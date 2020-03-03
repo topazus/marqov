@@ -9,6 +9,8 @@ Our General Hamiltonian looks like this
               + \sum\limits_{\beta = 1}^{N_\beta}h^{(\beta)} \sum\limits_{\beta\text{-sites: }i}  g^{(\beta)} (\phi_i)
 \end{aligned}
 ```
+
+it is split in interaction terms and on-site single particle contributions.
 # Examples
 
 The following Hamiltonians fit into this framework with the respective substitutions given:
