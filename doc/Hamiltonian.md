@@ -11,7 +11,12 @@ Our General Hamiltonian looks like this
 ```
 it is split in interaction terms and on-site single particle contributions.
 
-The dimension of the target set of $`f^{(\alpha)}`$ needs to match the dimension of $`J^{(\alpha)}`$ in order to be able to perform a meaningful scalar product. The same holds for $`g^{(\beta)}`$ in combination with $`h^{(\beta)}`$, compare Example (4). *Note to ourselves: Implement a check for this!*
+Here are a couple of lattices. *[Use them to explain the concept of families of sites and bonds]*
+
+<img src="grids.svg" width="55%" alt="Grids" class="center">.
+
+
+Keep in mind: The dimension of the target set of $`f^{(\alpha)}`$ needs to match the dimension of $`J^{(\alpha)}`$ in order to be able to perform a meaningful scalar product. The same holds for $`g^{(\beta)}`$ in combination with $`h^{(\beta)}`$, compare Example (4). *Note to ourselves: Implement a check for this!*
 
 
 # Examples
