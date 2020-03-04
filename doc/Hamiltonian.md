@@ -1,15 +1,23 @@
+
+
+
 # The General Hamiltonian
-Our General Hamiltonian looks like this
+Our General Hamiltonian is of the form
 
 ```math
 \begin{aligned}
- \mathcal{H} &= \sum\limits_{\alpha = 1}^{N_\alpha} \mathcal{H}^{(\alpha)} 
-              + \sum\limits_{\beta = 1}^{N_\beta} \mathcal{H}^{(\beta)} \\
-             &= \sum\limits_{\alpha = 1}^{N_\alpha}J^{(\alpha)} \sum\limits_{\alpha\text{-bonds: }\langle i,j\rangle}  f^{(\alpha)} (\phi_i,\phi_j,D_{ij})
-              + \sum\limits_{\beta = 1}^{N_\beta}h^{(\beta)} \sum\limits_{\beta\text{-sites: }i}  g^{(\beta)} (\phi_i)
+ \mathcal{H} &= \mathcal{H}_\text{int} 
+              + \mathcal{H}_\text{self} 
+              + \mathcal{V}_\text{pot}  \\
+             &= \sum\limits_{\alpha=1}^{N_\alpha} \mathcal{H}^{(\alpha)} 
+              + \sum\limits_{\beta=1}^{N_\beta}   \mathcal{H}^{(\beta)}
+              + \sum\limits_{\gamma=1}^{N_\gamma} \mathcal{V}^{(\gamma)} \\
+             &= \sum\limits_{\alpha=1}^{N_\alpha}J^{(\alpha)} \sum\limits_{\alpha\text{-bonds: }\langle i,j\rangle}  f^{(\alpha)} (\phi_i,\phi_j,D_{ij})
+              + \sum\limits_{\beta=1}^{N_\beta}h^{(\beta)} \sum\limits_{\beta\text{-sites: }i}  g^{(\beta)} (\phi_i)
+              + \sum\limits_{\gamma=1}^{N_\gamma}k^{(\gamma)} \sum\limits_{\gamma\text{-sites: }i}  v^{(\gamma)} \big(\phi_i,\ldots\big)
 \end{aligned}
 ```
-it is split in interaction terms and on-site single particle contributions. The greek indices $`\alpha`$ and $`\beta`$ describe distinct *families* of bonds and spins, respectively. For clarity let us explain this concept using the following Figure. In panel (a) there is only one type (family) of sites (open circles), but two families of bonds, in this case referring to nearest (black lines) and next-nearest neighbour connections (blue lines). In the second panel (b) we see three different species of sites (red, blue, green), translating to three $`\beta`$-families in our framework. Finally, panel (c) shows a typical example of a disordered lattice, with only one family of either bonds and sites.
+It is split into three parts: interaction terms, on-site single particle contributions and on-site contributions due to a potential. The greek indices describe distinct *families* of bonds ($`\alpha`$) and spins ($`\beta`$, $`\gamma`$), respectively. For clarity let us explain this concept using the following Figure. In panel (a) there is only one type (family) of sites (open circles), but two families of bonds, in this case referring to nearest (black lines) and next-nearest neighbour connections (blue lines). In the second panel (b) we see three different species of sites (red, blue, green), translating to three $`\beta`$-families in our framework. Finally, panel (c) shows a typical example of a disordered lattice, with only one family of either bonds and sites.
 
 
 <p align="center">
@@ -75,13 +83,25 @@ The following Hamiltonians fit into this framework with the respective substitut
     f^{(1)} = D_{ij} \phi_i^T \phi_j \quad\text{where } D_{ij} \text{ are tabulated scalar values}
     ```
 
+
 * Example 4: **Spin ice with dipolar interactions**
     ```math
     \mathcal{H} =   - J \sum\limits_{\langle i,j\rangle}\phi_i \phi_j
-                    + Da^3 \sum\limits_{i>j}\Bigg[\frac{\phi_i\phi_j}{|\bm{r}_{ij}|^3}
-                    - 3 \frac{(\bm{\phi}_i\cdot \bm{r}_{ij})(\bm{\phi}_j\cdot \bm{r}_{ij})}{|\bm{r}_{ij}|^5}\Bigg]
+                    + Da^3 \sum\limits_{i>j}\Bigg[\frac{\phi_i\phi_j}{|\vec{r}_{ij}|^3}
+                    - 3 \frac{(\vec{\phi}_i\cdot \vec{r}_{ij})(\vec{\phi}_j\cdot \vec{r}_{ij})}{|\vec{r}_{ij}|^5}\Bigg]
     ```
-    This Hamiltonian is typically defined on a *pyrochlore* lattice and the second term represens long-range dipolar interactions which can be efficiently computed using the Ewald summation technique.
+    This Hamiltonian is typically defined on a *pyrochlore* lattice. The first term represents a regular nearest neighbour Ising interaction. The second term, however, introduces long-range dipolar interactions and enters via a suitable potential energy term in our framework. Note that for this kind of interactions the sum can be efficiently computed using the Ewald summation technique.
+
+
+    ```math
+    N_\gamma=1, \quad k^{(1)} = Da^3
+    ```
+    ```math
+    v^{(1)} = v^{(1)}  \Big(  \phi_i,\{\phi_{j\neq i}\},\{\vec{r}_{ij}\}  \Big)
+            = \frac{1}{2}\sum\limits_{j\neq i}\Bigg[\frac{\phi_i\phi_j}{|\vec{r}_{ij}|^3}
+                    - 3 \frac{(\vec{\phi}_i\cdot \vec{r}_{ij})(\vec{\phi}_j\cdot \vec{r}_{ij})}{|\vec{r}_{ij}|^5}\Bigg]
+    ```
+
 
 
 * Example 5: **XXZ Heisenberg in Y external field**
