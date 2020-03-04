@@ -9,14 +9,16 @@ Our General Hamiltonian looks like this
               + \sum\limits_{\beta = 1}^{N_\beta}h^{(\beta)} \sum\limits_{\beta\text{-sites: }i}  g^{(\beta)} (\phi_i)
 \end{aligned}
 ```
-it is split in interaction terms and on-site single particle contributions.
-
-Here are a couple of lattices. *[Use them to explain the concept of families of sites and bonds]*
-
-<img src="grids.svg" width="55%" alt="Grids" class="center">.
+it is split in interaction terms and on-site single particle contributions. The greek indices $`\alpha`$ and $`\beta`$ describe distinct *families* of bonds and spins, respectively. For clarity let us explain this concept using the following Figure. In panel (a) there is only one type (family) of sites (open circles), but two families of bonds, in this case referring to nearest (black lines) and next-nearest neighbour connections (blue lines). In the second panel (b) we see three different species of sites (red, blue, green), translating to three $`\beta`$-families in our framework. Finally, panel (c) shows a typical example of a disordered lattice, with only one family of either bonds and sites.
 
 
-Keep in mind: The dimension of the target set of $`f^{(\alpha)}`$ needs to match the dimension of $`J^{(\alpha)}`$ in order to be able to perform a meaningful scalar product. The same holds for $`g^{(\beta)}`$ in combination with $`h^{(\beta)}`$, compare Example (4). *Note to ourselves: Implement a check for this!*
+<p align="center">
+<img src="grids.svg" width="40%" alt="Grids" class="center"></p>
+
+
+
+
+Keep in mind: The dimension of the target set of $`f^{(\alpha)}`$ needs to match the dimension of $`J^{(\alpha)}`$ in order to be able to perform a meaningful scalar product. The same holds for $`g^{(\beta)}`$ in combination with $`h^{(\beta)}`$, compare the XXZ Heisenberg example below. *Note to ourselves: Implement a check for this!*
 
 
 # Examples
@@ -73,7 +75,16 @@ The following Hamiltonians fit into this framework with the respective substitut
     f^{(1)} = D_{ij} \phi_i^T \phi_j \quad\text{where } D_{ij} \text{ are tabulated scalar values}
     ```
 
-* Example 4: **XXZ Heisenberg in Y external field**
+* Example 4: **Spin ice with dipolar interactions**
+    ```math
+    \mathcal{H} =   - J \sum\limits_{\langle i,j\rangle}\phi_i \phi_j
+                    + Da^3 \sum\limits_{i>j}\Bigg[\frac{\phi_i\phi_j}{|\bm{r}_{ij}|^3}
+                    - 3 \frac{(\bm{\phi}_i\cdot \bm{r}_{ij})(\bm{\phi}_j\cdot \bm{r}_{ij})}{|\bm{r}_{ij}|^5}\Bigg]
+    ```
+    This Hamiltonian is typically defined on a *pyrochlore* lattice and the second term represens long-range dipolar interactions which can be efficiently computed using the Ewald summation technique.
+
+
+* Example 5: **XXZ Heisenberg in Y external field**
 
 
     ```math
@@ -100,7 +111,7 @@ The following Hamiltonians fit into this framework with the respective substitut
     
     ```
 
-* Example 5: **Blume-Capel model**
+* Example 6: **Blume-Capel model**
  
     ```math
     \mathcal{H} = -J\sum\limits_{\langle i,j\rangle} \phi_i\phi_j + D\sum\limits_{i} \phi_i^2
@@ -114,7 +125,7 @@ The following Hamiltonians fit into this framework with the respective substitut
     f^{(1)} = \phi_i \phi_j, \quad g^{(1)} = \phi_i^2 
     ```
 
-* Example 6: **Improved O(N) lattice field theory**
+* Example 7: **Improved O(N) lattice field theory**
 
     ```math
     \mathcal{H} = -\beta\sum\limits_{\langle i,j\rangle} \phi_i \phi_j + m\sum\limits_i \phi_i^2 + \lambda\sum\limits_i (\phi_i^2-1)^2
@@ -132,7 +143,7 @@ The following Hamiltonians fit into this framework with the respective substitut
     all sites in the lattice are included for $`\beta=1`$ und $`\beta=2`$
     
 
-* Example 7: **Clock model**
+* Example 8: **Clock model**
 
     ```math
     N_\alpha= 1, \quad \phi_i\in\{0,1,\ldots,p-1\}, \quad J^{(1)} = J
@@ -141,13 +152,23 @@ The following Hamiltonians fit into this framework with the respective substitut
     f^{(1)} = \cos\Big(2\pi(\phi_i- \phi_j)/p\Big)
     ```
     
-* Example 8: **Disordered Baxter-Wu model**
+* Example 9: **Disordered Baxter-Wu model**
 
     ```math
     \mathcal{H} = -J\sum\limits_{\langle i,j,k\rangle} \epsilon_i \epsilon_j \epsilon_k \phi_i\phi_j\phi_k, 
                     \quad\text{where}\quad \epsilon_i,\epsilon_j,\epsilon_k\in\{0,1\}
     ```
-    defined on a triangular two-dimensional lattice, where particles are e.g. regular Ising spins.
+    defined on a triangular two-dimensional lattice, where particles are e.g. regular Ising spins...
 
-    ...
-    the third interaction partner might be sneaked in via the interaction D?
+
+    *Is this model covered? The third interaction partner might be sneaked in via the interaction D?*
+    
+
+* Example 10: **N-color Ashkin-Teller model**
+    ```math
+    \mathcal{H} =   - J\sum\limits_{\alpha=1}^N\sum\limits_{\langle i,j\rangle} \phi^\alpha_i\phi^\alpha_j 
+                    - K \sum\limits_{\alpha<\beta}\sum\limits_{\langle i,j\rangle} \phi^\alpha_i\phi^\alpha_j \phi^\beta_i\phi^\beta_j
+    ```  
+    An implementation of this Hamiltonian is not straightforwardly possible based on the above general form, as it requires an interaction term that couples spins of *different* families.
+
+
