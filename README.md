@@ -4,6 +4,16 @@ The place where the High performance MARQOV Code will take shape...
 
 write 2-3 sentences what your code does. 
 
+>  Magnetic systems offer themselves as the
+ideal benchmark for generic concepts pertaining to collective phenomena in nature. This is
+due in part to the availability of a large variety
+of diverse magnetic materials that can be chosen to approximate simple theoretical “toy
+models” of collective behavior and, in part, to
+their ease of study by a battery of experimental
+techniques. <br>
+-- Bramwell & Gingras, Science 294(5546), 1495-1501 (2001).
+
+
 ## Author
 Manuel Schrauth (mschrauth@physik.uni-wuerzburg.de)
 Florian Goth (fgoth@physik.uni-wuerzburg.de)
