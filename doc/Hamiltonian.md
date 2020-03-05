@@ -1,6 +1,5 @@
 
 
-
 # The General Hamiltonian
 Our General Hamiltonian is of the form
 
@@ -36,12 +35,15 @@ The following Hamiltonians fit into this framework with the respective substitut
 
 * Example 1: **Ferromagnetic Ising model in homogeneous external field**
 
-    ```math
-    \mathcal{H} = -J\sum\limits_{\langle i,j\rangle} \phi_i\phi_j + h\sum\limits_{i} \phi_i
-    ```
+    In the celebrated Ising model, individual spins are binary variables on a regular lattice in the presence of an external field. It represents the most basic toy model for ferromagnetic behaviour if the interaction constant $`J`$ is positive.
 
     ```math
-    N_\alpha=N_\beta = 1, \quad \phi_i\in\{-1,+1\}, \quad J^{(1)} = -J, \quad h^{(1)} = h
+    \mathcal{H} = -J\sum\limits_{\langle i,j\rangle} \phi_i\phi_j + h\sum\limits_{i} \phi_i \qquad\text{where}\quad \phi_i\in\{-1,+1\}
+    ```
+    In our framework this translates to one interaction term and one on-site term, which is detailed in the following:
+
+    ```math
+    N_\alpha=N_\beta = 1, \quad J^{(1)} = -J, \quad h^{(1)} = h
     ```
     
     ```math
@@ -49,15 +51,18 @@ The following Hamiltonians fit into this framework with the respective substitut
     ```
 
 * Example 2: **Diluted Heisenberg antiferromagnet**
+
+
+    In this model, spins are three-dimensional unit vectors on a regular lattice with quenched random vacancies or impurities. The system hence obeys a $`O(3)`$ symmetry, which means that the Hamiltonian is invariant under three-dimensional spin rotations.
     
     ```math
     \mathcal{H} = J\sum\limits_{\langle i,j\rangle} \epsilon_i \epsilon_j \vec{\phi_i}\vec{\phi_j}
-                    \quad\text{where}\quad \epsilon_i,\epsilon_j\in\{0,1\}
+                    \quad\text{where}\quad \epsilon_i,\epsilon_j\in\{0,1\} \quad\text{and}\quad \vec{\phi}_i\in\mathbb{R}^3, \quad |\vec{\phi}_i|^2=1,
     ```
-    The binary variables $`\epsilon`$ encode whether the corresponding site is magnetic ($`\epsilon=1`$) or a non-interacting impurity ($`\epsilon=0`$). Note that there is some redundancy in this notation. If the lattice (which is the set of sites $`i`$ and the set of bonds $`\langle i,j\rangle`$) does not include impurity sites in the first place, the $`\epsilon`$'s can be discarded.
+    Typically, a binary variables $`\epsilon`$ is employed to encode whether the corresponding site is magnetic ($`\epsilon=1`$) or a non-interacting impurity ($`\epsilon=0`$). Note that there is some redundancy in this notation. If the lattice (which is the set of sites $`i`$ and the set of bonds $`\langle i,j\rangle`$) does not include impurity sites in the first place, the $`\epsilon`$'s can be discarded.
 
     ```math
-    N_\alpha=1 \quad \phi_i\in\mathbb{R}^3, \quad |\phi_i|^2=1, \quad J^{(1)} = (J,J,J)^T
+    N_\alpha=1,  \quad J^{(1)} = J
     ```
     
     ```math
@@ -68,15 +73,17 @@ The following Hamiltonians fit into this framework with the respective substitut
 
 * Example 3: **Spin glass**
     
+    Altough seemingly related to the standard Ising or $`O(N)`$ model, the following system is neither ferro- nor antiferromagnetic but rather becomes a prototypical spin glass, as the $`\epsilon_{ij}`$ take on random positive and negative values.
+
     ```math
     \mathcal{H} = J\sum\limits_{\langle i,j\rangle} \epsilon_{ij} \phi_i \phi_j
                     \quad\text{where}\quad \epsilon_i,\epsilon_j\in\left[-1,1\right] \text{(random)}
     ```
-    Note that since the $`\epsilon_{ij}`$ take on random positive and negative values, the system is neither ferro- nor antiferromagnetic but rather becomes a prototypical spin glass.
-    
+
+    Since the disorder is quenched it makes sense to read the interactions strengths from a table:
 
     ```math
-    N_\alpha=1 \quad \phi_i\in\mathbb{R}^N, \quad |\phi_i|^2=1, \quad J^{(1)} = 1
+    N_\alpha=1 \quad \phi_i\in\mathbb{R}^N, \quad |\phi_i|^2=1, \quad J^{(1)} = 1, \quad D_{ij}=\epsilon_{ij}
     ```
     
     ```math
@@ -85,6 +92,10 @@ The following Hamiltonians fit into this framework with the respective substitut
 
 
 * Example 4: **Spin ice with dipolar interactions**
+ 
+    The term *spin ice* refers to substances, in which the disorder of the magnetic moments at low temperatures is precisely analogous to the proton disorder in water ice. The minimal model is the following:
+
+
     ```math
     \mathcal{H} =   - J \sum\limits_{\langle i,j\rangle}\phi_i \phi_j
                     + Da^3 \sum\limits_{i>j}\Bigg[\frac{\phi_i\phi_j}{|\vec{r}_{ij}|^3}
