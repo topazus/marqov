@@ -15,6 +15,7 @@ public:
             numberatoms *= length;
         }
     }
+    value_type getnbrs(int a, int i) const {return this->operator[](i);}
     value_type operator[](int i) const
     {
         std::vector<int> temp(2*dim);
@@ -74,7 +75,8 @@ public:
 template <class StateVector>
 class OnSite
 {
-    const double* h;
+public: 
+    const StateVector h;
     virtual StateVector operator() (StateVector& phi) = 0;
 private:
 };
@@ -83,17 +85,31 @@ template
 <class StateSpace, class StateVector>
 class MultiSite
 {
-    const double* k;
-    virtual StateVector operator() (StateSpace s) = 0;
+public: 
+    const double k;
+    virtual double operator() (StateVector& sv, int svpos, StateSpace s) = 0;
 private:
 };
 
-std::array<double, 1> operator += (std::array<double, 1> lhs,  std::array<double, 1> rhs)
+std::array<double, 1> operator + (std::array<double, 1> lhs,  std::array<double, 1> rhs)
 {
     std::array<double, 1> res;
     res[0] = lhs[0] + rhs[0];
     return res;
 }
+
+std::array<double, 1> operator - (std::array<double, 1> lhs,  std::array<double, 1> rhs)
+{
+    std::array<double, 1> res;
+    res[0] = lhs[0] - rhs[0];
+    return res;
+}
+
+double dot(std::array<double, 1> lhs,  std::array<double, 1> rhs)
+{
+    return lhs[0] * rhs[0];
+}
+
 
 template <class StateVector>
 class Ising_interaction : public Interaction<StateVector> 
@@ -146,7 +162,10 @@ public:
     {
         interactions = new Ising_interaction<StateVector>();
     }
-    StateVector creatersv(const StateVector& osv) {return -osv[0]; }
+    StateVector creatersv(const StateVector& osv) {
+        StateVector retval(osv);
+        retval[0]=-retval[0];
+        return  retval;}
 };
 
 // class Hamiltonian {
@@ -180,7 +199,7 @@ public:
     {
         for(int i = 0; i < grid.size(); ++i)
         {
-            metropolisstep<StateSpace, Hamiltonian> (statespace);
+            metropolisstep<StateSpace, Hamiltonian> (statespace, ham, grid);
         }
     }
     
@@ -209,5 +228,7 @@ int main()
     RegularLattice lattice(10, 2);
     rn.set_integer_range(lattice.size());
     Marqov<RegularLattice, Ising<double, double> > marqov(lattice);
+    marqov.gameloop();
+    
     
 }

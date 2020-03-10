@@ -7,8 +7,8 @@
 
 // Single Metropolis update step statevectors on a lattice
 // returns an integer which encodes whether the flip attempt was successful (1) or not (0)
-template<class MCState, class Hamiltonian>
-inline int metropolisstep(MCState& mcstate, Hamiltonian& ham)
+template<class MCState, class Hamiltonian, class Lattice>
+inline int metropolisstep(MCState& mcstate, Hamiltonian& ham, const Lattice& grid)
 {
     typedef typename Hamiltonian::StateVector StateVector;
     StateVector s = {0};
@@ -19,29 +19,31 @@ inline int metropolisstep(MCState& mcstate, Hamiltonian& ham)
     double interactionenergydifference = 0;
     for(int a = 0; a < ham.Nalpha; ++a)
     {
-        auto nbrs = ham.grid.getnbrs(a, rsite);
-        StateVector averagevector();
+        auto nbrs = grid.getnbrs(a, rsite);
+        StateVector averagevector;
         for (int i = 0; i < nbrs.size(); ++i)
         {
-            averagevector += ham.interaction[a](nbrs[i]);
+            auto mynbr = nbrs[i];
+            auto myvec = ham.interactions[a](mcstate[mynbr]);
+            averagevector = averagevector + myvec;
         }
-        interactionenergydifference += ham.interaction[a].J * (dot(svnew - svold, averagevector));
+        interactionenergydifference += ham.interactions[a].J * (dot(svnew - svold, averagevector));
     }
     
     double onsiteenergyold = 0;
     double onsiteenergynew = 0;
     for (int b = 0; b < ham.Nbeta; ++b)
     {
-        onsiteenergyold += dot(ham.onsite[b].h, ham.onsite[b](svold));
-        onsiteenergynew += dot(ham.onsite[b].h, ham.onsite[b](svnew));
+        onsiteenergyold += dot(ham.onsite[b]->h, ham.onsite[b]->operator()(svold));
+        onsiteenergynew += dot(ham.onsite[b]->h, ham.onsite[b]->operator()(svnew));
     }
     
     double multisiteenergyold = 0;
     double multisiteenergynew = 0;
     for (int g = 0; g < ham.Ngamma; ++g)
     {
-        multisiteenergynew += ham.multisite[g](svnew, rsite, mcstate);//FIXME: think about this...
-        multisiteenergyold += ham.multisite[g](svold, rsite, mcstate);//FIXME: think about this...
+        multisiteenergynew += ham.multisite[g]->operator()(svnew, rsite, mcstate);//FIXME: think about this...
+        multisiteenergyold += ham.multisite[g]->operator()(svold, rsite, mcstate);//FIXME: think about this...
         //forgot k_gamma
     }
     
