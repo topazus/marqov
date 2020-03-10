@@ -1,6 +1,11 @@
 #include <array>
 #include <vector>
+#include <iostream>
 #include "rndwrapper.h"
+using std::cout;
+using std::endl;
+using std::flush;
+using std::ofstream;
 
 class RegularLattice
 {
@@ -48,9 +53,9 @@ public:
         return temp;
     }
     std::size_t size() const {return numberatoms;}
+    int length;
 private:
     std::size_t numberatoms;
-    int length;
     int dim;
     std::vector<int> pows;
 };
@@ -162,10 +167,13 @@ public:
     {
         interactions = new Ising_interaction<StateVector>();
     }
-    StateVector creatersv(const StateVector& osv) {
+
+    StateVector creatersv(const StateVector& osv) 
+	 {
         StateVector retval(osv);
-        retval[0]=-retval[0];
-        return  retval;}
+        retval[0] = -retval[0];
+        return  retval;
+	}
 };
 
 // class Hamiltonian {
@@ -209,8 +217,29 @@ public:
             elementaryMCstep();
         
         for(int j = 0; j < nobs; ++j)
-            obs[j].measure(statespace);//FIXME: consider that there might be reuse across observables!
+            obs[j].measure(statespace);
+				//improve me: consider that there might be reuse across observables!
     }
+
+
+	 void print_state()
+	 {
+		for(int i = 0; i < grid.length; ++i)
+		{
+			for(int j = 0; j < grid.length; ++j)
+			if (statespace[i][0] == 1) cout << "+ ";
+			cout << endl;
+		}
+	 }
+
+	 void init_cold()
+	 {
+		for(int i = 0; i < grid.size(); ++i)
+		{
+			statespace[i][0] = 1;
+		}
+	 }
+
 private:
     StateSpace statespace;
     Hamiltonian ham;
@@ -228,7 +257,11 @@ int main()
     RegularLattice lattice(10, 2);
     rn.set_integer_range(lattice.size());
     Marqov<RegularLattice, Ising<double, double> > marqov(lattice);
+	 marqov.init_cold();
+	 marqov.print_state();
     marqov.gameloop();
+	 cout << endl;
+	 marqov.print_state();
     
     
 }
