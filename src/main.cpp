@@ -188,12 +188,18 @@ public:
 template <class StateSpace>
 class Observable {public: void measure(StateSpace&) {};};
 
+
+
 template <class Grid, class Hamiltonian>
 class Marqov {
 public:
     typedef typename Hamiltonian::StateVector* StateSpace;
     Marqov(Grid& lattice) : ham(),  grid(lattice) {
         statespace = new typename Hamiltonian::StateVector[lattice.size()];
+        
+        //initialize statespace
+        for (int i = 0; i < lattice.size(); ++i)
+            statespace[i][0] = 1;//Ising model specific
     }
     void elementaryMCstep()
     {
@@ -225,6 +231,7 @@ void wolff();
 
 int main()
 {
+    
     RegularLattice lattice(10, 2);
     rn.set_integer_range(lattice.size());
     Marqov<RegularLattice, Ising<double, double> > marqov(lattice);
