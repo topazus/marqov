@@ -1,4 +1,61 @@
-#include "metropolis.h"
+#include <array>
+#include <vector>
+#include "rndwrapper.h"
+
+class RegularLattice
+{
+public:
+//    friend class NArray_Iterator;
+    typedef std::vector<int> value_type;
+    RegularLattice(int l, int d) : length(l), dim(d), pows(dim) {
+        numberatoms = 1;
+        for(int i = 0; i < dim; ++i)
+        {
+            pows[i] = numberatoms;
+            numberatoms *= length;
+        }
+    }
+    value_type operator[](int i) const
+    {
+        std::vector<int> temp(2*dim);
+        //calculate neighbours for site i
+        for(int j = 0; j < dim; ++j)
+        {
+            int pl = pows[j]*length;
+            //positive additions
+            int c = i + pows[j];
+            //test positive additions for PBCs
+            if (c >= (c/pl)*pl)
+            {//PBC
+                temp[2*j] = (i/pl)*pl + c % pl;
+            }
+            else
+                temp[2*j] = c;
+            //      std::cout<<i<<" "<<temp[2*j]<<std::endl;
+            
+            //negative additions
+            c = i - pows[j];
+            //test negative additions for PBCs
+            if(c < (i/pl)*pl)
+            {
+                temp[2*j+1] = (i/pl)*pl + (c + pl) % pl;
+            }
+            else
+                temp[2*j+1] = c;
+            //      std::cout<<i<<" "<<temp[2*j+1]<<std::endl;
+        }
+        return temp;
+    }
+    std::size_t size() const {return numberatoms;}
+private:
+    std::size_t numberatoms;
+    int length;
+    int dim;
+    std::vector<int> pows;
+};
+
+
+
 
 class Grid {
     std::vector<int> getnbr(int i);
@@ -6,55 +63,124 @@ class Grid {
 
 /** This 
  */
-struct Interaction
+template <class StateVector>
+class Interaction
 {
-    const double J;
-    double operator(StateVector phi_i, StateVector phi_j)
+public:
+    double J;
+    virtual StateVector operator() (StateVector& phi_i) = 0;
+};
+
+template <class StateVector>
+class OnSite
+{
+    const double* h;
+    virtual StateVector operator() (StateVector& phi) = 0;
+private:
+};
+
+template
+<class StateSpace, class StateVector>
+class MultiSite
+{
+    const double* k;
+    virtual StateVector operator() (StateSpace s) = 0;
+private:
+};
+
+std::array<double, 1> operator += (std::array<double, 1> lhs,  std::array<double, 1> rhs)
+{
+    std::array<double, 1> res;
+    res[0] = lhs[0] + rhs[0];
+    return res;
+}
+
+template <class StateVector>
+class Ising_interaction : public Interaction<StateVector> 
+{
+public:
+    Ising_interaction()
     {
-        return (D_x * phi_x, D_y * phi_y ); //diagonal, unequal coupling within the structure of a statevector
-        
-        return 1/abs(i -j);//could also be from a table, e.g Dij[i,j]
+        this->J = 1;
     }
-private:
-    double [] Dij;
-    Grid& grid;
+    StateVector operator() (StateVector& phi) {return phi;};
 };
 
-struct OnSite
+// class Ising_interaction
+// {
+//     constexpr double J = 1.0;
+//     inline double operator() (std::array<double, 1> , std::array<double, 1> ) {}
+// };
+
+
+
+// struct Interaction
+// {
+//     const double J;
+//     double operator(StateVector phi_i, StateVector phi_j)
+//     {
+//         return (D_x * phi_x, D_y * phi_y ); //diagonal, unequal coupling within the structure of a statevector
+//     }
+// private:
+//     double [] Dij;
+//     Grid& grid;
+// };
+
+
+template <typename SpinType, typename MyFPType>
+class Ising
 {
-    const double[] h;
-    StateVector operator(StateVector phi);
-private:
-    double [] data;
+public:
+    constexpr static double beta = 5;
+    constexpr static int SymD = 1;
+    typedef std::array<SpinType, SymD> StateVector;
+    typedef MyFPType FPType;
+    static constexpr uint Nalpha = 1;
+    static constexpr uint Nbeta = 0;
+    static constexpr uint Ngamma = 0;
+    // requires pointers
+    Interaction<StateVector>* interactions;
+    OnSite<StateVector>* onsite[Nbeta];
+    MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
+    Ising()
+    {
+        interactions = new Ising_interaction<StateVector>();
+    }
+    StateVector creatersv(const StateVector& osv) {return -osv[0]; }
 };
 
-struct MultiSite
-{
-    const double[] k;
-    StateVector operator(StateSpace s);
-private:
-    double data;
-};
+// class Hamiltonian {
+// public:
+// //     typedef something StateVector;
+//     const uint Nalpha;
+//     const uint Nbeta;
+//     const uint Ngamma;
+//     
+//     Interaction<StateVector>[Nalpha] interactions;
+//     OnSite<StateVector>[Nbeta] onsite;
+//     MultiSite<<StateVector>*,  StateVector>[Ngamma] multisite;
+//     
+//     StateVector creatersv(StateVector old);
+// };
 
-class Hamiltonian {
-    typedef something StateVector;
-    const uint Nalpha;
-    const uint Nbeta;
-    const uint Ngamma;
-    
-    Interaction[Nalpha] interactions;
-    OnSite[Nbeta] onsite;
-    MultiSite[Ngamma] multisite;
-    
-    StateVector creatersv(StateVector old);
-};
+    RND rn(0, 1);
 
+#include "metropolis.h"
+template <class StateSpace>
+class Observable {public: void measure(StateSpace&) {};};
+
+template <class Grid, class Hamiltonian>
 class Marqov {
+public:
+    typedef typename Hamiltonian::StateVector* StateSpace;
+    Marqov(Grid& lattice) : ham(),  grid(lattice) {
+        statespace = new typename Hamiltonian::StateVector[lattice.size()];
+    }
     void elementaryMCstep()
     {
         for(int i = 0; i < grid.size(); ++i)
         {
-            metropolisstep(statespace);
+            metropolisstep<StateSpace, Hamiltonian> (statespace);
         }
     }
     
@@ -66,16 +192,22 @@ class Marqov {
         for(int j = 0; j < nobs; ++j)
             obs[j].measure(statespace);//FIXME: consider that there might be reuse across observables!
     }
-    
+private:
+    StateSpace statespace;
+    Hamiltonian ham;
+    Grid& grid;
+    static constexpr uint nobs = 0;
+    Observable<StateSpace> obs[5];
+    static constexpr int nstep = 20;
 };
 
 void wolff();
 
-class Observable {};
-
-
 
 int main()
 {
+    RegularLattice lattice(10, 2);
+    rn.set_integer_range(lattice.size());
+    Marqov<RegularLattice, Ising<double, double> > marqov(lattice);
     
 }
