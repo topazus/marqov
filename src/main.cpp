@@ -152,7 +152,7 @@ template <typename SpinType, typename MyFPType>
 class Ising
 {
 public:
-    constexpr static double beta = 5;
+    constexpr static double beta = 0.5;
     constexpr static int SymD = 1;
     typedef std::array<SpinType, SymD> StateVector;
     typedef MyFPType FPType;
@@ -262,6 +262,4 @@ int main()
     marqov.gameloop();
 	 cout << endl;
 	 marqov.print_state();
-    
-    
 }

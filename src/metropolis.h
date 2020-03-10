@@ -21,11 +21,21 @@ inline int metropolisstep(MCState& mcstate, Hamiltonian& ham, const Lattice& gri
     {
         auto nbrs = grid.getnbrs(a, rsite);
         StateVector averagevector;
+
+			/*
+			cout << rsite << "\t" << nbrs[0] << "\t"
+										 << nbrs[1] << "\t"
+										 << nbrs[2] << "\t"
+										 << nbrs[3] << endl;
+										 */
+
         for (int i = 0; i < nbrs.size(); ++i)
         {
             auto mynbr = nbrs[i];
             auto myvec = ham.interactions[a](mcstate[mynbr]);
             averagevector = averagevector + myvec;
+
+				cout << myvec[0] << endl;
         }
         interactionenergydifference += ham.interactions[a].J * (dot(svnew - svold, averagevector));
     }
@@ -49,6 +59,8 @@ inline int metropolisstep(MCState& mcstate, Hamiltonian& ham, const Lattice& gri
     
     double energydiff = (onsiteenergynew - onsiteenergyold) + interactionenergydifference
     + (multisiteenergynew - multisiteenergyold);
+
+	 cout << interactionenergydifference << endl;
     
     int retval = 0;
     if ( energydiff > 0 )
