@@ -11,31 +11,22 @@ template<class MCState, class Hamiltonian, class Lattice>
 inline int metropolisstep(MCState& mcstate, Hamiltonian& ham, const Lattice& grid)
 {
     typedef typename Hamiltonian::StateVector StateVector;
-    StateVector s = {0};
+//    StateVector s = {0};
     const int rsite = rn.i(); // choose random site -> Move one level above
-    StateVector svold = mcstate[rsite];
+    StateVector& svold = mcstate[rsite];
     StateVector svnew = ham.creatersv(svold); //get a new randomized state vector
     
     double interactionenergydifference = 0;
     for(int a = 0; a < ham.Nalpha; ++a)
     {
         auto nbrs = grid.getnbrs(a, rsite);
-        StateVector averagevector;
-
-			/*
-			cout << rsite << "\t" << nbrs[0] << "\t"
-										 << nbrs[1] << "\t"
-										 << nbrs[2] << "\t"
-										 << nbrs[3] << endl;
-										 */
+        StateVector averagevector = {0};
 
         for (int i = 0; i < nbrs.size(); ++i)
         {
             auto mynbr = nbrs[i];
             auto myvec = ham.interactions[a](mcstate[mynbr]);
             averagevector = averagevector + myvec;
-
-				cout << myvec[0] << endl;
         }
         interactionenergydifference += ham.interactions[a].J * (dot(svnew - svold, averagevector));
     }
@@ -57,10 +48,11 @@ inline int metropolisstep(MCState& mcstate, Hamiltonian& ham, const Lattice& gri
         //forgot k_gamma
     }
     
-    double energydiff = (onsiteenergynew - onsiteenergyold) + interactionenergydifference
-    + (multisiteenergynew - multisiteenergyold);
+    double energydiff = interactionenergydifference;
+	 // (onsiteenergynew - onsiteenergyold);
+    // + (multisiteenergynew - multisiteenergyold);
 
-	 cout << interactionenergydifference << endl;
+	 cout << interactionenergydifference << "\t" << svnew[0] << "\t" << svold[0] << endl;
     
     int retval = 0;
     if ( energydiff > 0 )

@@ -152,7 +152,7 @@ template <typename SpinType, typename MyFPType>
 class Ising
 {
 public:
-    constexpr static double beta = 0.5;
+    constexpr static double beta = 50.3;
     constexpr static int SymD = 1;
     typedef std::array<SpinType, SymD> StateVector;
     typedef MyFPType FPType;
@@ -190,6 +190,7 @@ public:
 //     StateVector creatersv(StateVector old);
 // };
 
+	 const int myid = 0;
     RND rn(0, 1);
 
 #include "metropolis.h"
@@ -227,7 +228,12 @@ public:
 		for(int i = 0; i < grid.length; ++i)
 		{
 			for(int j = 0; j < grid.length; ++j)
-			if (statespace[i][0] == 1) cout << "+ ";
+			{
+				int current = statespace[grid.length*i+j][0];
+				if (current == 1) cout << "o ";
+				else if (current == -1) cout << "x ";
+				else cout << "  ";
+			}
 			cout << endl;
 		}
 	 }
@@ -246,7 +252,7 @@ private:
     Grid& grid;
     static constexpr uint nobs = 0;
     Observable<StateSpace> obs[5];
-    static constexpr int nstep = 20;
+    static constexpr int nstep = 25;
 };
 
 void wolff();
@@ -254,6 +260,8 @@ void wolff();
 
 int main()
 {
+	 rn.seed(time(NULL));
+//	 rn.seed(myid+time(NULL)+random_device{}());
     RegularLattice lattice(10, 2);
     rn.set_integer_range(lattice.size());
     Marqov<RegularLattice, Ising<double, double> > marqov(lattice);
