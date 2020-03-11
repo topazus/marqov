@@ -122,37 +122,18 @@ class Ising_interaction : public Interaction<StateVector>
 public:
     Ising_interaction()
     {
-        this->J = 1;
+        this->J = -1;	// ferro
+//		  this->J = +1; 	// antiferro
     }
     StateVector operator() (StateVector& phi) {return phi;};
 };
-
-// class Ising_interaction
-// {
-//     constexpr double J = 1.0;
-//     inline double operator() (std::array<double, 1> , std::array<double, 1> ) {}
-// };
-
-
-
-// struct Interaction
-// {
-//     const double J;
-//     double operator(StateVector phi_i, StateVector phi_j)
-//     {
-//         return (D_x * phi_x, D_y * phi_y ); //diagonal, unequal coupling within the structure of a statevector
-//     }
-// private:
-//     double [] Dij;
-//     Grid& grid;
-// };
 
 
 template <typename SpinType, typename MyFPType>
 class Ising
 {
 public:
-    constexpr static double beta = 50.3;
+    constexpr static double beta = 1/2.26918;
     constexpr static int SymD = 1;
     typedef std::array<SpinType, SymD> StateVector;
     typedef MyFPType FPType;
@@ -176,22 +157,12 @@ public:
 	}
 };
 
-// class Hamiltonian {
-// public:
-// //     typedef something StateVector;
-//     const uint Nalpha;
-//     const uint Nbeta;
-//     const uint Ngamma;
-//     
-//     Interaction<StateVector>[Nalpha] interactions;
-//     OnSite<StateVector>[Nbeta] onsite;
-//     MultiSite<<StateVector>*,  StateVector>[Ngamma] multisite;
-//     
-//     StateVector creatersv(StateVector old);
-// };
+
 
 	 const int myid = 0;
     RND rn(0, 1);
+
+
 
 #include "metropolis.h"
 template <class StateSpace>
@@ -231,7 +202,7 @@ public:
 			{
 				int current = statespace[grid.length*i+j][0];
 				if (current == 1) cout << "o ";
-				else if (current == -1) cout << "x ";
+				else if (current == -1) cout << ". ";
 				else cout << "  ";
 			}
 			cout << endl;
@@ -252,7 +223,7 @@ private:
     Grid& grid;
     static constexpr uint nobs = 0;
     Observable<StateSpace> obs[5];
-    static constexpr int nstep = 25;
+    static constexpr int nstep = 250;
 };
 
 void wolff();
@@ -260,9 +231,11 @@ void wolff();
 
 int main()
 {
+	 rn.seed(42);
 	 rn.seed(time(NULL));
 //	 rn.seed(myid+time(NULL)+random_device{}());
-    RegularLattice lattice(10, 2);
+
+    RegularLattice lattice(20, 2);
     rn.set_integer_range(lattice.size());
     Marqov<RegularLattice, Ising<double, double> > marqov(lattice);
 	 marqov.init_cold();

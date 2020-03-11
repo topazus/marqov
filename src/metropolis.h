@@ -48,19 +48,18 @@ inline int metropolisstep(MCState& mcstate, Hamiltonian& ham, const Lattice& gri
         //forgot k_gamma
     }
     
-    double energydiff = interactionenergydifference;
+    double dE = interactionenergydifference;
 	 // (onsiteenergynew - onsiteenergyold);
     // + (multisiteenergynew - multisiteenergyold);
 
-	 cout << interactionenergydifference << "\t" << svnew[0] << "\t" << svold[0] << endl;
-    
+
     int retval = 0;
-    if ( energydiff > 0 )
+    if ( dE <= 0 )
     {
         svold = svnew;
         retval = 1;
     }
-    else if (rn.d() < exp(-ham.beta*energydiff))
+    else if (rn.d() < exp(-ham.beta*dE))
     {
         svold = svnew;
         retval = 1;
