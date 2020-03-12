@@ -230,7 +230,11 @@ inline int metropolisstep(int rsite)
     
     return retval;
 }
-	    StateSpace statespace;
+
+        void wolff()
+        {
+        }
+        StateSpace statespace;
 	    Hamiltonian ham;
 	    Grid& grid;
         RND rng;
@@ -240,8 +244,6 @@ inline int metropolisstep(int rsite)
 	    Observable<StateSpace> obs[5];
 	    static constexpr int nstep = 250;
 };
-
-void wolff();
 
 int main()
 {
