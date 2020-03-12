@@ -11,16 +11,17 @@ template<class MCState, class Hamiltonian, class Lattice>
 inline int metropolisstep(MCState& mcstate, Hamiltonian& ham, const Lattice& grid)
 {
     typedef typename Hamiltonian::StateVector StateVector;
-    StateVector s = {0};
+//    StateVector s = {0};
     const int rsite = rn.i(); // choose random site -> Move one level above
-    StateVector svold = mcstate[rsite];
+    StateVector& svold = mcstate[rsite];
     StateVector svnew = ham.creatersv(svold); //get a new randomized state vector
     
     double interactionenergydifference = 0;
     for(int a = 0; a < ham.Nalpha; ++a)
     {
         auto nbrs = grid.getnbrs(a, rsite);
-        StateVector averagevector;
+        StateVector averagevector = {0};
+
         for (int i = 0; i < nbrs.size(); ++i)
         {
             auto mynbr = nbrs[i];
@@ -47,16 +48,18 @@ inline int metropolisstep(MCState& mcstate, Hamiltonian& ham, const Lattice& gri
         //forgot k_gamma
     }
     
-    double energydiff = (onsiteenergynew - onsiteenergyold) + interactionenergydifference
-    + (multisiteenergynew - multisiteenergyold);
-    
+    double dE = interactionenergydifference;
+	 // (onsiteenergynew - onsiteenergyold);
+    // + (multisiteenergynew - multisiteenergyold);
+
+
     int retval = 0;
-    if ( energydiff > 0 )
+    if ( dE <= 0 )
     {
         svold = svnew;
         retval = 1;
     }
-    else if (rn.d() < exp(-ham.beta*energydiff))
+    else if (rn.d() < exp(-ham.beta*dE))
     {
         svold = svnew;
         retval = 1;
