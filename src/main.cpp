@@ -68,7 +68,8 @@ std::array<double, 1> operator - (StateVector lhs,  StateVector rhs)
     return res;
 }
 
-double dot(std::array<double, 1> lhs,  std::array<double, 1> rhs)
+template <class StateVector>
+double dot(const StateVector& lhs, const StateVector& rhs)
 {
     return lhs[0] * rhs[0];
 }
@@ -84,8 +85,8 @@ class Ising_interaction : public Interaction<StateVector>
 public:
 	Ising_interaction()
 	{
-		this->J = -1;	// ferro
-		// this->J = +1; 	// antiferro
+// 		this->J = -1;	// ferro
+		this->J = +1; 	// antiferro
 	}
 	StateVector operator() (StateVector& phi) {return phi;};
 };
