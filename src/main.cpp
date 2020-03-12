@@ -53,82 +53,64 @@ class MultiSite
 // ------- elementary state vector calculus
 
 template <class StateVector>
-std::array<double, 1> operator + (StateVector lhs,  StateVector rhs)
+StateVector operator + (StateVector lhs,  StateVector rhs)
 {
-    std::array<double, 1> res;
+    StateVector res;
     res[0] = lhs[0] + rhs[0];
     return res;
 }
 
 template <class StateVector>
-std::array<double, 1> operator - (StateVector lhs,  StateVector rhs)
+StateVector operator - (StateVector lhs,  StateVector rhs)
 {
-    std::array<double, 1> res;
+    StateVector res;
     res[0] = lhs[0] - rhs[0];
     return res;
 }
 
-template <class StateVector>
-double dot(const StateVector& lhs, const StateVector& rhs)
+template<class VecType>
+inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 {
-    return lhs[0] * rhs[0];
+        typedef typename VecType::value_type FPType;
+//         //Neumaier summation
+//         FPType sum = a[0]*b[0];
+//         FPType c = 0.0;
+//         for (uint i = 1; i < a.size(); ++i)
+//         {
+//             FPType input = a[i]*b[i];
+//             FPType t = sum + input;
+//             if (std::abs(t) >= std::abs(input))
+//                 c += (sum - t) + input;
+//             else
+//                 c += (input - t) + sum;
+//             sum = t;
+//         }
+//       return sum;
+
+//Kahan summation
+//     FPType sum = 0.0;
+//     FPType c = 0.0;
+//     for (uint i = 0; i < a.size(); ++i)
+//     {
+//         FPType y = a[i]*b[i] - c;
+//         FPType t = sum + y;
+//         c = (t - sum) -y;
+//         sum = t;
+//     }
+//       return sum;
+//plain version
+    return std::inner_product(begin(a), end(a), begin(b), 0.0);
 }
+
 
 // ---------------------------------------
 
 
-
-
-template <class StateVector>
-class Ising_interaction : public Interaction<StateVector> 
-{
-public:
-	Ising_interaction()
-	{
-// 		this->J = -1;	// ferro
-		this->J = +1; 	// antiferro
-	}
-	StateVector operator() (StateVector& phi) {return phi;};
-};
-
-
-
-template <typename SpinType, typename MyFPType>
-class Ising
-{
-public:
-    constexpr static double beta = 1/2.26918;
-    constexpr static int SymD = 1;
-    typedef std::array<SpinType, SymD> StateVector;
-    typedef MyFPType FPType;
-    static constexpr uint Nalpha = 1;
-    static constexpr uint Nbeta = 0;
-    static constexpr uint Ngamma = 0;
-    // requires pointers
-    Interaction<StateVector>* interactions;
-    OnSite<StateVector>* onsite[Nbeta];
-    MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
-    Ising()
-    {
-        interactions = new Ising_interaction<StateVector>();
-    }
-
-    StateVector creatersv(const StateVector& osv) 
-	 {
-        StateVector retval(osv);
-        retval[0] = -retval[0];
-        return  retval;
-	}
-};
-
-
-
 	 const int myid = 0;
-    RND rn(0, 1);
 
+#include "Heisenberg.h"
+#include "Ising.h"
 
-
-#include "metropolis.h"
 template <class StateSpace>
 class Observable {public: void measure(StateSpace&) {};};
 
@@ -138,15 +120,20 @@ template <class Grid, class Hamiltonian>
 class Marqov 
 {
 	public:
-	    typedef typename Hamiltonian::StateVector* StateSpace;
-	    Marqov(Grid& lattice) : ham(),  grid(lattice) {
+        typedef typename Hamiltonian::StateVector StateVector;
+	    typedef StateVector* StateSpace;
+	    Marqov(Grid& lattice) : ham(),  grid(lattice), rng(0, 1), metro(rng) {
+                	rng.seed(42);
+                    rng.seed(time(NULL));
+                    rng.set_integer_range(lattice.size());
 	        statespace = new typename Hamiltonian::StateVector[lattice.size()];
 	    }
 	    void elementaryMCstep()
 	    {
 	        for(int i = 0; i < grid.size(); ++i)
 	        {
-	            metropolisstep<StateSpace, Hamiltonian> (statespace, ham, grid);
+                const int rsite = rng.i(); // choose random site -> Move one level above
+	            metropolisstep(rsite);
 	        }
 	    }
 	    
@@ -167,9 +154,9 @@ class Marqov
 			{
 				for(int j = 0; j < grid.length; ++j)
 				{
-					int current = statespace[grid.length*i+j][0];
-					if (current == 1) cout << "o ";
-					else if (current == -1) cout << ". ";
+					double current = statespace[grid.length*i+j][0];
+					if (current > 0) cout << "o ";
+					else if (current < 0) cout << ". ";
 					else cout << "  ";
 				}
 				cout << endl;
@@ -185,9 +172,70 @@ class Marqov
 		 }
 	
 	private:
+        // Single Metropolis update step statevectors on a lattice
+// returns an integer which encodes whether the flip attempt was successful (1) or not (0)
+inline int metropolisstep(int rsite)
+{
+    StateVector& svold = statespace[rsite];
+    StateVector svnew = metro.newsv(svold);
+    
+    double interactionenergydifference = 0;
+    for(int a = 0; a < ham.Nalpha; ++a)
+    {
+        auto nbrs = grid.getnbrs(a, rsite);
+        StateVector averagevector = {0};
+
+        for (int i = 0; i < nbrs.size(); ++i)
+        {
+            auto mynbr = nbrs[i];
+            auto myvec = ham.interactions[a](statespace[mynbr]);
+            averagevector = averagevector + myvec;
+        }
+        interactionenergydifference += ham.interactions[a].J * (dot(svnew - svold, averagevector));
+    }
+
+    double onsiteenergyold = 0;
+    double onsiteenergynew = 0;
+    for (int b = 0; b < ham.Nbeta; ++b)
+    {
+        onsiteenergyold += dot(ham.onsite[b]->h, ham.onsite[b]->operator()(svold));
+        onsiteenergynew += dot(ham.onsite[b]->h, ham.onsite[b]->operator()(svnew));
+    }
+    
+    double multisiteenergyold = 0;
+    double multisiteenergynew = 0;
+    for (int g = 0; g < ham.Ngamma; ++g)
+    {
+        multisiteenergynew += ham.multisite[g]->operator()(svnew, rsite, statespace);//FIXME: think about this...
+        multisiteenergyold += ham.multisite[g]->operator()(svold, rsite, statespace);//FIXME: think about this...
+        //forgot k_gamma
+    }
+    
+    double dE = interactionenergydifference
+	 + (onsiteenergynew - onsiteenergyold);
+    + (multisiteenergynew - multisiteenergyold);
+
+
+    int retval = 0;
+    if ( dE <= 0 )
+    {
+        svold = svnew;
+        retval = 1;
+    }
+    else if (rng.d() < exp(-ham.beta*dE))
+    {
+        svold = svnew;
+        retval = 1;
+    }
+    
+    return retval;
+}
 	    StateSpace statespace;
 	    Hamiltonian ham;
 	    Grid& grid;
+        RND rng;
+        //Get the MetroInitializer from the user, It's required to have one argument left, the RNG.
+        typename Hamiltonian::template MetroInitializer<RND> metro;//C++11
 	    static constexpr uint nobs = 0;
 	    Observable<StateSpace> obs[5];
 	    static constexpr int nstep = 250;
@@ -195,15 +243,13 @@ class Marqov
 
 void wolff();
 
-
 int main()
 {
-	rn.seed(42);
-	rn.seed(time(NULL));
 
 	RegularLattice lattice(40, 2);
-	rn.set_integer_range(lattice.size());
-	Marqov<RegularLattice, Ising<double, double> > marqov(lattice);
+// 	Marqov<RegularLattice, Ising<int> > marqov(lattice);
+    
+    Marqov<RegularLattice, Heisenberg<double, double> > marqov(lattice);
 
 	marqov.init_cold();
 	marqov.print_state();
