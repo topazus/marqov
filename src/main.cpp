@@ -190,7 +190,6 @@ class Marqov
 	    static constexpr uint nobs = 0;
 	    Observable<StateSpace> obs[5];
 	    static constexpr int nstep = 250;
->>>>>>> 5fad7bf90011212009ab84e6f7aa54fbeb8d8787
 };
 
 void wolff();
