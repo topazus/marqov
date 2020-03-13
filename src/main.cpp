@@ -57,16 +57,18 @@ class MultiSite
 template <class StateVector>
 StateVector operator + (StateVector lhs,  StateVector rhs)
 {
-    StateVector res;
-    res[0] = lhs[0] + rhs[0];
+    StateVector res(lhs);
+    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    res[i] += rhs[i];
     return res;
 }
 
 template <class StateVector>
 StateVector operator - (StateVector lhs,  StateVector rhs)
 {
-    StateVector res;
-    res[0] = lhs[0] - rhs[0];
+    StateVector res(lhs);
+    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    res[i] -= rhs[i];
     return res;
 }
 
@@ -86,19 +88,19 @@ inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 #include "Heisenberg.h"
 #include "Ising.h"
 
-template <class StateSpace, typename RetType>
+template <class StateSpace>
 class Observable {
     public:
         const std::string name;
         Observable(const std::string s) : name(s) {}
-        virtual RetType measure(const StateSpace&) = 0;
+        virtual void measure(const StateSpace&) = 0;
 };
 
 template <class StateSpace, typename FPType = double>
-class Magnetization : public Observable<StateSpace, FPType> {
+class Magnetization : public Observable<StateSpace> {
     public:
-        Magnetization() : Observable("Magnetization")
-        double measure(const StateSpace& statespace) {};
+        Magnetization() : Observable<StateSpace>("Magnetization") {}
+        double measure(const StateSpace& statespace) {return 1.0;};
 };
 
 
@@ -134,26 +136,28 @@ class Marqov
 	            elementaryMCstep();
 	        
 	        for(int j = 0; j < nobs; ++j)
-	            obs[j].measure(statespace);
+	            obs[j]->measure(statespace);
 					//improve me: consider that there might be reuse across observables!
 	    }
 	
 	
 		 void print_state()
 		 {
+             for(int dim = 0; dim < 3; ++dim) {
 			for(int i = 0; i < grid.length; ++i)
 			{
 				for(int j = 0; j < grid.length; ++j)
 				{
-					const int dim = 0;
 					double current = statespace[grid.length*i+j][dim];
 
-					if (current > 0) cout << "o ";
-					else if (current < 0) cout << ". ";
-					else cout << "x  ";
+					if (current > 0.1) cout << "+ ";
+					else if (current < -0.1) cout << "- ";
+					else cout << "0 ";
 				}
 				cout << endl;
 			}
+			std::cout<<std::endl;
+             }
 		 }
 	
 		 void init_cold()
@@ -181,7 +185,7 @@ class Marqov
 	{
 	    StateVector& svold = statespace[rsite];
 	    StateVector svnew = metro.newsv(svold);
-	    
+
 	    // interaction part
 	    double interactionenergydiff = 0;
 	    for(int a = 0; a < ham.Nalpha; ++a)
@@ -254,7 +258,7 @@ class Marqov
 
 	// number of observables
 	static constexpr uint nobs = 0;
-	Observable<StateSpace> obs[5];
+	Observable<StateSpace>* obs[5];
 
 	// number of EMCS
 	static constexpr int nstep = 250;
