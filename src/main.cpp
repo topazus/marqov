@@ -102,8 +102,6 @@ class Magnetization : public Observable<StateSpace, FPType> {
 };
 
 
-
-
 template <class Grid, class Hamiltonian>
 class Marqov 
 {
@@ -125,7 +123,7 @@ class Marqov
 	    {
 	        for(int i = 0; i < grid.size(); ++i)
 	        {
-                const int rsite = rng.i(); // choose random site -> Move one level above
+                const int rsite = rng.i(); // choose random site -> Moved one level above
 	            metropolisstep(rsite);
 	        }
 	    }
