@@ -49,7 +49,7 @@ class Heisenberg
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
-		constexpr static MyFPType beta = 1.0;
+		constexpr static MyFPType beta = 1.0/0.7;
 		
 		template <typename RNG>
 		using MetroInitializer =  Heisenberg_Initializer<StateVector, RNG>; 

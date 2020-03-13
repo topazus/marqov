@@ -133,7 +133,7 @@ class Marqov
 			{
 				for(int j = 0; j < grid.length; ++j)
 				{
-					const int dim = 2;
+					const int dim = 0;
 					double current = statespace[grid.length*i+j][dim];
 
 					if (current > 0) cout << "o ";
@@ -170,7 +170,8 @@ class Marqov
 	    StateVector& svold = statespace[rsite];
 	    StateVector svnew = metro.newsv(svold);
 	    
-	    double interactionenergydifference = 0;
+	    // interaction part
+	    double interactionenergydiff = 0;
 	    for(int a = 0; a < ham.Nalpha; ++a)
 	    {
 	        auto nbrs = grid.getnbrs(a, rsite);
@@ -182,9 +183,10 @@ class Marqov
 	            auto myvec = ham.interactions[a](statespace[mynbr]);
 	            averagevector = averagevector + myvec;
 	        }
-	        interactionenergydifference += ham.interactions[a].J * (dot(svnew - svold, averagevector));
+	        interactionenergydiff += ham.interactions[a].J * (dot(svnew - svold, averagevector));
 	    }
 	
+	    // onsite energy part
 	    double onsiteenergyold = 0;
 	    double onsiteenergynew = 0;
 	    for (int b = 0; b < ham.Nbeta; ++b)
@@ -192,7 +194,9 @@ class Marqov
 	        onsiteenergyold += dot(ham.onsite[b]->h, ham.onsite[b]->operator()(svold));
 	        onsiteenergynew += dot(ham.onsite[b]->h, ham.onsite[b]->operator()(svnew));
 	    }
+
 	    
+	    // multi-site energy
 	    double multisiteenergyold = 0;
 	    double multisiteenergynew = 0;
 	    for (int g = 0; g < ham.Ngamma; ++g)
@@ -202,9 +206,9 @@ class Marqov
 	        //forgot k_gamma
 	    }
 	    
-	    double dE = interactionenergydifference
-		 + (onsiteenergynew - onsiteenergyold);
-	    + (multisiteenergynew - multisiteenergyold);
+	    double dE 	= interactionenergydiff 
+	    			+ (onsiteenergynew - onsiteenergyold) 
+				+ (multisiteenergynew - multisiteenergyold);
 	
 	
 	    int retval = 0;
@@ -247,7 +251,7 @@ class Marqov
 int main()
 {
 
-	RegularLattice lattice(40, 2);
+	RegularLattice lattice(35, 2);
 // 	Marqov<RegularLattice, Ising<int> > marqov(lattice);
     
     Marqov<RegularLattice, Heisenberg<double, double> > marqov(lattice);
