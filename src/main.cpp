@@ -1,6 +1,7 @@
 #include <array>
 #include <vector>
 #include <iostream>
+#include <string>
 #include "rndwrapper.h"
 #include "regular_lattice.h"
 #include "vectorhelpers.h"
@@ -85,8 +86,21 @@ inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 #include "Heisenberg.h"
 #include "Ising.h"
 
-template <class StateSpace>
-class Observable {public: void measure(StateSpace&) {};};
+template <class StateSpace, typename RetType>
+class Observable {
+    public:
+        const std::string name;
+        Observable(const std::string s) : name(s) {}
+        virtual RetType measure(const StateSpace&) = 0;
+};
+
+template <class StateSpace, typename FPType = double>
+class Magnetization : public Observable<StateSpace, FPType> {
+    public:
+        Magnetization() : Observable("Magnetization")
+        double measure(const StateSpace& statespace) {};
+};
+
 
 
 
@@ -233,7 +247,7 @@ class Marqov
 	Grid& grid;
 	RND rng;
 
-	//Get the MetroInitializer from the user, It's required to have one argument left, the RNG.
+	//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
 	typename Hamiltonian::template MetroInitializer<RND> metro;//C++11
 
 	// number of observables
