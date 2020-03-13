@@ -49,7 +49,7 @@ class Heisenberg
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
-		constexpr static MyFPType beta = 1.0/0.7;
+		constexpr static MyFPType beta = 1.0/0.00001;
 		
 		template <typename RNG>
 		using MetroInitializer =  Heisenberg_Initializer<StateVector, RNG>; 
@@ -62,13 +62,13 @@ class Heisenberg
 		static constexpr uint Ngamma = 0;
 
 		// requires pointers
-		Interaction<StateVector>* interactions;
-		OnSite<StateVector>* onsite[Nbeta];
+		Interaction<StateVector>* interactions[Nalpha];
+		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
 		Heisenberg()
 		{
-		    interactions = new Heisenberg_interaction<StateVector>();
+		    interactions[0] = new Heisenberg_interaction<StateVector>();
 		}
 		
 		StateVector createnewsv(const StateVector& osv) 

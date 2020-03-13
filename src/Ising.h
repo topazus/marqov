@@ -36,12 +36,12 @@ public:
     static constexpr uint Nbeta = 0;
     static constexpr uint Ngamma = 0;
     // requires pointers
-    Interaction<StateVector>* interactions;
-    OnSite<StateVector>* onsite[Nbeta];
+    Interaction<StateVector>* interactions[Nalpha];
+    OnSite<StateVector, int>* onsite[Nbeta];
     MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
     Ising()
     {
-        interactions = new Ising_interaction<StateVector>();
+        interactions[0] = new Ising_interaction<StateVector>();
     }
 
     StateVector createnewsv(const StateVector& osv) 
