@@ -30,12 +30,12 @@ class Interaction
 
 
 
-template <class StateVector>
+template <class StateVector, typename CouplingType>
 class OnSite
 {
 	public: 
-	    const StateVector h;
-	    virtual StateVector operator() (StateVector& phi) = 0;
+	    CouplingType h;
+	    virtual CouplingType operator() (StateVector& phi) = 0;
 	private:
 };
 
@@ -72,6 +72,11 @@ StateVector operator - (StateVector lhs,  StateVector rhs)
     return res;
 }
 
+inline double dot(const double& a, const double& b)
+{
+    return a*b;
+}
+
 template<class VecType>
 inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 {
@@ -87,6 +92,7 @@ inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 
 #include "Heisenberg.h"
 #include "Ising.h"
+#include "phi4.h"
 
 template <class StateSpace>
 class Observable {
@@ -196,21 +202,22 @@ class Marqov
 	        for (int i = 0; i < nbrs.size(); ++i)
 	        {
 	            auto mynbr = nbrs[i];
-	            auto myvec = ham.interactions[a](statespace[mynbr]);
+	            auto myvec = ham.interactions[a]->operator()(statespace[mynbr]);
 	            averagevector = averagevector + myvec;
 	        }
-	        interactionenergydiff += ham.interactions[a].J * (dot(svnew - svold, averagevector));
+	        interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
 	    }
 	
 	    // onsite energy part
-	    double onsiteenergyold = 0;
-	    double onsiteenergynew = 0;
+	    double onsiteenergydiff = 0;
 	    for (int b = 0; b < ham.Nbeta; ++b)
 	    {
-	        onsiteenergyold += dot(ham.onsite[b]->h, ham.onsite[b]->operator()(svold));
-	        onsiteenergynew += dot(ham.onsite[b]->h, ham.onsite[b]->operator()(svnew));
+            // compute the difference
+            auto diff = ham.onsite[b]->operator()(svnew) - ham.onsite[b]->operator()(svold);
+            // multiply the constant
+            onsiteenergydiff += dot(ham.onsite[b]->h, diff);
 	    }
-
+        
 	    
 	    // multi-site energy
 	    double multisiteenergyold = 0;
@@ -222,9 +229,7 @@ class Marqov
 	        //forgot k_gamma
 	    }
 	    
-	    double dE 	= interactionenergydiff 
-	    			+ (onsiteenergynew - onsiteenergyold) 
-				+ (multisiteenergynew - multisiteenergyold);
+	    double dE 	= interactionenergydiff + onsiteenergydiff + (multisiteenergynew - multisiteenergyold);
 	
 	
 	    int retval = 0;
@@ -261,7 +266,7 @@ class Marqov
 	Observable<StateSpace>* obs[5];
 
 	// number of EMCS
-	static constexpr int nstep = 250;
+	static constexpr int nstep = 25000;
 };
 
 int main()
@@ -270,7 +275,7 @@ int main()
 	RegularLattice lattice(35, 2);
 // 	Marqov<RegularLattice, Ising<int> > marqov(lattice);
     
-    Marqov<RegularLattice, Heisenberg<double, double> > marqov(lattice);
+    Marqov<RegularLattice, Phi4<double, double> > marqov(lattice);
 
 	marqov.init_hot();
 	marqov.print_state();
