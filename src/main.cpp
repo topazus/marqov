@@ -114,12 +114,12 @@ class Magnetization : public Observable<StateSpace> {
 int main()
 {
 
-	RegularLattice lattice(35, 2);
+	RegularLattice lattice(10, 2);
 // 	Marqov<RegularLattice, Ising<int> > marqov(lattice);
     
-	Marqov<RegularLattice, Phi4<double, double> > marqov(lattice);
+	Marqov<RegularLattice, Ising<int> > marqov(lattice);
 
-	marqov.init_hot();
+	marqov.init_cold();
 	marqov.visualize_state_2d();
 	marqov.gameloop();
 	marqov.visualize_state_2d();

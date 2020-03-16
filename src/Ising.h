@@ -1,6 +1,11 @@
 #ifndef ISING_H
 #define ISING_H
 #include <array>
+#include <tuple>
+#include <string>
+#include <functional>
+
+
 template <class StateVector>
 class Ising_interaction : public Interaction<StateVector> 
 {
@@ -22,6 +27,46 @@ public:
     StateVector newsv(const StateVector& svold) {StateVector retval(svold); retval[0]=-retval[0];return retval;};
 };
 
+class IsingMag
+{
+public:
+    std::string name;
+template <class StateSpace, class Grid>
+double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			const int N = grid.size();
+
+			double mag = 0.0;
+
+			for (int i=0; i<N; i++)
+			{
+					mag += statespace[i][0];
+			}
+
+			return mag/double(N);
+		}
+		IsingMag() : name("mag") {}
+};
+
+class IsingMag5
+{
+public:
+    std::string name;
+template <class StateSpace, class Grid>
+std::string measure(const StateSpace& statespace, const Grid& grid)
+		{
+			const int N = grid.size();
+
+			float mag = 0.0;
+
+			for (int i=0; i<N; i++)
+			{
+					mag += statespace[i][0];
+			}
+			return std::to_string(5.0*mag/float(N));
+		}
+		IsingMag5() : name("mag5") {}
+};
 
 template <typename SpinType = int>
 class Ising
@@ -42,6 +87,12 @@ public:
     Ising()
     {
         interactions[0] = new Ising_interaction<StateVector>();
+    }
+    IsingMag isingmag;
+    IsingMag5 isingmag5;
+    auto getobs()
+    {
+        return std::make_tuple(isingmag, isingmag5);
     }
 
     StateVector createnewsv(const StateVector& osv) 

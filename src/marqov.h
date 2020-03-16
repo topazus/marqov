@@ -5,11 +5,22 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <functional>
 
 using std::cout;
 using std::endl;
 using std::flush;
 
+template<typename Function, typename Object, typename Tuple, size_t ... I>
+auto _call(Function f, Object& obj, Tuple t, std::index_sequence<I ...>) {
+	return (obj.*f)(std::get<I>(t) ...);
+}
+
+template<typename Function, typename Object, typename Tuple>
+auto _call(Function f, Object& obj, Tuple t) {
+	static constexpr auto size = std::tuple_size<Tuple>::value;
+	return _call(f, obj, t, std::make_index_sequence<size>{});
+}
 
 template <class Grid, class Hamiltonian>
 class Marqov 
@@ -41,19 +52,32 @@ class Marqov
 				}
 			}
 		}
+		
+		template<size_t N = 0, typename... Ts, typename... Args>
+inline typename std::enable_if_t<N == sizeof...(Ts), void>
+marqov_measure(std::tuple<Ts...>& t, Args... args)
+{}
+
+template<size_t N = 0, typename... Ts, typename... Args>
+inline typename std::enable_if_t<N < sizeof...(Ts), void>
+marqov_measure(std::tuple<Ts...>& t, Args... args)
+{
+     auto retval = _call(
+         &std::tuple_element<N, std::tuple<Ts...> >::type::template measure<Args...>
+     , std::get<N>(t), std::make_tuple(args...) );
+	marqov_measure<N + 1, Ts...>(t, args...);
+    std::cout<<std::get<N>(t).name<<" "<<retval<<std::endl;
+}
 	    
 	    void gameloop()
 	    {
 	        for (int i = 0; i < nstep; ++i)
 		   {
 	          elementaryMCstep();
-			cout << getMagnetization() << endl;
+		auto obs = ham.getobs();
+        marqov_measure(obs, statespace, grid);
+		//improve me: consider that there might be reuse across observables!
 		}
-
-	        
-//	        for(int j = 0; j < nobs; ++j)
-//	            obs[j]->measure(statespace);
-//					//improve me: consider that there might be reuse across observables!
 	    }
 	
 	
@@ -125,7 +149,7 @@ class Marqov
 		 {
 			for(int i = 0; i < grid.size(); ++i)
 			{
-				statespace[i] = rnddir<RND, double, 3>(rng);
+//				statespace[i] = rnddir<RND, double, 3>(rng);
 			}
 		 }
 	
@@ -213,7 +237,7 @@ class Marqov
 	Observable<StateSpace>* obs[5];
 
 	// number of EMCS
-	static constexpr int nstep = 2500;
+	static constexpr int nstep = 25;
 };
 
 #endif
