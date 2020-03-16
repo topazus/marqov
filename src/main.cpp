@@ -29,7 +29,6 @@ class Interaction
 };
 
 
-
 template <class StateVector, typename CouplingType>
 class OnSite
 {
@@ -87,15 +86,15 @@ inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 
 // ---------------------------------------
 
-
-	 const int myid = 0;
-
 #include "Heisenberg.h"
 #include "Ising.h"
 #include "phi4.h"
 
+const int myid = 0;
+
 template <class StateSpace>
-class Observable {
+class Observable 
+{
     public:
         const std::string name;
         Observable(const std::string s) : name(s) {}
@@ -110,164 +109,7 @@ class Magnetization : public Observable<StateSpace> {
 };
 
 
-template <class Grid, class Hamiltonian>
-class Marqov 
-{
-	public:
-		typedef typename Hamiltonian::StateVector StateVector;
-		typedef StateVector* StateSpace;
-
-		// Constructor
-		Marqov(Grid& lattice) : ham(),  grid(lattice), rng(0, 1), metro(rng) 
-		{
-		  	rng.seed(42);
-		  	rng.seed(time(NULL));
-		  	rng.set_integer_range(lattice.size());
-		  	statespace = new typename Hamiltonian::StateVector[lattice.size()];
-		}
-
-		// Definition of an EMCS
-	    void elementaryMCstep()
-	    {
-	        for(int i = 0; i < grid.size(); ++i)
-	        {
-                const int rsite = rng.i(); // choose random site -> Moved one level above
-	            metropolisstep(rsite);
-	        }
-	    }
-	    
-	    void gameloop()
-	    {
-	        for (int i = 0; i < nstep; ++i)
-	            elementaryMCstep();
-	        
-	        for(int j = 0; j < nobs; ++j)
-	            obs[j]->measure(statespace);
-					//improve me: consider that there might be reuse across observables!
-	    }
-	
-	
-		 void print_state()
-		 {
-             for(int dim = 0; dim < 3; ++dim) {
-			for(int i = 0; i < grid.length; ++i)
-			{
-				for(int j = 0; j < grid.length; ++j)
-				{
-					double current = statespace[grid.length*i+j][dim];
-
-					if (current > 0.1) cout << "+ ";
-					else if (current < -0.1) cout << "- ";
-					else cout << "0 ";
-				}
-				cout << endl;
-			}
-			std::cout<<std::endl;
-             }
-		 }
-	
-		 void init_cold()
-		 {
-			for(int i = 0; i < grid.size(); ++i)
-			{
-				statespace[i][0] = 1;
-			}
-		 }
-
-		 void init_hot()
-		 {
-			for(int i = 0; i < grid.size(); ++i)
-			{
-				statespace[i] = rnddir<RND, double, 3>(rng);
-			}
-		 }
-	
-	private:
-
-
-	// Single Metropolis update step statevectors on a lattice
-	// returns an integer which encodes whether the flip attempt was successful (1) or not (0)
-	inline int metropolisstep(int rsite)
-	{
-	    StateVector& svold = statespace[rsite];
-	    StateVector svnew = metro.newsv(svold);
-
-	    // interaction part
-	    double interactionenergydiff = 0;
-	    for(int a = 0; a < ham.Nalpha; ++a)
-	    {
-	        auto nbrs = grid.getnbrs(a, rsite);
-	        StateVector averagevector = {0};
-	
-	        for (int i = 0; i < nbrs.size(); ++i)
-	        {
-	            auto mynbr = nbrs[i];
-	            auto myvec = ham.interactions[a]->operator()(statespace[mynbr]);
-	            averagevector = averagevector + myvec;
-	        }
-	        interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
-	    }
-	
-	    // onsite energy part
-	    double onsiteenergydiff = 0;
-	    for (int b = 0; b < ham.Nbeta; ++b)
-	    {
-            // compute the difference
-            auto diff = ham.onsite[b]->operator()(svnew) - ham.onsite[b]->operator()(svold);
-            // multiply the constant
-            onsiteenergydiff += dot(ham.onsite[b]->h, diff);
-	    }
-        
-	    
-	    // multi-site energy
-	    double multisiteenergyold = 0;
-	    double multisiteenergynew = 0;
-	    for (int g = 0; g < ham.Ngamma; ++g)
-	    {
-	        multisiteenergynew += ham.multisite[g]->operator()(svnew, rsite, statespace);//FIXME: think about this...
-	        multisiteenergyold += ham.multisite[g]->operator()(svold, rsite, statespace);//FIXME: think about this...
-	        //forgot k_gamma
-	    }
-	    
-	    double dE 	= interactionenergydiff + onsiteenergydiff + (multisiteenergynew - multisiteenergyold);
-	
-	
-	    int retval = 0;
-	    if ( dE <= 0 )
-	    {
-	        svold = svnew;
-	        retval = 1;
-	    }
-	    else if (rng.d() < exp(-ham.beta*dE))
-	    {
-	        svold = svnew;
-	        retval = 1;
-	    }
-	    
-	    return retval;
-	}
-
-
-	void wolff()
-	{
-	}
-
-
-	StateSpace statespace;
-	Hamiltonian ham;
-	Grid& grid;
-	RND rng;
-
-	//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
-	typename Hamiltonian::template MetroInitializer<RND> metro;//C++11
-
-	// number of observables
-	static constexpr uint nobs = 0;
-	Observable<StateSpace>* obs[5];
-
-	// number of EMCS
-	static constexpr int nstep = 25000;
-};
+#include "marqov.h"
 
 int main()
 {
@@ -275,11 +117,10 @@ int main()
 	RegularLattice lattice(35, 2);
 // 	Marqov<RegularLattice, Ising<int> > marqov(lattice);
     
-    Marqov<RegularLattice, Phi4<double, double> > marqov(lattice);
+	Marqov<RegularLattice, Phi4<double, double> > marqov(lattice);
 
 	marqov.init_hot();
-	marqov.print_state();
+	marqov.visualize_state();
 	marqov.gameloop();
-	cout << endl << endl;
-	marqov.print_state();
+	marqov.visualize_state();
 }
