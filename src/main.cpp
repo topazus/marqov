@@ -120,7 +120,7 @@ int main()
 	Marqov<RegularLattice, Phi4<double, double> > marqov(lattice);
 
 	marqov.init_hot();
-	marqov.visualize_state();
+	marqov.visualize_state_2d();
 	marqov.gameloop();
-	marqov.visualize_state();
+	marqov.visualize_state_2d();
 }

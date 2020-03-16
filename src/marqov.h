@@ -48,7 +48,7 @@ class Marqov
 	    }
 	
 	
-		void visualize_state(int dim=0, double threshold=0.3)
+		void visualize_state_2d(int dim=0, double threshold=0.4)
 		{
 			cout << "_";
 			for(int i = 0; i < grid.length; ++i) cout << " _";
