@@ -88,7 +88,7 @@ inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 
 #include "Heisenberg.h"
 #include "Ising.h"
-#include "phi4.h"
+#include "Phi4.h"
 
 const int myid = 0;
 

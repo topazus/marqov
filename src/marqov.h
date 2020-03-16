@@ -28,27 +28,36 @@ class Marqov
 		}
 
 		// Definition of an EMCS
-	    void elementaryMCstep()
-	    {
-	        for(int i = 0; i < grid.size(); ++i)
-	        {
-                const int rsite = rng.i(); // choose random site -> Moved one level above
-	            metropolisstep(rsite);
-	        }
-	    }
+		void elementaryMCstep()
+		{
+			const int nsweeps = 10;
+
+			for (int j=0; j<nsweeps; j++)
+			{
+				for(int i = 0; i < grid.size(); ++i)
+				{
+					const int rsite = rng.i(); // choose random site -> Moved one level above
+					metropolisstep(rsite);
+				}
+			}
+		}
 	    
 	    void gameloop()
 	    {
 	        for (int i = 0; i < nstep; ++i)
-	            elementaryMCstep();
+		   {
+	          elementaryMCstep();
+			cout << getMagnetization() << endl;
+		}
+
 	        
-	        for(int j = 0; j < nobs; ++j)
-	            obs[j]->measure(statespace);
-					//improve me: consider that there might be reuse across observables!
+//	        for(int j = 0; j < nobs; ++j)
+//	            obs[j]->measure(statespace);
+//					//improve me: consider that there might be reuse across observables!
 	    }
 	
 	
-		void visualize_state_2d(int dim=0, double threshold=0.4)
+		void visualize_state_2d(int dim=0, double threshold=0.3)
 		{
 			cout << "_";
 			for(int i = 0; i < grid.length; ++i) cout << " _";
@@ -71,6 +80,36 @@ class Marqov
 			for(int i = 0; i < grid.length; ++i) cout << " ‾";
 			cout << endl << endl;
 		}
+
+
+		double getMagnetization()
+		{
+
+			const int D = ham.SymD;
+			const int N = grid.size();
+
+			std::vector<double> totalMagComps(D,0);
+
+			for (int i=0; i<N; i++)
+			{
+				for (int j=0; j<D; j++)
+				{
+					totalMagComps[j] += statespace[i][j];
+				}
+			}
+
+			double totalMag = 0;
+
+			for (int j=0; j<D; j++) 
+			{
+				totalMag += pow(totalMagComps[j],2);
+			}
+			
+			return sqrt(totalMag)/double(N);
+		}
+
+
+				
 
 
 	
