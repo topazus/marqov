@@ -53,7 +53,7 @@ class IsingMag5
 public:
     std::string name;
 template <class StateSpace, class Grid>
-std::string measure(const StateSpace& statespace, const Grid& grid)
+int measure(const StateSpace& statespace, const Grid& grid)
 		{
 			const int N = grid.size();
 
@@ -63,7 +63,7 @@ std::string measure(const StateSpace& statespace, const Grid& grid)
 			{
 					mag += statespace[i][0];
 			}
-			return std::to_string(5.0*mag/float(N));
+			return int(5.0*mag/float(N));
 		}
 		IsingMag5() : name("mag5") {}
 };

@@ -6,6 +6,8 @@
 #include <iostream>
 #include <string>
 #include <functional>
+#include <H5Cpp.h>
+#include <H5File.h>
 
 using std::cout;
 using std::endl;
@@ -22,6 +24,25 @@ auto _call(Function f, Object& obj, Tuple t) {
 	return _call(f, obj, t, std::make_index_sequence<size>{});
 }
 
+template <typename T>
+class H5Mapper;
+
+template <>
+class H5Mapper<double>
+{
+public:
+    static constexpr double fillval = 0;
+    static auto H5Type(){return H5::PredType::NATIVE_DOUBLE;}
+};
+
+template <>
+class H5Mapper<int>
+{
+public:
+    static constexpr int fillval = 0;
+    static auto H5Type(){return H5::PredType::NATIVE_INT;}
+};
+
 template <class Grid, class Hamiltonian>
 class Marqov 
 {
@@ -29,14 +50,50 @@ class Marqov
 		typedef typename Hamiltonian::StateVector StateVector;
 		typedef StateVector* StateSpace;
 
+		template<size_t N = 0, typename... Ts>
+inline typename std::enable_if_t<N == sizeof...(Ts), void>
+marqov_createds(std::tuple<Ts...>& t)
+{}
+
+template<size_t N = 0, typename... Ts>
+inline typename std::enable_if_t<N < sizeof...(Ts), void>
+marqov_createds(std::tuple<Ts...>& t)
+{
+     int rank = 1;
+     hsize_t fdims[] = {0}; // dim sizes of ds (on disk)
+     hsize_t maxdims[] = {H5S_UNLIMITED};
+    
+    
+    H5::DataSpace mspace1(rank, fdims, maxdims);
+     typedef decltype(std::get<N>(t).template measure<decltype(statespace), Grid>(statespace, grid)) OutType;
+     H5::DSetCreatPropList cparms;
+     auto fv = H5Mapper<OutType>::fillval;
+     
+     hsize_t      chunk_dims[1] = {4096*1024/sizeof(OutType)};//4MB chunking
+     cparms.setChunk( rank, chunk_dims );
+     cparms.setDeflate(9);//Best (1-9) compression
+     cparms.setFillValue(  H5Mapper<OutType>::H5Type(), &fv);
+     dataset[N] = dump.createDataSet(std::get<N>(t).name, H5Mapper<OutType>::H5Type(), mspace1, cparms);
+     dssize[N] = 0;
+	marqov_createds<N + 1, Ts...>(t);
+}
+        
+        
 		// Constructor
-		Marqov(Grid& lattice) : ham(),  grid(lattice), rng(0, 1), metro(rng) 
+		Marqov(Grid& lattice) : ham(),  grid(lattice), rng(0, 1), metro(rng), dump("dump.h5", H5F_ACC_TRUNC )
 		{
 		  	rng.seed(42);
 		  	rng.seed(time(NULL));
 		  	rng.set_integer_range(lattice.size());
 		  	statespace = new typename Hamiltonian::StateVector[lattice.size()];
+            auto obs = ham.getobs();
+            constexpr int nobs = std::tuple_size<decltype(obs)>::value;
+            dataset = new H5::DataSet[nobs];
+            dssize = new hsize_t[nobs];
+            //Now we need to register the observables with HDF5...
+            marqov_createds(obs);
 		}
+		~Marqov() {delete [] statespace; delete [] dataset; dump.close();}
 
 		// Definition of an EMCS
 		void elementaryMCstep()
@@ -66,6 +123,17 @@ marqov_measure(std::tuple<Ts...>& t, Args... args)
          &std::tuple_element<N, std::tuple<Ts...> >::type::template measure<Args...>
      , std::get<N>(t), std::make_tuple(args...) );
 	marqov_measure<N + 1, Ts...>(t, args...);
+    //figure out how to properly append in HDF5
+    hsize_t dims[] = {1};
+    int rank = 1;
+    H5::DataSpace mspace(rank, dims, NULL);
+    ++dssize[N];
+    dataset[N].extend(&dssize[N]);
+    auto filespace = dataset[N].getSpace();
+    hsize_t start[] = {dssize[N]-1};
+    hsize_t count[] = {1};
+    filespace.selectHyperslab(H5S_SELECT_SET, count, start);
+    dataset[N].write(&retval, H5Mapper<decltype(retval)>::H5Type(), mspace, filespace);
     std::cout<<std::get<N>(t).name<<" "<<retval<<std::endl;
 }
 	    
@@ -74,8 +142,8 @@ marqov_measure(std::tuple<Ts...>& t, Args... args)
 	        for (int i = 0; i < nstep; ++i)
 		   {
 	          elementaryMCstep();
-		auto obs = ham.getobs();
-        marqov_measure(obs, statespace, grid);
+              auto obs = ham.getobs();
+              marqov_measure(obs, statespace, grid);
 		//improve me: consider that there might be reuse across observables!
 		}
 	    }
@@ -228,6 +296,9 @@ marqov_measure(std::tuple<Ts...>& t, Args... args)
 	Hamiltonian ham;
 	Grid& grid;
 	RND rng;
+    H5::H5File dump;
+    H5::DataSet* dataset;
+    hsize_t* dssize;
 
 	//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
 	typename Hamiltonian::template MetroInitializer<RND> metro;//C++11
