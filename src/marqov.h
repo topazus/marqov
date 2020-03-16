@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <functional>
+#include <type_traits>
 #include <H5Cpp.h>
 #include <H5File.h>
 
@@ -32,6 +33,7 @@ class H5Mapper<double>
 {
 public:
     static constexpr double fillval = 0;
+    static constexpr int rank = 1;
     static auto H5Type(){return H5::PredType::NATIVE_DOUBLE;}
 };
 
@@ -40,7 +42,17 @@ class H5Mapper<int>
 {
 public:
     static constexpr int fillval = 0;
+    static constexpr int rank = 1;
     static auto H5Type(){return H5::PredType::NATIVE_INT;}
+};
+
+template <typename Tp>
+class H5Mapper
+{
+public:
+    static constexpr int fillval = H5Mapper<typename Tp::value_type>::fillval;
+    static constexpr int rank = std::tuple_size<Tp>::value;
+    static auto H5Type(){return H5Mapper<typename Tp::value_type>::H5Type();}
 };
 
 template <class Grid, class Hamiltonian>
@@ -59,17 +71,17 @@ template<size_t N = 0, typename... Ts>
 inline typename std::enable_if_t<N < sizeof...(Ts), void>
 marqov_createds(std::tuple<Ts...>& t)
 {
-     int rank = 1;
-     hsize_t fdims[] = {0}; // dim sizes of ds (on disk)
-     hsize_t maxdims[] = {H5S_UNLIMITED};
+    typedef decltype(std::get<N>(t).template measure<decltype(statespace), Grid>(statespace, grid)) OutType;
+     constexpr int rank = H5Mapper<OutType>::rank;
+     hsize_t fdims[rank] = {0}; // dim sizes of ds (on disk)
+     hsize_t maxdims[rank] = {H5S_UNLIMITED};
     
     
     H5::DataSpace mspace1(rank, fdims, maxdims);
-     typedef decltype(std::get<N>(t).template measure<decltype(statespace), Grid>(statespace, grid)) OutType;
      H5::DSetCreatPropList cparms;
      auto fv = H5Mapper<OutType>::fillval;
      
-     hsize_t      chunk_dims[1] = {4096*1024/sizeof(OutType)};//4MB chunking
+     hsize_t chunk_dims[1] = {4096*1024/sizeof(OutType)};//4MB chunking
      cparms.setChunk( rank, chunk_dims );
      cparms.setDeflate(9);//Best (1-9) compression
      cparms.setFillValue(  H5Mapper<OutType>::H5Type(), &fv);
@@ -123,17 +135,18 @@ marqov_measure(std::tuple<Ts...>& t, Args... args)
          &std::tuple_element<N, std::tuple<Ts...> >::type::template measure<Args...>
      , std::get<N>(t), std::make_tuple(args...) );
 	marqov_measure<N + 1, Ts...>(t, args...);
+    typedef decltype(retval) OutType;
     //figure out how to properly append in HDF5
-    hsize_t dims[] = {1};
-    int rank = 1;
+    constexpr int rank = H5Mapper<OutType>::rank;
+    hsize_t dims[rank] = {1};
     H5::DataSpace mspace(rank, dims, NULL);
     ++dssize[N];
     dataset[N].extend(&dssize[N]);
     auto filespace = dataset[N].getSpace();
-    hsize_t start[] = {dssize[N]-1};
-    hsize_t count[] = {1};
+    hsize_t start[rank] = {dssize[N]-1};
+    hsize_t count[rank] = {1};
     filespace.selectHyperslab(H5S_SELECT_SET, count, start);
-    dataset[N].write(&retval, H5Mapper<decltype(retval)>::H5Type(), mspace, filespace);
+    dataset[N].write(&retval, H5Mapper<OutType>::H5Type(), mspace, filespace);
     std::cout<<std::get<N>(t).name<<" "<<retval<<std::endl;
 }
 	    
