@@ -2,7 +2,23 @@
 #define HEISENBERG_H
 #include <array>
 #include <cmath>
+#include <string>
+#include <functional>
 #include "vectorhelpers.h"
+
+
+
+class HeisenbergMag
+{
+	public:
+		std::string name;
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			return 0.0; // implement me!
+		}
+		HeisenbergMag() : name("m") {}
+};
 
 
 
@@ -49,7 +65,7 @@ class Heisenberg
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
-		constexpr static MyFPType beta = 1.0/0.00001;
+		constexpr static MyFPType beta = 1.0/0.6;
 		
 		template <typename RNG>
 		using MetroInitializer =  Heisenberg_Initializer<StateVector, RNG>; 
@@ -70,6 +86,10 @@ class Heisenberg
 		{
 		    interactions[0] = new Heisenberg_interaction<StateVector>();
 		}
+
+		HeisenbergMag obs_m;
+
+		auto getobs() { return std::make_tuple(obs_m); }
 		
 		StateVector createnewsv(const StateVector& osv) 
 		{

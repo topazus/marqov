@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <H5Cpp.h>
 #include <H5File.h>
+#include <unistd.h> // provides usleep
 
 using std::cout;
 using std::endl;
@@ -110,7 +111,7 @@ marqov_createds(std::tuple<Ts...>& t)
 		// Definition of an EMCS
 		void elementaryMCstep()
 		{
-			const int nsweeps = 10;
+			const int nsweeps = 3;
 
 			for (int j=0; j<nsweeps; j++)
 			{
@@ -150,17 +151,32 @@ marqov_measure(std::tuple<Ts...>& t, Args... args)
 //    std::cout<<std::get<N>(t).name<<" "<<retval<<std::endl;
 }
 	    
-	    void gameloop()
-	    {
-	        for (int i = 0; i < nstep; ++i)
-		   {
-	          elementaryMCstep();
-              auto obs = ham.getobs();
-              marqov_measure(obs, statespace, grid);
-		//improve me: consider that there might be reuse across observables!
+	    	void gameloop(int nsteps)
+		{
+			for (int i = 0; i < nsteps; ++i)
+			{
+				elementaryMCstep();
+				auto obs = ham.getobs();
+				marqov_measure(obs, statespace, grid);
+			}
 		}
-	    }
 	
+
+		// use carefully, might generate a lot of terminal output
+	    	void gameloop_liveview(int nframes = 100, int nsweepsbetweenframe = 5)
+		{
+			for (int i = 0; i < nframes; ++i)
+			{
+
+				for (int j=0; j<nsweepsbetweenframe; j++) elementaryMCstep();
+					
+				unsigned int microsec = 30000; 
+				usleep(microsec);
+				system("tput reset");
+				
+				visualize_state_2d();
+			}
+		}
 	
 		void visualize_state_2d(int dim=0, double threshold=0.3)
 		{
@@ -222,7 +238,7 @@ marqov_measure(std::tuple<Ts...>& t, Args... args)
 		 {
 			for(int i = 0; i < grid.size(); ++i)
 			{
-				statespace[i][0] = 1;
+				statespace[i][0] = -1;
 			}
 		 }
 
