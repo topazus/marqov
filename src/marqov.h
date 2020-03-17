@@ -147,7 +147,7 @@ marqov_measure(std::tuple<Ts...>& t, Args... args)
     hsize_t count[rank] = {1};
     filespace.selectHyperslab(H5S_SELECT_SET, count, start);
     dataset[N].write(&retval, H5Mapper<OutType>::H5Type(), mspace, filespace);
-    std::cout<<std::get<N>(t).name<<" "<<retval<<std::endl;
+//    std::cout<<std::get<N>(t).name<<" "<<retval<<std::endl;
 }
 	    
 	    void gameloop()
@@ -321,7 +321,7 @@ marqov_measure(std::tuple<Ts...>& t, Args... args)
 	Observable<StateSpace>* obs[5];
 
 	// number of EMCS
-	static constexpr int nstep = 25;
+	static constexpr int nstep = 250;
 };
 
 #endif

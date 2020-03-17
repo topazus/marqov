@@ -45,10 +45,10 @@ double measure(const StateSpace& statespace, const Grid& grid)
 
 			return mag/double(N);
 		}
-		IsingMag() : name("mag") {}
+		IsingMag() : name("m") {}
 };
 
-class IsingMag5
+class IsingMagSquare
 {
 public:
     std::string name;
@@ -61,11 +61,11 @@ int measure(const StateSpace& statespace, const Grid& grid)
 
 			for (int i=0; i<N; i++)
 			{
-					mag += statespace[i][0];
+					mag += pow(statespace[i][0],2);
 			}
-			return int(5.0*mag/float(N));
+			return mag/double(N);
 		}
-		IsingMag5() : name("mag5") {}
+		IsingMagSquare() : name("m2") {}
 };
 
 template <typename SpinType = int>
@@ -88,11 +88,11 @@ public:
     {
         interactions[0] = new Ising_interaction<StateVector>();
     }
-    IsingMag isingmag;
-    IsingMag5 isingmag5;
+    IsingMag       obs_m;
+    IsingMagSquare obs_m2;
     auto getobs()
     {
-        return std::make_tuple(isingmag, isingmag5);
+        return std::make_tuple(obs_m, obs_m2);
     }
 
     StateVector createnewsv(const StateVector& osv) 
