@@ -93,7 +93,7 @@ marqov_createds(std::tuple<Ts...>& t)
         
         
 		// Constructor
-		Marqov(Grid& lattice) : ham(),  grid(lattice), rng(0, 1), metro(rng), dump("dump.h5", H5F_ACC_TRUNC )
+		Marqov(Grid& lattice, double mybeta) : ham(mybeta),  grid(lattice), rng(0, 1), metro(rng), dump("dump.h5", H5F_ACC_TRUNC )
 		{
 		  	rng.seed(42);
 		  	rng.seed(time(NULL));

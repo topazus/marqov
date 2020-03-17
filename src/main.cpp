@@ -114,16 +114,16 @@ class Magnetization : public Observable<StateSpace> {
 int main()
 {
 
-	RegularLattice lattice(35, 2);
+	RegularLattice lattice(30, 2);
     
-	Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice);
-//	Marqov<RegularLattice, Ising<int> > marqov(lattice);
+//	Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice);
+	Marqov<RegularLattice, Ising<int> > marqov(lattice, 1/3.869);
 
 	marqov.init_cold();
 //	marqov.visualize_state_2d();
 
 	cout << endl << "Equilibrating ... " << endl;
-	marqov.gameloop(150);
+	marqov.gameloop(100);
 	marqov.gameloop_liveview(1000,1);
 
 //	marqov.visualize_state_2d();
