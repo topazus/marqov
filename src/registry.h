@@ -40,7 +40,7 @@ The basic Exception thrown by the registry. It is derived from the STL logic_err
 class Registry_Exception : public std::logic_error
 {
 public:
-    explicit Registry_Exception(const std::string& what_arg) throw(): std::logic_error(what_arg) {}
+    explicit Registry_Exception(const std::string& what_arg) throw() : std::logic_error(what_arg) {}
 private:
 };
 
@@ -50,7 +50,7 @@ The Exception when the desired key is not found
 class Registry_Key_not_found_Exception : public Registry_Exception
 {
 public:
-    explicit Registry_Key_not_found_Exception(const std::string& what_arg) throw(): Registry_Exception(what_arg) {}
+    explicit Registry_Key_not_found_Exception(const std::string& what_arg) throw() : Registry_Exception(what_arg) {}
 private:
 };
 
@@ -58,7 +58,7 @@ class Registry_Block_Data_not_found_Exception : public Registry_Key_not_found_Ex
 {
 public:
     const std::string block_key;
-    explicit Registry_Block_Data_not_found_Exception(const std::string& key_value) throw(): Registry_Key_not_found_Exception(std::string("Block Key not found: ") + key_value), block_key(key_value) {}
+    explicit Registry_Block_Data_not_found_Exception(const std::string& key_value) throw() : Registry_Key_not_found_Exception(std::string("Block Key not found: ") + key_value), block_key(key_value) {}
     ~Registry_Block_Data_not_found_Exception() throw() {}
 private:
 };
@@ -67,7 +67,7 @@ class Registry_Block_not_found_Exception : public Registry_Key_not_found_Excepti
 {
 public:
     const std::string block;
-    explicit Registry_Block_not_found_Exception(const std::string& key_value) throw(): Registry_Key_not_found_Exception(std::string("Block not found: ") + key_value), block(key_value) {}
+    explicit Registry_Block_not_found_Exception(const std::string& key_value) throw() : Registry_Key_not_found_Exception(std::string("Block not found: ") + key_value), block(key_value) {}
     ~Registry_Block_not_found_Exception() throw() {}
 private:
 };
@@ -107,13 +107,13 @@ public:
     {
         return Block_Data[Bn];
     }
-    std::string& find(const std::string& key) throw(Registry_Block_Data_not_found_Exception)
+    std::string& find(const std::string& key)
     {
         std::map<std::string , std::string >::iterator it = Block_Data.find(key);
         if (it == Block_Data.end()) throw(Registry_Block_Data_not_found_Exception(key));
         return it->second;
     }
-    const std::string& find(const std::string& key) const throw(Registry_Block_Data_not_found_Exception)
+    const std::string& find(const std::string& key) const
     {
         std::map<std::string , std::string >::const_iterator it = Block_Data.find(key);
         if (it == Block_Data.end()) throw(Registry_Block_Data_not_found_Exception(key));
@@ -138,13 +138,13 @@ public:
     {
         return cfgfile[a];
     }
-    Block& find(const std::string& key) throw(Registry_Block_not_found_Exception)
+    Block& find(const std::string& key)
     {
         std::map<std::string , Block>::iterator it = cfgfile.find(key);
         if ( it == cfgfile.end()) throw(Registry_Block_not_found_Exception(key));
         return it->second;
     }
-    const Block& find(const std::string& key) const throw(Registry_Block_not_found_Exception)
+    const Block& find(const std::string& key) const
     {
         std::map<std::string , Block>::const_iterator it = cfgfile.find(key);
         if ( it == cfgfile.end()) throw(Registry_Block_not_found_Exception(key));
@@ -190,7 +190,7 @@ public:
     @return the requested key
     */
     template < typename T >
-    inline T Get(const std::string& file, const std::string& block, const std::string& key) const throw(Registry_Key_not_found_Exception);
+    inline T Get(const std::string& file, const std::string& block, const std::string& key) const;
     template <typename T>
     inline T set(const std::string& file, const std::string& block, const std::string& key, T val);
 };
@@ -236,7 +236,7 @@ struct SetTrait
 };
 
 template < typename T >
-inline T RegistryDB::Get(const std::string& file, const std::string& block, const std::string& Key) const throw(Registry_Key_not_found_Exception)
+inline T RegistryDB::Get(const std::string& file, const std::string& block, const std::string& Key) const
 {
     typedef GetTrait<T> Trait;
     std::map<std::string , cfile>::const_iterator tempkey = Reg.find(file);

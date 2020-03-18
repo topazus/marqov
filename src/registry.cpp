@@ -68,7 +68,7 @@ Block::Block(std::string blockname, const std::vector<std::string>& block) : Blo
     return;
 }
 
-inline pair<string , unsigned int > FindNextBracketPair(vector<string>& file , unsigned int pos ) throw(runtime_error)
+inline pair<string , unsigned int > FindNextBracketPair(vector<string>& file , unsigned int pos )
 {
     for (unsigned int k = pos; k < file.size(); ++k )
     {
