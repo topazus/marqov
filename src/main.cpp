@@ -5,6 +5,7 @@
 #include "rndwrapper.h"
 #include "regular_lattice.h"
 #include "vectorhelpers.h"
+#include "registry.h"
 
 using std::cout;
 using std::endl;
@@ -92,27 +93,11 @@ inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 
 const int myid = 0;
 
-template <class StateSpace>
-class Observable 
-{
-    public:
-        const std::string name;
-        Observable(const std::string s) : name(s) {}
-        virtual void measure(const StateSpace&) = 0;
-};
-
-template <class StateSpace, typename FPType = double>
-class Magnetization : public Observable<StateSpace> {
-    public:
-        Magnetization() : Observable<StateSpace>("Magnetization") {}
-        double measure(const StateSpace& statespace) {return 1.0;};
-};
-
-
 #include "marqov.h"
 #include <cstdlib>
 int main()
 {
+    RegistryD registry("./cfgs");
 
 	RegularLattice lattice(30, 2);
     
