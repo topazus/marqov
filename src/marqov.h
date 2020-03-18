@@ -101,11 +101,11 @@ class Marqov
         
         
 		// Constructor
-		Marqov(Grid& lattice, double mybeta)  : ham(mybeta),  
-										grid(lattice), 
-										rng(0, 1), 
-										metro(rng), 
-										dump("dump.h5", H5F_ACC_TRUNC )
+		Marqov(Grid& lattice, double mybeta, std::string outfile) : ham(mybeta),  
+													grid(lattice), 
+													rng(0, 1), 
+													metro(rng), 
+													dump(outfile, H5F_ACC_TRUNC )
 		{
 			rng.seed(42);
 			rng.seed(time(NULL));

@@ -97,19 +97,18 @@ const int myid = 0;
 #include <cstdlib>
 int main()
 {
-    RegistryDB registry("./cfgs");
+
+	//RegistryDB registry("./cfgs");
 
 	RegularLattice lattice(30, 2);
     
-//	Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice);
-	Marqov<RegularLattice, Ising<int> > marqov(lattice, 1/3.869);
+	std::string outfile = "output.h5";
+	Marqov<RegularLattice, Ising<int> > marqov(lattice, 1/2.2, outfile);
 
 	marqov.init_cold();
-//	marqov.visualize_state_2d();
-
 	cout << endl << "Equilibrating ... " << endl;
 	marqov.gameloop(100);
-	marqov.gameloop_liveview(1000,1);
+	marqov.gameloop_liveview(500,1);
 
 //	marqov.visualize_state_2d();
 }
