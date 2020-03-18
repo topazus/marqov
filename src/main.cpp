@@ -97,7 +97,7 @@ const int myid = 0;
 #include <cstdlib>
 int main()
 {
-    RegistryD registry("./cfgs");
+    //RegistryDB registry("./cfgs");
 
 	RegularLattice lattice(30, 2);
     

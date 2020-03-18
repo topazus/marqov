@@ -318,10 +318,6 @@ class Marqov
 	//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
 	typename Hamiltonian::template MetroInitializer<RND> metro;//C++11
 
-	// number of observables
-	static constexpr uint nobs = 0;
-	Observable<StateSpace>* obs[5];
-
 	// number of EMCS
 	static constexpr int nstep = 250;
 };
