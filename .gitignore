@@ -1,4 +1,4 @@
 build/
+src/build
 *.swp
 a.out
-../build/
