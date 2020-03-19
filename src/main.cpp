@@ -96,6 +96,13 @@ inline void reflect(StateVector& vec, const StateVector mirror)
 	for (int i=0; i<SymD; i++) vec[i] -= 2*dotp*mirror[i];
 }	
 
+template <class Container>
+inline void normalize(Container& a)
+{
+	typename Container::value_type tmp_abs=std::sqrt(dot(a, a));
+
+	for (int i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
+}
 
 
 
@@ -112,9 +119,9 @@ int main()
 {
 	//RegistryDB registry("./cfgs");
 
-	int nbeta = 10;
+	int nbeta = 1;
 
-	double betastart = 0.2;
+	double betastart = 1.0;
 	double betaend   = 1.8;
 
 	double betastep = (betaend - betastart) / double(nbeta);

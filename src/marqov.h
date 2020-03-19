@@ -123,18 +123,24 @@ class Marqov
 		// Destructor
 		~Marqov() {delete [] statespace; delete [] dataset; dump.close();}
 
-		// Definition of an EMCS
+
+
+		// ----------------------- Definition of an EMCS ---------------------------
+
 		void elementaryMCstep()
 		{
 
-			/*
+cout << ".";
+//			/*
 			const int SymD = std::tuple_size<StateVector>::value;
-			const auto rndir = rnddir<RND, double, SymD>(rng);
-			const int rsite = rng.i(); // choose random site -> Moved one level above
+			const auto rdir = rnddir<RND, double, SymD>(rng);
+			const int rsite = rng.i();
+
 			wolffstep(rsite, rdir);
-			*/
+//			*/
 
 
+cout << ",";
 			const int nsweeps = 3;
 
 			for (int j=0; j<nsweeps; j++)
@@ -147,6 +153,8 @@ class Marqov
 			}
 		}
 		
+		// -------------------------------------------------------------------------
+
 		template<size_t N = 0, typename... Ts, typename... Args>
 		inline typename std::enable_if_t<N == sizeof...(Ts), void>
 		marqov_measure(std::tuple<Ts...>& t, Args... args) {}
@@ -235,6 +243,7 @@ class Marqov
 
 
 	
+		 // only for the Ising model so far!
 		 void init_cold()
 		 {
 			for(int i = 0; i < grid.size(); ++i)
@@ -245,9 +254,10 @@ class Marqov
 
 		 void init_hot()
 		 {
+		 	const int SymD = std::tuple_size<StateVector>::value;
 			for(int i = 0; i < grid.size(); ++i)
 			{
-				statespace[i] = rnddir<RND, double, 3>(rng);
+				statespace[i] = rnddir<RND, double, SymD>(rng);
 			}
 		 }
 	
@@ -256,13 +266,14 @@ class Marqov
 
 
 
-	inline int wolffstep(int rsite, StateVector rnddir)
+//	inline int wolffstep(int rsite, StateVector rdir)
+	int wolffstep(int rsite, StateVector rdir)
 	{
-		std::vector<int> cstack(statespace.size(), 0);
+		std::vector<int> cstack(grid.size(), 0);
 
 		int q = 0;
 
-		reflect(statespace[rsite], rnddir);
+		reflect(statespace[rsite], rdir);
 
 		cstack[q] = rsite;
 
@@ -273,19 +284,18 @@ class Marqov
 		{
 			current = cstack[q];
 			q--;
-
-			const double proj1 = dot(statespace[current], rnddir);
+			
+			const double proj1 = dot(statespace[current], rdir);
 
 			int a = 0; // to be replaced by loop over Nalpha
-			auto nbrs = grid.getnbrs(a, rsite);
+			const auto nbrs = grid.getnbrs(a, rsite);
 
 			for (int i = 0; i < nbrs.size(); ++i)
 			{
-				
 				const auto mynbr = nbrs[i];
-				const auto myvec = ham.interactions[a]->operator()(statespace[mynbr]);
+				auto myvec = ham.interactions[a]->operator()(statespace[mynbr]);
 
-				const double proj2 = dot(myvec, rnddir);
+				const double proj2 = dot(myvec, rdir);
 
 				if (proj1*proj2 < 0)
 				{
@@ -294,14 +304,23 @@ class Marqov
 					if (rng.d() < prob)
 					{
 						q++;
+						cout << " >> " << q << "  " << cstack.size() << "   " << clustersize << endl;
 						cstack[q] = mynbr;
 						clustersize++;
 
-						reflect(myvec,rnddir);
+						cout << myvec[0] << " " << myvec[1] << " " << myvec[2] << endl;
+						cout << dot(myvec, rdir) << endl;
+						reflect(myvec, rdir);
+						cout << myvec[0] << " " << myvec[1] << " " << myvec[2] << endl;
+						cout << dot(myvec, rdir) << endl;
+
+						normalize(myvec); // necessary?
 					}
 				}
 			}
 		}
+
+		return 1.0*clustersize/grid.size();
 	}
 
 
