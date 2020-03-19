@@ -15,7 +15,13 @@ class HeisenbergMag
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			return 0.0; // implement me!
+			const int N = grid.size();
+			double mag = 0;
+			for (int i=0; i<N; i++)
+			{
+				mag += sqrt(pow(statespace[i][0],2) + pow(statespace[i][1],2) + pow(statespace[i][2],2));
+			}
+			return mag/double(N);
 		}
 		HeisenbergMag() : name("m") {}
 };
@@ -62,10 +68,11 @@ template <typename SpinType, typename MyFPType>
 class Heisenberg
 {
 	public:
+
+		double beta;
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
-		constexpr static MyFPType beta = 1.0/0.6;
 		
 		template <typename RNG>
 		using MetroInitializer =  Heisenberg_Initializer<StateVector, RNG>; 
@@ -82,10 +89,7 @@ class Heisenberg
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Heisenberg()
-		{
-		    interactions[0] = new Heisenberg_interaction<StateVector>();
-		}
+		Heisenberg(double mybeta) : beta(mybeta) {   interactions[0] = new Heisenberg_interaction<StateVector>(); }
 
 		HeisenbergMag obs_m;
 
