@@ -126,6 +126,15 @@ class Marqov
 		// Definition of an EMCS
 		void elementaryMCstep()
 		{
+
+			/*
+			const int SymD = std::tuple_size<StateVector>::value;
+			const auto rndir = rnddir<RND, double, SymD>(rng);
+			const int rsite = rng.i(); // choose random site -> Moved one level above
+			wolffstep(rsite, rdir);
+			*/
+
+
 			const int nsweeps = 3;
 
 			for (int j=0; j<nsweeps; j++)
@@ -176,6 +185,13 @@ class Marqov
 			}
 		}
 	
+	    	void warmuploop(int nsteps)
+		{
+			for (int i = 0; i < nsteps; ++i)
+			{
+				elementaryMCstep();
+			}
+		}
 
 		// use carefully, might generate a lot of terminal output
 	    	void gameloop_liveview(int nframes = 100, int nsweepsbetweenframe = 5)
@@ -236,6 +252,58 @@ class Marqov
 		 }
 	
 	private:
+
+
+
+
+	inline int wolffstep(int rsite, StateVector rnddir)
+	{
+		std::vector<int> cstack(statespace.size(), 0);
+
+		int q = 0;
+
+		reflect(statespace[rsite], rnddir);
+
+		cstack[q] = rsite;
+
+		int clustersize = 1;
+		int current = 0;
+
+		while (q>=0)
+		{
+			current = cstack[q];
+			q--;
+
+			const double proj1 = dot(statespace[current], rnddir);
+
+			int a = 0; // to be replaced by loop over Nalpha
+			auto nbrs = grid.getnbrs(a, rsite);
+
+			for (int i = 0; i < nbrs.size(); ++i)
+			{
+				
+				const auto mynbr = nbrs[i];
+				const auto myvec = ham.interactions[a]->operator()(statespace[mynbr]);
+
+				const double proj2 = dot(myvec, rnddir);
+
+				if (proj1*proj2 < 0)
+				{
+					const double prob = 1.0 - exp(2.0*ham.beta*proj1*proj2);
+
+					if (rng.d() < prob)
+					{
+						q++;
+						cstack[q] = mynbr;
+						clustersize++;
+
+						reflect(myvec,rnddir);
+					}
+				}
+			}
+		}
+	}
+
 
 
 	// Single Metropolis update step statevectors on a lattice
