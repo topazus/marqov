@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <cstdlib>
 #include "rndwrapper.h"
 #include "regular_lattice.h"
 #include "vectorhelpers.h"
@@ -85,6 +86,19 @@ inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 }
 
 
+template <class StateVector>
+inline void reflect(StateVector& vec, const StateVector mirror)
+{
+	const int SymD = std::tuple_size<StateVector>::value;
+	
+	const double dotp = dot(vec,mirror);
+
+	for (int i=0; i<SymD; i++) vec[i] -= 2*dotp*mirror[i];
+}	
+
+
+
+
 // ---------------------------------------
 
 #include "Heisenberg.h"
@@ -94,21 +108,37 @@ inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 const int myid = 0;
 
 #include "marqov.h"
-#include <cstdlib>
 int main()
 {
-
 	//RegistryDB registry("./cfgs");
 
-	RegularLattice lattice(30, 2);
+	int nbeta = 10;
+
+	double betastart = 0.2;
+	double betaend   = 1.8;
+
+	double betastep = (betaend - betastart) / double(nbeta);
+
+	for (int i=0; i<nbeta; i++)
+	{
+
+		double currentbeta = betastart + i*betastep; 
+		cout << "beta = " << currentbeta << endl;
+
+
+		RegularLattice lattice(24, 3);
+	
     
-	std::string outfile = "output.h5";
-	Marqov<RegularLattice, Ising<int> > marqov(lattice, 1/2.2, outfile);
+		std::string outfile = std::to_string(i)+".h5";
+//		Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
+		Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, currentbeta, outfile);
 
-	marqov.init_cold();
-	cout << endl << "Equilibrating ... " << endl;
-	marqov.gameloop(100);
-	marqov.gameloop_liveview(500,1);
+//		marqov.init_cold();
+		marqov.init_hot();
+		marqov.warmuploop(100);
+		marqov.gameloop(50);
 
-//	marqov.visualize_state_2d();
+	}
+	//marqov.gameloop_liveview(500,1);
+	//marqov.visualize_state_2d();
 }
