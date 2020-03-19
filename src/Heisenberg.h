@@ -15,13 +15,25 @@ class HeisenbergMag
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			const int N = grid.size();
-			double mag = 0;
+			constexpr static int SymD = 3;	// improve me
+			const     static int N = grid.size();
+
+			std::vector<double> mag(SymD,0) ;
+
 			for (int i=0; i<N; i++)
 			{
-				mag += sqrt(pow(statespace[i][0],2) + pow(statespace[i][1],2) + pow(statespace[i][2],2));
+				for (int j=0; j<SymD; j++)
+				{
+					mag[j] += statespace[i][j];
+				}
 			}
-			return mag/double(N);
+			
+			double retval = 0;
+			for (int j=0; j<SymD; j++)
+			{
+				retval += mag[j]*mag[j];
+			}
+			return sqrt(retval)/double(N);
 		}
 		HeisenbergMag() : name("m") {}
 };
