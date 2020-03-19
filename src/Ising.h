@@ -30,50 +30,6 @@ class IsingMag
 		IsingMag() : name("m") {}
 };
 
-// Squared magnetization
-class IsingMagSquare
-{
-	public:
-		std::string name;
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			const int N = grid.size();
-
-			float mag = 0.0;
-
-			for (int i=0; i<N; i++)
-			{
-					mag += pow(statespace[i][0],2);
-			}
-			return mag/double(N);
-		}
-		IsingMagSquare() : name("m2") {}
-};
-
-
-// Fourth power of magnetization
-class IsingMagFour
-{
-	public:
-		std::string name;
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			const int N = grid.size();
-
-			float mag = 0.0;
-
-			for (int i=0; i<N; i++)
-			{
-					mag += pow(statespace[i][0],2);
-			}
-			return mag/double(N);
-		}
-		IsingMagFour() : name("m4") {}
-};
-
-
 
 // ----------------------------------------------------------------------
 
@@ -137,11 +93,9 @@ class Ising
 	
 		// instantiate and choose observables
 		IsingMag       obs_m;
-		IsingMagSquare obs_m2;
-		IsingMagFour   obs_m4;
 		auto getobs()
 		{
-			return std::make_tuple(obs_m, obs_m2, obs_m4);
+			return std::make_tuple(obs_m);
 		}
 	
 };
