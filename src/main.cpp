@@ -119,10 +119,10 @@ int main()
 {
 	//RegistryDB registry("./cfgs");
 
-	int nbeta = 1;
+	int nbeta = 15;
 
-	double betastart = 1.0;
-	double betaend   = 1.8;
+	double betastart = 0.6;
+	double betaend   = 2.2;
 
 	double betastep = (betaend - betastart) / double(nbeta);
 
@@ -133,7 +133,7 @@ int main()
 		cout << "beta = " << currentbeta << endl;
 
 
-		RegularLattice lattice(24, 3);
+		RegularLattice lattice(16, 3);
 	
     
 		std::string outfile = std::to_string(i)+".h5";
@@ -143,7 +143,7 @@ int main()
 //		marqov.init_cold();
 		marqov.init_hot();
 		marqov.warmuploop(100);
-		marqov.gameloop(50);
+		marqov.gameloop(100);
 
 	}
 	//marqov.gameloop_liveview(500,1);

@@ -130,18 +130,14 @@ class Marqov
 		void elementaryMCstep()
 		{
 
-cout << ".";
-//			/*
 			const int SymD = std::tuple_size<StateVector>::value;
 			const auto rdir = rnddir<RND, double, SymD>(rng);
 			const int rsite = rng.i();
 
 			wolffstep(rsite, rdir);
-//			*/
 
 
-cout << ",";
-			const int nsweeps = 3;
+			const int nsweeps = 1;
 
 			for (int j=0; j<nsweeps; j++)
 			{
@@ -293,7 +289,8 @@ cout << ",";
 			for (int i = 0; i < nbrs.size(); ++i)
 			{
 				const auto mynbr = nbrs[i];
-				auto myvec = ham.interactions[a]->operator()(statespace[mynbr]);
+//				auto myvec = ham.interactions[a]->operator()(statespace[mynbr]);
+				StateVector& myvec = statespace[mynbr];
 
 				const double proj2 = dot(myvec, rdir);
 
@@ -304,16 +301,21 @@ cout << ",";
 					if (rng.d() < prob)
 					{
 						q++;
-						cout << " >> " << q << "  " << cstack.size() << "   " << clustersize << endl;
+//						cout << endl;
+//						cout << " >> " << q << "  " << cstack.size() << "   " << clustersize << endl;
+//						cout << endl;
 						cstack[q] = mynbr;
 						clustersize++;
 
-						cout << myvec[0] << " " << myvec[1] << " " << myvec[2] << endl;
-						cout << dot(myvec, rdir) << endl;
+//						cout << myvec[0] << " " << myvec[1] << " " << myvec[2] << endl;
+//						cout << statespace[mynbr][0] << " " << statespace[mynbr][1] << " " << statespace[mynbr][2] << endl;
+//						cout << dot(myvec, rdir) << endl;
 						reflect(myvec, rdir);
-						cout << myvec[0] << " " << myvec[1] << " " << myvec[2] << endl;
-						cout << dot(myvec, rdir) << endl;
-
+//						cout << myvec[0] << " " << myvec[1] << " " << myvec[2] << endl;
+//						cout << statespace[mynbr][0] << " " << statespace[mynbr][1] << " " << statespace[mynbr][2] << endl;
+//						cout << dot(myvec, rdir) << endl;
+//						cout << dot(myvec, rdir) << endl;
+//
 						normalize(myvec); // necessary?
 					}
 				}
