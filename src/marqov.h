@@ -127,26 +127,35 @@ class Marqov
 
 		// ----------------------- Definition of an EMCS ---------------------------
 
-		void elementaryMCstep()
+		double elementaryMCstep()
 		{
 
+			const int nwolff  = 100;
+			const int nsweeps = 5;
+
 			const int SymD = std::tuple_size<StateVector>::value;
-			const auto rdir = rnddir<RND, double, SymD>(rng);
-			const int rsite = rng.i();
 
-			wolffstep(rsite, rdir);
+			// Wolff
+			double avgclustersize = 0;
+			for (int j=0; j<nwolff; j++)
+			{
+				const auto rdir = rnddir<RND, double, SymD>(rng);
+				const int rsite = rng.i();
+				avgclustersize += wolffstep(rsite, rdir);
+			}
 
 
-			const int nsweeps = 1;
-
+			// Metropolis
 			for (int j=0; j<nsweeps; j++)
 			{
 				for(int i = 0; i < grid.size(); ++i)
 				{
-					const int rsite = rng.i(); // choose random site -> Moved one level above
+					const int rsite = rng.i();
 					metropolisstep(rsite);
 				}
 			}
+
+			return avgclustersize/nwolff;
 		}
 		
 		// -------------------------------------------------------------------------
@@ -181,12 +190,14 @@ class Marqov
 	    
 	    	void gameloop(int nsteps)
 		{
+			double avgclustersize = 0;
 			for (int i = 0; i < nsteps; ++i)
 			{
-				elementaryMCstep();
+				avgclustersize += elementaryMCstep();
 				auto obs = ham.getobs();
 				marqov_measure(obs, statespace, grid);
 			}
+			cout << avgclustersize/nsteps << endl;
 		}
 	
 	    	void warmuploop(int nsteps)
@@ -196,6 +207,7 @@ class Marqov
 				elementaryMCstep();
 			}
 		}
+
 
 		// use carefully, might generate a lot of terminal output
 	    	void gameloop_liveview(int nframes = 100, int nsweepsbetweenframe = 5)
@@ -262,9 +274,9 @@ class Marqov
 
 
 
-//	inline int wolffstep(int rsite, StateVector rdir)
 	int wolffstep(int rsite, StateVector rdir)
 	{
+
 		std::vector<int> cstack(grid.size(), 0);
 
 		int q = 0;
@@ -301,28 +313,31 @@ class Marqov
 					if (rng.d() < prob)
 					{
 						q++;
+
 //						cout << endl;
 //						cout << " >> " << q << "  " << cstack.size() << "   " << clustersize << endl;
 //						cout << endl;
+
 						cstack[q] = mynbr;
 						clustersize++;
 
 //						cout << myvec[0] << " " << myvec[1] << " " << myvec[2] << endl;
 //						cout << statespace[mynbr][0] << " " << statespace[mynbr][1] << " " << statespace[mynbr][2] << endl;
 //						cout << dot(myvec, rdir) << endl;
+
 						reflect(myvec, rdir);
+
 //						cout << myvec[0] << " " << myvec[1] << " " << myvec[2] << endl;
 //						cout << statespace[mynbr][0] << " " << statespace[mynbr][1] << " " << statespace[mynbr][2] << endl;
 //						cout << dot(myvec, rdir) << endl;
-//						cout << dot(myvec, rdir) << endl;
-//
+
 						normalize(myvec); // necessary?
 					}
 				}
 			}
 		}
 
-		return 1.0*clustersize/grid.size();
+		return clustersize;
 	}
 
 

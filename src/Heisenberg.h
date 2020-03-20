@@ -107,8 +107,5 @@ class Heisenberg
 
 		auto getobs() { return std::make_tuple(obs_m); }
 		
-		StateVector createnewsv(const StateVector& osv) 
-		{
-		}
 };
 #endif

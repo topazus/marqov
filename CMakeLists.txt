@@ -9,5 +9,7 @@ target_link_libraries(marqov ${MPI_C_LIBRARIES})
 SET(CMAKE_C_COMPILER ${MPI_C_COMPILER})
 SET(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
 
+add_definitions(-O3)
+
 #add_subdirectory(testsuite)
 #enable_testing()
