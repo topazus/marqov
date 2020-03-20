@@ -130,8 +130,8 @@ class Marqov
 		double elementaryMCstep()
 		{
 
-			const int nwolff  = 100;
-			const int nsweeps = 5;
+			const int nwolff  = 10;
+			const int nsweeps = 0;
 
 			const int SymD = std::tuple_size<StateVector>::value;
 
@@ -191,23 +191,41 @@ class Marqov
 	    	void gameloop(int nsteps)
 		{
 			double avgclustersize = 0;
-			for (int i = 0; i < nsteps; ++i)
+			for (int k=0; k<10; k++)
 			{
-				avgclustersize += elementaryMCstep();
-				auto obs = ham.getobs();
-				marqov_measure(obs, statespace, grid);
+				cout << "." << flush;
+				for (int i=0; i<nsteps/10; ++i)
+				{
+					avgclustersize += elementaryMCstep();
+					auto obs = ham.getobs();
+					marqov_measure(obs, statespace, grid);
+				}
 			}
+			cout << "|" << endl;
 			cout << avgclustersize/nsteps << endl;
 		}
 	
 	    	void warmuploop(int nsteps)
 		{
-			for (int i = 0; i < nsteps; ++i)
+			cout << "|";
+			for (int k=0; k<10; k++)
+			{
+				cout << "." << flush;
+				for (int i=0; i<nsteps; ++i)
+				{
+					elementaryMCstep();
+				}
+			}
+			cout << "|";
+		}
+
+	    	void debugloop(int nsteps)
+		{
+			for (int i=0; i<nsteps; ++i)
 			{
 				elementaryMCstep();
 			}
 		}
-
 
 		// use carefully, might generate a lot of terminal output
 	    	void gameloop_liveview(int nframes = 100, int nsweepsbetweenframe = 5)
@@ -259,6 +277,15 @@ class Marqov
 				statespace[i][0] = -1;
 			}
 		 }
+		 void init_cold_Heisenberg()
+		 {
+			for(int i = 0; i < grid.size(); ++i)
+			{
+				statespace[i][0] = -1;
+				statespace[i][1] = 0;
+				statespace[i][2] = 0;
+			}
+		 }
 
 		 void init_hot()
 		 {
@@ -276,7 +303,6 @@ class Marqov
 
 	int wolffstep(int rsite, StateVector rdir)
 	{
-
 		std::vector<int> cstack(grid.size(), 0);
 
 		int q = 0;
@@ -296,12 +322,12 @@ class Marqov
 			const double proj1 = dot(statespace[current], rdir);
 
 			int a = 0; // to be replaced by loop over Nalpha
-			const auto nbrs = grid.getnbrs(a, rsite);
+			const auto nbrs = grid.getnbrs(a, current);
 
 			for (int i = 0; i < nbrs.size(); ++i)
 			{
 				const auto mynbr = nbrs[i];
-//				auto myvec = ham.interactions[a]->operator()(statespace[mynbr]);
+				//auto myvec = ham.interactions[a]->operator()(statespace[mynbr]);
 				StateVector& myvec = statespace[mynbr];
 
 				const double proj2 = dot(myvec, rdir);
@@ -314,22 +340,10 @@ class Marqov
 					{
 						q++;
 
-//						cout << endl;
-//						cout << " >> " << q << "  " << cstack.size() << "   " << clustersize << endl;
-//						cout << endl;
-
 						cstack[q] = mynbr;
 						clustersize++;
 
-//						cout << myvec[0] << " " << myvec[1] << " " << myvec[2] << endl;
-//						cout << statespace[mynbr][0] << " " << statespace[mynbr][1] << " " << statespace[mynbr][2] << endl;
-//						cout << dot(myvec, rdir) << endl;
-
 						reflect(myvec, rdir);
-
-//						cout << myvec[0] << " " << myvec[1] << " " << myvec[2] << endl;
-//						cout << statespace[mynbr][0] << " " << statespace[mynbr][1] << " " << statespace[mynbr][2] << endl;
-//						cout << dot(myvec, rdir) << endl;
 
 						normalize(myvec); // necessary?
 					}
