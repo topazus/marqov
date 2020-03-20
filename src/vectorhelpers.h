@@ -2,22 +2,22 @@
 #define VECTORHELPERS_H
 #include <cmath>
 #include <array>
+#include <type_traits>
 
 // Generate random vector on the SymD-dimensional unit sphere
-
-template <class RND, typename FPType, int SymD> 
-auto rnddir(RND& rn) -> std::array<FPType, SymD>
+template <class RND, typename valuetype, int SymD, typename Enable = void> 
+struct Rnddir_Helper
 {
-
+static auto rnddir(RND& rn) -> std::array<valuetype, SymD>
+{
 	// Spherical coordinates according to:
 	// https://sites.math.washington.edu/~morrow/335_12/sphericalCoords.pdf
-
-    std::array<FPType, SymD> retval;
+    std::array<valuetype, SymD> retval;
     retval[0] = 1;//beginning of recursion
     if(SymD > 1) //poor mans constexpr if
     {
         //set up that auxiliary data that might be erased later
-        FPType angles[SymD-1];
+        valuetype angles[SymD-1];
         for(int i = 0; i < SymD - 1; ++i)
             angles[i] = 2.0*rn.d();
         //recursion for the polar(?) angles
@@ -28,10 +28,28 @@ auto rnddir(RND& rn) -> std::array<FPType, SymD>
         retval[SymD - 2] = std::sqrt(retval[SymD - 2]);
         //fix up the azimuthal angle
         //note the dependency on retval[SymD-2] here. Hence the order is important
-        retval[SymD - 1] = retval[SymD - 2] * cos(M_PI*angles[SymD - 2]);
-        retval[SymD - 2] = retval[SymD - 2] * sin(M_PI*angles[SymD - 2]);
+        retval[SymD - 1] = retval[SymD - 2] * std::cos(M_PI*angles[SymD - 2]);
+        retval[SymD - 2] = retval[SymD - 2] * std::sin(M_PI*angles[SymD - 2]);
     }
     return retval;
 }
+};
 
+template <class RND, typename inttype>
+struct Rnddir_Helper<RND, inttype, 1, 
+typename std::enable_if<std::is_integral<inttype>::value>::type> // enable only for integers
+{
+static auto rnddir(RND& rn) -> std::array<inttype, 1>
+{
+    std::array<inttype, 1> retval = {42};
+//    if (rn.d() < 0.5) retval[0] = -1;
+    return retval;
+}
+};
+
+template <class RND, typename valuetype, int SymD> 
+auto rnddir(RND& rn) -> std::array<valuetype, SymD>
+{
+return Rnddir_Helper<RND, valuetype, SymD>::rnddir(rn);
+}
 #endif
