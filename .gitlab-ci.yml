@@ -67,10 +67,11 @@ marqov_Buster_clang:
         - CITATION
         - README.md
     script:
-      - apt-get update && apt-get install -y clang cmake libhdf5-dev
+      - apt-get update && apt-get install -y libhdf5-dev
       - cmake -E make_directory build
       - cd build
-      - make CXX=clang++ LD=clang++
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang ..
+      - make
 
 marqov_create_doc:
   image: aergus/latex
