@@ -97,6 +97,22 @@ class Ising
 		{
 			return std::make_tuple(obs_m);
 		}
+
+
+		// using the Wolff cluster algorithm requires to implement
+		// the functions 'wolff_coupling' and 'wolff_flip'
+
+		template <class A>
+		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
+		{
+			return 1;
+		}
+
+		template <class A>
+		inline void wolff_flip(StateVector& sv, const A a)
+		{
+			sv[0] *= -1;
+		}
 	
 };
 #endif

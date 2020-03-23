@@ -7,7 +7,9 @@
 #include "vectorhelpers.h"
 
 
+// ------------------------------ OBSERVABLES ---------------------------
 
+// Magnetization
 class HeisenbergMag
 {
 	public:
@@ -39,6 +41,7 @@ class HeisenbergMag
 };
 
 
+// ----------------------------------------------------------------------
 
 template <class StateVector, class RNG>
 class Heisenberg_Initializer
@@ -75,6 +78,7 @@ class Heisenberg_interaction : public Interaction<StateVector>
 };
 
 
+// ------------------------------ HAMILTONIAN ---------------------------
 
 template <typename SpinType, typename MyFPType>
 class Heisenberg
@@ -107,5 +111,24 @@ class Heisenberg
 
 		auto getobs() { return std::make_tuple(obs_m); }
 		
+
+		// using the Wolff cluster algorithm requires to implement 
+		// the functions 'wolff_coupling' and 'wolff_flip'
+
+		template <class A> 
+		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
+		{
+			return dot(sv1, a) * dot(sv2, a);
+		}
+
+		template <class A>
+		inline void wolff_flip(StateVector& sv, const A a)
+		{
+			const double dotp = dot(sv, a);
+			for (int i=0; i<SymD; i++) sv[i] -= 2*dotp*a[i];
+
+			normalize(sv);  // necessary?
+		}
+
 };
 #endif

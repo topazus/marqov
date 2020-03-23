@@ -1,100 +1,76 @@
 #ifndef UPDATE_H
 #define UPDATE_H
 
-
-// Heisenerg
-
-// fine tune template argument syntax? "A" should always be a StateVector
-template <class A, class B>
-inline double wolff_coupling(A& arga1, A& arga2, const B argb)
-{
-	return dot(arga1, argb) * dot(arga2, argb);
-}
-
-template <class A, class B>
-inline void wolff_reflect(A& arga, const B argb)	
-{
-	const int SymD = 3; // improve me
-	const double dotp = dot(arga, argb);
-	for (int i=0; i<SymD; i++) arga[i] -= 2*dotp*argb[i];
-}
 	
 
-
-// Ising
-/*
-template <class A, class B>
-inline double wolff_coupling(A& arga1, A& arga2, const B argb)
-{
-	return 1.0;
-}
-*/
-
-
-
+// todo: the second argument should be a general template parameter; how to acomplish that?
+// todo: what about the alpha-loop? currently alpha=0 hard-coded
+// implement me: does not support locally fluctating (e.g. random) interaction strengths
 
 
 template <class Grid, class Hamiltonian> 
-inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, StateVector rdir)
+inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, const StateVector& rdir)
 {
+	// prepare stack
 	std::vector<int> cstack(grid.size(), 0);
 
+	// add initial site and flip it
 	int q = 0;
-
-	wolff_reflect(statespace[rsite], rdir);
-
 	cstack[q] = rsite;
-
+	ham.wolff_flip(statespace[rsite], rdir);
 	int clustersize = 1;
 
+	// loop over stack as long as non-empty
 	while (q>=0)
 	{
+		// extract last sv in stack
 		static const int currentidx = cstack[q];
 		StateVector& currentsv = statespace[currentidx];
 		q--;
 		
+		// get its neighbours
 		int a = 0; // to be replaced by loop over Nalpha
 		const auto nbrs = grid.getnbrs(a, currentidx);
 
+		// loop over neighbours
 		for (int i = 0; i < nbrs.size(); ++i)
 		{
+			// extract corresponding sv
 			const auto mynbr = nbrs[i];
 			StateVector& myvec = statespace[mynbr];
 
-			const double coupling = wolff_coupling(currentsv, myvec, rdir);
+			// compute 'Wolff coupling'
+			const double global_coupling = ham.interactions[a]->J;
+			const double local_coupling = 1.0; // not yet implemented: grid.getcoupling(...)
+			const double coupling = global_coupling
+								* local_coupling
+								* ham.wolff_coupling(currentsv, myvec, rdir);
 
-			if (coupling < 0)
+			// test whether site is added to the cluster
+//			if (coupling > 0)
 			{
-				const double prob = 1.0 - exp(2.0*ham.beta*coupling);
+				const double prob = 1.0 - exp(-2.0*ham.beta*coupling);
 
 				if (rng.d() < prob)
 				{
 					q++;
-
 					cstack[q] = mynbr;
 					clustersize++;
-
-					wolff_reflect(myvec, rdir);
-
-					normalize(myvec); // necessary?
+					ham.wolff_flip(myvec, rdir);
 				}
 			}
 		}
 	}
-
 	return clustersize;
 }
 
-// todo: what about the alpha-loop? currently alpha=1 hard-coded
+
 template <class Grid, class Hamiltonian> 
-inline int Marqov<Grid, Hamiltonian>::wolffstep(int rsite, StateVector rdir)
+inline int Marqov<Grid, Hamiltonian>::wolffstep(int rsite, const StateVector& rdir)
 {
 	std::vector<int> cstack(grid.size(), 0);
-
 	int q = 0;
-
 	reflect(statespace[rsite], rdir);
-
 	cstack[q] = rsite;
 
 	int clustersize = 1;
@@ -106,43 +82,44 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep(int rsite, StateVector rdir)
 		q--;
 		
 		const double proj1 = dot(statespace[current], rdir);
-
 		int a = 0; // to be replaced by loop over Nalpha
 		const auto nbrs = grid.getnbrs(a, current);
-
 		for (int i = 0; i < nbrs.size(); ++i)
 		{
 			const auto mynbr = nbrs[i];
 			//auto myvec = ham.interactions[a]->operator()(statespace[mynbr]);
 			StateVector& myvec = statespace[mynbr];
-
 			const double proj2 = dot(myvec, rdir);
-
 			if (proj1*proj2 < 0)
 			{
 				const double prob = 1.0 - exp(2.0*ham.beta*proj1*proj2);
-
 				if (rng.d() < prob)
 				{
 					q++;
-
 					cstack[q] = mynbr;
 					clustersize++;
-
 					reflect(myvec, rdir);
-
 					normalize(myvec); // necessary?
 				}
 			}
 		}
 	}
-
 	return clustersize;
 }
 
 
+
+
+
+
+
+
+
 // Single Metropolis update step statevectors on a lattice
 // returns an integer which encodes whether the flip attempt was successful (1) or not (0)
+
+// todo: does not support locally fluctating (e.g. random) interaction strengths
+
 template <class Grid, class Hamiltonian> 
 inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
 {

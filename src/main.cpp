@@ -120,8 +120,12 @@ int main()
 {
 	//RegistryDB registry("./cfgs");
 
-	int nbeta = 30;
 
+
+	/*
+	// ---- 2D Ising testing section ----
+
+	int    nbeta     = 30;
 	double betastart = 0.55;
 	double betaend   = 0.85;
 
@@ -134,26 +138,52 @@ int main()
 
 	for (int i=0; i<nbeta; i++)
 	{
-
 		double currentbeta = betastart + i*betastep; 
 		cout << "beta = " << currentbeta << endl;
 
-
 		RegularLattice lattice(32, 3);
-	
     
 		std::string outfile = std::to_string(i)+".h5";
 
-//		Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
+		Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
+
+		marqov.init_hot();
+		marqov.warmuploop(50);
+		marqov.gameloop(100);
+	}
+	*/
+
+//	/*
+
+	// ---- O(3) testing section ----
+
+	int    nbeta     = 30;
+	double betastart = 0.55;
+	double betaend   = 0.85;
+
+	double betastep = (betaend - betastart) / double(nbeta);
+
+	std::ofstream os;
+	os.open("simplelog.dat");
+	for (int i=0; i<nbeta; i++) os << betastart + i*betastep << endl;
+	os.close();
+
+	for (int i=0; i<nbeta; i++)
+	{
+		double currentbeta = betastart + i*betastep; 
+		cout << "beta = " << currentbeta << endl;
+
+		RegularLattice lattice(32, 3);
+	
+		std::string outfile = std::to_string(i)+".h5";
+
 		Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, currentbeta, outfile);
 
-//		marqov.init_cold_Heisenberg();
 		marqov.init_hot();
-//		marqov.debugloop(1);
-		marqov.warmuploop(500);
-		marqov.gameloop(1000);
-
+		marqov.warmuploop(50);
+		marqov.gameloop(100);
 	}
-	//marqov.gameloop_liveview(500,1);
-	//marqov.visualize_state_2d();
+
+//	*/
+
 }

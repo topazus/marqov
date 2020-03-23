@@ -141,7 +141,8 @@ class Marqov
 			{
 				const auto rdir = rnddir<RND, double, SymD>(rng);
 				const int rsite = rng.i();
-				avgclustersize += wolffstep(rsite, rdir);
+//				avgclustersize += wolffstep(rsite, rdir);
+				avgclustersize += general_wolffstep(rsite, rdir);
 			}
 
 
@@ -301,7 +302,8 @@ class Marqov
 
 
 	inline int metropolisstep(int rsite);
-	inline int wolffstep(int rsite, StateVector rdir);
+	inline int wolffstep(int rsite, const StateVector& rdir);
+	inline int general_wolffstep(int rsite, const StateVector& rdir);
 
 
 
