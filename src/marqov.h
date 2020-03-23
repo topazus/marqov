@@ -301,6 +301,7 @@ class Marqov
 
 
 	inline int metropolisstep(int rsite);
+	inline int general_wolffstep(int rsite, StateVector rdir);
 	inline int wolffstep(int rsite, StateVector rdir);
 
 
