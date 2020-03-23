@@ -1,6 +1,70 @@
 #ifndef UPDATE_H
 #define UPDATE_H
 
+
+// A must be a state vector?
+template <class A, class B>
+inline double wolff_coupling(A& arga1, A& arga2, B argb)
+{
+	return dot(arga1, argb) * dot(arga2, argb);
+}
+	
+	
+
+
+
+template <class Grid, class Hamiltonian> 
+inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, StateVector rdir)
+{
+	std::vector<int> cstack(grid.size(), 0);
+
+	int q = 0;
+
+	reflect(statespace[rsite], rdir);
+
+	cstack[q] = rsite;
+
+	int clustersize = 1;
+
+	while (q>=0)
+	{
+		static const int currentidx = cstack[q];
+		StateVector& currentsv = statespace[currentidx];
+		q--;
+		
+		int a = 0; // to be replaced by loop over Nalpha
+		const auto nbrs = grid.getnbrs(a, currentidx);
+
+		for (int i = 0; i < nbrs.size(); ++i)
+		{
+			const auto mynbr = nbrs[i];
+			StateVector& myvec = statespace[mynbr];
+
+			const double coupling = wolff_coupling(currentsv, myvec, rdir);
+
+			if (coupling < 0)
+			{
+				const double prob = 1.0 - exp(2.0*ham.beta*coupling);
+
+				if (rng.d() < prob)
+				{
+					q++;
+
+					cstack[q] = mynbr;
+					clustersize++;
+
+					reflect(myvec, rdir);
+
+					normalize(myvec); // necessary?
+				}
+			}
+		}
+	}
+
+	return clustersize;
+}
+
+// todo: what about the alpha-loop? currently alpha=1 hard-coded
 template <class Grid, class Hamiltonian> 
 inline int Marqov<Grid, Hamiltonian>::wolffstep(int rsite, StateVector rdir)
 {
