@@ -11,7 +11,7 @@ types:
       - README.md
       - doc/*
   script:
-    - apt-get update && apt-get install -y g++ cmake libhdf5-dev
+    - apt-get update && apt-get install -y g++ cmake libhdf5-dev libopenmpi-dev
     - cmake -E make_directory build
     - cd build
     - cmake ..
@@ -67,7 +67,7 @@ marqov_Buster_clang:
         - CITATION
         - README.md
     script:
-      - apt-get update && apt-get install -y libhdf5-dev
+      - apt-get update && apt-get install -y libhdf5-dev libopenmpi-dev
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang ..
