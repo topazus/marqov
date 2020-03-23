@@ -2,14 +2,35 @@
 #define UPDATE_H
 
 
-// A must be a state vector?
+// Heisenerg
+
+// fine tune template argument syntax? "A" should always be a StateVector
 template <class A, class B>
-inline double wolff_coupling(A& arga1, A& arga2, B argb)
+inline double wolff_coupling(A& arga1, A& arga2, const B argb)
 {
 	return dot(arga1, argb) * dot(arga2, argb);
 }
+
+template <class A, class B>
+inline void wolff_reflect(A& arga, const B argb)	
+{
+	const int SymD = 3; // improve me
+	const double dotp = dot(arga, argb);
+	for (int i=0; i<SymD; i++) arga[i] -= 2*dotp*argb[i];
+}
 	
-	
+
+
+// Ising
+/*
+template <class A, class B>
+inline double wolff_coupling(A& arga1, A& arga2, const B argb)
+{
+	return 1.0;
+}
+*/
+
+
 
 
 
@@ -20,7 +41,7 @@ inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, StateVector r
 
 	int q = 0;
 
-	reflect(statespace[rsite], rdir);
+	wolff_reflect(statespace[rsite], rdir);
 
 	cstack[q] = rsite;
 
@@ -53,7 +74,7 @@ inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, StateVector r
 					cstack[q] = mynbr;
 					clustersize++;
 
-					reflect(myvec, rdir);
+					wolff_reflect(myvec, rdir);
 
 					normalize(myvec); // necessary?
 				}
