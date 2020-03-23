@@ -6,16 +6,16 @@
 
 // fine tune template argument syntax? "A" should always be a StateVector
 template <class A, class B>
-inline double wolff_coupling(A& arga1, A& arga2, const B argb)
+inline auto wolff_coupling(A& arga1, A& arga2, const B argb)
 {
 	return dot(arga1, argb) * dot(arga2, argb);
 }
 
 template <class A, class B>
-inline void wolff_reflect(A& arga, const B argb)	
+inline void wolff_reflect(A& arga, const B& argb)
 {
 	const int SymD = 3; // improve me
-	const double dotp = dot(arga, argb);
+	const auto dotp = dot(arga, argb);
 	for (int i=0; i<SymD; i++) arga[i] -= 2*dotp*argb[i];
 }
 	
@@ -61,11 +61,11 @@ inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, StateVector r
 			const auto mynbr = nbrs[i];
 			StateVector& myvec = statespace[mynbr];
 
-			const double coupling = wolff_coupling(currentsv, myvec, rdir);
+			const auto coupling = wolff_coupling(currentsv, myvec, rdir);
 
 			if (coupling < 0)
 			{
-				const double prob = 1.0 - exp(2.0*ham.beta*coupling);
+				const double prob = 1.0 - std::exp(2.0*ham.beta*coupling);
 
 				if (rng.d() < prob)
 				{
@@ -105,7 +105,7 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep(int rsite, StateVector rdir)
 		current = cstack[q];
 		q--;
 		
-		const double proj1 = dot(statespace[current], rdir);
+		const auto proj1 = dot(statespace[current], rdir);
 
 		int a = 0; // to be replaced by loop over Nalpha
 		const auto nbrs = grid.getnbrs(a, current);
@@ -116,11 +116,11 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep(int rsite, StateVector rdir)
 			//auto myvec = ham.interactions[a]->operator()(statespace[mynbr]);
 			StateVector& myvec = statespace[mynbr];
 
-			const double proj2 = dot(myvec, rdir);
+			const auto proj2 = dot(myvec, rdir);
 
 			if (proj1*proj2 < 0)
 			{
-				const double prob = 1.0 - exp(2.0*ham.beta*proj1*proj2);
+				const auto prob = 1.0 - std::exp(2.0*ham.beta*proj1*proj2);
 
 				if (rng.d() < prob)
 				{
@@ -200,10 +200,8 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
         svold = svnew;
         retval = 1;
     }
-    
+
     return retval;
 }
-
-
 
 #endif
