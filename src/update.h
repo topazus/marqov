@@ -49,7 +49,7 @@ inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, const StateVe
 			// test whether site is added to the cluster
 //			if (coupling > 0)
 			{
-				const double prob = 1.0 - exp(-2.0*ham.beta*coupling);
+				const double prob = 1.0 - std::exp(-2.0*ham.beta*coupling);
 
 				if (rng.d() < prob)
 				{
@@ -81,7 +81,8 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep(int rsite, const StateVector& rd
 		current = cstack[q];
 		q--;
 		
-		const double proj1 = dot(statespace[current], rdir);
+		const auto proj1 = dot(statespace[current], rdir);
+
 		int a = 0; // to be replaced by loop over Nalpha
 		const auto nbrs = grid.getnbrs(a, current);
 		for (int i = 0; i < nbrs.size(); ++i)
@@ -89,10 +90,13 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep(int rsite, const StateVector& rd
 			const auto mynbr = nbrs[i];
 			//auto myvec = ham.interactions[a]->operator()(statespace[mynbr]);
 			StateVector& myvec = statespace[mynbr];
-			const double proj2 = dot(myvec, rdir);
+
+			const auto proj2 = dot(myvec, rdir);
+
 			if (proj1*proj2 < 0)
 			{
-				const double prob = 1.0 - exp(2.0*ham.beta*proj1*proj2);
+				const auto prob = 1.0 - std::exp(2.0*ham.beta*proj1*proj2);
+
 				if (rng.d() < prob)
 				{
 					q++;
@@ -177,10 +181,8 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
         svold = svnew;
         retval = 1;
     }
-    
+
     return retval;
 }
-
-
 
 #endif
