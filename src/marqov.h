@@ -130,8 +130,8 @@ class Marqov
 		double elementaryMCstep()
 		{
 
-			const int nwolff  = 1;
-			const int nsweeps = 0;
+			const int nwolff  = 500;
+			const int nsweeps = 25;
 //			const int nsweeps = 75;
 
 			const int SymD = std::tuple_size<StateVector>::value;

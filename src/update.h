@@ -58,7 +58,7 @@ if (verbose) cout << endl << "curr: " << currentidx << "\t" << currentsv[0] << e
 if (verbose) cout << "ngbr: " << mynbr << "\t" << myvec[0] << "\t" << coupling;
 
 			// test whether site is added to the cluster
-//			if (coupling > 0)
+			if (coupling > 0)
 			{
 				const double prob = 1.0 - std::exp(-2.0*ham.beta*coupling);
 				const double p = rng.d();

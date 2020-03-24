@@ -14,6 +14,7 @@ using std::endl;
 using std::flush;
 using std::ofstream;
 
+#include "systemtools.h"
 
 
 class Grid 
@@ -135,9 +136,11 @@ int main()
 //	/*
 	// ---- 2D Ising testing section ----
 
-	int    nbeta     = 1;
-	double betastart = 0.44;
-	double betaend   = 0.57;
+	std::vector<int> nL = {12,16,24,32};
+
+	int    nbeta     = 15;
+	double betastart = 0.35;
+	double betaend   = 0.50;
 
 	double betastep = (betaend - betastart) / double(nbeta);
 
@@ -146,25 +149,26 @@ int main()
 	for (int i=0; i<nbeta; i++) os << betastart + i*betastep << endl;
 	os.close();
 
-	for (int i=0; i<nbeta; i++)
+
+	for (int j=0; j<nL.size(); j++)
 	{
-		double currentbeta = betastart + i*betastep; 
-		cout << "beta = " << currentbeta << endl;
+		makeDir(std::to_string(nL[j]));
 
-		RegularLattice lattice(12, 2);
+		for (int i=0; i<nbeta; i++)
+		{
+			double currentbeta = betastart + i*betastep; 
+			cout << "beta = " << currentbeta << endl;
+
+			RegularLattice lattice(nL[j], 2);
     
-		std::string outfile = std::to_string(i)+".h5";
+			std::string outfile = std::to_string(nL[j])+"/"+std::to_string(i)+".h5";
 
-		Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
+			Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
 
-		marqov.init_hot();
-//		marqov.init_cold();
-marqov.visualize_state_2d();
-marqov.debugloop(1);
-
-marqov.visualize_state_2d();
-//		marqov.warmuploop(50);
-//		marqov.gameloop(150);
+			marqov.init_hot();
+			marqov.warmuploop(100);
+			marqov.gameloop(500);
+		}
 	}
 //	*/
 
