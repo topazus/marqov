@@ -25,7 +25,7 @@ class IsingMag
 					mag += statespace[i][0];
 			}
 
-			return mag/double(N);
+			return abs(mag)/double(N);
 		}
 		IsingMag() : name("m") {}
 };
@@ -105,8 +105,8 @@ class Ising
 		template <class A>
 		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
 		{
-			if (sv1[0] == sv2[0]) return -1.0;
-			else return 0.0;
+			if (sv1[0] == sv2[0]) return 0.0;
+			else return -1.0;
 		}
 
 

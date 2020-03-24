@@ -12,7 +12,7 @@ template <class Grid, class Hamiltonian>
 inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, const StateVector& rdir)
 {
 
-	const int verbose = true;
+	const int verbose = false;
 
 	// prepare stack
 	std::vector<int> cstack(grid.size(), 0);
