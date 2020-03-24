@@ -132,12 +132,12 @@ int main()
 
 
 
-	/*
+//	/*
 	// ---- 2D Ising testing section ----
 
 	int    nbeta     = 30;
-	double betastart = 0.55;
-	double betaend   = 0.85;
+	double betastart = 0.3;
+	double betaend   = 0.5;
 
 	double betastep = (betaend - betastart) / double(nbeta);
 
@@ -157,17 +157,18 @@ int main()
 
 		Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
 
-		marqov.init_hot();
+//		marqov.init_hot();
+		marqov.init_cold();
 		marqov.warmuploop(50);
 		marqov.gameloop(100);
 	}
-	*/
+//	*/
 
-//	/*
+	/*
 
 	// ---- O(3) testing section ----
 
-	int    nbeta     = 1;
+	int    nbeta     = 30;
 	double betastart = 0.55;
 	double betaend   = 0.85;
 
@@ -194,6 +195,6 @@ int main()
 		marqov.gameloop(100);
 	}
 
-//	*/
+	*/
 
 }
