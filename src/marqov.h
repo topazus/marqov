@@ -107,7 +107,7 @@ class Marqov
 													metro(rng), 
 													dump(outfile, H5F_ACC_TRUNC )
 		{
-			rng.seed(5); cout << "seed is fixed!" << endl << endl;
+			rng.seed(15); cout << "seed is fixed!" << endl << endl;
 //			rng.seed(time(NULL));
 			rng.set_integer_range(lattice.size());
 			statespace = new typename Hamiltonian::StateVector[lattice.size()];
@@ -130,7 +130,7 @@ class Marqov
 		double elementaryMCstep()
 		{
 
-			const int nwolff  = 1000;
+			const int nwolff  = 1;
 			const int nsweeps = 0;
 //			const int nsweeps = 75;
 
@@ -260,12 +260,22 @@ class Marqov
 				cout << "|";
 				for(int j = 0; j < grid.length; ++j)
 				{
-					double current = statespace[grid.length*i+j][dim];
+					int curridx = grid.length*i+j;
+					double current = statespace[curridx][dim];
+
+//					if (curridx == 116) cout << "X ";
+//					else if (curridx == 117) cout << "X ";
+//					else if (curridx == 115) cout << "X ";
+//					else if (curridx == 129) cout << "X ";
+//					else if (curridx == 105) cout << "X ";
+//					else
+					{
 
 					if (current > threshold) cout << "O ";
 					else if (current < -threshold) cout << "  ";
 					else if (current > 0) cout << "o ";
 					else if (current < 0) cout << ". ";
+					}
 				}
 				cout << "|" << endl;
 			}

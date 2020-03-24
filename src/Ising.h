@@ -105,8 +105,8 @@ class Ising
 		template <class A>
 		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
 		{
-			if (sv1[0] == sv2[0]) return -1;
-			else return 0;
+			if (sv1[0] == sv2[0]) return -1.0;
+			else return 0.0;
 		}
 
 
@@ -115,6 +115,8 @@ class Ising
 		{
 			sv[0] *= -1;
 		}
+
+
 	
 };
 #endif

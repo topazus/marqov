@@ -135,8 +135,8 @@ int main()
 //	/*
 	// ---- 2D Ising testing section ----
 
-	int    nbeta     = 15;
-	double betastart = 0.27;
+	int    nbeta     = 1;
+	double betastart = 0.44;
 	double betaend   = 0.57;
 
 	double betastep = (betaend - betastart) / double(nbeta);
@@ -159,8 +159,12 @@ int main()
 
 		marqov.init_hot();
 //		marqov.init_cold();
-		marqov.warmuploop(50);
-		marqov.gameloop(150);
+marqov.visualize_state_2d();
+marqov.debugloop(1);
+
+marqov.visualize_state_2d();
+//		marqov.warmuploop(50);
+//		marqov.gameloop(150);
 	}
 //	*/
 

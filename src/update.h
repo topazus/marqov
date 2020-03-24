@@ -1,7 +1,7 @@
 #ifndef UPDATE_H
 #define UPDATE_H
 
-	
+#include <iomanip>
 
 // todo: the second argument should be a general template parameter; how to acomplish that?
 // todo: what about the alpha-loop? currently alpha=0 hard-coded
@@ -11,12 +11,18 @@
 template <class Grid, class Hamiltonian> 
 inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, const StateVector& rdir)
 {
+
+	const int verbose = true;
+
 	// prepare stack
 	std::vector<int> cstack(grid.size(), 0);
 
 	// add initial site and flip it
 	int q = 0;
 	cstack[q] = rsite;
+
+if (verbose) cout << std::setprecision(3) << "seed: " << rsite << "\t" << statespace[rsite][0];
+
 	ham.wolff_flip(statespace[rsite], rdir);
 	int clustersize = 1;
 	
@@ -27,7 +33,9 @@ inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, const StateVe
 		const int currentidx = cstack[q];
 		StateVector& currentsv = statespace[currentidx];
 		q--;
-		
+	
+if (verbose) cout << endl << "curr: " << currentidx << "\t" << currentsv[0] << endl;
+
 		// get its neighbours
 		int a = 0; // to be replaced by loop over Nalpha
 		const auto nbrs = grid.getnbrs(a, currentidx);
@@ -39,6 +47,7 @@ inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, const StateVe
 			const auto mynbr = nbrs[i];
 			StateVector& myvec = statespace[mynbr];
 
+
 			// compute 'Wolff coupling'
 			const double global_coupling = ham.interactions[a]->J;
 			const double local_coupling = 1.0; // not yet implemented: grid.getcoupling(...)
@@ -46,17 +55,26 @@ inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, const StateVe
 								* local_coupling
 								* ham.wolff_coupling(currentsv, myvec, rdir);
 
+if (verbose) cout << "ngbr: " << mynbr << "\t" << myvec[0] << "\t" << coupling;
+
 			// test whether site is added to the cluster
-			if (coupling > 0)
+//			if (coupling > 0)
 			{
 				const double prob = 1.0 - std::exp(-2.0*ham.beta*coupling);
+				const double p = rng.d();
+if (verbose) cout << "\t" << p << "\t" << prob;
 			
-				if (rng.d() < prob)
+				if (p < prob)
 				{
 					q++;
 					cstack[q] = mynbr;
 					clustersize++;
 					ham.wolff_flip(myvec, rdir);
+if (verbose) cout << "\t accepted" << endl;
+				}
+				else
+				{
+if (verbose) cout << "\t rejected" << endl;
 				}
 			}
 		}
