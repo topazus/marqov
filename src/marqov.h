@@ -140,7 +140,7 @@ class Marqov
 			for (int j=0; j<nwolff; j++)
 			{
 //				const auto rdir = rnddir<RND, double, SymD>(rng);
-				const auto rdir = rnddir<RND, int, SymD>(rng);
+				const auto rdir = rnddir<RND, typename StateVector::value_type, SymD>(rng);
 
 				const int rsite = rng.i();
 //				avgclustersize += wolffstep(rsite, rdir);
