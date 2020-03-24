@@ -107,6 +107,16 @@ inline void normalize(Container& a)
 
 
 
+template <class StateVector>
+inline void coutsv(StateVector& vec)
+{
+	const int SymD = std::tuple_size<StateVector>::value;
+	
+	for (int i=0; i<SymD; i++) cout << vec[i] << "\t";
+	cout << endl;
+}	
+
+
 // ---------------------------------------
 
 #include "Heisenberg.h"
@@ -157,7 +167,7 @@ int main()
 
 	// ---- O(3) testing section ----
 
-	int    nbeta     = 30;
+	int    nbeta     = 1;
 	double betastart = 0.55;
 	double betaend   = 0.85;
 

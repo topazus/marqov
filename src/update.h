@@ -19,12 +19,12 @@ inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, const StateVe
 	cstack[q] = rsite;
 	ham.wolff_flip(statespace[rsite], rdir);
 	int clustersize = 1;
-
+	
 	// loop over stack as long as non-empty
 	while (q>=0)
 	{
 		// extract last sv in stack
-		static const int currentidx = cstack[q];
+		const int currentidx = cstack[q];
 		StateVector& currentsv = statespace[currentidx];
 		q--;
 		
@@ -47,10 +47,10 @@ inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, const StateVe
 								* ham.wolff_coupling(currentsv, myvec, rdir);
 
 			// test whether site is added to the cluster
-//			if (coupling > 0)
+			if (coupling > 0)
 			{
 				const double prob = 1.0 - std::exp(-2.0*ham.beta*coupling);
-
+			
 				if (rng.d() < prob)
 				{
 					q++;

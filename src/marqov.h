@@ -107,8 +107,8 @@ class Marqov
 													metro(rng), 
 													dump(outfile, H5F_ACC_TRUNC )
 		{
-			rng.seed(42);
-			rng.seed(time(NULL));
+			rng.seed(5); cout << "seed is fixed!" << endl << endl;
+//			rng.seed(time(NULL));
 			rng.set_integer_range(lattice.size());
 			statespace = new typename Hamiltonian::StateVector[lattice.size()];
 			auto obs = ham.getobs();
@@ -220,12 +220,15 @@ class Marqov
 			cout << "|";
 		}
 
+		
 	    	void debugloop(int nsteps)
 		{
+			double avgclustersize = 0;
 			for (int i=0; i<nsteps; ++i)
 			{
-				elementaryMCstep();
+				avgclustersize += elementaryMCstep();
 			}
+			cout << avgclustersize/nsteps << endl;
 		}
 
 		// use carefully, might generate a lot of terminal output
