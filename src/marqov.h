@@ -299,8 +299,7 @@ class Marqov
 		 	const int SymD = std::tuple_size<StateVector>::value;
 			for(int i = 0; i < grid.size(); ++i)
 			{
-				statespace[i] = rnddir<RND, int, SymD>(rng);
-//				statespace[i] = rnddir<RND, double, SymD>(rng);
+				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
 			}
 		 }
 	
