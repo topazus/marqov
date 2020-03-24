@@ -41,8 +41,8 @@ typename std::enable_if<std::is_integral<inttype>::value>::type> // enable only 
 {
 static auto rnddir(RND& rn) -> std::array<inttype, 1>
 {
-    std::array<inttype, 1> retval = {42};
-//    if (rn.d() < 0.5) retval[0] = -1;
+    std::array<inttype, 1> retval = {1};
+    if (rn.d() < 0.5) retval[0] = -1;
     return retval;
 }
 };
