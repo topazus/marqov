@@ -130,8 +130,9 @@ class Marqov
 		double elementaryMCstep()
 		{
 
-			const int nwolff  = 25;
-			const int nsweeps = 1;
+			const int nwolff  = 1000;
+			const int nsweeps = 0;
+//			const int nsweeps = 75;
 
 			const int SymD = std::tuple_size<StateVector>::value;
 
@@ -143,6 +144,7 @@ class Marqov
 				const auto rdir = rnddir<RND, int, SymD>(rng);
 
 				const int rsite = rng.i();
+
 //				avgclustersize += wolffstep(rsite, rdir);
 				avgclustersize += general_wolffstep(rsite, rdir);
 			}
@@ -298,7 +300,8 @@ class Marqov
 		 	const int SymD = std::tuple_size<StateVector>::value;
 			for(int i = 0; i < grid.size(); ++i)
 			{
-				statespace[i] = rnddir<RND, double, SymD>(rng);
+				statespace[i] = rnddir<RND, int, SymD>(rng);
+//				statespace[i] = rnddir<RND, double, SymD>(rng);
 			}
 		 }
 	

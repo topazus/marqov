@@ -105,8 +105,10 @@ class Ising
 		template <class A>
 		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
 		{
-			return 1;
+			if (sv1[0] == sv2[0]) return -1;
+			else return 0;
 		}
+
 
 		template <class A>
 		inline void wolff_flip(StateVector& sv, const A a)

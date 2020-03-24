@@ -135,9 +135,9 @@ int main()
 //	/*
 	// ---- 2D Ising testing section ----
 
-	int    nbeta     = 30;
-	double betastart = 0.3;
-	double betaend   = 0.5;
+	int    nbeta     = 15;
+	double betastart = 0.27;
+	double betaend   = 0.57;
 
 	double betastep = (betaend - betastart) / double(nbeta);
 
@@ -151,16 +151,16 @@ int main()
 		double currentbeta = betastart + i*betastep; 
 		cout << "beta = " << currentbeta << endl;
 
-		RegularLattice lattice(32, 3);
+		RegularLattice lattice(12, 2);
     
 		std::string outfile = std::to_string(i)+".h5";
 
 		Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
 
-//		marqov.init_hot();
-		marqov.init_cold();
+		marqov.init_hot();
+//		marqov.init_cold();
 		marqov.warmuploop(50);
-		marqov.gameloop(100);
+		marqov.gameloop(150);
 	}
 //	*/
 
