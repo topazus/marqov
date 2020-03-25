@@ -124,6 +124,7 @@ inline void coutsv(StateVector& vec)
 #include "Ising.h"
 #include "Phi4.h"
 
+const std::string outdir = "../out/";
 const int myid = 0;
 
 #include "marqov.h"
@@ -131,16 +132,21 @@ int main()
 {
 	//RegistryDB registry("./cfgs");
 
+	// remove old output and prepare new one
+	std::string command = "rm -r " + outdir;
+	system(command.c_str());
+	makeDir(outdir);
+
 
 
 //	/*
 	// ---- 2D Ising testing section ----
 
-	std::vector<int> nL = {12,16,24,32};
+	std::vector<int> nL = {24,32,48,64,96,128};
 
-	int    nbeta     = 15;
-	double betastart = 0.35;
-	double betaend   = 0.50;
+	int    nbeta     = 20;
+	double betastart = 0.42;
+	double betaend   = 0.46;
 
 	double betastep = (betaend - betastart) / double(nbeta);
 
@@ -152,7 +158,7 @@ int main()
 
 	for (int j=0; j<nL.size(); j++)
 	{
-		makeDir(std::to_string(nL[j]));
+		makeDir(outdir+std::to_string(nL[j]));
 
 		for (int i=0; i<nbeta; i++)
 		{
@@ -161,13 +167,13 @@ int main()
 
 			RegularLattice lattice(nL[j], 2);
     
-			std::string outfile = std::to_string(nL[j])+"/"+std::to_string(i)+".h5";
+			std::string outfile = outdir+std::to_string(nL[j])+"/"+std::to_string(i)+".h5";
 
 			Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
 
 			marqov.init_hot();
-			marqov.warmuploop(100);
-			marqov.gameloop(500);
+			marqov.warmuploop(350);
+			marqov.gameloop(1000);
 		}
 	}
 //	*/

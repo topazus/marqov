@@ -107,8 +107,8 @@ class Marqov
 													metro(rng), 
 													dump(outfile, H5F_ACC_TRUNC )
 		{
-			rng.seed(15); cout << "seed is fixed!" << endl << endl;
-//			rng.seed(time(NULL));
+//			rng.seed(15); cout << "seed is fixed!" << endl << endl;
+			rng.seed(time(NULL));
 			rng.set_integer_range(lattice.size());
 			statespace = new typename Hamiltonian::StateVector[lattice.size()];
 			auto obs = ham.getobs();
