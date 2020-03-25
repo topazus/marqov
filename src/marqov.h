@@ -132,7 +132,6 @@ class Marqov
 
 			const int nwolff  = 500;
 			const int nsweeps = 25;
-//			const int nsweeps = 75;
 
 			const int SymD = std::tuple_size<StateVector>::value;
 
@@ -144,8 +143,8 @@ class Marqov
 
 				const int rsite = rng.i();
 
-//				avgclustersize += wolffstep(rsite, rdir);
-				avgclustersize += general_wolffstep(rsite, rdir);
+				avgclustersize += wolffstep_Ising(rsite);
+//				avgclustersize += wolffstep_general(rsite, rdir);
 			}
 
 
@@ -319,7 +318,8 @@ class Marqov
 
 	inline int metropolisstep(int rsite);
 	inline int wolffstep(int rsite, const StateVector& rdir);
-	inline int general_wolffstep(int rsite, const StateVector& rdir);
+	inline int wolffstep_Ising(int rsite);
+	inline int wolffstep_general(int rsite, const StateVector& rdir);
 
 
 

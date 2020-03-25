@@ -9,7 +9,7 @@
 
 
 template <class Grid, class Hamiltonian> 
-inline int Marqov<Grid, Hamiltonian>::general_wolffstep(int rsite, const StateVector& rdir)
+inline int Marqov<Grid, Hamiltonian>::wolffstep_general(int rsite, const StateVector& rdir)
 {
 
 	const int verbose = false;
@@ -47,7 +47,6 @@ if (verbose) cout << endl << "curr: " << currentidx << "\t" << currentsv[0] << e
 			const auto mynbr = nbrs[i];
 			StateVector& myvec = statespace[mynbr];
 
-
 			// compute 'Wolff coupling'
 			const double global_coupling = ham.interactions[a]->J;
 			const double local_coupling = 1.0; // not yet implemented: grid.getcoupling(...)
@@ -60,11 +59,7 @@ if (verbose) cout << "ngbr: " << mynbr << "\t" << myvec[0] << "\t" << coupling;
 			// test whether site is added to the cluster
 			if (coupling > 0)
 			{
-				const double prob = 1.0 - std::exp(-2.0*ham.beta*coupling);
-				const double p = rng.d();
-if (verbose) cout << "\t" << p << "\t" << prob;
-			
-				if (p < prob)
+				if (rng.d() < 1.0-std::exp(-2.0*ham.beta*coupling))
 				{
 					q++;
 					cstack[q] = mynbr;
@@ -81,6 +76,70 @@ if (verbose) cout << "\t rejected" << endl;
 	}
 	return clustersize;
 }
+
+
+
+
+// in the plain Ising model, the Wolff couling is a constant, which can be
+// exploited for optimization
+
+template <class Grid, class Hamiltonian> 
+inline int Marqov<Grid, Hamiltonian>::wolffstep_Ising(int rsite)
+{
+	// prepare stack
+	std::vector<int> cstack(grid.size(), 0);
+
+	// add initial site and flip it
+	int q = 0;
+	cstack[q] = rsite;
+	const int val = statespace[rsite][0];
+	ham.wolff_flip(statespace[rsite]);
+	int clustersize = 1;
+
+	// compute 'Wolff probability' 
+	const int a = 0; // plain Ising model has only one interaction term
+	const double coupling = ham.interactions[a]->J;
+	const double prob = 1.0-std::exp(+2.0*ham.beta*coupling);
+	
+	// loop over stack as long as non-empty
+	while (q>=0)
+	{
+		// extract last sv in stack
+		const int currentidx = cstack[q];
+		StateVector& currentsv = statespace[currentidx];
+		q--;
+	
+		// get its neighbours
+		const auto nbrs = grid.getnbrs(a, currentidx);
+
+		// loop over neighbours
+		for (int i = 0; i < nbrs.size(); ++i)
+		{
+			// extract corresponding sv
+			const auto currentnbr = nbrs[i];
+			StateVector& candidate = statespace[currentnbr];
+
+			// test whether site is added to the cluster
+			if (candidate[0] == val)
+			{
+				if (rng.d() < prob)
+				{
+					q++;
+					cstack[q] = currentnbr;
+					clustersize++;
+					ham.wolff_flip(candidate);
+				}
+			}
+		}
+	}
+	return clustersize;
+}
+
+
+
+
+
+
 
 
 template <class Grid, class Hamiltonian> 
