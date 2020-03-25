@@ -124,45 +124,7 @@ class Marqov
 		~Marqov() {delete [] statespace; delete [] dataset; dump.close();}
 
 
-
-		// ----------------------- Definition of an EMCS ---------------------------
-
-		double elementaryMCstep()
-		{
-
-			const int nwolff  = 500;
-			const int nsweeps = 25;
-
-			const int SymD = std::tuple_size<StateVector>::value;
-
-			// Wolff
-			double avgclustersize = 0;
-			for (int j=0; j<nwolff; j++)
-			{
-				const auto rdir = rnddir<RND, typename StateVector::value_type, SymD>(rng);
-
-				const int rsite = rng.i();
-
-				avgclustersize += wolffstep_Ising(rsite);
-//				avgclustersize += wolffstep_general(rsite, rdir);
-			}
-
-
-			// Metropolis
-			for (int j=0; j<nsweeps; j++)
-			{
-				for(int i = 0; i < grid.size(); ++i)
-				{
-					const int rsite = rng.i();
-					metropolisstep(rsite);
-				}
-			}
-
-			return avgclustersize/nwolff;
-		}
 		
-		// -------------------------------------------------------------------------
-
 		template<size_t N = 0, typename... Ts, typename... Args>
 		inline typename std::enable_if_t<N == sizeof...(Ts), void>
 		marqov_measure(std::tuple<Ts...>& t, Args... args) {}
@@ -190,8 +152,10 @@ class Marqov
 			dataset[N].write(&retval, H5Mapper<OutType>::H5Type(), mspace, filespace);
 			// std::cout<<std::get<N>(t).name<<" "<<retval<<std::endl;
 		}
+
+		double elementaryMCstep(const int ncluster, const int nsweeps);
 	    
-	    	void gameloop(int nsteps)
+	    	void gameloop(const int nsteps, const int ncluster, const int nsweeps)
 		{
 			double avgclustersize = 0;
 			for (int k=0; k<10; k++)
@@ -199,7 +163,7 @@ class Marqov
 				cout << "." << flush;
 				for (int i=0; i<nsteps/10; ++i)
 				{
-					avgclustersize += elementaryMCstep();
+					avgclustersize += elementaryMCstep(ncluster, nsweeps);
 					auto obs = ham.getobs();
 					marqov_measure(obs, statespace, grid);
 				}
@@ -208,7 +172,7 @@ class Marqov
 			cout << avgclustersize/nsteps << endl;
 		}
 	
-	    	void warmuploop(int nsteps)
+	    	void warmuploop(const int nsteps, const int ncluster, const int nsweeps)
 		{
 			cout << "|";
 			for (int k=0; k<10; k++)
@@ -216,19 +180,19 @@ class Marqov
 				cout << "." << flush;
 				for (int i=0; i<nsteps; ++i)
 				{
-					elementaryMCstep();
+					elementaryMCstep(ncluster, nsweeps);
 				}
 			}
 			cout << "|";
 		}
 
 		
-	    	void debugloop(int nsteps)
+	    	void debugloop(const int nsteps, const int ncluster, const int nsweeps)
 		{
 			double avgclustersize = 0;
 			for (int i=0; i<nsteps; ++i)
 			{
-				avgclustersize += elementaryMCstep();
+				avgclustersize += elementaryMCstep(ncluster, nsweeps);
 			}
 			cout << avgclustersize/nsteps << endl;
 		}
@@ -236,10 +200,12 @@ class Marqov
 		// use carefully, might generate a lot of terminal output
 	    	void gameloop_liveview(int nframes = 100, int nsweepsbetweenframe = 5)
 		{
+			const int ncluster = 0;
+			const int nsweeps = 1;
 			for (int i = 0; i < nframes; ++i)
 			{
 
-				for (int j=0; j<nsweepsbetweenframe; j++) elementaryMCstep();
+				for (int j=0; j<nsweepsbetweenframe; j++) elementaryMCstep(ncluster, nsweeps);
 					
 				unsigned int microsec = 30000; 
 				usleep(microsec);
@@ -262,19 +228,10 @@ class Marqov
 					int curridx = grid.length*i+j;
 					double current = statespace[curridx][dim];
 
-//					if (curridx == 116) cout << "X ";
-//					else if (curridx == 117) cout << "X ";
-//					else if (curridx == 115) cout << "X ";
-//					else if (curridx == 129) cout << "X ";
-//					else if (curridx == 105) cout << "X ";
-//					else
-					{
-
 					if (current > threshold) cout << "O ";
 					else if (current < -threshold) cout << "  ";
 					else if (current > 0) cout << "o ";
 					else if (current < 0) cout << ". ";
-					}
 				}
 				cout << "|" << endl;
 			}
@@ -343,5 +300,6 @@ class Marqov
 };
 
 #include "update.h"
+#include "emcs.h"
 
 #endif

@@ -144,9 +144,9 @@ int main()
 
 	std::vector<int> nL = {32};
 
-	int    nbeta     = 20;
-	double betastart = 0.38;
-	double betaend   = 0.48;
+	int    nbeta     = 5;
+	double betastart = 0.44;
+	double betaend   = 0.451;
 
 	double betastep = (betaend - betastart) / double(nbeta);
 
@@ -172,8 +172,8 @@ int main()
 			Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
 
 			marqov.init_hot();
-			marqov.warmuploop(150);
-			marqov.gameloop(300);
+			marqov.warmuploop(150, 250, 25);
+			marqov.gameloop(300, 250, 25);
 		}
 	}
 //	*/
