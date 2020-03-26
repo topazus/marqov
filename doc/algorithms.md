@@ -12,6 +12,8 @@
 
 ## Cluster Algorithms
 
+For the 2D Ising model at criticality, the specially optimized version of the Wolff algorithm is about 20% faster than the more generic one. The data collapse in the picture provides decent evidence that both algorithms provide correct results. Results from the generic algorithm are denoted by dots whereas the optimized ones are represented by circles. In the simulations also occasional Metropolis sweeps were used to efficiently equilibrate short-range modes.
+
 
 <p align="center">
-<img src="IsingWolffComparison.pdf" width="55%" alt="IsingWolffComparison" class="center"></p>
+<img src="IsingWolffComparison.svg" width="55%" alt="IsingWolffComparison" class="center"></p>
