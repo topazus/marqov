@@ -2,6 +2,7 @@
 #define UPDATE_H
 
 #include <iomanip>
+#include <vector>
 
 // todo: the second argument should be a general template parameter; how to acomplish that?
 // todo: what about the alpha-loop? currently alpha=0 hard-coded
@@ -9,7 +10,8 @@
 
 
 template <class Grid, class Hamiltonian> 
-inline int Marqov<Grid, Hamiltonian>::wolffstep_general(int rsite, const StateVector& rdir)
+template <class DirType>
+inline int Marqov<Grid, Hamiltonian>::wolffstep_general(int rsite, const DirType& rdir)
 {
 
 	const int verbose = false;

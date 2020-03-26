@@ -124,7 +124,6 @@ class Marqov
 		~Marqov() {delete [] statespace; delete [] dataset; dump.close();}
 
 
-		
 		template<size_t N = 0, typename... Ts, typename... Args>
 		inline typename std::enable_if_t<N == sizeof...(Ts), void>
 		marqov_measure(std::tuple<Ts...>& t, Args... args) {}
@@ -276,7 +275,8 @@ class Marqov
 	inline int metropolisstep(int rsite);
 	inline int wolffstep(int rsite, const StateVector& rdir);
 	inline int wolffstep_Ising(int rsite);
-	inline int wolffstep_general(int rsite, const StateVector& rdir);
+	template <typename DirType>
+	inline int wolffstep_general(int rsite, const DirType& rdir);
 
 
 
