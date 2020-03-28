@@ -18,7 +18,7 @@ class HeisenbergMag
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
 			constexpr static int SymD = 3;	// improve me
-			const     static int N = grid.size();
+			const     int N = grid.size();
 
 			std::vector<double> mag(SymD,0) ;
 

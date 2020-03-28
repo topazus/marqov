@@ -217,8 +217,8 @@ int main()
 			marqov.init_hot();
 //			marqov.init_cold_Heisenberg();
 
-			marqov.warmuploop(200,100,5);
-			marqov.gameloop(200,100,5);
+			marqov.warmuploop(2000,20,1);
+			marqov.gameloop(300,50,3);
 
 		}
 	}
