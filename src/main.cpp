@@ -139,14 +139,14 @@ int main()
 
 
 
-//	/*
+	/*
 	// ---- 2D Ising testing section ----
 
-	std::vector<int> nL = {32};
+	std::vector<int> nL = {8,16,32,64,128};
 
-	int    nbeta     = 5;
-	double betastart = 0.44;
-	double betaend   = 0.451;
+	int    nbeta     = 10;
+	double betastart = 0.37;
+	double betaend   = 0.47;
 
 	double betastep = (betaend - betastart) / double(nbeta);
 
@@ -158,6 +158,8 @@ int main()
 
 	for (int j=0; j<nL.size(); j++)
 	{
+
+		cout << endl << "L = " << nL[j] << endl << endl;
 		makeDir(outdir+std::to_string(nL[j]));
 
 		for (int i=0; i<nbeta; i++)
@@ -172,19 +174,21 @@ int main()
 			Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
 
 			marqov.init_hot();
-			marqov.warmuploop(150, 250, 25);
-			marqov.gameloop(300, 250, 25);
+			marqov.warmuploop(1000, 500, 10);
+			marqov.gameloop(1500, 500, 10);
 		}
 	}
 //	*/
 
-	/*
+//	/*
 
 	// ---- O(3) testing section ----
 
-	int    nbeta     = 30;
-	double betastart = 0.55;
-	double betaend   = 0.85;
+	std::vector<int> nL = {8,12,16,24,32,48,64};
+
+	int    nbeta     = 10;
+	double betastart = 0.6;
+	double betaend   = 0.8;
 
 	double betastep = (betaend - betastart) / double(nbeta);
 
@@ -193,22 +197,32 @@ int main()
 	for (int i=0; i<nbeta; i++) os << betastart + i*betastep << endl;
 	os.close();
 
-	for (int i=0; i<nbeta; i++)
+	for (int j=0; j<nL.size(); j++)
 	{
-		double currentbeta = betastart + i*betastep; 
-		cout << "beta = " << currentbeta << endl;
 
-		RegularLattice lattice(32, 3);
-	
-		std::string outfile = std::to_string(i)+".h5";
+		cout << endl << "L = " << nL[j] << endl << endl;
+		makeDir(outdir+std::to_string(nL[j]));
 
-		Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, currentbeta, outfile);
+		for (int i=0; i<nbeta; i++)
+		{
+			double currentbeta = betastart + i*betastep; 
+			cout << "beta = " << currentbeta << endl;
 
-		marqov.init_hot();
-		marqov.warmuploop(50);
-		marqov.gameloop(100);
+			RegularLattice lattice(nL[j], 3);
+		
+			std::string outfile = outdir+std::to_string(nL[j])+"/"+std::to_string(i)+".h5";
+
+			Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, currentbeta, outfile);
+
+			marqov.init_hot();
+//			marqov.init_cold_Heisenberg();
+
+			marqov.warmuploop(200,100,5);
+			marqov.gameloop(200,100,5);
+
+		}
 	}
 
-	*/
+//	*/
 
 }

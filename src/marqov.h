@@ -275,6 +275,7 @@ class Marqov
 	inline int metropolisstep(int rsite);
 	inline int wolffstep(int rsite, const StateVector& rdir);
 	inline int wolffstep_Ising(int rsite);
+	inline int wolffstep_Heisenberg(int rsite, const StateVector& rdir);
 	template <typename DirType>
 	inline int wolffstep_general(int rsite, const DirType& rdir);
 

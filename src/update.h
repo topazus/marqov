@@ -4,26 +4,20 @@
 #include <iomanip>
 #include <vector>
 
-// todo: the second argument should be a general template parameter; how to acomplish that?
 // todo: what about the alpha-loop? currently alpha=0 hard-coded
-// implement me: does not support locally fluctating (e.g. random) interaction strengths
+// implement me: does not support locally fluctating (e.g. random) interaction strengths yet
 
 
 template <class Grid, class Hamiltonian> 
 template <class DirType>
 inline int Marqov<Grid, Hamiltonian>::wolffstep_general(int rsite, const DirType& rdir)
 {
-
-	const int verbose = false;
-
 	// prepare stack
 	std::vector<int> cstack(grid.size(), 0);
 
 	// add initial site and flip it
 	int q = 0;
 	cstack[q] = rsite;
-
-if (verbose) cout << std::setprecision(3) << "seed: " << rsite << "\t" << statespace[rsite][0];
 
 	ham.wolff_flip(statespace[rsite], rdir);
 	int clustersize = 1;
@@ -36,8 +30,6 @@ if (verbose) cout << std::setprecision(3) << "seed: " << rsite << "\t" << states
 		StateVector& currentsv = statespace[currentidx];
 		q--;
 	
-if (verbose) cout << endl << "curr: " << currentidx << "\t" << currentsv[0] << endl;
-
 		// get its neighbours
 		int a = 0; // to be replaced by loop over Nalpha
 		const auto nbrs = grid.getnbrs(a, currentidx);
@@ -46,17 +38,15 @@ if (verbose) cout << endl << "curr: " << currentidx << "\t" << currentsv[0] << e
 		for (int i = 0; i < nbrs.size(); ++i)
 		{
 			// extract corresponding sv
-			const auto mynbr = nbrs[i];
-			StateVector& myvec = statespace[mynbr];
+			const auto currentnbr = nbrs[i];
+			StateVector& candidate = statespace[currentnbr];
 
 			// compute 'Wolff coupling'
 			const double global_coupling = ham.interactions[a]->J;
 			const double local_coupling = 1.0; // not yet implemented: grid.getcoupling(...)
 			const double coupling = global_coupling
 								* local_coupling
-								* ham.wolff_coupling(currentsv, myvec, rdir);
-
-if (verbose) cout << "ngbr: " << mynbr << "\t" << myvec[0] << "\t" << coupling;
+								* ham.wolff_coupling(currentsv, candidate, rdir);
 
 			// test whether site is added to the cluster
 			if (coupling > 0)
@@ -64,14 +54,9 @@ if (verbose) cout << "ngbr: " << mynbr << "\t" << myvec[0] << "\t" << coupling;
 				if (rng.d() < 1.0-std::exp(-2.0*ham.beta*coupling))
 				{
 					q++;
-					cstack[q] = mynbr;
+					cstack[q] = currentnbr;
 					clustersize++;
-					ham.wolff_flip(myvec, rdir);
-if (verbose) cout << "\t accepted" << endl;
-				}
-				else
-				{
-if (verbose) cout << "\t rejected" << endl;
+					ham.wolff_flip(candidate, rdir);
 				}
 			}
 		}
@@ -134,6 +119,7 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_Ising(int rsite)
 			}
 		}
 	}
+
 	return clustersize;
 }
 
@@ -145,11 +131,11 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_Ising(int rsite)
 
 
 template <class Grid, class Hamiltonian> 
-inline int Marqov<Grid, Hamiltonian>::wolffstep(int rsite, const StateVector& rdir)
+inline int Marqov<Grid, Hamiltonian>::wolffstep_Heisenberg(int rsite, const StateVector& rdir)
 {
 	std::vector<int> cstack(grid.size(), 0);
 	int q = 0;
-	reflect(statespace[rsite], rdir);
+	ham.wolff_flip(statespace[rsite], rdir);
 	cstack[q] = rsite;
 
 	int clustersize = 1;
@@ -160,29 +146,28 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep(int rsite, const StateVector& rd
 		current = cstack[q];
 		q--;
 		
-		const auto proj1 = dot(statespace[current], rdir);
+		int a = 0; // plain Heisenberg model has only one interaction term
+		const double coupling = ham.interactions[a]->J; 
+		const auto proj1 = coupling*dot(statespace[current], rdir);
 
-		int a = 0; // to be replaced by loop over Nalpha
 		const auto nbrs = grid.getnbrs(a, current);
 		for (int i = 0; i < nbrs.size(); ++i)
 		{
-			const auto mynbr = nbrs[i];
-			//auto myvec = ham.interactions[a]->operator()(statespace[mynbr]);
-			StateVector& myvec = statespace[mynbr];
+			const auto currentidx = nbrs[i];
+			StateVector& candidate = statespace[currentidx];
 
-			const auto proj2 = dot(myvec, rdir);
+			const auto proj2 = dot(candidate, rdir);
 
-			if (proj1*proj2 < 0)
+			if (proj1*proj2 > 0)
 			{
-				const auto prob = 1.0 - std::exp(2.0*ham.beta*proj1*proj2);
+				const auto prob = 1.0 - std::exp(-2.0*ham.beta*proj1*proj2);
 
 				if (rng.d() < prob)
 				{
 					q++;
-					cstack[q] = mynbr;
+					cstack[q] = currentidx;
 					clustersize++;
-					reflect(myvec, rdir);
-					normalize(myvec); // necessary?
+					ham.wolff_flip(candidate, rdir);
 				}
 			}
 		}

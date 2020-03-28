@@ -10,18 +10,17 @@ template <class Grid, class Hamiltonian>
 double Marqov<Grid, Hamiltonian>::elementaryMCstep(const int ncluster, const int nsweeps)
 {
 	const int SymD = std::tuple_size<StateVector>::value;
-//	const int SymD = ham.SymD;
-
-	// only dummy, will not be used
-	const auto rdir = rnddir<RND, typename StateVector::value_type, SymD>(rng);
 
 	// cluster updates
 	double avgclustersize = 0;
 	for (int j=0; j<ncluster; j++)
 	{
 		const int rsite = rng.i();
-		avgclustersize += wolffstep_Ising(rsite);
-		//avgclustersize += wolffstep_general(rsite, rdir);
+//		avgclustersize += wolffstep_Ising(rsite);
+
+		const auto rdir = rnddir<RND, typename StateVector::value_type, SymD>(rng);
+//		avgclustersize += wolffstep_Heisenberg(rsite, rdir);
+		avgclustersize += wolffstep_general(rsite, rdir);
 	}
 
 
