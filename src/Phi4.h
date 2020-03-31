@@ -4,6 +4,40 @@
 #include <cmath>
 #include "vectorhelpers.h"
 
+// ------------------------------ OBSERVABLES ---------------------------
+
+class Phi4Mag
+{
+     public:
+          std::string name;
+          template <class StateSpace, class Grid>
+          double measure(const StateSpace& statespace, const Grid& grid)
+          {
+               constexpr static int SymD = 3;     // improve me
+               const     int N = grid.size();
+
+               std::vector<double> mag(SymD,0) ;
+
+               for (int i=0; i<N; i++)
+               {
+                    for (int j=0; j<SymD; j++)
+                    {
+                         mag[j] += statespace[i][j];
+                    }
+               }
+
+               double retval = 0;
+               for (int j=0; j<SymD; j++)
+               {
+                    retval += mag[j]*mag[j];
+               }
+               return sqrt(retval)/double(N);
+          }
+          Phi4Mag() : name("m") {}
+};
+
+
+// ----------------------------------------------------------------------
 
 
 template <class StateVector, class RNG>
@@ -51,7 +85,7 @@ class Phi4_onsitesquare : public OnSite<StateVector, double>
 	public:
 		Phi4_onsitesquare(double beta)
 		{
-	 		this->h = 1;
+	 		this->h = 1.0/beta;
 		}
 		double operator() (StateVector& phi) {return dot(phi,phi);};
 };
@@ -67,17 +101,21 @@ class Phi4_onsitefour : public OnSite<StateVector, double>
 		double operator() (StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);};
 };
 
+
+
+// ------------------------------ HAMILTONIAN ---------------------------
+
 template <typename SpinType, typename MyFPType>
 class Phi4
 {
 	public:
+		double beta;
+		const double lambda = 4.5;
+
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
 
-		constexpr static MyFPType beta = 1.0/0.5;
-		constexpr static MyFPType lambda = 1.0;
-		
 		template <typename RNG>
 		using MetroInitializer =  Phi4_Initializer<StateVector, RNG>; 
 		// this construction allows to specify a number of template arguments
@@ -93,15 +131,29 @@ class Phi4
 		OnSite<StateVector, FPType>* onsite[Nbeta]; //Todo: External fields not yet supported
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Phi4()
+		Phi4(double mybeta) : beta(mybeta)
 		{
             interactions[0] = new Phi4_interaction<StateVector>();
             onsite[0] = new Phi4_onsitesquare<StateVector>(beta);
             onsite[1] = new Phi4_onsitefour<StateVector>(1.0,beta);
 		}
-		
-		StateVector createnewsv(const StateVector& osv) 
+
+		Phi4Mag obs_m;
+		auto getobs() { return std::make_tuple(obs_m);}
+
+		template <class A>
+		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
 		{
+			return dot(sv1, a) * dot(sv2, a);
 		}
+
+		template <class A>
+		inline void wolff_flip(StateVector& sv, const A a)
+		{
+			const double dotp = dot(sv, a);
+			for (int i=0; i<SymD; i++) sv[i] -= 2*dotp*a[i];
+		}
+
+		
 };
 #endif
