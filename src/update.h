@@ -240,7 +240,7 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
         svold = svnew;
         retval = 1;
     }
-    else if (rng.d() < exp(-ham.beta*dE))
+    else if (rng.d() < exp(-ham.beta*dE)) 
     {
         svold = svnew;
         retval = 1;

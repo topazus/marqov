@@ -98,6 +98,8 @@ class Marqov
 			dssize[N] = 0;
 			marqov_createds<N + 1, Ts...>(t);
 		}
+
+		std::vector<std::vector<std::vector<double>>> check;
         
         
 		// Constructor
@@ -150,12 +152,92 @@ class Marqov
 			filespace.selectHyperslab(H5S_SELECT_SET, count, start);
 			dataset[N].write(&retval, H5Mapper<OutType>::H5Type(), mspace, filespace);
 			// std::cout<<std::get<N>(t).name<<" "<<retval<<std::endl;
+
+
 		}
+
+
+		void perform_check(std::vector<int> testidxs)
+		{
+			std::vector<std::vector<double>> subcheck;
+
+			for (int k=0; k<testidxs.size(); k++)
+			{
+				const int testidx = testidxs[k];
+				std::vector<double> subsubcheck;
+
+				const auto testsite = statespace[testidx];
+				const auto nbrs = grid.getnbrs(0, testidx);
+
+				for (int i = 0; i < nbrs.size(); ++i)
+				{
+					const auto currentnbr = statespace[nbrs[i]];
+					subsubcheck.push_back(dot(testsite,currentnbr));
+				}
+
+				const double selfdot = dot(testsite,testsite);
+
+				subsubcheck.push_back(selfdot);
+				subsubcheck.push_back((selfdot-1)*selfdot);
+
+				subcheck.push_back(subsubcheck);
+			}
+
+			check.push_back(subcheck);
+		}
+
+		void finalize_check()
+		{
+			std::vector<double> sum(8,0);
+			int SymD = std::tuple_size<StateVector>::value;
+			const int nmeas = check[0].size();
+
+			for (int k=0; k<check.size(); k++)
+			{
+				for (int i=0; i<nmeas; i++)
+				{
+					for (int j=0; j<8; j++)
+					{
+						sum[j] += check[k][i][j];
+					}
+				}
+			}
+			
+			for (int j=0; j<8; j++) 
+			{
+				sum[j] /= double(nmeas);
+				sum[j] /= double(check.size());
+				
+				cout << sum[j] << " ";
+			}
+			cout << endl;
+
+			double retval = 0.5*ham.beta*(sum[0]+sum[1]+sum[2]+sum[3]+sum[4]+sum[5]) - sum[6] - 2*ham.lambda*sum[7] + 0.5*SymD;
+
+			cout << retval << endl << endl;
+
+		}
+					
+
+
+
+
 
 		double elementaryMCstep(const int ncluster, const int nsweeps);
 	    
 	    	void gameloop(const int nsteps, const int ncluster, const int nsweeps)
 		{
+
+
+
+			std::vector<int> test;
+			for (int i=0; i<grid.size(); i++)
+			{
+				test.push_back(i);
+			}
+
+
+
 			double avgclustersize = 0;
 			for (int k=0; k<10; k++)
 			{
@@ -165,10 +247,13 @@ class Marqov
 					avgclustersize += elementaryMCstep(ncluster, nsweeps);
 					auto obs = ham.getobs();
 					marqov_measure(obs, statespace, grid);
+
+					perform_check(test);
 				}
 			}
 			cout << "|" << endl;
 			cout << avgclustersize/nsteps << endl;
+			finalize_check();
 		}
 	
 	    	void warmuploop(const int nsteps, const int ncluster, const int nsweeps)
@@ -267,7 +352,7 @@ class Marqov
 				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
 			}
 		 }
-	
+
 	private:
 
 

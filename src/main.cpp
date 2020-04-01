@@ -184,10 +184,10 @@ int main()
 
 	// ---- O(3) testing section ----
 
-	std::vector<int> nL = {8,12,16,24,32,48};
+	std::vector<int> nL = {8,12,16,24,32,48,64};
 
-	int    nbeta     = 15;
-	double betastart = 0.85;
+	int    nbeta     = 10;
+	double betastart = 0.50;
 	double betaend   = 1.0;
 
 	double betastep = (betaend - betastart) / double(nbeta);
@@ -218,8 +218,8 @@ int main()
 			marqov.init_hot();
 //			marqov.init_cold_Heisenberg();
 
-			marqov.warmuploop(300,100,5);
-			marqov.gameloop(300,100,5);
+			marqov.warmuploop(200,nL[j],nL[j]);
+			marqov.gameloop(300,nL[j],nL[j]);
 
 		}
 	}

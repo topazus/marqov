@@ -135,7 +135,7 @@ class Phi4
 		{
             interactions[0] = new Phi4_interaction<StateVector>();
             onsite[0] = new Phi4_onsitesquare<StateVector>(beta);
-            onsite[1] = new Phi4_onsitefour<StateVector>(1.0,beta);
+            onsite[1] = new Phi4_onsitefour<StateVector>(lambda, beta);
 		}
 
 		Phi4Mag obs_m;
