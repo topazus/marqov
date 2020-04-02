@@ -268,32 +268,35 @@ struct TupleToTupleVector
 		// evaluate check and display results
 		void finalize_consistency_check()
 		{
-			std::vector<double> sum(8,0);
-			int SymD = std::tuple_size<StateVector>::value;
-			const int nmeas = check.size();
+			const int SymD = std::tuple_size<StateVector>::value;
+			const int ncol = 8;
+			const int nmeasure = check.size();
+			const int nsites = check[0].size();
 
-			for (int k=0; k<check.size(); k++)
+			std::vector<double> sum(ncol,0);
+
+			// compute averages in each column
+			for (int k=0; k<nmeasure; k++)
 			{
-				for (int i=0; i<nmeas; i++)
+				for (int i=0; i<nsites; i++)
 				{
-					for (int j=0; j<8; j++)
+					for (int j=0; j<ncol; j++)
 					{
 						sum[j] += check[k][i][j];
 					}
 				}
 			}
 			
-			for (int j=0; j<8; j++) 
+			for (int j=0; j<ncol; j++) 
 			{
-				sum[j] /= double(nmeas);
-				sum[j] /= double(check.size());
-				
-				//cout << sum[j] << " ";
+				sum[j] = sum[j] / double(nmeasure) / double(nsites);
+				cout << sum[j] << " ";
 			}
 			cout << endl;
 
-//			double retval = 0.5*ham.beta*(sum[0]+sum[1]+sum[2]+sum[3]+sum[4]+sum[5]) - sum[6] - 2*ham.lambda*sum[7] + 0.5*SymD;
-//			cout << retval << endl << endl;
+			// summation formula
+			double retval = 0.5*ham.beta*(sum[0]+sum[1]+sum[2]+sum[3]+sum[4]+sum[5]) - sum[6] - 2*ham.lambda*sum[7] + 0.5*SymD;
+			cout << retval << endl << endl;
 
 		}
 					
