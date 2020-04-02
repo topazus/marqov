@@ -184,7 +184,7 @@ int main()
 
 	// ---- O(3) testing section ----
 
-	std::vector<int> nL = {8,12,16,24};
+	std::vector<int> nL = {8,12,16,24,32,48};
 
 	int    nbeta     = 10;
 	double betastart = 0.50;
@@ -200,26 +200,31 @@ int main()
 	for (int j=0; j<nL.size(); j++)
 	{
 
-		cout << endl << "L = " << nL[j] << endl << endl;
-		makeDir(outdir+std::to_string(nL[j]));
+		const int L = nL[j];
+
+		cout << endl << "L = " << L << endl << endl;
+		makeDir(outdir+std::to_string(L));
 
 		for (int i=0; i<nbeta; i++)
 		{
 			double currentbeta = betastart + i*betastep; 
 			cout << "beta = " << currentbeta << endl;
 
-			RegularLattice lattice(nL[j], 3);
+			RegularLattice lattice(L, 3);
 		
-			std::string outfile = outdir+std::to_string(nL[j])+"/"+std::to_string(i)+".h5";
+			std::string outfile = outdir+std::to_string(L)+"/"+std::to_string(i)+".h5";
 
-			Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, currentbeta, outfile);
-//			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, currentbeta, outfile);
+//			Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, currentbeta, outfile);
+			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, currentbeta, outfile);
 
 			marqov.init_hot();
 //			marqov.init_cold_Heisenberg();
 
-			marqov.warmuploop(200,nL[j],nL[j]);
-			marqov.gameloop(300,nL[j],nL[j]);
+			const int ncluster = L;
+			const int nsweeps  = L; 
+
+			marqov.wrmploop(200, ncluster, nsweeps);
+			marqov.gameloop(200, ncluster, nsweeps);
 
 		}
 	}
