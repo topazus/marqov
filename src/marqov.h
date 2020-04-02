@@ -343,21 +343,23 @@ struct TupleToTupleVector
 			finalize_consistency_check();
 		}
 	
-	    	void warmuploop(const int nsteps, const int ncluster, const int nsweeps)
+	    	void wrmploop(const int nsteps, const int ncluster, const int nsweeps)
 		{
 			cout << "|";
 			for (int k=0; k<10; k++)
 			{
 				cout << "." << flush;
-				for (int i=0; i<nsteps; ++i)
-				{
-					elementaryMCstep(ncluster, nsweeps);
-				}
+				for (int i=0; i<nsteps/10; ++i) elementaryMCstep(ncluster, nsweeps);
 			}
 			cout << "|";
 		}
+	
 
-		
+
+
+		// -------------- special purpose functions ----------------
+
+
 	    	void debugloop(const int nsteps, const int ncluster, const int nsweeps)
 		{
 			double avgclustersize = 0;
@@ -367,6 +369,8 @@ struct TupleToTupleVector
 			}
 			cout << avgclustersize/nsteps << endl;
 		}
+
+
 
 		// use carefully, might generate a lot of terminal output
 	    	void gameloop_liveview(int nframes = 100, int nsweepsbetweenframe = 5)
@@ -386,6 +390,8 @@ struct TupleToTupleVector
 			}
 		}
 	
+
+
 		void visualize_state_2d(int dim=0, double threshold=0.3)
 		{
 			cout << "_";
