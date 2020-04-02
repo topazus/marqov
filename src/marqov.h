@@ -12,6 +12,7 @@
 #include <H5Cpp.h>
 #include <H5File.h>
 #include <unistd.h> // provides usleep
+#include <stdexcept>
 
 using std::cout;
 using std::endl;
@@ -138,7 +139,9 @@ struct TupleToTupleVector
             cachepos[N] = 0;
 		}
 
+
 		std::vector<std::vector<std::vector<double>>> check;
+		std::vector<int> checkidxs;
         
         
 		// Constructor
@@ -214,25 +217,30 @@ struct TupleToTupleVector
 		}
 
 
-		void perform_check(std::vector<int> testidxs)
+		// ----------------- consistency check ------------------
+
+		// perform consistency check according to 
+		// Hasenbusch, J. Phys. A: Math. Gen. 34 8221 (2001)
+		
+		void perform_consistency_check(std::vector<int>& checkidxs)
 		{
 			std::vector<std::vector<double>> subcheck;
 
-			for (int k=0; k<testidxs.size(); k++)
+			for (int k=0; k<checkidxs.size(); k++)
 			{
-				const int testidx = testidxs[k];
+				const int checkidx = checkidxs[k];
 				std::vector<double> subsubcheck;
 
-				const auto testsite = statespace[testidx];
-				const auto nbrs = grid.getnbrs(0, testidx);
+				const auto checksite = statespace[checkidx];
+				const auto nbrs = grid.getnbrs(0, checkidx);
 
 				for (int i = 0; i < nbrs.size(); ++i)
 				{
 					const auto currentnbr = statespace[nbrs[i]];
-					subsubcheck.push_back(dot(testsite,currentnbr));
+					subsubcheck.push_back(dot(checksite,currentnbr));
 				}
 
-				const double selfdot = dot(testsite,testsite);
+				const double selfdot = dot(checksite,checksite);
 
 				subsubcheck.push_back(selfdot);
 				subsubcheck.push_back((selfdot-1)*selfdot);
@@ -241,13 +249,28 @@ struct TupleToTupleVector
 			}
 
 			check.push_back(subcheck);
+
+			// monitor memory consumption
+			const int nsites = checkidxs.size();
+			const int nmeasure = check.size(); 
+			const int ncol = check[0][0].size(); 
+
+			constexpr static double check_GB_limit = 1.0;
+
+			if (nsites*nmeasure*ncol > check_GB_limit*1024*1024*1024/8) 
+			{
+				throw std::overflow_error(
+				"\n Running out of memory during consistency check! \n Decrease either lattice size or number of measurements!");
+			}
 		}
 
-		void finalize_check()
+
+		// evaluate check and display results
+		void finalize_consistency_check()
 		{
 			std::vector<double> sum(8,0);
 			int SymD = std::tuple_size<StateVector>::value;
-			const int nmeas = check[0].size();
+			const int nmeas = check.size();
 
 			for (int k=0; k<check.size(); k++)
 			{
@@ -265,17 +288,29 @@ struct TupleToTupleVector
 				sum[j] /= double(nmeas);
 				sum[j] /= double(check.size());
 				
-				cout << sum[j] << " ";
+				//cout << sum[j] << " ";
 			}
 			cout << endl;
 
 //			double retval = 0.5*ham.beta*(sum[0]+sum[1]+sum[2]+sum[3]+sum[4]+sum[5]) - sum[6] - 2*ham.lambda*sum[7] + 0.5*SymD;
-
 //			cout << retval << endl << endl;
 
 		}
 					
 
+		// specificy site indices which will enter the check
+		// default: all (good statistic, but requires a somewhat large amount of memory)
+		void prepare_consistency_check(std::vector<int>& checkidxs)
+		{
+			for (int i=0; i<grid.size(); i++)
+			{
+				checkidxs.push_back(i);
+			}
+		}
+
+
+		
+		// ----------------- consistency check end ------------------
 
 
 
@@ -285,15 +320,7 @@ struct TupleToTupleVector
 	    	void gameloop(const int nsteps, const int ncluster, const int nsweeps)
 		{
 
-
-
-			std::vector<int> test;
-			for (int i=0; i<grid.size(); i++)
-			{
-				test.push_back(i);
-			}
-
-
+			prepare_consistency_check(checkidxs);
 
 			double avgclustersize = 0;
 			for (int k=0; k<10; k++)
@@ -304,13 +331,13 @@ struct TupleToTupleVector
 					avgclustersize += elementaryMCstep(ncluster, nsweeps);
 					auto obs = ham.getobs();
 					marqov_measure(obs, statespace, grid);
-
-					perform_check(test);
+					perform_consistency_check(checkidxs);
 				}
 			}
+
 			cout << "|" << endl;
 			cout << avgclustersize/nsteps << endl;
-			finalize_check();
+			finalize_consistency_check();
 		}
 	
 	    	void warmuploop(const int nsteps, const int ncluster, const int nsweeps)

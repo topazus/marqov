@@ -184,7 +184,7 @@ int main()
 
 	// ---- O(3) testing section ----
 
-	std::vector<int> nL = {8,12,16,24,32,48,64};
+	std::vector<int> nL = {8,12,16,24};
 
 	int    nbeta     = 10;
 	double betastart = 0.50;
@@ -212,8 +212,8 @@ int main()
 		
 			std::string outfile = outdir+std::to_string(nL[j])+"/"+std::to_string(i)+".h5";
 
-//			Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, currentbeta, outfile);
-			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, currentbeta, outfile);
+			Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, currentbeta, outfile);
+//			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, currentbeta, outfile);
 
 			marqov.init_hot();
 //			marqov.init_cold_Heisenberg();
