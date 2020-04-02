@@ -108,6 +108,48 @@ struct TupleToTupleVector
     RetType;
 };
 
+		/**
+         * Writes out the entire current cache of observable N
+         */
+		template <int N>
+		void writecache ()
+        {
+            hsize_t num = cachepos[N];
+            //figure out how to properly append in HDF5
+            typedef typename std::tuple_element<N, TupleCacheType>::type::value_type OutType;
+			constexpr int rank = H5Mapper<OutType>::rank;
+			hsize_t dims[rank] = {num};
+			H5::DataSpace mspace(rank, dims, NULL);
+			hsize_t start[rank] = {dssize[N]};
+			dssize[N] += num;
+			dataset[N].extend(&dssize[N]);
+			auto filespace = dataset[N].getSpace();
+			hsize_t count[rank] = {num};
+			filespace.selectHyperslab(H5S_SELECT_SET, count, start);
+			dataset[N].write(
+                std::get<N>(obscache).data(),
+                H5Mapper<OutType>::H5Type(), mspace, filespace);
+			// std::cout<<std::get<N>(t).name<<" "<<retval<<std::endl;
+        }
+
+template <int N, class M>
+struct ObsCacheDestructor
+{
+    static void call(M& m)
+    {
+    m.template writecache<N>();
+    ObsCacheDestructor<N-1, M>::call(m);
+}
+};
+
+template <class M>
+struct ObsCacheDestructor<0, M>
+{
+    static void call(M& m)
+    {
+    m.template writecache<0>();
+}
+};
 
 		
 		template<size_t N = 0, typename... Ts>
@@ -166,32 +208,8 @@ struct TupleToTupleVector
 
 		// Destructor
 		~Marqov() {
-            writecache<0>();
+            ObsCacheDestructor<std::tuple_size<ObsTs>::value -1, decltype(*this)>::call(*this);
             delete [] statespace; delete [] dataset; dump.close();
-        }
-
-		/**
-         * Writes out the entire current cache
-         */
-		template <int N>
-		void writecache ()
-        {
-            hsize_t num = cachepos[N];
-            //figure out how to properly append in HDF5
-            typedef typename std::tuple_element<N, TupleCacheType>::type::value_type OutType;
-			constexpr int rank = H5Mapper<OutType>::rank;
-			hsize_t dims[rank] = {num};
-			H5::DataSpace mspace(rank, dims, NULL);
-			hsize_t start[rank] = {dssize[N]};
-			dssize[N] += num;
-			dataset[N].extend(&dssize[N]);
-			auto filespace = dataset[N].getSpace();
-			hsize_t count[rank] = {num};
-			filespace.selectHyperslab(H5S_SELECT_SET, count, start);
-			dataset[N].write(
-                std::get<N>(obscache).data(),
-                H5Mapper<OutType>::H5Type(), mspace, filespace);
-			// std::cout<<std::get<N>(t).name<<" "<<retval<<std::endl;
         }
 
 		template<size_t N = 0, typename... Ts, typename... Args>
