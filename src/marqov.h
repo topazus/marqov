@@ -7,6 +7,8 @@
 #include <string>
 #include <functional>
 #include <type_traits>
+#include <utility>
+#include <tuple>
 #include <H5Cpp.h>
 #include <H5File.h>
 #include <unistd.h> // provides usleep
@@ -25,7 +27,6 @@ auto _call(Function f, Object& obj, Tuple t) {
 	static constexpr auto size = std::tuple_size<Tuple>::value;
 	return _call(f, obj, t, std::make_index_sequence<size>{});
 }
-
 
 // ---------------- HDF5 MAPPER -----------------
 
@@ -71,6 +72,42 @@ class Marqov
 	public:
 		typedef typename Hamiltonian::StateVector StateVector;
 		typedef StateVector* StateSpace;
+
+//Local classes. We gain access to all Types of Marqov        
+        
+        template <typename T>
+        struct ObsRetType
+        {
+            typedef decltype(// this line and the next two determine the value that we will pass to the vector from the return type of the measure function of the observable...
+            std::declval<T>().template measure<StateSpace, Grid>(
+            std::declval<StateSpace>(), std::declval<Grid>() )) RetType;
+        };
+
+template <int N, typename Tup>
+struct TupleIter
+{
+    typedef decltype(std::tuple_cat(
+                std::declval<typename TupleIter<N-1, Tup>::RetType>(),
+                std::make_tuple(std::declval<std::vector<typename ObsRetType<typename std::tuple_element<N, Tup>::type>::RetType>>())
+    )) RetType;
+};
+
+template <typename Tup>
+struct TupleIter<0, Tup>
+{
+    typedef std::tuple<std::vector<
+    typename ObsRetType<typename std::tuple_element<0, Tup>::type>::RetType
+    > > RetType;
+};
+
+template <typename Tup>
+struct TupleToTupleVector
+{
+    typedef typename TupleIter<std::tuple_size<Tup>::value-1, Tup>::RetType
+    RetType;
+};
+
+
 		
 		template<size_t N = 0, typename... Ts>
 		inline typename std::enable_if_t<N == sizeof...(Ts), void>
@@ -97,6 +134,8 @@ class Marqov
 			dataset[N] = dump.createDataSet(std::get<N>(t).name, H5Mapper<OutType>::H5Type(), mspace1, cparms);
 			dssize[N] = 0;
 			marqov_createds<N + 1, Ts...>(t);
+            std::get<N>(obscache).resize(maxcache);//allocate space for 1024 entries
+            cachepos[N] = 0;
 		}
 
 		std::vector<std::vector<std::vector<double>>> check;
@@ -114,7 +153,7 @@ class Marqov
 			rng.set_integer_range(lattice.size());
 			statespace = new typename Hamiltonian::StateVector[lattice.size()];
 			auto obs = ham.getobs();
-			constexpr int nobs = std::tuple_size<decltype(obs)>::value;
+			constexpr int nobs = std::tuple_size<ObsTs>::value;
 			dataset = new H5::DataSet[nobs];
 			dssize = new hsize_t[nobs];
 
@@ -123,8 +162,34 @@ class Marqov
 		}
 
 		// Destructor
-		~Marqov() {delete [] statespace; delete [] dataset; dump.close();}
+		~Marqov() {
+            writecache<0>();
+            delete [] statespace; delete [] dataset; dump.close();
+        }
 
+		/**
+         * Writes out the entire current cache
+         */
+		template <int N>
+		void writecache ()
+        {
+            hsize_t num = cachepos[N];
+            //figure out how to properly append in HDF5
+            typedef typename std::tuple_element<N, TupleCacheType>::type::value_type OutType;
+			constexpr int rank = H5Mapper<OutType>::rank;
+			hsize_t dims[rank] = {num};
+			H5::DataSpace mspace(rank, dims, NULL);
+			hsize_t start[rank] = {dssize[N]};
+			dssize[N] += num;
+			dataset[N].extend(&dssize[N]);
+			auto filespace = dataset[N].getSpace();
+			hsize_t count[rank] = {num};
+			filespace.selectHyperslab(H5S_SELECT_SET, count, start);
+			dataset[N].write(
+                std::get<N>(obscache).data(),
+                H5Mapper<OutType>::H5Type(), mspace, filespace);
+			// std::cout<<std::get<N>(t).name<<" "<<retval<<std::endl;
+        }
 
 		template<size_t N = 0, typename... Ts, typename... Args>
 		inline typename std::enable_if_t<N == sizeof...(Ts), void>
@@ -139,21 +204,13 @@ class Marqov
 							 std::get<N>(t), 
 							 std::make_tuple(args...) );
 			marqov_measure<N + 1, Ts...>(t, args...);
-			typedef decltype(retval) OutType;
-			//figure out how to properly append in HDF5
-			constexpr int rank = H5Mapper<OutType>::rank;
-			hsize_t dims[rank] = {1};
-			H5::DataSpace mspace(rank, dims, NULL);
-			++dssize[N];
-			dataset[N].extend(&dssize[N]);
-			auto filespace = dataset[N].getSpace();
-			hsize_t start[rank] = {dssize[N]-1};
-			hsize_t count[rank] = {1};
-			filespace.selectHyperslab(H5S_SELECT_SET, count, start);
-			dataset[N].write(&retval, H5Mapper<OutType>::H5Type(), mspace, filespace);
-			// std::cout<<std::get<N>(t).name<<" "<<retval<<std::endl;
-
-
+            std::get<N>(obscache)[cachepos[N]] = retval;
+            cachepos[N] = cachepos[N] + 1;
+            if (cachepos[N] >= maxcache)
+            {
+                writecache<N>();
+                cachepos[N] = 0;
+            }
 		}
 
 
@@ -212,9 +269,9 @@ class Marqov
 			}
 			cout << endl;
 
-			double retval = 0.5*ham.beta*(sum[0]+sum[1]+sum[2]+sum[3]+sum[4]+sum[5]) - sum[6] - 2*ham.lambda*sum[7] + 0.5*SymD;
+//			double retval = 0.5*ham.beta*(sum[0]+sum[1]+sum[2]+sum[3]+sum[4]+sum[5]) - sum[6] - 2*ham.lambda*sum[7] + 0.5*SymD;
 
-			cout << retval << endl << endl;
+//			cout << retval << endl << endl;
 
 		}
 					
@@ -347,7 +404,7 @@ class Marqov
 		 void init_hot()
 		 {
 		 	const int SymD = std::tuple_size<StateVector>::value;
-			for(int i = 0; i < grid.size(); ++i)
+			for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
 			{
 				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
 			}
@@ -368,11 +425,17 @@ class Marqov
 
 	StateSpace statespace;
 	Hamiltonian ham;
+    typedef typename Hamiltonian::ObsTs ObsTs;
+    typedef typename TupleToTupleVector<ObsTs>::RetType TupleCacheType;
+    constexpr static int maxcache=1024;
+//    typename Hamiltonian::ObsTs obs;
 	Grid& grid;
 	RND rng;
 
 	H5::H5File dump;
 	H5::DataSet* dataset;
+    TupleCacheType obscache;
+    int cachepos[std::tuple_size<ObsTs>::value];
 	hsize_t* dssize;
 
 	//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.

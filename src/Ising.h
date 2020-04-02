@@ -92,6 +92,7 @@ class Ising
 	    
 	
 		// instantiate and choose observables
+        typedef std::tuple<IsingMag> ObsTs;
 		IsingMag       obs_m;
 		auto getobs()
 		{
