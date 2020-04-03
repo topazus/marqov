@@ -123,6 +123,7 @@ inline void coutsv(StateVector& vec)
 #include "Heisenberg.h"
 #include "Ising.h"
 #include "Phi4.h"
+#include "BlumeCapel.h"
 
 const std::string outdir = "../out/";
 const int myid = 0;
@@ -139,14 +140,16 @@ int main()
 
 
 
-	/*
-	// ---- 2D Ising testing section ----
+//	/*
+	// ---- 2D/3D Ising testing section ----
 
-	std::vector<int> nL = {8,16,32,64,128};
+	std::vector<int> nL = {8,12,16,24,32,48};
 
-	int    nbeta     = 10;
-	double betastart = 0.37;
-	double betaend   = 0.47;
+	const int dim = 3;
+
+	const int    nbeta     = 12;
+	const double betastart = 0.32;
+	const double betaend   = 0.44;
 
 	double betastep = (betaend - betastart) / double(nbeta);
 
@@ -158,37 +161,42 @@ int main()
 
 	for (int j=0; j<nL.size(); j++)
 	{
-
-		cout << endl << "L = " << nL[j] << endl << endl;
-		makeDir(outdir+std::to_string(nL[j]));
+		const int L = nL[j];
+		cout << endl << "L = " << L << endl << endl;
+		makeDir(outdir+std::to_string(L));
 
 		for (int i=0; i<nbeta; i++)
 		{
 			double currentbeta = betastart + i*betastep; 
 			cout << "beta = " << currentbeta << endl;
 
-			RegularLattice lattice(nL[j], 2);
+			RegularLattice lattice(L, dim);
     
-			std::string outfile = outdir+std::to_string(nL[j])+"/"+std::to_string(i)+".h5";
+			std::string outfile = outdir+std::to_string(L)+"/"+std::to_string(i)+".h5";
 
-			Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
+//			Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
+			Marqov<RegularLattice, BlumeCapel<int> > marqov(lattice, currentbeta, outfile);
 
 			marqov.init_hot();
-			marqov.warmuploop(1000, 500, 10);
-			marqov.gameloop(1500, 500, 10);
+
+			const int ncluster = L;
+			const int nsweeps  = L/2; 
+
+			marqov.wrmploop(2000, ncluster, nsweeps);
+			marqov.gameloop(8000, ncluster, nsweeps);
 		}
 	}
 //	*/
 
-//	/*
+	/*
 
 	// ---- O(3) testing section ----
 
 	std::vector<int> nL = {8,12,16,24,32,48};
 
-	int    nbeta     = 10;
-	double betastart = 0.50;
-	double betaend   = 1.0;
+	int    nbeta     = 30;
+	double betastart = 0.60;
+	double betaend   = 0.9;
 
 	double betastep = (betaend - betastart) / double(nbeta);
 
@@ -218,17 +226,16 @@ int main()
 			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, currentbeta, outfile);
 
 			marqov.init_hot();
-//			marqov.init_cold_Heisenberg();
 
 			const int ncluster = L;
-			const int nsweeps  = L; 
+			const int nsweeps  = L/2; 
 
-			marqov.wrmploop(200, ncluster, nsweeps);
-			marqov.gameloop(200, ncluster, nsweeps);
+			marqov.wrmploop(1000, ncluster, nsweeps);
+			marqov.gameloop(2000, ncluster, nsweeps);
 
 		}
 	}
 
-//	*/
+	*/
 
 }

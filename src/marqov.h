@@ -273,7 +273,7 @@ struct ObsCacheDestructor<0, M>
 			const int nmeasure = check.size(); 
 			const int ncol = check[0][0].size(); 
 
-			constexpr static double check_GB_limit = 1.0;
+			constexpr static double check_GB_limit = 4.0;
 
 			if (nsites*nmeasure*ncol > check_GB_limit*1024*1024*1024/8) 
 			{
@@ -341,7 +341,7 @@ struct ObsCacheDestructor<0, M>
 	    	void gameloop(const int nsteps, const int ncluster, const int nsweeps)
 		{
 
-			prepare_consistency_check(checkidxs);
+//			prepare_consistency_check(checkidxs);
 
 			double avgclustersize = 0;
 			for (int k=0; k<10; k++)
@@ -352,13 +352,13 @@ struct ObsCacheDestructor<0, M>
 					avgclustersize += elementaryMCstep(ncluster, nsweeps);
 					auto obs = ham.getobs();
 					marqov_measure(obs, statespace, grid);
-					perform_consistency_check(checkidxs);
+//					perform_consistency_check(checkidxs);
 				}
 			}
 
 			cout << "|" << endl;
 			cout << avgclustersize/nsteps << endl;
-			finalize_consistency_check();
+//			finalize_consistency_check();
 		}
 	
 	    	void wrmploop(const int nsteps, const int ncluster, const int nsweeps)
