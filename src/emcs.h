@@ -15,6 +15,7 @@ double Marqov<Grid, Hamiltonian>::elementaryMCstep(const int ncluster, const int
 	double avgclustersize = 0;
 	for (int j=0; j<ncluster; j++)
 	{
+
 		const int rsite = rng.i();
 //		avgclustersize += wolffstep_Ising(rsite);
 

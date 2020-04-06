@@ -124,6 +124,7 @@ inline void coutsv(StateVector& vec)
 #include "Ising.h"
 #include "Phi4.h"
 #include "BlumeCapel.h"
+#include "XXZAntiferro.h"
 
 const std::string outdir = "../out/";
 const int myid = 0;
@@ -140,7 +141,7 @@ int main()
 
 
 
-//	/*
+	/*
 	// ---- 2D/3D Ising testing section ----
 
 	std::vector<int> nL = {8,12,16,24,32,48};
@@ -186,9 +187,9 @@ int main()
 			marqov.gameloop(8000, ncluster, nsweeps);
 		}
 	}
-//	*/
+	*/
 
-	/*
+//	/*
 
 	// ---- O(3) testing section ----
 
@@ -223,19 +224,20 @@ int main()
 			std::string outfile = outdir+std::to_string(L)+"/"+std::to_string(i)+".h5";
 
 //			Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, currentbeta, outfile);
-			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, currentbeta, outfile);
+//			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, currentbeta, outfile);
+			Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, currentbeta, outfile);
 
 			marqov.init_hot();
 
 			const int ncluster = L;
 			const int nsweeps  = L/2; 
 
-			marqov.wrmploop(1000, ncluster, nsweeps);
-			marqov.gameloop(2000, ncluster, nsweeps);
+			marqov.wrmploop(100, ncluster, nsweeps);
+			marqov.gameloop(200, ncluster, nsweeps);
 
 		}
 	}
 
-	*/
+//	*/
 
 }
