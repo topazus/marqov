@@ -86,7 +86,7 @@ class Heisenberg_Initializer
 		Heisenberg_Initializer(RNG& rn) : rng(rn) {}
 
 		// generate new statevector
-		StateVector newsv(StateVector&) 
+		StateVector newsv(const StateVector&) 
 		{
 			return rnddir<RNG, double, SymD>(rng);
 		};
@@ -105,7 +105,7 @@ class Heisenberg_interaction : public Interaction<StateVector>
 		{
 	 		this->J = -1;	// -1 ferro, +1 antiferro
 		}
-		StateVector operator() (StateVector& phi) {return phi;};
+		StateVector operator() (const StateVector& phi) {return phi;};
 };
 
 

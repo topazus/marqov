@@ -41,7 +41,7 @@ public:
 	{
 		this->J = -1;	// +1 ferro, -1 antiferro
 	}
-	StateVector operator() (StateVector& phi) {return phi;};
+	StateVector operator() (const StateVector& phi) {return phi;};
 };
 
 
@@ -53,7 +53,7 @@ class BlumeCapel_onsite : public OnSite<StateVector, double>
 		{
 			this->h = D/beta;
 		}
-		double operator() (StateVector& phi) {return dot(phi,phi);};
+		double operator() (const StateVector& phi) {return dot(phi,phi);};
 };
 
 

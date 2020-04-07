@@ -41,7 +41,7 @@ public:
 	{
 		this->J = -1;	// +1 ferro, -1 antiferro
 	}
-	StateVector operator() (StateVector& phi) {return phi;};
+	StateVector operator() (const StateVector& phi) {return phi;};
 };
 
 

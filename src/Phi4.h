@@ -52,7 +52,7 @@ class Phi4_Initializer
 		Phi4_Initializer(RNG& rn) : rng(rn) {}
 
 		// generate new statevector
-		StateVector newsv(StateVector& osv) 
+		StateVector newsv(const StateVector& osv) 
 		{
             double amp = 0.5;
             double r = 2*rng.d() - 1.0;
@@ -76,7 +76,7 @@ class Phi4_interaction : public Interaction<StateVector>
 		{
 	 		this->J = -1;	
 		}
-		StateVector operator() (StateVector& phi) {return phi;};
+		StateVector operator() (const StateVector& phi) {return phi;};
 };
 
 template <class StateVector>
@@ -87,7 +87,7 @@ class Phi4_onsitesquare : public OnSite<StateVector, double>
 		{
 	 		this->h = 1.0/beta;
 		}
-		double operator() (StateVector& phi) {return dot(phi,phi);};
+		double operator() (const StateVector& phi) {return dot(phi,phi);};
 };
 
 template <class StateVector>
@@ -98,7 +98,7 @@ class Phi4_onsitefour : public OnSite<StateVector, double>
 		{
 	 		this->h = lambda/beta;
 		}
-		double operator() (StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);};
+		double operator() (const StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);};
 };
 
 

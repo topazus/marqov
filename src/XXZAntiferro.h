@@ -57,6 +57,8 @@ class XXZAntiferroStaggeredMagZ
 		XXZAntiferroStaggeredMagZ() : name("mstagz") {}
 };
 
+
+
 // Staggered magnetization perpendicular to easy axis (x-y plane)
 class XXZAntiferroStaggeredMagXY
 {
@@ -125,7 +127,7 @@ class XXZAntiferro_Initializer
 		XXZAntiferro_Initializer(RNG& rn) : rng(rn) {}
 
 		// generate new statevector
-		StateVector newsv(StateVector&) 
+		StateVector newsv(const StateVector&) 
 		{
 			return rnddir<RNG, double, SymD>(rng);
 		};
@@ -146,7 +148,7 @@ class XXZAntiferro_interaction : public Interaction<StateVector>
 		{
 	 		this->J = 1;
 		}
-		StateVector operator() (StateVector& phi) 
+		StateVector operator() (const StateVector& phi) 
 		{
 			StateVector retval;
 
@@ -207,7 +209,7 @@ class XXZAntiferro
 		template <class A>
 		inline void wolff_flip(StateVector& sv, const A a)
 		{
-			sv[2] *= -sv[2];
+			sv[2] *= -1;
 			normalize(sv);  // necessary?
 		}
 

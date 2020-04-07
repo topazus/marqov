@@ -29,7 +29,7 @@ class Interaction
 {
 	public:
 	    double J;
-	    virtual StateVector operator() (StateVector& phi_i) = 0;
+	    virtual StateVector operator() (const StateVector& phi_i) = 0;
 };
 
 
@@ -38,7 +38,7 @@ class OnSite
 {
 	public: 
 	    CouplingType h;
-	    virtual CouplingType operator() (StateVector& phi) = 0;
+	    virtual CouplingType operator() (const StateVector& phi) = 0;
 	private:
 };
 
@@ -49,7 +49,7 @@ class MultiSite
 {
 	public: 
 	    const double k;
-	    virtual double operator() (StateVector& sv, int svpos, StateSpace s) = 0;
+	    virtual double operator() (const StateVector& sv, int svpos, StateSpace s) = 0;
 	private:
 };
 
@@ -146,9 +146,9 @@ int main()
 		const int L = 30;
 		RegularLattice lattice(L, 3);
 		std::string outfile = outdir+"temp.h5";
-		Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, 1/0.46, outfile);
+		Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, 1/0.36, outfile);
 		marqov.init_hot();
-		const int ncluster = L;
+		const int ncluster = 0;
 		const int nsweeps  = L/2; 
 		marqov.wrmploop(50, ncluster, nsweeps);
 		marqov.gameloop_liveview();
@@ -246,8 +246,8 @@ int main()
 			const int ncluster = L;
 			const int nsweeps  = L/2; 
 
-			marqov.wrmploop(300, ncluster, nsweeps);
-			marqov.gameloop(500, ncluster, nsweeps);
+			marqov.wrmploop(1500, ncluster, nsweeps);
+			marqov.gameloop(5000, ncluster, nsweeps);
 
 		}
 	}
