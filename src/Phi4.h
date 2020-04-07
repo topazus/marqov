@@ -143,7 +143,7 @@ class Phi4
 		auto getobs() { return std::make_tuple(obs_m);}
 
 		template <class A>
-		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
+		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
 		{
 			return dot(sv1, a) * dot(sv2, a);
 		}

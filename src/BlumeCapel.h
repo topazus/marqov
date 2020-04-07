@@ -53,7 +53,7 @@ class BlumeCapel_onsite : public OnSite<StateVector, double>
 		{
 			this->h = D/beta;
 		}
-		double operator() (const StateVector& phi) {return dot(phi,phi);};
+		auto operator() (const StateVector& phi) {return dot(phi,phi);};
 };
 
 
@@ -152,7 +152,7 @@ class BlumeCapel
 		template <class A = bool>
 		inline void wolff_flip(StateVector& sv, const A a=0)
 		{
-			sv[0] *= -1;
+			sv[0] *= -static_cast<decltype(sv[0])>(1.0);
 		}
 
 };
