@@ -149,7 +149,7 @@ class Heisenberg
 		// the functions 'wolff_coupling' and 'wolff_flip'
 
 		template <class A> 
-		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
+		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
 		{
 			return dot(sv1, a) * dot(sv2, a);
 		}
