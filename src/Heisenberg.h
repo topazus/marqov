@@ -136,7 +136,9 @@ class Heisenberg
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Heisenberg(double mybeta) : beta(mybeta) {   interactions[0] = new Heisenberg_interaction<StateVector>(); }
+        template <class T>
+		Heisenberg(T& registry) : beta(registry.template Get<double>("Heisenberg", "General", "beta" ))
+        {   interactions[0] = new Heisenberg_interaction<StateVector>(); }
 		
 		typedef std::tuple<HeisenbergMag, HeisenbergMagSq> ObsTs;
 		HeisenbergMag obs_m;

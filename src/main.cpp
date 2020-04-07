@@ -16,6 +16,40 @@ using std::ofstream;
 
 #include "systemtools.h"
 
+//two examples on how to extend the parsing capapbilities of the registry
+template <typename T>
+struct GetTrait<std::vector<T> >//helper trait to break up a string at various predefined seperators
+{
+    static std::vector<T> Convert(std::string& arg)
+    {
+        const std::string delim("; ,");
+        std::vector<T> retval;
+        std::size_t pos = 0;
+        std::size_t posold = 0;
+        do
+        {
+            retval.push_back(GetTrait<T>::Convert(arg.substr(posold, ( pos = arg.find_first_of(delim, posold) ) - posold) ));
+        } while ((posold = arg.find_first_not_of(delim, pos) ) != std::string::npos);
+        return retval;
+    }
+};
+
+template <>
+struct GetTrait<std::vector<std::string> >//helper trait to break up a string at various predefined seperators
+{
+    static std::vector<std::string> Convert(std::string arg)
+    {
+        const std::string delim("; ,");
+        std::vector<std::string> retval;
+        std::size_t pos = 0;
+        std::size_t posold = 0;
+        do
+        {
+            retval.push_back(arg.substr(posold, ( pos = arg.find_first_of(delim, posold) ) - posold) );
+        } while ((posold = arg.find_first_not_of(delim, pos) ) != std::string::npos);
+        return retval;
+    }
+};
 
 class Grid 
 {
@@ -132,7 +166,7 @@ const int myid = 0;
 #include "marqov.h"
 int main()
 {
-	//RegistryDB registry("./cfgs");
+	RegistryDB registry("./cfgs");
 
 	// remove old output and prepare new one
 	std::string command = "rm -r " + outdir;
@@ -146,7 +180,7 @@ int main()
 		const int L = 30;
 		RegularLattice lattice(L, 3);
 		std::string outfile = outdir+"temp.h5";
-		Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, 1/0.36, outfile);
+		Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, outfile, 1/0.36);
 		marqov.init_hot();
 		const int ncluster = 0;
 		const int nsweeps  = L/2; 
@@ -207,16 +241,17 @@ int main()
 
 	// ---- O(3) testing section ----
 
-	std::vector<int> nL = {8,12,16,24,32,48};
+	auto  nL = registry.Get<std::vector<int> >("mc", "General", "nL" );
 
-	int    nbeta     = 12;
-	double betastart = 0.59;
-	double betaend   = 0.71;
+	int    nbeta     = registry.Get<int>("mc", "General", "nbeta" );
+	double betastart = registry.Get<double>("mc", "General", "betastart" );
+	double betaend   = registry.Get<double>("mc", "General", "betaend" );
 
 	double betastep = (betaend - betastart) / double(nbeta);
 
-	std::ofstream os;
-	os.open("simplelog.dat");
+
+	std::string logfilename = registry.Get<std::string>("mc", "IO", "logfilename" );
+	std::ofstream os(logfilename);
 	for (int i=0; i<nbeta; i++) os << betastart + i*betastep << endl;
 	os.close();
 
@@ -237,12 +272,12 @@ int main()
 		
 			std::string outfile = outdir+std::to_string(L)+"/"+std::to_string(i)+".h5";
 {
-			Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, currentbeta, outfile);
+			Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, outfile, registry);
 }
 {
-			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, currentbeta, outfile);
+			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, outfile, currentbeta);
 }
-			Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, currentbeta, outfile);
+			Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, outfile, currentbeta);
 
 			marqov.init_hot();
 
