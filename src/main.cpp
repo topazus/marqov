@@ -138,7 +138,21 @@ int main()
 	std::string command = "rm -r " + outdir;
 	system(command.c_str());
 	makeDir(outdir);
+	
 
+	// ---- live view ----
+//		/*
+
+		const int L = 30;
+		RegularLattice lattice(L, 3);
+		std::string outfile = outdir+"temp.h5";
+		Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, 1/0.46, outfile);
+		marqov.init_hot();
+		const int ncluster = L;
+		const int nsweeps  = L/2; 
+		marqov.wrmploop(50, ncluster, nsweeps);
+		marqov.gameloop_liveview();
+//		*/
 
 
 	/*
@@ -195,9 +209,9 @@ int main()
 
 	std::vector<int> nL = {8,12,16,24,32,48};
 
-	int    nbeta     = 30;
-	double betastart = 0.60;
-	double betaend   = 0.9;
+	int    nbeta     = 12;
+	double betastart = 0.59;
+	double betaend   = 0.71;
 
 	double betastep = (betaend - betastart) / double(nbeta);
 
@@ -232,8 +246,8 @@ int main()
 			const int ncluster = L;
 			const int nsweeps  = L/2; 
 
-			marqov.wrmploop(100, ncluster, nsweeps);
-			marqov.gameloop(200, ncluster, nsweeps);
+			marqov.wrmploop(300, ncluster, nsweeps);
+			marqov.gameloop(500, ncluster, nsweeps);
 
 		}
 	}

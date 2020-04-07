@@ -46,9 +46,9 @@ public:
     }
     std::size_t size() const {return numberatoms;}
     int length;
+    int dim;
 private:
     std::size_t numberatoms;
-    int dim;
     std::vector<int> pows;
 };
 

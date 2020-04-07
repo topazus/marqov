@@ -9,68 +9,107 @@
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-// Magnetization
-class XXZAntiferroMag
+// Staggered magnetization easy axis (z)
+class XXZAntiferroStaggeredMagZ
 {
 	public:
 		std::string name;
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			constexpr static int SymD = 3;	// improve me
-			const     int N = grid.size();
+			const int N = grid.size();
+			const int L = grid.length;
 
-			std::vector<double> mag(SymD,0) ;
+			if ((L+1) % 2 == 0) cout << "error"<< endl;
 
-			for (int i=0; i<N; i++)
+			double magA = 0;
+			double magB = 0;
+
+			if (grid.dim == 2)
 			{
-				for (int j=0; j<SymD; j++)
+				// implement me
+			}
+
+			if (grid.dim == 3)
+			{
+				for (int i=0; i<L; i++)
 				{
-					mag[j] += statespace[i][j];
+					for (int j=0; j<L; j++)
+					{
+						for (int k=0; k<L; k++)
+						{
+							const int idx = i*L*L + j*L + k;
+
+							// sublattice A
+							if ((i+j+k) % 2 == 0) 	
+								magA += statespace[idx][2];
+							// sublattice B
+							else					
+								magB += statespace[idx][2];
+						}
+					}
 				}
 			}
-			
-			double retval = 0;
-			for (int j=0; j<SymD; j++)
-			{
-				retval += mag[j]*mag[j];
-			}
-			return sqrt(retval)/double(N);
+
+			return fabs(magA-magB) / double(0.5*N);
 		}
-		XXZAntiferroMag() : name("m") {}
+
+		XXZAntiferroStaggeredMagZ() : name("mstagz") {}
 };
 
-// Magnetization Squared - > some dummy for testing two observables
-class XXZAntiferroMagSq
+// Staggered magnetization perpendicular to easy axis (x-y plane)
+class XXZAntiferroStaggeredMagXY
 {
 	public:
 		std::string name;
 		template <class StateSpace, class Grid>
-		int measure(const StateSpace& statespace, const Grid& grid)
+		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			constexpr static int SymD = 3;	// improve me
-			const     int N = grid.size();
+			const int N = grid.size();
+			const int L = grid.length;
 
-			std::vector<double> mag(SymD,0) ;
+			if ((L+1) % 2 == 0) cout << "error"<< endl;
 
-			for (int i=0; i<N; i++)
+			double magAx = 0;
+			double magBx = 0;
+			double magAy = 0;
+			double magBy = 0;
+
+			if (grid.dim == 2)
 			{
-				for (int j=0; j<SymD; j++)
+				// implement me
+			}
+
+			if (grid.dim == 3)
+			{
+				for (int i=0; i<L; i++)
 				{
-					mag[j] += statespace[i][j];
+					for (int j=0; j<L; j++)
+					{
+						for (int k=0; k<L; k++)
+						{
+							const int idx = i*L*L + j*L + k;
+
+							if ((i+j+k) % 2 == 0) // sublattice A
+							{
+								magAx += statespace[idx][0];
+								magAy += statespace[idx][1];
+							}
+							else // sublattice B
+							{
+								magBx += statespace[idx][0];
+								magBy += statespace[idx][1];
+							}
+						}
+					}
 				}
 			}
-			
-			double retval = 0;
-			for (int j=0; j<SymD; j++)
-			{
-				retval += mag[j]*mag[j];
-			}
-			return (int) retval;
-		}
-		XXZAntiferroMagSq() : name("msq") {}
-};
 
+			return std::sqrt(pow(magAx-magBx,2) + pow(magAy-magBy,2)) / double(0.5*N);
+		}
+
+		XXZAntiferroStaggeredMagXY() : name("mstagxy") {}
+};
 
 // ----------------------------------------------------------------------
 
@@ -149,11 +188,11 @@ class XXZAntiferro
 
 		XXZAntiferro(double mybeta) : beta(mybeta) {   interactions[0] = new XXZAntiferro_interaction<StateVector>(); }
 		
-		typedef std::tuple<XXZAntiferroMag, XXZAntiferroMagSq> ObsTs;
-		XXZAntiferroMag obs_m;
-        XXZAntiferroMagSq obs_msq;
+		typedef std::tuple<XXZAntiferroStaggeredMagZ, XXZAntiferroStaggeredMagXY> ObsTs;
+		XXZAntiferroStaggeredMagZ  obs_mstagz;
+		XXZAntiferroStaggeredMagXY obs_mstagxy;
 
-		auto getobs() { return std::make_tuple(obs_m, obs_msq); }
+		auto getobs() { return std::make_tuple(obs_mstagz, obs_mstagxy); }
 		
 
 		// using the Wolff cluster algorithm requires to implement 
