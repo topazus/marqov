@@ -236,9 +236,12 @@ int main()
 			RegularLattice lattice(L, 3);
 		
 			std::string outfile = outdir+std::to_string(L)+"/"+std::to_string(i)+".h5";
-
-//			Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, currentbeta, outfile);
-//			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, currentbeta, outfile);
+{
+			Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, currentbeta, outfile);
+}
+{
+			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, currentbeta, outfile);
+}
 			Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, currentbeta, outfile);
 
 			marqov.init_hot();
