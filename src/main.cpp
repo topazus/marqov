@@ -166,7 +166,7 @@ const int myid = 0;
 #include "marqov.h"
 int main()
 {
-	RegistryDB registry("./cfgs");
+	RegistryDB registry("../src/config");
 
 	// remove old output and prepare new one
 	std::string command = "rm -r " + outdir;
@@ -174,8 +174,8 @@ int main()
 	makeDir(outdir);
 	
 
-	// ---- live view ----
-		/*
+	// ------------------ live view -----------------------
+	/*
 
 		const int L = 30;
 		RegularLattice lattice(L, 3);
@@ -186,66 +186,11 @@ int main()
 		const int nsweeps  = L/2; 
 		marqov.wrmploop(50, ncluster, nsweeps);
 		marqov.gameloop_liveview();
-		*/
 
-
-	/*
-	// ---- 2D/3D Ising testing section ----
-
-	std::vector<int> nL = {8,12,16,24,32,48};
-
-	const int dim = 3;
-
-	const int    nbeta     = 12;
-	const double betastart = 0.32;
-	const double betaend   = 0.44;
-
-	double betastep = (betaend - betastart) / double(nbeta);
-
-	std::ofstream os;
-	os.open("simplelog.dat");
-	for (int i=0; i<nbeta; i++) os << betastart + i*betastep << endl;
-	os.close();
-
-
-	for (int j=0; j<nL.size(); j++)
-	{
-		const int L = nL[j];
-		cout << endl << "L = " << L << endl << endl;
-		makeDir(outdir+std::to_string(L));
-
-		for (int i=0; i<nbeta; i++)
-		{
-			double currentbeta = betastart + i*betastep; 
-			cout << "beta = " << currentbeta << endl;
-
-			RegularLattice lattice(L, dim);
-    
-			std::string outfile = outdir+std::to_string(L)+"/"+std::to_string(i)+".h5";
-
-//			Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
-			Marqov<RegularLattice, BlumeCapel<int> > marqov(lattice, currentbeta, outfile);
-
-			marqov.init_hot();
-
-			const int ncluster = L;
-			const int nsweeps  = L/2; 
-
-			marqov.wrmploop(2000, ncluster, nsweeps);
-			marqov.gameloop(8000, ncluster, nsweeps);
-		}
-	}
 	*/
-
-//	/*
-
-	// ---- O(3) testing section ----
+	// ----------------------------------------------------
 
 	auto  nL = registry.Get<std::vector<int> >("mc", "General", "nL" );
-
-//	int    nbeta     = 10;
-//	double betastart = 0.92;
-//	double betaend   = 1.02;
 
 	int    nbeta     = registry.Get<int>("mc", "General", "nbeta" );
 	double betastart = registry.Get<double>("mc", "General", "betastart" );
@@ -259,41 +204,54 @@ int main()
 	for (int i=0; i<nbeta; i++) os << betastart + i*betastep << endl;
 	os.close();
 
+
+
+	// lattice dimension
+	const int dim = 3;
+
+	// lattice size loop
 	for (int j=0; j<nL.size(); j++)
 	{
-
+		// extract lattice size and prepare directories
 		const int L = nL[j];
-
 		cout << endl << "L = " << L << endl << endl;
 		makeDir(outdir+std::to_string(L));
 
+		// temperature loop
 		for (int i=0; i<nbeta; i++)
 		{
 			double currentbeta = betastart + i*betastep; 
 			cout << "beta = " << currentbeta << endl;
 
-			RegularLattice lattice(L, 3);
+			// set up lattice
+			RegularLattice lattice(L, dim);
 		
+			// set up outfile
 			std::string outfile = outdir+std::to_string(L)+"/"+std::to_string(i)+".h5";
-{
-			Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, outfile, registry);
-}
-{
-			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, outfile, currentbeta);
-}
+
+			// set up model
+//			Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
+//			Marqov<RegularLattice, BlumeCapel<int> > marqov(lattice, currentbeta, outfile);
+//			Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, outfile, registry);
+//			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, outfile, currentbeta);
 			Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, outfile, currentbeta);
 
-			marqov.init_hot();
 
+			// number of cluster updates and metropolis sweeps
 			const int ncluster = 0;
 			const int nsweeps  = L; 
 
-			marqov.wrmploop(1000, ncluster, nsweeps);
-			marqov.gameloop(1000, ncluster, nsweeps);
+
+			// number of EMCS during relaxation and measurement
+			const int nrlx = 1000;
+			const int nmsr = 1000;  
+
+
+			// perform simulation
+			marqov.init_hot();
+			marqov.wrmploop(nrlx, ncluster, nsweeps);
+			marqov.gameloop(nsmr, ncluster, nsweeps);
 
 		}
 	}
-
-//	*/
-
 }

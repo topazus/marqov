@@ -1,0 +1,8 @@
+[General]
+nL = 12,14,16,18,20
+betastart = 0.5
+betaend = 0.8
+nbeta = 12
+
+[IO]
+logfilename = logfile.txt
