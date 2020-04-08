@@ -8,6 +8,8 @@
 
 * Blume-Capel model: Implemented in `BlumeCapel.h`; Extension to integer spin values $`\{-1,0,1\}`$, which calls for a hybrid MC scheme, as the Wolff algorithm does not affect zero-spins; current implementation of the Metropolis and Wolff algorithms are only obvious guesses at the moment, i.e. as it stand it is unclear whether updates obey the detailed balance condition strictly; nonetheless, tested in 3D via critical scaling collapses for a specific parameter choice; results match expected numbers from `hasenbusch2010`, `hasenbusch2018`
 
+* XXZ antiferromagnet: Implemented in `XXZAntiferro.h`; Tested at two points in the T/H phase diagram: Found second-order transition from the AF into the paramagnetic phase at $`\beta=0.6384`$, $`H=0`$ and from the SF into the paramagnetic phase at $`\beta=0.98`$, $`H=4.2`$, consistent with recent literature, such as `selke2009`, `selke2011` and `hu2014`; due to lack of precision critical exponents could not be confirmed so far; note: make sure that the Wolff cluster algorithm is only used at zero external field
+
+
 # Up next
 
-* something from the XXZ antiferromagnet family
