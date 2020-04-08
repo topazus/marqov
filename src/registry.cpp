@@ -129,6 +129,7 @@ inline int alphasort(const void* d1, const void* d2)
 }
 #endif
 
+#ifdef HAVE_CONFIG_H
 #ifndef HAVE_SCANDIR
 #include <unistd.h>
 #include <string.h>
@@ -177,6 +178,7 @@ inline int scandir(const char* dirname, struct dirent *(*namelist[]), int (*sele
     closedir(dirp);
     return i;
 }
+#endif
 #endif
 
 static int
