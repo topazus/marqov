@@ -1,5 +1,6 @@
 out/
 build/
+log/
 src/build
 *.swp
 a.out

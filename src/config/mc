@@ -5,6 +5,6 @@ betaend = 1.04
 nbeta = 10
 
 [IO]
-logfilename = logfile.txt
+logfilename = ../log/logfile.txt
 
 [END]
