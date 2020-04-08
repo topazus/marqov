@@ -3,7 +3,7 @@ INCLUDE(CheckFunctionExists)
 
 SET(MARQOVTARGETS MARQOV mpiMARQOV)
 
-foreach(target in ${MARQOVTARGETS})
+foreach(target ${MARQOVTARGETS})
 add_executable (${target} registry.cpp main.cpp)
 target_include_directories(${target} PUBLIC ${HDF5_INCLUDE_DIRS})
 target_link_libraries(${target} ${HDF5_LIBRARIES})
