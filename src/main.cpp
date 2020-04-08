@@ -175,7 +175,7 @@ int main()
 	
 
 	// ---- live view ----
-//		/*
+		/*
 
 		const int L = 30;
 		RegularLattice lattice(L, 3);
@@ -186,7 +186,7 @@ int main()
 		const int nsweeps  = L/2; 
 		marqov.wrmploop(50, ncluster, nsweeps);
 		marqov.gameloop_liveview();
-//		*/
+		*/
 
 
 	/*
@@ -243,6 +243,10 @@ int main()
 
 	auto  nL = registry.Get<std::vector<int> >("mc", "General", "nL" );
 
+//	int    nbeta     = 10;
+//	double betastart = 0.92;
+//	double betaend   = 1.02;
+
 	int    nbeta     = registry.Get<int>("mc", "General", "nbeta" );
 	double betastart = registry.Get<double>("mc", "General", "betastart" );
 	double betaend   = registry.Get<double>("mc", "General", "betaend" );
@@ -281,11 +285,11 @@ int main()
 
 			marqov.init_hot();
 
-			const int ncluster = L;
-			const int nsweeps  = L/2; 
+			const int ncluster = 0;
+			const int nsweeps  = L; 
 
-			marqov.wrmploop(1500, ncluster, nsweeps);
-			marqov.gameloop(5000, ncluster, nsweeps);
+			marqov.wrmploop(1000, ncluster, nsweeps);
+			marqov.gameloop(1000, ncluster, nsweeps);
 
 		}
 	}
