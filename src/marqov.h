@@ -62,6 +62,73 @@ class H5Mapper
 };
 
 
+template <class T, class Cont = std::vector<T> >
+class CacheContainer
+{
+public:
+    /** @param hfile the HDF5 File that we use to dump the data
+     *  @param cs the memory size in Bytes to use for caching. Will be rounded to integers of datatypes
+     */
+    CacheContainer(H5::H5File& hfile, const std::string& name, std::size_t cachesize=4194304) : cachepos(0)
+    {
+        cachemaxelems = cachesize/sizeof(T);
+			constexpr int rank = H5Mapper<T>::rank;
+			hsize_t fdims[rank] = {0}; // dim sizes of ds (on disk)
+			hsize_t maxdims[rank] = {H5S_UNLIMITED};
+
+			H5::DataSpace mspace1(rank, fdims, maxdims);
+			H5::DSetCreatPropList cparms;
+			auto fv = H5Mapper<T>::fillval;
+
+			hsize_t chunk_dims[1] = {4096*1024/sizeof(T)};//4MB chunking
+			cparms.setChunk( rank, chunk_dims );
+			cparms.setDeflate(9);//Best (1-9) compression
+			cparms.setFillValue(  H5Mapper<T>::H5Type(), &fv);
+			dataset = hfile.createDataSet(name, H5Mapper<T>::H5Type(), mspace1, cparms);
+			dssize = 0;
+            cont.resize(cachemaxelems);//allocate space for 1024 entries
+    }
+    ~CacheContainer()
+    {
+        this->writecache();
+    }
+    /** pushes data into the cache
+     * @param data the element that we write
+     */
+    void push(T& data) {
+            cont[cachepos] = data;
+            cachepos = cachepos + 1;
+            if (cachepos >= cachemaxelems)
+            {
+                this->writecache();
+                cachepos = 0;
+            }
+    }
+    CacheContainer& operator<<(const T& t) {this->push(t); return *this;}
+private:
+		/**
+         * Writes out the entire current cache of the observable
+         */
+		void writecache ()
+        {
+			constexpr int rank = H5Mapper<T>::rank;
+			hsize_t dims[rank] = {cachepos};
+			H5::DataSpace mspace(rank, dims, NULL);
+			hsize_t start[rank] = {dssize};
+			dssize += cachepos;
+			dataset.extend(&dssize);
+			auto filespace = dataset.getSpace();
+			hsize_t count[rank] = {cachepos};
+			filespace.selectHyperslab(H5S_SELECT_SET, count, start);
+			dataset.write(cont.data(), H5Mapper<T>::H5Type(), mspace, filespace);
+        }
+    H5::DataSet dataset;
+    hsize_t dssize;
+    std::size_t cachemaxelems; ///< How many elements can the cache hold
+    std::size_t cachepos; ///< the current position of the cache
+    Cont cont;
+};
+
 
 
 
@@ -184,8 +251,7 @@ struct ObsCacheDestructor<0, M>
 
 		std::vector<std::vector<std::vector<double>>> check;
 		std::vector<int> checkidxs;
-        
-        
+
 		// Constructor
         template <class ...Ts>
 		Marqov(Grid& lattice, std::string outfile, Ts&& ... args) : ham(std::forward<Ts>(args) ... ),
