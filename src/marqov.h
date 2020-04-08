@@ -187,7 +187,8 @@ struct ObsCacheDestructor<0, M>
         
         
 		// Constructor
-		Marqov(Grid& lattice, double mybeta, std::string outfile) : ham(mybeta),  
+        template <class ...Ts>
+		Marqov(Grid& lattice, std::string outfile, Ts&& ... args) : ham(std::forward<Ts>(args) ... ),
 													grid(lattice), 
 													rng(0, 1), 
 													metro(rng), 

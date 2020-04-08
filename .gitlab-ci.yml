@@ -15,7 +15,7 @@ types:
     - cmake -E make_directory build
     - cd build
     - cmake ..
-    - make
+    - make mpiMARQOV
 
 .TEST_template: &test_definition
   type: test
@@ -59,11 +59,11 @@ marqov_Buster_clang:
         - CITATION
         - README.md
     script:
-      - apt-get update && apt-get install -y libhdf5-dev libopenmpi-dev
+      - apt-get update && apt-get install -y libhdf5-dev
       - cmake -E make_directory build
       - cd build
-      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang ..
-      - make
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang++ ..
+      - make MARQOV VERBOSE=1
 
 marqov_create_doc:
   image: aergus/latex

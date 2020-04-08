@@ -216,7 +216,7 @@ class XXZAntiferro
 		// the functions 'wolff_coupling' and 'wolff_flip'
 
 		template <class A> 
-		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
+		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
 		{
 			return sv1[2]*sv2[2]; // perform the cluster update only in the z-components
 		}
@@ -224,9 +224,8 @@ class XXZAntiferro
 		template <class A>
 		inline void wolff_flip(StateVector& sv, const A a)
 		{
-			sv[2] *= -1;
+			sv[2] = -sv[2];
 			normalize(sv);  // necessary?
 		}
-
 };
 #endif
