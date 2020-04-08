@@ -134,8 +134,8 @@ class Phi4
 		Phi4(double mybeta) : beta(mybeta)
 		{
             interactions[0] = new Phi4_interaction<StateVector>();
-            onsite[0] = new Phi4_onsitesquare<StateVector>(beta);
-            onsite[1] = new Phi4_onsitefour<StateVector>(lambda, beta);
+            onsite[0]       = new Phi4_onsitesquare<StateVector>(beta);
+            onsite[1]       = new Phi4_onsitefour<StateVector>(lambda, beta);
 		}
 
 		 typedef std::tuple<Phi4Mag> ObsTs;

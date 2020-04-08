@@ -141,7 +141,7 @@ int main()
 	
 
 	// ---- live view ----
-//		/*
+		/*
 
 		const int L = 30;
 		RegularLattice lattice(L, 3);
@@ -152,7 +152,7 @@ int main()
 		const int nsweeps  = L/2; 
 		marqov.wrmploop(50, ncluster, nsweeps);
 		marqov.gameloop_liveview();
-//		*/
+		*/
 
 
 	/*
@@ -209,9 +209,9 @@ int main()
 
 	std::vector<int> nL = {8,12,16,24,32,48};
 
-	int    nbeta     = 12;
-	double betastart = 0.59;
-	double betaend   = 0.71;
+	int    nbeta     = 10;
+	double betastart = 0.92;
+	double betaend   = 1.02;
 
 	double betastep = (betaend - betastart) / double(nbeta);
 
@@ -236,21 +236,18 @@ int main()
 			RegularLattice lattice(L, 3);
 		
 			std::string outfile = outdir+std::to_string(L)+"/"+std::to_string(i)+".h5";
-{
-			Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, currentbeta, outfile);
-}
-{
-			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, currentbeta, outfile);
-}
+
+			//Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, currentbeta, outfile);
+			//Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, currentbeta, outfile);
 			Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, currentbeta, outfile);
 
 			marqov.init_hot();
 
-			const int ncluster = L;
-			const int nsweeps  = L/2; 
+			const int ncluster = 0;
+			const int nsweeps  = L; 
 
-			marqov.wrmploop(1500, ncluster, nsweeps);
-			marqov.gameloop(5000, ncluster, nsweeps);
+			marqov.wrmploop(1000, ncluster, nsweeps);
+			marqov.gameloop(1000, ncluster, nsweeps);
 
 		}
 	}

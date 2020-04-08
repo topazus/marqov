@@ -160,6 +160,17 @@ class XXZAntiferro_interaction : public Interaction<StateVector>
 		};
 };
 
+template <class StateVector>
+class XXZAntiferro_extfield : public OnSite<StateVector, double>
+{
+	public:
+		XXZAntiferro_extfield()
+		{
+			this->h = -4.2;
+		}
+		double operator() (const StateVector& phi) {return phi[2];};
+};
+
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
@@ -180,7 +191,7 @@ class XXZAntiferro
 
 		
 		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta = 0; //1;
+		static constexpr uint Nbeta  = 1;
 		static constexpr uint Ngamma = 0;
 
 		// requires pointers
@@ -188,7 +199,11 @@ class XXZAntiferro
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		XXZAntiferro(double mybeta) : beta(mybeta) {   interactions[0] = new XXZAntiferro_interaction<StateVector>(); }
+		XXZAntiferro(double mybeta) : beta(mybeta) 
+		{
+			interactions[0] = new XXZAntiferro_interaction<StateVector>(); 
+			onsite[0]       = new XXZAntiferro_extfield<StateVector>();
+		}
 		
 		typedef std::tuple<XXZAntiferroStaggeredMagZ, XXZAntiferroStaggeredMagXY> ObsTs;
 		XXZAntiferroStaggeredMagZ  obs_mstagz;
