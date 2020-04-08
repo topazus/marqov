@@ -15,7 +15,7 @@ types:
     - cmake -E make_directory build
     - cd build
     - cmake ..
-    - make
+    - make mpiMARQOV
 
 .TEST_template: &test_definition
   type: test
@@ -63,7 +63,7 @@ marqov_Buster_clang:
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang ..
-      - make
+      - make MARQOV
 
 marqov_create_doc:
   image: aergus/latex
