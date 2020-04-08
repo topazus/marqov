@@ -244,13 +244,13 @@ int main()
 
 			// number of EMCS during relaxation and measurement
 			const int nrlx = 1000;
-			const int nmsr = 1000;  
+			const int nmsr = 2000;  
 
 
 			// perform simulation
 			marqov.init_hot();
 			marqov.wrmploop(nrlx, ncluster, nsweeps);
-			marqov.gameloop(nsmr, ncluster, nsweeps);
+			marqov.gameloop(nmsr, ncluster, nsweeps);
 
 		}
 	}

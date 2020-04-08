@@ -1,8 +1,10 @@
 [General]
-nL = 12,14,16,18,20
-betastart = 0.5
-betaend = 0.8
-nbeta = 12
+nL = 12,16,24,32,48
+betastart = 0.94
+betaend = 1.04
+nbeta = 10
 
 [IO]
 logfilename = logfile.txt
+
+[END]
