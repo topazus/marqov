@@ -6,3 +6,5 @@ nbeta = 12
 
 [IO]
 logfilename = logfile.txt
+
+[END]
