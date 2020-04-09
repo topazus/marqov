@@ -25,7 +25,7 @@ class BlumeCapelMag
 					mag += statespace[i][0];
 			}
 
-			return abs(mag)/double(N);
+			return std::abs(mag)/double(N);
 		}
 		BlumeCapelMag() : name("m") {}
 };
