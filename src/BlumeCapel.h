@@ -127,7 +127,6 @@ class BlumeCapel
 		
 	
 		// instantiate and choose observables
-		typedef std::tuple<BlumeCapelMag> ObsTs;
 		BlumeCapelMag       obs_m;
 		auto getobs()
 		{

@@ -138,7 +138,6 @@ class Phi4
             onsite[1]       = new Phi4_onsitefour<StateVector>(lambda, beta);
 		}
 
-		 typedef std::tuple<Phi4Mag> ObsTs;
 		Phi4Mag obs_m;
 		auto getobs() { return std::make_tuple(obs_m);}
 

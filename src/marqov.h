@@ -61,6 +61,14 @@ class H5Mapper
 		static auto H5Type(){return H5Mapper<typename Tp::value_type>::H5Type();}
 };
 
+struct CacheContainerArgs
+{
+    CacheContainerArgs(H5::H5File& file, const std::string& n, std::size_t cs=4194304) :
+    hfile(file), obsname(n), cachesize(cs) {}
+    H5::H5File& hfile;
+    const std::string& obsname;
+    std::size_t cachesize;
+};
 
 template <class T, class Cont = std::vector<T> >
 class CacheContainer
@@ -88,6 +96,7 @@ public:
 			dssize = 0;
             cont.resize(cachemaxelems);//allocate space for 1024 entries
     }
+    CacheContainer(CacheContainerArgs args) : CacheContainer<T, Cont>(args.hfile, args.obsname, args.cachesize) {}
     ~CacheContainer()
     {
         this->writecache();
@@ -172,6 +181,30 @@ template <typename Tup>
 struct TupleToTupleVector
 {
     typedef typename TupleIter<std::tuple_size<Tup>::value-1, Tup>::RetType
+    RetType;
+};
+
+template <int N, typename Tup>
+struct ObsCacheTupleIter
+{
+    typedef decltype(std::tuple_cat(
+                std::declval<typename ObsCacheTupleIter<N-1, Tup>::RetType>(),
+                std::make_tuple(std::declval<CacheContainer<typename ObsRetType<typename std::tuple_element<N, Tup>::type>::RetType>>())
+    )) RetType;
+};
+
+template <typename Tup>
+struct ObsCacheTupleIter<0, Tup>
+{
+    typedef std::tuple<CacheContainer<
+    typename ObsRetType<typename std::tuple_element<0, Tup>::type>::RetType
+    > > RetType;
+};
+
+template <typename Tup>
+struct ObsTupleToObsCacheTuple
+{
+    typedef typename ObsCacheTupleIter<std::tuple_size<Tup>::value-1, Tup>::RetType
     RetType;
 };
 
@@ -546,10 +579,10 @@ struct ObsCacheDestructor<0, M>
 
 	StateSpace statespace;
 	Hamiltonian ham;
-    typedef typename Hamiltonian::ObsTs ObsTs;
+    typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
     typedef typename TupleToTupleVector<ObsTs>::RetType TupleCacheType;
     constexpr static int maxcache=1024;
-//    typename Hamiltonian::ObsTs obs;
+
 	Grid& grid;
 	RND rng;
 
