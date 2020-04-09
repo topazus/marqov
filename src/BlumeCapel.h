@@ -118,7 +118,6 @@ class BlumeCapel
 		OnSite<StateVector, double>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 	
-	    
 		BlumeCapel(double mybeta) : beta(mybeta) 
 		{	
 			interactions[0] = new BlumeCapel_interaction<StateVector>(); 
@@ -133,7 +132,6 @@ class BlumeCapel
 			return std::make_tuple(obs_m);
 		}
 
-		
 		// not yet implemented
 
 		// using the Wolff cluster algorithm requires to implement

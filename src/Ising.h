@@ -62,17 +62,13 @@ class Ising_Initializer
 		};
 };
 
-
-
-
-
 // ------------------------------ HAMILTONIAN ---------------------------
 
 template <typename SpinType = int>
 class Ising
 {
 	public:
-		double beta;
+		double j;
 		constexpr static int SymD = 1;
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
@@ -82,14 +78,12 @@ class Ising
 		static constexpr uint Nbeta = 0;
 		static constexpr uint Ngamma = 0;
 		
-		Ising(double mybeta) : beta(mybeta) {	interactions[0] = new Ising_interaction<StateVector>(); }
+		Ising(double myJ) : j(myj) {	interactions[0] = new Ising_interaction<StateVector>(); }
 		
 		// instantiate interaction terms (requires pointers)
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, int>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
-	
-	    
 	
 		// instantiate and choose observables
 		IsingMag       obs_m;
@@ -97,7 +91,6 @@ class Ising
 		{
 			return std::make_tuple(obs_m);
 		}
-
 
 		// using the Wolff cluster algorithm requires to implement
 		// the functions 'wolff_coupling' and 'wolff_flip'
@@ -108,7 +101,6 @@ class Ising
 			if (sv1[0] == sv2[0]) return 0.0;
 			else return -1.0;
 		}
-
 
 		template <class A = bool>
 		inline void wolff_flip(StateVector& sv, const A a=0)
