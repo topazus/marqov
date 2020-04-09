@@ -4,10 +4,16 @@
 #include <string>
 #include <cstdlib>
 #include <fstream>
+#include <algorithm>
 #include "rndwrapper.h"
 #include "regular_lattice.h"
 #include "vectorhelpers.h"
+#include "cartprod.h"
 #include "registry.h"
+
+//helper, delete later
+#include <typeinfo>
+#include <cxxabi.h>
 
 using std::cout;
 using std::endl;
@@ -116,8 +122,7 @@ inline void coutsv(StateVector& vec)
 	
 	for (int i=0; i<SymD; i++) cout << vec[i] << "\t";
 	cout << endl;
-}	
-
+}
 
 // ---------------------------------------
 
@@ -195,7 +200,18 @@ int main()
 		cout << endl << "L = " << L << endl << endl;
 		cout << outdir+std::to_string(L) << endl;
 		makeDir(outdir+std::to_string(L));
-
+        
+        nbeta=7;
+        betastep = 0.1;
+        // let's create some parameter vectors
+        std::vector<double> anisos = {0.8, 1.0, 1.2};
+        std::vector<double> anisos2 = {10,20,30,40,50};
+        std::vector<double> anisos3 = {100,200,300,400,500};
+        std::vector<double> betas(nbeta);
+        for (int i = 0; i < nbeta; ++i)
+            betas[i] = betastart + i*betastep;
+        std::cout<<betas.size()<<" "<<betas[0]<<" "<<betas.back()<<std::endl;
+        auto parameters = cart_prod(betas, anisos);
 		// temperature loop
 		for (int i=0; i<nbeta; i++)
 		{
