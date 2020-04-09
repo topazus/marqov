@@ -85,7 +85,7 @@ public:
     /** pushes data into the cache
      * @param data the element that we write
      */
-    void push(T& data) {
+    void push(const T& data) {
             cont[cachepos] = data;
             cachepos = cachepos + 1;
             if (cachepos >= cachemaxelems)
