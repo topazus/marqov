@@ -56,39 +56,6 @@ class Grid
     std::vector<int> getnbr(int i);
 };
 
-
-
-template <class StateVector>
-class Interaction
-{
-	public:
-	    double J;
-	    virtual StateVector operator() (const StateVector& phi_i) = 0;
-};
-
-
-template <class StateVector, typename CouplingType>
-class OnSite
-{
-	public: 
-	    CouplingType h;
-	    virtual CouplingType operator() (const StateVector& phi) = 0;
-	private:
-};
-
-
-
-template <class StateSpace, class StateVector>
-class MultiSite
-{
-	public: 
-	    const double k;
-	    virtual double operator() (const StateVector& sv, int svpos, StateSpace s) = 0;
-	private:
-};
-
-
-
 // ------- elementary state vector calculus
 
 template <class StateVector>
@@ -242,11 +209,11 @@ int main()
 			std::string outfile = outdir+"/"+std::to_string(L)+"/"+std::to_string(i)+".h5";
 
 			// set up model
-//			Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
-//			Marqov<RegularLattice, BlumeCapel<int> > marqov(lattice, currentbeta, outfile);
-//			Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, outfile, registry);
-//			Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, outfile, currentbeta);
-			Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, outfile, currentbeta);
+            {Marqov<RegularLattice, Ising<int> > marqov(lattice, outfile, currentbeta, -1.0);}
+			{Marqov<RegularLattice, BlumeCapel<int> > marqov(lattice, outfile, currentbeta, currentbeta);}
+			{Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, outfile, currentbeta, -1.0);}
+			{Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, outfile, currentbeta, currentbeta, -4.5);}
+			Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, outfile, currentbeta, 1.0);
 
 
 			// number of cluster updates and metropolis sweeps
