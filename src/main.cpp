@@ -154,24 +154,34 @@ inline void coutsv(StateVector& vec)
 
 // ---------------------------------------
 
+const int myid = 0; // remove once a parallelization is available
+
 #include "Heisenberg.h"
 #include "Ising.h"
 #include "Phi4.h"
 #include "BlumeCapel.h"
 #include "XXZAntiferro.h"
 
-const std::string outdir = "../out/";
-const int myid = 0;
-
 #include "marqov.h"
+
 int main()
 {
+	// read config files
 	RegistryDB registry("../src/config");
 
+
 	// remove old output and prepare new one
-	std::string command = "rm -r " + outdir;
+	std::string outdir = registry.Get<std::string>("mc", "IO", "outdir" );
+	std::string logdir = registry.Get<std::string>("mc", "IO", "logdir" );
+
+	std::string command;
+	command = "rm -r " + outdir;
 	system(command.c_str());
+	command = "rm -r " + logdir;
+	system(command.c_str());
+
 	makeDir(outdir);
+	makeDir(logdir);
 	
 
 	// ------------------ live view -----------------------
@@ -190,17 +200,18 @@ int main()
 	*/
 	// ----------------------------------------------------
 
-	auto  nL = registry.Get<std::vector<int> >("mc", "General", "nL" );
 
+	// extract Monte Carlo parameters
+	auto  nL = registry.Get<std::vector<int> >("mc", "General", "nL" );
 	int    nbeta     = registry.Get<int>("mc", "General", "nbeta" );
 	double betastart = registry.Get<double>("mc", "General", "betastart" );
 	double betaend   = registry.Get<double>("mc", "General", "betaend" );
-
 	double betastep = (betaend - betastart) / double(nbeta);
 
 
-	std::string logfilename = registry.Get<std::string>("mc", "IO", "logfilename" );
-	std::ofstream os(logfilename);
+	// write temperatures in logfile
+	std::string logfile = registry.Get<std::string>("mc", "IO", "logfile" );
+	std::ofstream os(logdir+"/"+logfile);
 	for (int i=0; i<nbeta; i++) os << betastart + i*betastep << endl;
 	os.close();
 
@@ -215,6 +226,7 @@ int main()
 		// extract lattice size and prepare directories
 		const int L = nL[j];
 		cout << endl << "L = " << L << endl << endl;
+		cout << outdir+std::to_string(L) << endl;
 		makeDir(outdir+std::to_string(L));
 
 		// temperature loop
@@ -227,7 +239,7 @@ int main()
 			RegularLattice lattice(L, dim);
 		
 			// set up outfile
-			std::string outfile = outdir+std::to_string(L)+"/"+std::to_string(i)+".h5";
+			std::string outfile = outdir+"/"+std::to_string(L)+"/"+std::to_string(i)+".h5";
 
 			// set up model
 //			Marqov<RegularLattice, Ising<int> > marqov(lattice, currentbeta, outfile);
@@ -243,8 +255,8 @@ int main()
 
 
 			// number of EMCS during relaxation and measurement
-			const int nrlx = 1000;
-			const int nmsr = 2000;  
+			const int nrlx = 2500;
+			const int nmsr = 5000;  
 
 
 			// perform simulation
