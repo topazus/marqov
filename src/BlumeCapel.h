@@ -4,6 +4,7 @@
 #include <tuple>
 #include <string>
 #include <functional>
+#include "hamiltonianparts.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
@@ -53,7 +54,7 @@ class BlumeCapel_onsite : public OnSite<StateVector, double>
 		{
 			this->h = D/beta;
 		}
-		auto operator() (const StateVector& phi) {return dot(phi,phi);};
+		double operator() (const StateVector& phi) {return dot(phi,phi);};
 };
 
 
@@ -118,7 +119,6 @@ class BlumeCapel
 		OnSite<StateVector, double>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 	
-	    
 		BlumeCapel(double mybeta) : beta(mybeta) 
 		{	
 			interactions[0] = new BlumeCapel_interaction<StateVector>(); 
@@ -133,7 +133,6 @@ class BlumeCapel
 			return std::make_tuple(obs_m);
 		}
 
-		
 		// not yet implemented
 
 		// using the Wolff cluster algorithm requires to implement

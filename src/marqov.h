@@ -84,11 +84,19 @@ struct ObsTupleToObsCacheTuple
 		std::vector<std::vector<std::vector<double>>> check;
 		std::vector<int> checkidxs;
 
-		// Constructor
+		/** The initial constructor call.
+         * First we have the parameters for the MARQOV class, then follows the arbitrary number of
+         * arguments for a particular Hamiltonian.
+         * @param lattice The instantiated lattice object
+         * @param outfile Where to create the output file
+         * @param mybeta the temperature that governs the Metropolis dynamics
+         * @param args A template parameter pack for the Hamiltonian
+         */
         template <class ...Ts>
-		Marqov(Grid& lattice, std::string outfile, Ts&& ... args) : ham(std::forward<Ts>(args) ... ),
+		Marqov(Grid& lattice, std::string outfile, double mybeta, Ts&& ... args) : ham(std::forward<Ts>(args) ... ),
 													grid(lattice), 
 													rng(0, 1), 
+													beta(mybeta),
 													metro(rng), 
 													dump(outfile, H5F_ACC_TRUNC ),
 													obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
@@ -361,8 +369,6 @@ struct ObsTupleToObsCacheTuple
 	template <typename DirType>
 	inline int wolffstep_general(int rsite, const DirType& rdir);
 
-
-
 	StateSpace statespace;
 	Hamiltonian ham;
     typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
@@ -371,6 +377,7 @@ struct ObsTupleToObsCacheTuple
     typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;
 	Grid& grid;
 	RND rng;
+    double beta;
 
 	//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
 	typename Hamiltonian::template MetroInitializer<RND> metro;//C++11

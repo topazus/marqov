@@ -3,6 +3,8 @@
 #include <array>
 #include <cmath>
 #include "vectorhelpers.h"
+#include "hamiltonianparts.h"
+
 
 // ------------------------------ OBSERVABLES ---------------------------
 
@@ -110,7 +112,7 @@ class Phi4
 {
 	public:
 		double beta;
-		const double lambda = 4.5;
+		double lambda = 4.5;
 
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
@@ -131,7 +133,7 @@ class Phi4
 		OnSite<StateVector, FPType>* onsite[Nbeta]; //Todo: External fields not yet supported
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Phi4(double mybeta) : beta(mybeta)
+		Phi4(double mybeta, double mylambda) : beta(mybeta), lambda(mylambda)
 		{
             interactions[0] = new Phi4_interaction<StateVector>();
             onsite[0]       = new Phi4_onsitesquare<StateVector>(beta);

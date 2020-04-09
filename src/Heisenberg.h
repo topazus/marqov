@@ -5,6 +5,7 @@
 #include <string>
 #include <functional>
 #include "vectorhelpers.h"
+#include "hamiltonianparts.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
@@ -116,7 +117,7 @@ class Heisenberg
 {
 	public:
 
-		double beta;
+		double j;
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
@@ -136,8 +137,7 @@ class Heisenberg
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-        template <class T>
-		Heisenberg(T& registry) : beta(registry.template Get<double>("Heisenberg", "General", "beta" ))
+		Heisenberg(double myj) : j(myj)
         {   interactions[0] = new Heisenberg_interaction<StateVector>(); }
 		
 		HeisenbergMag obs_m;
