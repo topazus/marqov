@@ -10,7 +10,7 @@
 #include <H5Cpp.h>
 #include <H5File.h>
 
-// ---------------- HDF5 MAPPER -----------------
+/*some predefined HDF5 helpers --------------------------------*/
 
 template <typename T>
 class H5Mapper;
@@ -42,6 +42,10 @@ class H5Mapper
 		static auto H5Type(){return H5Mapper<typename Tp::value_type>::H5Type();}
 };
 
+/** A helper structure to encapsulate the arguments of a single CacheContainer.
+ *  The rationale was that it was ambiguous to use tuples of tuples. tuple_cat
+ *  would flatten all tuples
+ */
 struct CacheContainerArgs
 {
     CacheContainerArgs(H5::H5File& file, const std::string& n, std::size_t cs=4194304) :
@@ -51,11 +55,17 @@ struct CacheContainerArgs
     std::size_t cachesize;
 };
 
+/** The CacheContainer.
+ *  It is associated with a dataspace in an already open HDF5 file. It performs caching
+ *  so that not every new data point leads to I/O. C++ stack unwinding takes care of proper
+ *  tidy up
+ */
 template <class T, class Cont = std::vector<T> >
 class CacheContainer
 {
 public:
     /** @param hfile the HDF5 File that we use to dump the data
+     *  @param name the name of the data set in HDF5
      *  @param cs the memory size in Bytes to use for caching. Will be rounded to integers of datatypes
      */
     CacheContainer(H5::H5File& hfile, const std::string& name, std::size_t cachesize=4194304) : cachepos(0)
@@ -77,7 +87,12 @@ public:
 			dssize = 0;
             cont.resize(cachemaxelems);//allocate space for 1024 entries
     }
+    /** A helper constructor that forwards to the main constructor
+     * @param args the Argument helper structure
+     */
     CacheContainer(CacheContainerArgs args) : CacheContainer<T, Cont>(args.hfile, args.obsname, args.cachesize) {}
+    /* Destructor that takes care of flushing the cache.
+     */
     ~CacheContainer()
     {
         this->writecache();
@@ -94,6 +109,8 @@ public:
                 cachepos = 0;
             }
     }
+    /* Convenience function for pushing data
+     */
     CacheContainer& operator<<(const T& t) {this->push(t); return *this;}
 private:
 		/**
@@ -112,11 +129,11 @@ private:
 			filespace.selectHyperslab(H5S_SELECT_SET, count, start);
 			dataset.write(cont.data(), H5Mapper<T>::H5Type(), mspace, filespace);
         }
-    H5::DataSet dataset;
-    hsize_t dssize;
+    H5::DataSet dataset; ///< The HDF5 dataset
+    hsize_t dssize; //< the current dataset size
     std::size_t cachemaxelems; ///< How many elements can the cache hold
     std::size_t cachepos; ///< the current position of the cache
-    Cont cont;
+    Cont cont;///< the container where the data is held until it is flushed
 };
 
 #endif
