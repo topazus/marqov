@@ -1,4 +1,4 @@
-#ifdef HAMILTONIANPARTS_H
+#ifndef HAMILTONIANPARTS_H
 #define HAMILTONIANPARTS_H
 template <class StateVector>
 class Interaction

@@ -5,6 +5,7 @@
 #include <string>
 #include <functional>
 #include "vectorhelpers.h"
+#include "hamiltonianparts.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------

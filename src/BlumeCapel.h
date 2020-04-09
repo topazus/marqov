@@ -4,6 +4,7 @@
 #include <tuple>
 #include <string>
 #include <functional>
+#include "hamiltonianparts.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
@@ -53,7 +54,7 @@ class BlumeCapel_onsite : public OnSite<StateVector, double>
 		{
 			this->h = D/beta;
 		}
-		auto operator() (const StateVector& phi) {return dot(phi,phi);};
+		double operator() (const StateVector& phi) {return dot(phi,phi);};
 };
 
 

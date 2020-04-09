@@ -5,7 +5,7 @@
 #include <string>
 #include <functional>
 #include "vectorhelpers.h"
-
+#include "hamiltonianparts.h"
 
 // ------------------------------ OBSERVABLES ---------------------------
 
@@ -178,8 +178,7 @@ template <typename SpinType, typename MyFPType>
 class XXZAntiferro
 {
 	public:
-
-		double beta;
+        double j;
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
@@ -199,7 +198,7 @@ class XXZAntiferro
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		XXZAntiferro(double mybeta) : beta(mybeta) 
+		XXZAntiferro(double myj) : j(myj)
 		{
 			interactions[0] = new XXZAntiferro_interaction<StateVector>(); 
 			onsite[0]       = new XXZAntiferro_extfield<StateVector>();

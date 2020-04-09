@@ -3,6 +3,8 @@
 #include <array>
 #include <cmath>
 #include "vectorhelpers.h"
+#include "hamiltonianparts.h"
+
 
 // ------------------------------ OBSERVABLES ---------------------------
 
