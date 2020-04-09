@@ -9,10 +9,9 @@
 #include <type_traits>
 #include <utility>
 #include <tuple>
-#include <H5Cpp.h>
-#include <H5File.h>
 #include <unistd.h> // provides usleep
 #include <stdexcept>
+#include "cachecontainer.h"
 
 using std::cout;
 using std::endl;
@@ -28,42 +27,6 @@ auto _call(Function f, Object& obj, Tuple t) {
 	static constexpr auto size = std::tuple_size<Tuple>::value;
 	return _call(f, obj, t, std::make_index_sequence<size>{});
 }
-
-// ---------------- HDF5 MAPPER -----------------
-
-template <typename T>
-class H5Mapper;
-
-template <>
-class H5Mapper<double>
-{
-	public:
-		static constexpr double fillval = 0;
-		static constexpr int rank = 1;
-		static auto H5Type(){return H5::PredType::NATIVE_DOUBLE;}
-};
-
-template <>
-class H5Mapper<int>
-{
-	public:
-		static constexpr int fillval = 0;
-		static constexpr int rank = 1;
-		static auto H5Type(){return H5::PredType::NATIVE_INT;}
-};
-
-template <typename Tp>
-class H5Mapper
-{
-	public:
-		static constexpr int fillval = H5Mapper<typename Tp::value_type>::fillval;
-		static constexpr int rank = std::tuple_size<Tp>::value;
-		static auto H5Type(){return H5Mapper<typename Tp::value_type>::H5Type();}
-};
-
-
-
-
 
 // --------------------------- MARQOV CLASS -------------------------------
 
@@ -85,132 +48,60 @@ class Marqov
         };
 
 template <int N, typename Tup>
-struct TupleIter
+struct ObsCacheTupleIter
 {
     typedef decltype(std::tuple_cat(
-                std::declval<typename TupleIter<N-1, Tup>::RetType>(),
-                std::make_tuple(std::declval<std::vector<typename ObsRetType<typename std::tuple_element<N, Tup>::type>::RetType>>())
+                std::declval<typename ObsCacheTupleIter<N-1, Tup>::RetType>(),
+                std::make_tuple(std::declval<CacheContainer<typename ObsRetType<typename std::tuple_element<N, Tup>::type>::RetType>>())
     )) RetType;
+    
+    static auto getargtuple(H5::H5File& h5file, Tup& t){
+        return std::tuple_cat( 
+        ObsCacheTupleIter<N-1, Tup>::getargtuple(h5file, t),
+        std::make_tuple(CacheContainerArgs(h5file, std::get<N>(t).name)));}
 };
 
 template <typename Tup>
-struct TupleIter<0, Tup>
+struct ObsCacheTupleIter<0, Tup>
 {
-    typedef std::tuple<std::vector<
+    typedef std::tuple<CacheContainer<
     typename ObsRetType<typename std::tuple_element<0, Tup>::type>::RetType
     > > RetType;
+    
+    static auto getargtuple(H5::H5File& h5file, Tup& t){return std::make_tuple(CacheContainerArgs(h5file, std::get<0>(t).name));}
 };
 
 template <typename Tup>
-struct TupleToTupleVector
+struct ObsTupleToObsCacheTuple
 {
-    typedef typename TupleIter<std::tuple_size<Tup>::value-1, Tup>::RetType
+    typedef typename ObsCacheTupleIter<std::tuple_size<Tup>::value-1, Tup>::RetType
     RetType;
+    static auto getargtuple(H5::H5File& h5file, Tup&& t){
+        return ObsCacheTupleIter<std::tuple_size<Tup>::value - 1, Tup>::getargtuple(h5file, t);
+    }
 };
-
-		/**
-         * Writes out the entire current cache of observable N
-         */
-		template <int N>
-		void writecache ()
-        {
-            hsize_t num = cachepos[N];
-            //figure out how to properly append in HDF5
-            typedef typename std::tuple_element<N, TupleCacheType>::type::value_type OutType;
-			constexpr int rank = H5Mapper<OutType>::rank;
-			hsize_t dims[rank] = {num};
-			H5::DataSpace mspace(rank, dims, NULL);
-			hsize_t start[rank] = {dssize[N]};
-			dssize[N] += num;
-			dataset[N].extend(&dssize[N]);
-			auto filespace = dataset[N].getSpace();
-			hsize_t count[rank] = {num};
-			filespace.selectHyperslab(H5S_SELECT_SET, count, start);
-			dataset[N].write(
-                std::get<N>(obscache).data(),
-                H5Mapper<OutType>::H5Type(), mspace, filespace);
-			// std::cout<<std::get<N>(t).name<<" "<<retval<<std::endl;
-        }
-
-template <int N, class M>
-struct ObsCacheDestructor
-{
-    static void call(M& m)
-    {
-    m.template writecache<N>();
-    ObsCacheDestructor<N-1, M>::call(m);
-}
-};
-
-template <class M>
-struct ObsCacheDestructor<0, M>
-{
-    static void call(M& m)
-    {
-    m.template writecache<0>();
-}
-};
-
-		
-		template<size_t N = 0, typename... Ts>
-		inline typename std::enable_if_t<N == sizeof...(Ts), void>
-		marqov_createds(std::tuple<Ts...>& t){}
-		
-		template<size_t N = 0, typename... Ts>
-		inline typename std::enable_if_t<N < sizeof...(Ts), void>
-		marqov_createds(std::tuple<Ts...>& t)
-		{
-			typedef decltype(std::get<N>(t).template measure<decltype(statespace), Grid>(statespace, grid)) OutType;
-			constexpr int rank = H5Mapper<OutType>::rank;
-			hsize_t fdims[rank] = {0}; // dim sizes of ds (on disk)
-			hsize_t maxdims[rank] = {H5S_UNLIMITED};
-			
-			
-			H5::DataSpace mspace1(rank, fdims, maxdims);
-			H5::DSetCreatPropList cparms;
-			auto fv = H5Mapper<OutType>::fillval;
-			
-			hsize_t chunk_dims[1] = {4096*1024/sizeof(OutType)};//4MB chunking
-			cparms.setChunk( rank, chunk_dims );
-			cparms.setDeflate(9);//Best (1-9) compression
-			cparms.setFillValue(  H5Mapper<OutType>::H5Type(), &fv);
-			dataset[N] = dump.createDataSet(std::get<N>(t).name, H5Mapper<OutType>::H5Type(), mspace1, cparms);
-			dssize[N] = 0;
-			marqov_createds<N + 1, Ts...>(t);
-            std::get<N>(obscache).resize(maxcache);//allocate space for 1024 entries
-            cachepos[N] = 0;
-		}
-
 
 		std::vector<std::vector<std::vector<double>>> check;
 		std::vector<int> checkidxs;
-        
-        
+
 		// Constructor
         template <class ...Ts>
 		Marqov(Grid& lattice, std::string outfile, Ts&& ... args) : ham(std::forward<Ts>(args) ... ),
 													grid(lattice), 
 													rng(0, 1), 
 													metro(rng), 
-													dump(outfile, H5F_ACC_TRUNC )
+													dump(outfile, H5F_ACC_TRUNC ),
+													obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
 		{
 //			rng.seed(15); cout << "seed is fixed!" << endl << endl;
 			rng.seed(time(NULL));
 			rng.set_integer_range(lattice.size());
 			statespace = new typename Hamiltonian::StateVector[lattice.size()];
-			auto obs = ham.getobs();
-			constexpr int nobs = std::tuple_size<ObsTs>::value;
-			dataset = new H5::DataSet[nobs];
-			dssize = new hsize_t[nobs];
-
-			//Now we need to register the observables with HDF5...
-			marqov_createds(obs);
 		}
 
 		// Destructor
 		~Marqov() {
-            ObsCacheDestructor<std::tuple_size<ObsTs>::value -1, decltype(*this)>::call(*this);
-            delete [] statespace; delete [] dataset; dump.close();
+            delete [] statespace; dump.close();
         }
 
 		template<size_t N = 0, typename... Ts, typename... Args>
@@ -226,13 +117,7 @@ struct ObsCacheDestructor<0, M>
 							 std::get<N>(t), 
 							 std::make_tuple(args...) );
 			marqov_measure<N + 1, Ts...>(t, args...);
-            std::get<N>(obscache)[cachepos[N]] = retval;
-            cachepos[N] = cachepos[N] + 1;
-            if (cachepos[N] >= maxcache)
-            {
-                writecache<N>();
-                cachepos[N] = 0;
-            }
+            std::get<N>(obscache)<<retval;
 		}
 
 
@@ -480,22 +365,15 @@ struct ObsCacheDestructor<0, M>
 
 	StateSpace statespace;
 	Hamiltonian ham;
-    typedef typename Hamiltonian::ObsTs ObsTs;
-    typedef typename TupleToTupleVector<ObsTs>::RetType TupleCacheType;
-    constexpr static int maxcache=1024;
-//    typename Hamiltonian::ObsTs obs;
+    typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
+
+    H5::H5File dump;///< The handle for the HDF5 file. must be before the obscaches
+    typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;
 	Grid& grid;
 	RND rng;
 
-	H5::H5File dump;
-	H5::DataSet* dataset;
-    TupleCacheType obscache;
-    int cachepos[std::tuple_size<ObsTs>::value];
-	hsize_t* dssize;
-
 	//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
 	typename Hamiltonian::template MetroInitializer<RND> metro;//C++11
-
 
 	// obs now handled differently
 

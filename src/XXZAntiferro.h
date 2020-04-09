@@ -205,7 +205,6 @@ class XXZAntiferro
 			onsite[0]       = new XXZAntiferro_extfield<StateVector>();
 		}
 		
-		typedef std::tuple<XXZAntiferroStaggeredMagZ, XXZAntiferroStaggeredMagXY> ObsTs;
 		XXZAntiferroStaggeredMagZ  obs_mstagz;
 		XXZAntiferroStaggeredMagXY obs_mstagxy;
 

@@ -140,7 +140,6 @@ class Heisenberg
 		Heisenberg(T& registry) : beta(registry.template Get<double>("Heisenberg", "General", "beta" ))
         {   interactions[0] = new Heisenberg_interaction<StateVector>(); }
 		
-		typedef std::tuple<HeisenbergMag, HeisenbergMagSq> ObsTs;
 		HeisenbergMag obs_m;
         HeisenbergMagSq obs_msq;
 
