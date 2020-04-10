@@ -250,10 +250,12 @@ int main()
         std::vector<Marqov<RegularLattice, XXZAntiferro<double,double> >> sims;
         sims.reserve(parameters.size());//MARQOV has issues with copying -> reuires reserve in vector
         RegularLattice latt(L, dim);
+        std:cout<<"main: "<<&latt<<std::endl;
         fillsims(parameters, sims, 
                  [&latt, &outdir, L]( decltype(parameters[0]) p) {
                      std::string outfile = outdir+std::to_string(L)+"/beta"+std::to_string(std::get<0>(p))
                      +"aniso"+std::to_string(std::get<1>(p))+".h5";
+                     std::cout<<"lambda: "<<&latt<<std::endl;
                      std::cout<<outfile<<std::endl;
                      return std::tuple_cat(std::make_tuple(latt, outfile), p);
                 });
