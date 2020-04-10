@@ -124,6 +124,41 @@ inline void coutsv(StateVector& vec)
 	cout << endl;
 }
 
+//c++17 make_from_tuple from cppreference adapted for emplace
+template <class Cont, class Tuple, std::size_t... I>
+constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple&& t, std::index_sequence<I...> )
+{
+  return cont.emplace_back(std::get<I>(std::forward<Tuple>(t))...) ;
+}
+ 
+template <class Cont, class Tuple>
+constexpr auto emplace_from_tuple(Cont&& cont,  Tuple&& t )
+{
+    return emplace_from_tuple_impl(cont, std::forward<Tuple>(t),
+        std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value>{});
+}
+
+/** ToDo: introduce a filter..., e.g. a lambda*/
+template <class Args, class T, class Grid>
+void fillsims(const std::vector<Args>& args, std::vector<T>& sims, Grid& grid, std::string& fn)
+{
+    for(auto p : args)
+    {
+        auto args = std::tuple_cat(std::make_tuple(grid, fn), p);
+        emplace_from_tuple(sims, args);
+    }
+}
+
+template <class Args, class T, class Callable>
+void fillsims(const std::vector<Args>& args, std::vector<T>& sims, Callable c)
+{
+    for(auto p : args)
+    {
+        auto temp = c(p);
+        emplace_from_tuple(sims, temp);
+    }
+}
+
 // ---------------------------------------
 
 const int myid = 0; // remove once a parallelization is available
@@ -212,6 +247,18 @@ int main()
             betas[i] = betastart + i*betastep;
         std::cout<<betas.size()<<" "<<betas[0]<<" "<<betas.back()<<std::endl;
         auto parameters = cart_prod(betas, anisos);
+        std::vector<Marqov<RegularLattice, XXZAntiferro<double,double> >> sims;
+        sims.reserve(parameters.size());//MARQOV has issues with copying
+        RegularLattice latt(L, dim);
+        fillsims(parameters, sims, 
+                 [&latt, &outdir, L]( decltype(parameters[0]) p) {
+                     std::string outfile = outdir+std::to_string(L)+"/beta"+std::to_string(std::get<0>(p))
+                     +"aniso"+std::to_string(std::get<1>(p))+".h5";
+                     std::cout<<outfile<<std::endl;
+                     return std::tuple_cat(std::make_tuple(latt, outfile), p);
+                });
+        std::cout<< sims.size()<<std::endl;
+        exit(-1);
 		// temperature loop
 		for (int i=0; i<nbeta; i++)
 		{
@@ -222,13 +269,13 @@ int main()
 			RegularLattice lattice(L, dim);
 		
 			// set up outfile
-			std::string outfile = outdir+"/"+std::to_string(L)+"/"+std::to_string(i)+".h5";
+			std::string outfile = outdir+std::to_string(L)+"/"+std::to_string(i)+".h5";
 
 			// set up model
-            {Marqov<RegularLattice, Ising<int> > marqov(lattice, outfile, currentbeta, -1.0);}
-			{Marqov<RegularLattice, BlumeCapel<int> > marqov(lattice, outfile, currentbeta, currentbeta);}
-			{Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, outfile, currentbeta, -1.0);}
-			{Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, outfile, currentbeta, currentbeta, -4.5);}
+//             {Marqov<RegularLattice, Ising<int> > marqov(lattice, outfile, currentbeta, -1.0);}
+// 			{Marqov<RegularLattice, BlumeCapel<int> > marqov(lattice, outfile, currentbeta, currentbeta);}
+// 			{Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, outfile, currentbeta, -1.0);}
+// 			{Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, outfile, currentbeta, currentbeta, -4.5);}
 			Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, outfile, currentbeta, 1.0);
 
 

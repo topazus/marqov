@@ -111,6 +111,11 @@ struct ObsTupleToObsCacheTuple
 		~Marqov() {
             delete [] statespace; dump.close();
         }
+        //FIXME: Fix assignment and copying...
+        Marqov(const Marqov& rhs) = delete;
+        Marqov& operator=(const Marqov& rhs) = delete;
+        Marqov(Marqov&& other) = default;
+        Marqov& operator=(Marqov&& other) = default;
 
 		template<size_t N = 0, typename... Ts, typename... Args>
 		inline typename std::enable_if_t<N == sizeof...(Ts), void>
