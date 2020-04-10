@@ -51,7 +51,7 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_general(int rsite, const DirType
 			// test whether site is added to the cluster
 			if (coupling > 0)
 			{
-				if (rng.d() < 1.0-std::exp(-2.0*beta*coupling))
+				if (rng.d() < -std::expm1(2.0*beta*coupling))
 				{
 					q++;
 					cstack[q] = currentnbr;
@@ -86,7 +86,7 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_Ising(int rsite)
 	// compute 'Wolff probability' 
 	const int a = 0; // plain Ising model has only one interaction term
 	const double coupling = ham.interactions[a]->J;
-	const double prob = 1.0-std::exp(+2.0*beta*coupling);
+	const double prob = -std::expm1(+2.0*beta*coupling);
 	
 	// loop over stack as long as non-empty
 	while (q>=0)
@@ -160,7 +160,7 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_Heisenberg(int rsite, const Stat
 
 			if (proj1*proj2 > 0)
 			{
-				const auto prob = 1.0 - std::exp(-2.0*beta*proj1*proj2);
+				const auto prob = -std::expm1(-2.0*beta*proj1*proj2);
 
 				if (rng.d() < prob)
 				{
