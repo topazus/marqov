@@ -258,7 +258,7 @@ int main()
                 });
         std::cout<< sims.size()<<std::endl;
         
-        /execute 
+        //execute 
 #pragma omp parallel for
         for(std::size_t i = 0; i < sims.size(); ++i)//for OMP
         {
