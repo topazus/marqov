@@ -248,7 +248,7 @@ int main()
         std::cout<<betas.size()<<" "<<betas[0]<<" "<<betas.back()<<std::endl;
         auto parameters = cart_prod(betas, anisos);
         std::vector<Marqov<RegularLattice, XXZAntiferro<double,double> >> sims;
-        sims.reserve(parameters.size());//MARQOV has issues with copying
+        sims.reserve(parameters.size());//MARQOV has issues with copying -> reuires reserve in vector
         RegularLattice latt(L, dim);
         fillsims(parameters, sims, 
                  [&latt, &outdir, L]( decltype(parameters[0]) p) {
@@ -258,28 +258,11 @@ int main()
                      return std::tuple_cat(std::make_tuple(latt, outfile), p);
                 });
         std::cout<< sims.size()<<std::endl;
-        exit(-1);
-		// temperature loop
-		for (int i=0; i<nbeta; i++)
-		{
-			double currentbeta = betastart + i*betastep; 
-			cout << "beta = " << currentbeta << endl;
-
-			// set up lattice
-			RegularLattice lattice(L, dim);
-		
-			// set up outfile
-			std::string outfile = outdir+std::to_string(L)+"/"+std::to_string(i)+".h5";
-
-			// set up model
-//             {Marqov<RegularLattice, Ising<int> > marqov(lattice, outfile, currentbeta, -1.0);}
-// 			{Marqov<RegularLattice, BlumeCapel<int> > marqov(lattice, outfile, currentbeta, currentbeta);}
-// 			{Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, outfile, currentbeta, -1.0);}
-// 			{Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, outfile, currentbeta, currentbeta, -4.5);}
-			Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, outfile, currentbeta, 1.0);
-
-
-			// number of cluster updates and metropolis sweeps
+#pragma omp parallel for
+        for(std::size_t i = 0; i < sims.size(); ++i)//for OMP
+        {
+            auto& marqov = sims[i];
+            // number of cluster updates and metropolis sweeps
 			const int ncluster = 0;
 			const int nsweeps  = L; 
 
@@ -293,7 +276,6 @@ int main()
 			marqov.init_hot();
 			marqov.wrmploop(nrlx, ncluster, nsweeps);
 			marqov.gameloop(nmsr, ncluster, nsweeps);
-
-		}
+        }
 	}
 }
