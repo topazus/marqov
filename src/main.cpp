@@ -185,7 +185,7 @@ int main()
 
 
 	// lattice dimension
-	const int dim = 3;
+	const int dim = 2;
 
 	// lattice size loop
 	for (int j=0; j<nL.size(); j++)
@@ -193,8 +193,7 @@ int main()
 		// extract lattice size and prepare directories
 		const int L = nL[j];
 		cout << endl << "L = " << L << endl << endl;
-		cout << outdir+std::to_string(L) << endl;
-		makeDir(outdir+std::to_string(L));
+		makeDir(outdir+"/"+std::to_string(L));
 
 		// temperature loop
 		for (int i=0; i<nbeta; i++)
@@ -209,16 +208,16 @@ int main()
 			std::string outfile = outdir+"/"+std::to_string(L)+"/"+std::to_string(i)+".h5";
 
 			// set up model
-            {Marqov<RegularLattice, Ising<int> > marqov(lattice, outfile, currentbeta, -1.0);}
+			Marqov<RegularLattice, Ising<int> > marqov(lattice, outfile, currentbeta, -1.0);
 			{Marqov<RegularLattice, BlumeCapel<int> > marqov(lattice, outfile, currentbeta, currentbeta);}
 			{Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, outfile, currentbeta, -1.0);}
 			{Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, outfile, currentbeta, currentbeta, -4.5);}
-			Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, outfile, currentbeta, 1.0);
+			{Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, outfile, currentbeta, 1.0);}
 
 
 			// number of cluster updates and metropolis sweeps
-			const int ncluster = 0;
-			const int nsweeps  = L; 
+			const int ncluster = L;
+			const int nsweeps  = L/2; 
 
 
 			// number of EMCS during relaxation and measurement
