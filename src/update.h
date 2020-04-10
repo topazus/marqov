@@ -51,7 +51,7 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_general(int rsite, const DirType
 			// test whether site is added to the cluster
 			if (coupling > 0)
 			{
-				if (rng.d() < -std::expm1(2.0*beta*coupling))
+				if (rng.d() < -std::expm1(-2.0*beta*coupling))
 				{
 					q++;
 					cstack[q] = currentnbr;
