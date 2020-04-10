@@ -153,10 +153,7 @@ template <class Args, class T, class Callable>
 void fillsims(const std::vector<Args>& args, std::vector<T>& sims, Callable c)
 {
     for(auto p : args)
-    {
-        auto temp = c(p);
-        emplace_from_tuple(sims, temp);
-    }
+        emplace_from_tuple(sims, c(p));
 }
 
 // ---------------------------------------
@@ -245,21 +242,21 @@ int main()
         std::vector<double> betas(nbeta);
         for (int i = 0; i < nbeta; ++i)
             betas[i] = betastart + i*betastep;
-        std::cout<<betas.size()<<" "<<betas[0]<<" "<<betas.back()<<std::endl;
+        
         auto parameters = cart_prod(betas, anisos);
+        
+        // set up simulations
         std::vector<Marqov<RegularLattice, XXZAntiferro<double,double> >> sims;
         sims.reserve(parameters.size());//MARQOV has issues with copying -> reuires reserve in vector
         RegularLattice latt(L, dim);
-        std:cout<<"main: "<<&latt<<std::endl;
         fillsims(parameters, sims, 
                  [&latt, &outdir, L]( decltype(parameters[0]) p) {
-                     std::string outfile = outdir+std::to_string(L)+"/beta"+std::to_string(std::get<0>(p))
-                     +"aniso"+std::to_string(std::get<1>(p))+".h5";
-                     std::cout<<"lambda: "<<&latt<<std::endl;
-                     std::cout<<outfile<<std::endl;
-                     return std::tuple_cat(std::make_tuple(latt, outfile), p);
+                     std::string outfile = outdir+std::to_string(L)+"/beta"+std::to_string(std::get<0>(p))+"aniso"+std::to_string(std::get<1>(p))+".h5";
+                     return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outfile), p);
                 });
         std::cout<< sims.size()<<std::endl;
+        
+        /execute 
 #pragma omp parallel for
         for(std::size_t i = 0; i < sims.size(); ++i)//for OMP
         {

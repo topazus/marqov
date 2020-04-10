@@ -101,7 +101,6 @@ struct ObsTupleToObsCacheTuple
 													dump(outfile, H5F_ACC_TRUNC ),
 													obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
 		{
-            std::cout<<"marqov: "<<&lattice<<std::endl;
 //			rng.seed(15); cout << "seed is fixed!" << endl << endl;
 			rng.seed(time(NULL));
 			rng.set_integer_range(lattice.size());
