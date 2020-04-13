@@ -244,11 +244,8 @@ int main()
 
 		// let's create some parameter vectors
 		std::vector<double> anisos = {0.8, 1.0, 1.2};
-		std::vector<double> anisos2 = {10,20,30,40,50};
-		std::vector<double> anisos3 = {100,200,300,400,500};
 		std::vector<double> betas(nbeta);
-		for (int i = 0; i < nbeta; ++i)
-			betas[i] = betastart + i*betastep;
+		for (int i = 0; i < nbeta; ++i) betas[i] = betastart + i*betastep;
 		       
 		auto parameters = cart_prod(betas, anisos);
        
@@ -265,14 +262,17 @@ int main()
 		fillsims(parameters, sims, [&latt, &outdir, L]( decltype(parameters[0]) p) 
 		{
 			// write a filter to determine output file path
-			std::string outfile = outdir+std::to_string(L)+"/beta"+std::to_string(std::get<0>(p))+"aniso"+std::to_string(std::get<1>(p))+".h5";
-			return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outfile), p);
+			std::string outname   = "beta"+std::to_string(std::get<0>(p))+"aniso"+std::to_string(std::get<1>(p))+".h5";
+			std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
+
+			return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
 		});
 		std::cout<< sims.size()<<std::endl;
         
 
 
 		//execute 
+		cout << sims.size() << endl;
 		#pragma omp parallel for
 		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
 		{
