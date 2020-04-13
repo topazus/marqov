@@ -237,7 +237,7 @@ struct ObsTupleToObsCacheTuple
 
 		double elementaryMCstep(const int ncluster, const int nsweeps);
 	    
-	    	void gameloop(const int nsteps, const int ncluster, const int nsweeps)
+	    	void gameloop(const int nsteps, const int ncluster, const int nsweeps, int myid)
 		{
 
 //			prepare_consistency_check(checkidxs);
@@ -245,7 +245,8 @@ struct ObsTupleToObsCacheTuple
 			double avgclustersize = 0;
 			for (int k=0; k<10; k++)
 			{
-				cout << "." << flush;
+
+				if (myid == 0) cout << "." << flush;
 				for (int i=0; i<nsteps/10; ++i)
 				{
 					avgclustersize += elementaryMCstep(ncluster, nsweeps);
@@ -255,20 +256,19 @@ struct ObsTupleToObsCacheTuple
 				}
 			}
 
-			cout << "|" << endl;
-			cout << avgclustersize/nsteps << endl;
+			if (myid == 0) cout << "|" << endl << avgclustersize/nsteps << endl;
 //			finalize_consistency_check();
 		}
 	
-	    	void wrmploop(const int nsteps, const int ncluster, const int nsweeps)
+	    	void wrmploop(const int nsteps, const int ncluster, const int nsweeps, int myid)
 		{
-			cout << "|";
+			if (myid == 0) cout << "|";
 			for (int k=0; k<10; k++)
 			{
-				cout << "." << flush;
+				if (myid == 0) cout << "." << flush;
 				for (int i=0; i<nsteps/10; ++i) elementaryMCstep(ncluster, nsweeps);
 			}
-			cout << "|";
+			if (myid == 0) cout << "|";
 		}
 	
 

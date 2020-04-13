@@ -237,13 +237,13 @@ int main()
         
 
 		// temp!
-		nbeta=7;
-		betastep = 0.1;
+//		nbeta=7;
+//		betastep = 0.1;
 
 
 
 		// let's create some parameter vectors
-		std::vector<double> anisos = {0.8, 1.0, 1.2};
+		std::vector<double> anisos = {0.0, 4.2};
 		std::vector<double> betas(nbeta);
 		for (int i = 0; i < nbeta; ++i) betas[i] = betastart + i*betastep;
 		       
@@ -259,23 +259,25 @@ int main()
 
 		RegularLattice latt(L, dim);
 
-		fillsims(parameters, sims, [&latt, &outdir, L]( decltype(parameters[0]) p) 
-		{
-			// write a filter to determine output file path
-			std::string outname   = "beta"+std::to_string(std::get<0>(p))+"aniso"+std::to_string(std::get<1>(p))+".h5";
-			std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
+		fillsims
+		(
+			parameters, sims, [&latt, &outdir, L]( decltype(parameters[0]) p) 
+			{
+				// write a filter to determine output file path
+				std::string outname   = "beta"+std::to_string(std::get<0>(p))+"aniso"+std::to_string(std::get<1>(p))+".h5";
+				std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
 
-			return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
-		});
-		std::cout<< sims.size()<<std::endl;
+				return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
+			}
+		);
         
 
 
 		//execute 
-		cout << sims.size() << endl;
 		#pragma omp parallel for
 		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
 		{
+			auto myid = i;
 			auto& marqov = sims[i];
 
 			// number of cluster updates and metropolis sweeps
@@ -289,8 +291,8 @@ int main()
 			
 			// perform simulation
 			marqov.init_hot();
-			marqov.wrmploop(nrlx, ncluster, nsweeps);
-			marqov.gameloop(nmsr, ncluster, nsweeps);
+			marqov.wrmploop(nrlx, ncluster, nsweeps, myid);
+			marqov.gameloop(nmsr, ncluster, nsweeps, myid);
 		}
 	}
 }
