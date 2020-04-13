@@ -9,6 +9,8 @@ target_include_directories(${target} PUBLIC ${HDF5_INCLUDE_DIRS})
 target_link_libraries(${target} ${HDF5_LIBRARIES})
 target_compile_features(${target} PUBLIC cxx_lambdas cxx_auto_type cxx_constexpr cxx_trailing_return_types cxx_return_type_deduction)
 
+find_package(OpenMP)
+
 add_definitions("-fopenmp")
 set_target_properties(MARQOV PROPERTIES LINK_FLAGS " ${LINK_FLAGS} -fopenmp")
 

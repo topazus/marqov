@@ -5,11 +5,13 @@
 #include <cstdlib>
 #include <fstream>
 #include <algorithm>
+#include <omp.h>
 #include "rndwrapper.h"
 #include "regular_lattice.h"
 #include "vectorhelpers.h"
 #include "cartprod.h"
 #include "registry.h"
+
 
 //helper, delete later
 #include <typeinfo>
@@ -230,52 +232,65 @@ int main()
 		// extract lattice size and prepare directories
 		const int L = nL[j];
 		cout << endl << "L = " << L << endl << endl;
+		makeDir(outdir+"/"+std::to_string(L));
 
-		cout << outdir+std::to_string(L) << endl;
-		makeDir(outdir+std::to_string(L));
         
-        nbeta=7;
-        betastep = 0.1;
-        // let's create some parameter vectors
-        std::vector<double> anisos = {0.8, 1.0, 1.2};
-        std::vector<double> anisos2 = {10,20,30,40,50};
-        std::vector<double> anisos3 = {100,200,300,400,500};
-        std::vector<double> betas(nbeta);
-        for (int i = 0; i < nbeta; ++i)
-            betas[i] = betastart + i*betastep;
+
+		// temp!
+		nbeta=7;
+		betastep = 0.1;
+
+
+
+		// let's create some parameter vectors
+		std::vector<double> anisos = {0.8, 1.0, 1.2};
+		std::vector<double> anisos2 = {10,20,30,40,50};
+		std::vector<double> anisos3 = {100,200,300,400,500};
+		std::vector<double> betas(nbeta);
+		for (int i = 0; i < nbeta; ++i)
+			betas[i] = betastart + i*betastep;
+		       
+		auto parameters = cart_prod(betas, anisos);
+       
+
+
+		// set up simulations
+
+		std::vector<Marqov<RegularLattice, XXZAntiferro<double,double> >> sims;
+
+		sims.reserve(parameters.size());//MARQOV has issues with copying -> reuires reserve in vector
+
+		RegularLattice latt(L, dim);
+
+		fillsims(parameters, sims, [&latt, &outdir, L]( decltype(parameters[0]) p) 
+		{
+			// write a filter to determine output file path
+			std::string outfile = outdir+std::to_string(L)+"/beta"+std::to_string(std::get<0>(p))+"aniso"+std::to_string(std::get<1>(p))+".h5";
+			return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outfile), p);
+		});
+		std::cout<< sims.size()<<std::endl;
         
-        auto parameters = cart_prod(betas, anisos);
-        
-        // set up simulations
-        std::vector<Marqov<RegularLattice, XXZAntiferro<double,double> >> sims;
-        sims.reserve(parameters.size());//MARQOV has issues with copying -> reuires reserve in vector
-        RegularLattice latt(L, dim);
-        fillsims(parameters, sims, 
-                 [&latt, &outdir, L]( decltype(parameters[0]) p) {
-                     // write a filter to determine output file path
-                     std::string outfile = outdir+std::to_string(L)+"/beta"+std::to_string(std::get<0>(p))+"aniso"+std::to_string(std::get<1>(p))+".h5";
-                     return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outfile), p);
-                });
-        std::cout<< sims.size()<<std::endl;
-        
-        //execute 
-#pragma omp parallel for
-        for(std::size_t i = 0; i < sims.size(); ++i)//for OMP
-        {
-            auto& marqov = sims[i];
-            // number of cluster updates and metropolis sweeps
+
+
+		//execute 
+		#pragma omp parallel for
+		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
+		{
+			auto& marqov = sims[i];
+
+			// number of cluster updates and metropolis sweeps
 			const int ncluster = L;
 			const int nsweeps  = L/2;
-
+			
 			// number of EMCS during relaxation and measurement
 			const int nrlx = 2500;
 			const int nmsr = 5000;  
-
-
+			
+			
 			// perform simulation
 			marqov.init_hot();
 			marqov.wrmploop(nrlx, ncluster, nsweeps);
 			marqov.gameloop(nmsr, ncluster, nsweeps);
-        }
+		}
 	}
 }
