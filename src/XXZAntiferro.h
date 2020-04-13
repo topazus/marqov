@@ -166,7 +166,7 @@ class XXZAntiferro_extfield : public OnSite<StateVector, double>
 	public:
 		XXZAntiferro_extfield()
 		{
-			this->h = -4.2;
+			this->h = 0;
 		}
 		double operator() (const StateVector& phi) {return phi[2];};
 };

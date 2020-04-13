@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <fstream>
 #include <algorithm>
-#include <omp.h>
 #include "rndwrapper.h"
 #include "regular_lattice.h"
 #include "vectorhelpers.h"
@@ -226,6 +225,8 @@ int main()
 	// lattice dimension
 	const int dim = 2;
 
+	cout << endl << "The dimension is " << dim << endl << endl;
+
 	// lattice size loop
 	for (int j=0; j<nL.size(); j++)
 	{
@@ -236,35 +237,35 @@ int main()
 
         
 
-		// temp!
-//		nbeta=7;
-//		betastep = 0.1;
 
-
+		// FIXME: parameters not working so far; still hard-coded!!
 
 		// let's create some parameter vectors
-		std::vector<double> anisos = {0.0, 4.2};
+		std::vector<double> anisos = {0.0}; //, 4.2};
 		std::vector<double> betas(nbeta);
 		for (int i = 0; i < nbeta; ++i) betas[i] = betastart + i*betastep;
-		       
 		auto parameters = cart_prod(betas, anisos);
        
 
+		// ----------- set up simulations ------------
 
-		// set up simulations
-
-		std::vector<Marqov<RegularLattice, XXZAntiferro<double,double> >> sims;
-
-		sims.reserve(parameters.size());//MARQOV has issues with copying -> reuires reserve in vector
-
+		// lattice
 		RegularLattice latt(L, dim);
 
-		fillsims
-		(
-			parameters, sims, [&latt, &outdir, L]( decltype(parameters[0]) p) 
+		// model
+//		std::vector<Marqov<RegularLattice, XXZAntiferro<double,double> >> sims;
+		std::vector<Marqov<RegularLattice, Ising<int> >> sims;
+
+		// simulation vector
+		sims.reserve(parameters.size());//MARQOV has issues with copying -> reuires reserve in vector
+
+
+		fillsims(	parameters, 
+				sims, 
+				[&latt, &outdir, L]( decltype(parameters[0]) p) 
 			{
 				// write a filter to determine output file path
-				std::string outname   = "beta"+std::to_string(std::get<0>(p))+"aniso"+std::to_string(std::get<1>(p))+".h5";
+				std::string outname   = "beta"+std::to_string(std::get<0>(p))+"_aniso"+std::to_string(std::get<1>(p))+".h5";
 				std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
 
 				return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
@@ -273,7 +274,9 @@ int main()
         
 
 
-		//execute 
+
+		// ------------- execute -------------
+
 		#pragma omp parallel for
 		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
 		{
@@ -281,12 +284,12 @@ int main()
 			auto& marqov = sims[i];
 
 			// number of cluster updates and metropolis sweeps
-			const int ncluster = L;
-			const int nsweeps  = L/2;
+			const int ncluster = 10*pow(L*L, 0.125);
+			const int nsweeps  = 5;
 			
 			// number of EMCS during relaxation and measurement
-			const int nrlx = 2500;
-			const int nmsr = 5000;  
+			const int nrlx = 1000;
+			const int nmsr = 1000;  
 			
 			
 			// perform simulation
