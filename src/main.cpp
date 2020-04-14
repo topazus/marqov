@@ -207,11 +207,12 @@ int main()
 
 
 	// extract Monte Carlo parameters
-	auto  nL = registry.Get<std::vector<int> >("mc", "General", "nL" );
+	auto   nL        = registry.Get<std::vector<int> >("mc", "General", "nL" );
+	int    nreps     = registry.Get<int>("mc", "General", "nreps" );
 	int    nbeta     = registry.Get<int>("mc", "General", "nbeta" );
 	double betastart = registry.Get<double>("mc", "General", "betastart" );
 	double betaend   = registry.Get<double>("mc", "General", "betaend" );
-	double betastep = (betaend - betastart) / double(nbeta);
+	double betastep  = (betaend - betastart) / double(nbeta);
 
 
 	// write temperatures in logfile
@@ -223,7 +224,7 @@ int main()
 
 
 	// lattice dimension
-	const int dim = 2;
+	const int dim = 3;
 
 	cout << endl << "The dimension is " << dim << endl << endl;
 
@@ -237,15 +238,37 @@ int main()
 
         
 
+		//------------ parameters --------------
 
-		// FIXME: parameters not working so far; still hard-coded!!
+		// anisotropy
+		std::vector<double> anisos   = {0.8};
 
-		// let's create some parameter vectors
-		std::vector<double> anisos = {0.0}; //, 4.2};
+		// external field
+		std::vector<double> extfield = {0.0};
+
+		// temperature
 		std::vector<double> betas(nbeta);
-		for (int i = 0; i < nbeta; ++i) betas[i] = betastart + i*betastep;
-		auto parameters = cart_prod(betas, anisos);
+		for (int i=0; i<nbeta; ++i) betas[i] = betastart + i*betastep;
+
+		// replicas index
+		std::vector<double> id(nreps);
+		for (int i=0; i<nreps; ++i) id[i] = i;
+
+
+
+
+		// create parameter vector
+
+		// usually temperatures have to go first, but here we want it sorted by "id" first
+		auto parameters = cart_prod(id, betas, anisos, extfield);
+
+		// swap "id" and "temperature"
+		for (auto& param_tuple : parameters) 
+			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
+
        
+
+
 
 		// ----------- set up simulations ------------
 
@@ -253,8 +276,7 @@ int main()
 		RegularLattice latt(L, dim);
 
 		// model
-//		std::vector<Marqov<RegularLattice, XXZAntiferro<double,double> >> sims;
-		std::vector<Marqov<RegularLattice, Ising<int> >> sims;
+		std::vector<Marqov<RegularLattice, XXZAntiferro<double,double> >> sims;
 
 		// simulation vector
 		sims.reserve(parameters.size());//MARQOV has issues with copying -> reuires reserve in vector
@@ -263,13 +285,15 @@ int main()
 		fillsims(	parameters, 
 				sims, 
 				[&latt, &outdir, L]( decltype(parameters[0]) p) 
-			{
-				// write a filter to determine output file path
-				std::string outname   = "beta"+std::to_string(std::get<0>(p))+"_aniso"+std::to_string(std::get<1>(p))+".h5";
-				std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
+				{
+					// write a filter to determine output file path
+					std::string str_beta = "beta"+std::to_string(std::get<0>(p));
+					std::string str_id   = std::to_string(int(std::get<1>(p)));
+					std::string outname   = str_beta+"_"+str_id+".h5";
+					std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
 
-				return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
-			}
+					return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
+				}
 		);
         
 
@@ -284,11 +308,11 @@ int main()
 			auto& marqov = sims[i];
 
 			// number of cluster updates and metropolis sweeps
-			const int ncluster = 10*pow(L*L, 0.125);
-			const int nsweeps  = 5;
+			const int ncluster = L;
+			const int nsweeps  = L/2;
 			
 			// number of EMCS during relaxation and measurement
-			const int nrlx = 1000;
+			const int nrlx = 500;
 			const int nmsr = 1000;  
 			
 			
