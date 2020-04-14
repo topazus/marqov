@@ -143,11 +143,10 @@ class XXZAntiferro_interaction : public Interaction<StateVector>
 {
 	public:
 		double Delta; // uniaxial exchange anisotropy
-		double J = 1;
 
 		XXZAntiferro_interaction(double myDelta) : Delta(myDelta)
 		{
-	 		this->J = J;
+	 		this->J = 1;
 		}
 		StateVector operator() (const StateVector& phi) 
 		{

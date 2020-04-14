@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <utility>
 #include <tuple>
+#include <random>
 #include <unistd.h> // provides usleep
 #include <stdexcept>
 #include "cachecontainer.h"
@@ -102,7 +103,7 @@ struct ObsTupleToObsCacheTuple
 													obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
 		{
 //			rng.seed(15); cout << "seed is fixed!" << endl << endl;
-			rng.seed(time(NULL));
+			rng.seed(time(NULL)+std::random_device{}());
 			rng.set_integer_range(lattice.size());
 			statespace = new typename Hamiltonian::StateVector[lattice.size()];
 		}
