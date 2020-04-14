@@ -4,10 +4,17 @@
 #include <string>
 #include <cstdlib>
 #include <fstream>
+#include <algorithm>
 #include "rndwrapper.h"
 #include "regular_lattice.h"
 #include "vectorhelpers.h"
+#include "cartprod.h"
 #include "registry.h"
+
+
+//helper, delete later
+#include <typeinfo>
+#include <cxxabi.h>
 
 using std::cout;
 using std::endl;
@@ -116,8 +123,39 @@ inline void coutsv(StateVector& vec)
 	
 	for (int i=0; i<SymD; i++) cout << vec[i] << "\t";
 	cout << endl;
-}	
+}
 
+//c++17 make_from_tuple from cppreference adapted for emplace
+template <class Cont, class Tuple, std::size_t... I>
+constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple&& t, std::index_sequence<I...> )
+{
+  return cont.emplace_back(std::get<I>(std::forward<Tuple>(t))...) ;
+}
+ 
+template <class Cont, class Tuple>
+constexpr auto emplace_from_tuple(Cont&& cont,  Tuple&& t )
+{
+    return emplace_from_tuple_impl(cont, std::forward<Tuple>(t),
+        std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value>{});
+}
+
+/** ToDo: introduce a filter..., e.g. a lambda*/
+template <class Args, class T, class Grid>
+void fillsims(const std::vector<Args>& args, std::vector<T>& sims, Grid& grid, std::string& fn)
+{
+    for(auto p : args)
+    {
+        auto args = std::tuple_cat(std::make_tuple(grid, fn), p);
+        emplace_from_tuple(sims, args);
+    }
+}
+
+template <class Args, class T, class Callable>
+void fillsims(const std::vector<Args>& args, std::vector<T>& sims, Callable c)
+{
+    for(auto p : args)
+        emplace_from_tuple(sims, c(p));
+}
 
 // ---------------------------------------
 
@@ -169,11 +207,12 @@ int main()
 
 
 	// extract Monte Carlo parameters
-	auto  nL = registry.Get<std::vector<int> >("mc", "General", "nL" );
+	auto   nL        = registry.Get<std::vector<int> >("mc", "General", "nL" );
+	int    nreps     = registry.Get<int>("mc", "General", "nreps" );
 	int    nbeta     = registry.Get<int>("mc", "General", "nbeta" );
 	double betastart = registry.Get<double>("mc", "General", "betastart" );
 	double betaend   = registry.Get<double>("mc", "General", "betaend" );
-	double betastep = (betaend - betastart) / double(nbeta);
+	double betastep  = (betaend - betastart) / double(nbeta);
 
 
 	// write temperatures in logfile
@@ -185,7 +224,9 @@ int main()
 
 
 	// lattice dimension
-	const int dim = 2;
+	const int dim = 3;
+
+	cout << endl << "The dimension is " << dim << endl << endl;
 
 	// lattice size loop
 	for (int j=0; j<nL.size(); j++)
@@ -195,41 +236,90 @@ int main()
 		cout << endl << "L = " << L << endl << endl;
 		makeDir(outdir+"/"+std::to_string(L));
 
-		// temperature loop
-		for (int i=0; i<nbeta; i++)
+        
+
+		//------------ parameters --------------
+
+		// anisotropy
+		std::vector<double> anisos   = {0.8};
+
+		// external field
+		std::vector<double> extfield = {0.0};
+
+		// temperature
+		std::vector<double> betas(nbeta);
+		for (int i=0; i<nbeta; ++i) betas[i] = betastart + i*betastep;
+
+		// replicas index
+		std::vector<double> id(nreps);
+		for (int i=0; i<nreps; ++i) id[i] = i;
+
+
+
+
+		// create parameter vector
+
+		// usually temperatures have to go first, but here we want it sorted by "id" first
+		auto parameters = cart_prod(id, betas, anisos, extfield);
+
+		// swap "id" and "temperature"
+		for (auto& param_tuple : parameters) 
+			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
+
+       
+
+
+
+		// ----------- set up simulations ------------
+
+		// lattice
+		RegularLattice latt(L, dim);
+
+		// model
+		std::vector<Marqov<RegularLattice, XXZAntiferro<double,double> >> sims;
+
+		// simulation vector
+		sims.reserve(parameters.size());//MARQOV has issues with copying -> reuires reserve in vector
+
+
+		fillsims(	parameters, 
+				sims, 
+				[&latt, &outdir, L]( decltype(parameters[0]) p) 
+				{
+					// write a filter to determine output file path
+					std::string str_beta = "beta"+std::to_string(std::get<0>(p));
+					std::string str_id   = std::to_string(int(std::get<1>(p)));
+					std::string outname   = str_beta+"_"+str_id+".h5";
+					std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
+
+					return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
+				}
+		);
+        
+
+
+
+		// ------------- execute -------------
+
+		#pragma omp parallel for
+		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
 		{
-			double currentbeta = betastart + i*betastep; 
-			cout << "beta = " << currentbeta << endl;
-
-			// set up lattice
-			RegularLattice lattice(L, dim);
-		
-			// set up outfile
-			std::string outfile = outdir+"/"+std::to_string(L)+"/"+std::to_string(i)+".h5";
-
-			// set up model
-            {Marqov<RegularLattice, BlumeCapel<int> > marqov(lattice, outfile, currentbeta, currentbeta);}
- 			{Marqov<RegularLattice, Heisenberg<double,double> > marqov(lattice, outfile, currentbeta, -1.0);}
- 			{Marqov<RegularLattice, Phi4<double,double> > marqov(lattice, outfile, currentbeta, currentbeta, -4.5);}
- 			{Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, outfile, currentbeta, 1.0);}
-			Marqov<RegularLattice, Ising<int> > marqov(lattice, outfile, currentbeta, -1.0);
-
+			auto myid = i;
+			auto& marqov = sims[i];
 
 			// number of cluster updates and metropolis sweeps
-			const int ncluster = L;
-			const int nsweeps  = L/2; 
-
-
+			const int ncluster = 0;
+			const int nsweeps  = L/2;
+			
 			// number of EMCS during relaxation and measurement
-			const int nrlx = 2500;
-			const int nmsr = 5000;  
-
-
+			const int nrlx = 500;
+			const int nmsr = 1500;  
+			
+			
 			// perform simulation
 			marqov.init_hot();
-			marqov.wrmploop(nrlx, ncluster, nsweeps);
-			marqov.gameloop(nmsr, ncluster, nsweeps);
-
+			marqov.wrmploop(nrlx, ncluster, nsweeps, myid);
+			marqov.gameloop(nmsr, ncluster, nsweeps, myid);
 		}
 	}
 }

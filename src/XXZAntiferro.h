@@ -142,11 +142,12 @@ template <class StateVector>
 class XXZAntiferro_interaction : public Interaction<StateVector> 
 {
 	public:
-		double Delta = 0.8; // uniaxial exchange anisotropy
+		double Delta; // uniaxial exchange anisotropy
+		double J = 1;
 
-		XXZAntiferro_interaction()
+		XXZAntiferro_interaction(double myDelta) : Delta(myDelta)
 		{
-	 		this->J = 1;
+	 		this->J = J;
 		}
 		StateVector operator() (const StateVector& phi) 
 		{
@@ -164,9 +165,12 @@ template <class StateVector>
 class XXZAntiferro_extfield : public OnSite<StateVector, double>
 {
 	public:
-		XXZAntiferro_extfield()
+
+		double H;
+
+		XXZAntiferro_extfield(double myH) : H(myH)
 		{
-			this->h = -4.2;
+			this->h = H;
 		}
 		double operator() (const StateVector& phi) {return phi[2];};
 };
@@ -178,7 +182,7 @@ template <typename SpinType, typename MyFPType>
 class XXZAntiferro
 {
 	public:
-        double j;
+        	double Delta, H, id;
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
@@ -198,10 +202,10 @@ class XXZAntiferro
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		XXZAntiferro(double myj) : j(myj)
+		XXZAntiferro(double myid, double myDelta, double myH) : id(myid), Delta(myDelta), H(myH)	
 		{
-			interactions[0] = new XXZAntiferro_interaction<StateVector>(); 
-			onsite[0]       = new XXZAntiferro_extfield<StateVector>();
+			interactions[0] = new XXZAntiferro_interaction<StateVector>(Delta); 
+			onsite[0]       = new XXZAntiferro_extfield<StateVector>(H);
 		}
 		
 		XXZAntiferroStaggeredMagZ  obs_mstagz;

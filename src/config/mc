@@ -1,8 +1,9 @@
 [General]
 nL = 8,12,16,24,32,48
-betastart = 0.93
-betaend = 1.03
+betastart = 0.62
+betaend = 0.66
 nbeta = 8
+nreps = 5
 
 
 [IO]
