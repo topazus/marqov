@@ -308,12 +308,12 @@ int main()
 			auto& marqov = sims[i];
 
 			// number of cluster updates and metropolis sweeps
-			const int ncluster = L;
+			const int ncluster = 0;
 			const int nsweeps  = L/2;
 			
 			// number of EMCS during relaxation and measurement
 			const int nrlx = 500;
-			const int nmsr = 1000;  
+			const int nmsr = 1500;  
 			
 			
 			// perform simulation

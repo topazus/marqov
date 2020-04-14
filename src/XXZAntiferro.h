@@ -143,10 +143,11 @@ class XXZAntiferro_interaction : public Interaction<StateVector>
 {
 	public:
 		double Delta; // uniaxial exchange anisotropy
+		double J = 1;
 
 		XXZAntiferro_interaction(double myDelta) : Delta(myDelta)
 		{
-	 		this->J = Delta;
+	 		this->J = J;
 		}
 		StateVector operator() (const StateVector& phi) 
 		{
@@ -164,7 +165,10 @@ template <class StateVector>
 class XXZAntiferro_extfield : public OnSite<StateVector, double>
 {
 	public:
-		XXZAntiferro_extfield(double H)
+
+		double H;
+
+		XXZAntiferro_extfield(double myH) : H(myH)
 		{
 			this->h = H;
 		}
