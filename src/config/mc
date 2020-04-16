@@ -1,9 +1,24 @@
 [General]
+dim = 2
 nL = 8,12,16,24,32,48
-betastart = 0.62
-betaend = 0.66
-nbeta = 8
-nreps = 5
+nreplicas = 1
+
+loopvar = beta
+lvstart = 0.91
+lvfinal = 0.93
+lvsteps = 10
+loopstyle = lin
+
+
+
+[Hamiltonian] // model parameters other than temperature
+
+names = extfield, aniso, singleaniso
+
+extfield = 4.4
+aniso = 0.8
+singleaniso = 0.2
+
 
 
 [IO]

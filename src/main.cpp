@@ -8,6 +8,7 @@
 #include "rndwrapper.h"
 #include "regular_lattice.h"
 #include "vectorhelpers.h"
+#include "helpers.h"
 #include "cartprod.h"
 #include "registry.h"
 
@@ -16,6 +17,7 @@
 #include <typeinfo>
 #include <cxxabi.h>
 
+#include <iomanip>      // std::setprecision
 using std::cout;
 using std::endl;
 using std::flush;
@@ -157,6 +159,7 @@ void fillsims(const std::vector<Args>& args, std::vector<T>& sims, Callable c)
         emplace_from_tuple(sims, c(p));
 }
 
+
 // ---------------------------------------
 
 const int myid = 0; // remove once a parallelization is available
@@ -166,6 +169,7 @@ const int myid = 0; // remove once a parallelization is available
 #include "Phi4.h"
 #include "BlumeCapel.h"
 #include "XXZAntiferro.h"
+#include "XXZAntiferroSingleAniso.h"
 
 #include "marqov.h"
 
@@ -206,27 +210,50 @@ int main()
 	// ----------------------------------------------------
 
 
-	// extract Monte Carlo parameters
-	auto   nL        = registry.Get<std::vector<int> >("mc", "General", "nL" );
-	int    nreps     = registry.Get<int>("mc", "General", "nreps" );
-	int    nbeta     = registry.Get<int>("mc", "General", "nbeta" );
-	double betastart = registry.Get<double>("mc", "General", "betastart" );
-	double betaend   = registry.Get<double>("mc", "General", "betaend" );
-	double betastep  = (betaend - betastart) / double(nbeta);
+
+	// --------- unpack configuration file ---------
+
+	const auto dim       = registry.Get<int>("mc", "General", "dim" );
+	const auto nL        = registry.Get<std::vector<int> >("mc", "General", "nL" );
+	const int  nreplicas = registry.Get<int>("mc", "General", "nreplicas" );
+
+	auto lvname    = registry.Get<std::string>("mc", "General", "loopvar" );
+	auto loopstyle = registry.Get<std::string>("mc", "General", "loopstyle" );
+
+	double lvstart = registry.Get<double>("mc", "General", "lvstart" );
+	double lvfinal = registry.Get<double>("mc", "General", "lvfinal" );
+	int    lvsteps = registry.Get<int>("mc", "General", "lvsteps" );
+
+	auto parnames = registry.Get<std::vector<std::string>>("mc", "Hamiltonian", "names"); 
 
 
-	// write temperatures in logfile
+	std::vector<std::vector<double>> par;
+	for (int i=0; i<parnames.size(); i++)
+	{
+		auto parname = parnames[i];
+		if (parname != lvname)
+		{
+			std::vector<double> parval = {0};
+			parval[0] = registry.Get<double>("mc", "Hamiltonian", parnames[i]);
+			par.push_back(parval);
+		}
+	}
+
+	// create range for loop variable
+	std::vector<double> loopvar = create_range(lvstart, lvfinal, lvsteps);
+
+	// write values in external fields in logfile
 	std::string logfile = registry.Get<std::string>("mc", "IO", "logfile" );
 	std::ofstream os(logdir+"/"+logfile);
-	for (int i=0; i<nbeta; i++) os << betastart + i*betastep << endl;
+		os << std::setprecision(7);
+		for (int i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;
 	os.close();
 
 
 
-	// lattice dimension
-	const int dim = 3;
+	// ---------------- main loop -----------------
 
-	cout << endl << "The dimension is " << dim << endl << endl;
+	cout << endl << "The dimension is " << dim << endl;
 
 	// lattice size loop
 	for (int j=0; j<nL.size(); j++)
@@ -238,29 +265,23 @@ int main()
 
         
 
-		//------------ parameters --------------
+		// ------------ create parameter vector ---------------
 
-		// anisotropy
-		std::vector<double> anisos   = {0.8};
+		// todo: improve this section
+		// by construction temperatures have to go first, but here 
+		// we want it sorted by "id", therefore the two are swaped afterwards
 
-		// external field
-		std::vector<double> extfield = {0.0};
+		// replicas index (used as a fake Hamiltonian parameter)
+		std::vector<double> id(nreplicas);
+		for (int i=0; i<nreplicas; ++i) id[i] = i;
 
-		// temperature
-		std::vector<double> betas(nbeta);
-		for (int i=0; i<nbeta; ++i) betas[i] = betastart + i*betastep;
+		// beta is loopvar
+		auto parameters = cart_prod(id, loopvar, par[0], par[1], par[2]);
 
-		// replicas index
-		std::vector<double> id(nreps);
-		for (int i=0; i<nreps; ++i) id[i] = i;
-
-
-
-
-		// create parameter vector
-
-		// usually temperatures have to go first, but here we want it sorted by "id" first
-		auto parameters = cart_prod(id, betas, anisos, extfield);
+		// beta is not loopvar
+//		auto beta = registry.Get<double>("mc", "General", "beta");
+//		auto parameters = cart_prod(id, beta, loopvar, par[0], par[1]);
+	
 
 		// swap "id" and "temperature"
 		for (auto& param_tuple : parameters) 
@@ -276,7 +297,7 @@ int main()
 		RegularLattice latt(L, dim);
 
 		// model
-		std::vector<Marqov<RegularLattice, XXZAntiferro<double,double> >> sims;
+		std::vector<Marqov<RegularLattice, XXZAntiferroSingleAniso<double,double> >> sims;
 
 		// simulation vector
 		sims.reserve(parameters.size());//MARQOV has issues with copying -> reuires reserve in vector
@@ -286,10 +307,12 @@ int main()
 				sims, 
 				[&latt, &outdir, L]( decltype(parameters[0]) p) 
 				{
-					// write a filter to determine output file path
+					// write a filter to determine output file path and name
 					std::string str_beta = "beta"+std::to_string(std::get<0>(p));
+					std::string str_extf = "extf"+std::to_string(std::get<2>(p));
 					std::string str_id   = std::to_string(int(std::get<1>(p)));
-					std::string outname   = str_beta+"_"+str_id+".h5";
+
+					std::string outname   = str_beta+"_"+str_extf+"_"+str_id+".h5";
 					std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
 
 					return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
@@ -309,11 +332,11 @@ int main()
 
 			// number of cluster updates and metropolis sweeps
 			const int ncluster = 0;
-			const int nsweeps  = L/2;
+			const int nsweeps  = 2*L;
 			
 			// number of EMCS during relaxation and measurement
-			const int nrlx = 500;
-			const int nmsr = 1500;  
+			const int nrlx = 5000;
+			const int nmsr = 15000;  
 			
 			
 			// perform simulation
