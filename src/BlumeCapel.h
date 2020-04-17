@@ -150,7 +150,7 @@ class BlumeCapel
 		template <class A = bool>
 		inline void wolff_flip(StateVector& sv, const A a=0)
 		{
-			sv[0] *= -static_cast<decltype(sv[0])>(1.0);
+			sv[0] *= -static_cast<SpinType>(1.0);
 		}
 
 };

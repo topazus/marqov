@@ -8,10 +8,10 @@ lvstart = 0.91
 lvfinal = 0.93
 lvsteps = 10
 loopstyle = lin
+Hamiltonian = XXZAntiferroSingleAniso
 
 
-
-[Hamiltonian] // model parameters other than temperature
+[XXZAntiferroSingleAniso] // model parameters other than temperature
 
 names = extfield, aniso, singleaniso
 
