@@ -61,11 +61,6 @@ struct GetTrait<std::vector<std::string> >//helper trait to break up a string at
     }
 };
 
-class Grid 
-{
-    std::vector<int> getnbr(int i);
-};
-
 template <class StateVector>
 inline void coutsv(StateVector& vec)
 {
