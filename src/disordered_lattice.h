@@ -71,6 +71,7 @@ class Regular2D : public PointCloud
 
 
 // Base class encoding the links
+template <typename bond_type = int>
 class DisorderType
 {
 	public:
@@ -82,24 +83,30 @@ class DisorderType
 		{
 			return nbrs[i];
 		}
+		
+		inline bond_type getweights(const int i)
+		{
+			return 1;
+		}
+
 };
 
 
 
 // some dummy implementation of DisorderType
-template <class PointCloud>
-class SomeRandomConnections : public DisorderType
+template <class PointCloud, typename bond_type>
+class SomeRandomConnections : public DisorderType<bond_type>
 {
 	private:
 		RND rng;
 	
 	public:
-		SomeRandomConnections(const PointCloud cloud) : rng(0,1)
+		SomeRandomConnections(const PointCloud& cloud) : rng(0,1)
 		{
 			rng.seed(time(NULL)+std::random_device{}());	
 
 			const int npoints = cloud.size;
-			nbrs.resize(npoints);
+			this->nbrs.resize(npoints);
 			rng.set_integer_range(npoints);
 			for (int i=0; i<2*npoints; i++)
 			{
@@ -108,16 +115,24 @@ class SomeRandomConnections : public DisorderType
 	
 				if (i!=k)
 				{
-					nbrs[j].push_back(k);
-					nbrs[k].push_back(j);
+					this->nbrs[j].push_back(k);
+					this->nbrs[k].push_back(j);
 				}
 			}
+		}
+
+		std::vector<std::vector<std::vector<bond_type>>> bnds;
+		bond_type getweights(const int i)
+		{
+			return bnds[i];
 		}
 };
 
 
 
-template <class PointCloud, class DisorderType>
+// this class is supposed to collect everything that is needed for
+// for quenched disordered lattices; let's see if this works out ...
+template <class PointCloud, class DisorderType, class BondWeights>
 class DisorderedLattice
 {
 	private:
@@ -141,11 +156,6 @@ class DisorderedLattice
 
 		int symD;
 
-//		std::vector<std::vector<int>> nbrs;
-//		std::vector<std::vector<double>> crds;
-//		std::vector<std::vector<std::vector<double>>> bnds;
-
-
-		std::vector<int> getnbrs(int a, int i) {return 0;}
-		std::size_t size() const {return 0;}
+//		std::vector<int> getnbrs(int a, int i) {return 0;}
+//		std::size_t size() const {return 0;}
 };

@@ -1,11 +1,11 @@
 [General]
 dim = 2
-nL = 8,12,16,24,32,48
+nL = 8,12,16,24,32,48,64
 nreplicas = 1
 
 loopvar = beta
-lvstart = 0.91
-lvfinal = 0.93
+lvstart = 1.70
+lvfinal = 1.90
 lvsteps = 10
 loopstyle = lin
 
@@ -15,7 +15,7 @@ loopstyle = lin
 
 names = extfield, aniso, singleaniso
 
-extfield = 4.4
+extfield = 1.8
 aniso = 0.8
 singleaniso = 0.2
 

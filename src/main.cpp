@@ -172,6 +172,7 @@ const int myid = 0; // remove once a parallelization is available
 #include "XXZAntiferroSingleAniso.h"
 
 #include "marqov.h"
+#include "disordered_lattice.h"
 
 int main()
 {
@@ -191,6 +192,19 @@ int main()
 
 	makeDir(outdir);
 	makeDir(logdir);
+
+
+	Regular2D cloud(10);
+	SomeRandomConnections<Regular2D,double> disorder(cloud);
+
+
+	std::vector<int> nbrs = disorder.getnbrs(42);
+
+	for (auto&& x: nbrs)
+		cout << x << "\t";
+	cout << endl;
+
+
 	
 
 	// ------------------ live view -----------------------
@@ -226,6 +240,7 @@ int main()
 
 	auto parnames = registry.Get<std::vector<std::string>>("mc", "Hamiltonian", "names"); 
 
+	
 
 	std::vector<std::vector<double>> par;
 	for (int i=0; i<parnames.size(); i++)
@@ -335,8 +350,8 @@ int main()
 			const int nsweeps  = 2*L;
 			
 			// number of EMCS during relaxation and measurement
-			const int nrlx = 5000;
-			const int nmsr = 15000;  
+			const int nrlx = 500;
+			const int nmsr = 1500;  
 			
 			
 			// perform simulation
