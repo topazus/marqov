@@ -160,12 +160,35 @@ const int myid = 0; // remove once a parallelization is available
 #include "XXZAntiferro.h"
 #include "XXZAntiferroSingleAniso.h"
 
+void selectsim(RegistryDB& reg)
+{
+    const std::string ham = reg.Get<std::string>("mc", "General", "Hamiltonian" );
+    if (ham == "Ising")
+    {
+    }
+    else if (ham == "Heisenberg")
+    {
+    }
+    else if (ham == "Phi4")
+    {
+    }
+    else if (ham == "BlumeCapel")
+    {
+    }
+    else if(ham == "XXZAntiferro")
+    {
+    }
+    else if(ham == "XXZAntiferroSingleAniso")
+    {
+    }
+}
+
 int main()
 {
 	// read config files
 	RegistryDB registry("../src/config");
 
-
+    //FIXME: NEVER DELETE USER DATA
 	// remove old output and prepare new one
 	std::string outdir = registry.Get<std::string>("mc", "IO", "outdir" );
 	std::string logdir = registry.Get<std::string>("mc", "IO", "logdir" );
@@ -211,8 +234,13 @@ int main()
 	double lvfinal = registry.Get<double>("mc", "General", "lvfinal" );
 	int    lvsteps = registry.Get<int>("mc", "General", "lvsteps" );
 
-	auto parnames = registry.Get<std::vector<std::string>>("mc", "Hamiltonian", "names"); 
-
+    auto parnames = registry.GetBlock("mc", "Hamiltonian").GetKeys();
+    
+    for(auto t: out)
+        std::cout<<t<<std::endl;
+    
+    for(auto t: parnames)
+        std::cout<<t<<std::endl;
 
 	std::vector<std::vector<double>> par;
 	for (int i=0; i<parnames.size(); i++)
