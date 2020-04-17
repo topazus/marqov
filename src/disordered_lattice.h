@@ -1,14 +1,33 @@
 
-
-class Poissonian
+// base class for point clouds which is nothing
+// but a set of coordinate vectors
+class PointCloud
 {
 	public:
 		int dim, size;
-		RND rng;
+		PointCloud(){}
+
 		std::vector<std::vector<double>> crds;
 
-		Poissonian(int dim, int size) : dim(dim), size(size), rng(0,1)
+		std::vector<double> getcrds(const int i)
 		{
+			return crds[i];
+		}
+};
+
+
+// random Poissonian point cloud
+class Poissonian : public PointCloud
+{
+	private:
+		RND rng;
+
+	public:
+		Poissonian(int dim, int size) : rng(0,1)
+		{
+			dim = dim;
+			size = size;
+
 			rng.seed(time(NULL)+std::random_device{}());
 
 			for (int i=0; i<size; i++)
@@ -25,16 +44,18 @@ class Poissonian
 };
 
 
-class Regular2D
+// coordinates of a regular square lattice
+// improve me: calculate coordinates on demand
+class Regular2D : public PointCloud
 {
 	public:
-		int dim = 2;
-		int size;
 		int len;
-		std::vector<std::vector<double>> crds;
 
 		Regular2D(int len) : len(len)
 		{
+			dim = 2;
+			size = len*len;
+			
 			const double delta = 1.0 / (double)(len);
 			for (int i=0; i<len; i++)  
 			{
@@ -48,41 +69,50 @@ class Regular2D
 };
 
 
-template <class PointCloud>
-class SomeRandomConnections
+
+// Base class encoding the links
+class DisorderType
 {
+	public:
+		std::vector<std::vector<int>> nbrs;
 
-private:
-	RND rng;
+		DisorderType(){}
 
-public:
-
-	std::vector<std::vector<int>> nbrs;
-
-	SomeRandomConnections() : rng(0,1) {}
-
-	void construct(const PointCloud cloud)
-	{
-		const int npoints = cloud.size();
-		nbrs.resize(npoints);
-		rng.set_integer_range(npoints);
-		for (int i=0; i<4*npoints; i++)
+		std::vector<int> getnbrs(const int i)
 		{
-			const int j = rng.i();
-			const int k = rng.i();
+			return nbrs[i];
+		}
+};
 
-			if (i!=k)
+
+
+// some dummy implementation of DisorderType
+template <class PointCloud>
+class SomeRandomConnections : public DisorderType
+{
+	private:
+		RND rng;
+	
+	public:
+		SomeRandomConnections(const PointCloud cloud) : rng(0,1)
+		{
+			rng.seed(time(NULL)+std::random_device{}());	
+
+			const int npoints = cloud.size;
+			nbrs.resize(npoints);
+			rng.set_integer_range(npoints);
+			for (int i=0; i<2*npoints; i++)
 			{
-				nbrs[j].push_back(k);
-				nbrs[k].push_back(j);
+				const int j = rng.i();
+				const int k = rng.i();
+	
+				if (i!=k)
+				{
+					nbrs[j].push_back(k);
+					nbrs[k].push_back(j);
+				}
 			}
 		}
-	}
-
-	std::vector<int> getnbrs(const int i)
-	{
-		return nbrs[i];
-	}
 };
 
 
