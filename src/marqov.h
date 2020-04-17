@@ -169,20 +169,36 @@ struct ObsTupleToObsCacheTuple
         Marqov(Marqov&& other) = default;
         Marqov& operator=(Marqov&& other) = default;
 
-		template<size_t N = 0, typename... Ts, typename... Args>
+        //For reference: this template is just to cool to forget....
+// 		template<size_t N = 0, typename... Ts, typename... Args>
+// 		inline typename std::enable_if_t<N == sizeof...(Ts), void>
+// 		marqov_measure(std::tuple<Ts...>& t, Args... args) {}
+// 		
+// 		template<size_t N = 0, typename... Ts, typename... Args>
+// 		inline typename std::enable_if_t<N < sizeof...(Ts), void>
+// 		marqov_measure(std::tuple<Ts...>& t, Args... args)
+// 		{
+// 		     auto retval = _call(&std::tuple_element<N, 
+// 							 std::tuple<Ts...> >::type::template measure<Args...>,
+// 							 std::get<N>(t), 
+// 							 std::make_tuple(std::forward<Args>(args)...) );
+// 			marqov_measure<N + 1, Ts...>(t, args...);
+//              std::get<N>(obscache)<<retval;
+// 		}
+		template<size_t N = 0, typename... Ts, typename S, typename G>
 		inline typename std::enable_if_t<N == sizeof...(Ts), void>
-		marqov_measure(std::tuple<Ts...>& t, Args... args) {}
+		marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid) {}
 		
-		template<size_t N = 0, typename... Ts, typename... Args>
+		template<size_t N = 0, typename... Ts, typename S, typename G>
 		inline typename std::enable_if_t<N < sizeof...(Ts), void>
-		marqov_measure(std::tuple<Ts...>& t, Args... args)
+		marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid)
 		{
 		     auto retval = _call(&std::tuple_element<N, 
-							 std::tuple<Ts...> >::type::template measure<Args...>,
+							 std::tuple<Ts...> >::type::template measure<StateSpace, G>,
 							 std::get<N>(t), 
-							 std::make_tuple(args...) );
-			marqov_measure<N + 1, Ts...>(t, args...);
-            std::get<N>(obscache)<<retval;
+                            std::forward_as_tuple(s, grid) );
+			marqov_measure<N + 1, Ts...>(t, s, grid);
+             std::get<N>(obscache)<<retval;
 		}
 
 
@@ -438,8 +454,6 @@ struct ObsTupleToObsCacheTuple
 
 	//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
 	typename Hamiltonian::template MetroInitializer<RND> metro;//C++11
-
-	// obs now handled differently
 
 	// number of EMCS
 	static constexpr int nstep = 250;

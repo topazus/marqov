@@ -13,6 +13,7 @@
 #include "cartprod.h"
 #include "registry.h"
 #include "marqov.h"
+#include "neighbourclass.h"
 
 
 //helper, delete later
@@ -164,7 +165,6 @@ const int myid = 0; // remove once a parallelization is available
 template <class Hamiltonian, class Params, class Callable>
 void RegularLatticeloop(RegistryDB& reg, const std::string outdir, std::string logdir, const std::vector<Params>& parameters, Callable filter)
 {
-    using namespace std::placeholders;
     const auto dim       = reg.Get<int>("mc", "General", "dim" );
 	const auto nL        = reg.Get<std::vector<int> >("mc", "General", "nL" );
 
@@ -190,7 +190,7 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 {
     const std::string ham = registry.Get<std::string>("mc", "General", "Hamiltonian" );
     const int  nreplicas = registry.Get<int>("mc", "General", "nreplicas" );
-    auto defaultfilter = [](RegularLattice& latt, std::string outdir, int L, auto p)
+    auto defaultfilter = [](auto& latt, std::string outdir, int L, auto p)
     {
         // write a filter to determine output file path and name
         std::string str_beta = "beta"+std::to_string(std::get<0>(p));
@@ -302,6 +302,21 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 					return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
 				};
             RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outdir, logdir, parameters, xxzfilter);
+    }
+    else if(ham == "IregularIsing")
+    {
+        std::vector<std::vector<int> > dummy;
+        Neighbours<int32_t> nbrs(dummy);
+        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
+        std::vector<double> myj = {1.0};
+        auto parameters = cart_prod(betas, myj);
+        		// extract lattice size and prepare directories
+		int L = nbrs.size();
+		cout << endl << "L = " << L << endl << endl;
+		makeDir(outdir+"/"+std::to_string(L));
+		// lattice
+        auto f = [&defaultfilter, &nbrs, &outdir, L](auto p){return defaultfilter(nbrs, outdir, L, p);};//partially apply filter
+        loop<Ising<int>, Neighbours<int32_t> >(parameters, f, 2*L);
     }
 }
 
