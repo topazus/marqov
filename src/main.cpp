@@ -11,6 +11,7 @@
 #include "helpers.h"
 #include "cartprod.h"
 #include "registry.h"
+#include "marqov.h"
 
 
 //helper, delete later
@@ -65,59 +66,6 @@ class Grid
     std::vector<int> getnbr(int i);
 };
 
-// ------- elementary state vector calculus
-
-template <class StateVector>
-StateVector operator + (StateVector lhs,  StateVector rhs)
-{
-    StateVector res(lhs);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
-    res[i] += rhs[i];
-    return res;
-}
-
-template <class StateVector>
-StateVector operator - (StateVector lhs,  StateVector rhs)
-{
-    StateVector res(lhs);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
-    res[i] -= rhs[i];
-    return res;
-}
-
-inline double dot(const double& a, const double& b)
-{
-    return a*b;
-}
-
-template<class VecType>
-inline typename VecType::value_type dot(const VecType& a, const VecType& b)
-{
-    typedef typename VecType::value_type FPType;
-    return std::inner_product(begin(a), end(a), begin(b), 0.0);
-}
-
-
-template <class StateVector>
-inline void reflect(StateVector& vec, const StateVector mirror)
-{
-	const int SymD = std::tuple_size<StateVector>::value;
-	
-	const double dotp = dot(vec,mirror);
-
-	for (int i=0; i<SymD; i++) vec[i] -= 2*dotp*mirror[i];
-}	
-
-template <class Container>
-inline void normalize(Container& a)
-{
-	typename Container::value_type tmp_abs=std::sqrt(dot(a, a));
-
-	for (int i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
-}
-
-
-
 template <class StateVector>
 inline void coutsv(StateVector& vec)
 {
@@ -163,7 +111,7 @@ template <class Hamiltonian, class Parameters, class Lattice, class Callable>
 void loop(const Lattice& latt, const std::vector<Parameters>& params, Callable& filter, int nsweeps)
 {
 		// model
-		std::vector<Hamiltonian> sims;
+		std::vector<Marqov<Lattice, Hamiltonian> > sims;
 
 		// simulation vector
 		sims.reserve(params.size());//MARQOV has issues with copying -> reuires reserve in vector
@@ -216,8 +164,6 @@ const int myid = 0; // remove once a parallelization is available
 #include "BlumeCapel.h"
 #include "XXZAntiferro.h"
 #include "XXZAntiferroSingleAniso.h"
-
-#include "marqov.h"
 
 int main()
 {
@@ -333,10 +279,6 @@ int main()
 		for (auto& param_tuple : parameters) 
 			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
 
-       
-
-
-
 		// ----------- set up simulations ------------
 
 		// lattice
@@ -355,6 +297,6 @@ int main()
 					return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
 				};
 
-        loop<Marqov<RegularLattice, XXZAntiferroSingleAniso<double,double> >>(latt, parameters, xxzfilter, 2*L); 
+        loop<XXZAntiferroSingleAniso<double,double> >(latt, parameters, xxzfilter, 2*L); 
 	}
 }
