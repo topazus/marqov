@@ -159,6 +159,52 @@ void fillsims(const std::vector<Args>& args, std::vector<T>& sims, Callable c)
         emplace_from_tuple(sims, c(p));
 }
 
+template <class Hamiltonian, class Parameters, class Lattice, class Callable>
+void loop(const Lattice& latt, const std::vector<Parameters>& params, Callable& filter, int nsweeps)
+{
+		// model
+		std::vector<Hamiltonian> sims;
+
+		// simulation vector
+		sims.reserve(params.size());//MARQOV has issues with copying -> reuires reserve in vector
+
+		fillsims(	params, sims, filter);
+        
+//init
+        #pragma omp parallel for
+		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
+		{
+			auto myid = i;
+			auto& marqov = sims[i];
+
+			// number of cluster updates and metropolis sweeps
+			const int ncluster = 0;
+			
+			// number of EMCS during relaxation and measurement
+			const int nrlx = 5000;
+			// perform simulation
+			marqov.init_hot();
+			marqov.wrmploop(nrlx, ncluster, nsweeps, myid);
+		}
+
+std::cout<<"warmup done"<<std::endl;
+		// ------------- execute -------------
+
+		#pragma omp parallel for
+		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
+		{
+			auto myid = i;
+			auto& marqov = sims[i];
+
+			// number of cluster updates and metropolis sweeps
+			const int ncluster = 0;
+			
+			// number of EMCS during relaxation and measurement
+			const int nmsr = 15000;  
+			// perform simulation
+			marqov.gameloop(nmsr, ncluster, nsweeps, myid);
+		}
+}
 
 // ---------------------------------------
 
@@ -269,7 +315,7 @@ int main()
 
 		// todo: improve this section
 		// by construction temperatures have to go first, but here 
-		// we want it sorted by "id", therefore the two are swaped afterwards
+		// we want it sorted by "id", therefore the two are swapped afterwards
 
 		// replicas index (used as a fake Hamiltonian parameter)
 		std::vector<double> id(nreplicas);
@@ -295,17 +341,8 @@ int main()
 
 		// lattice
 		RegularLattice latt(L, dim);
-
-		// model
-		std::vector<Marqov<RegularLattice, XXZAntiferroSingleAniso<double,double> >> sims;
-
-		// simulation vector
-		sims.reserve(parameters.size());//MARQOV has issues with copying -> reuires reserve in vector
-
-
-		fillsims(	parameters, 
-				sims, 
-				[&latt, &outdir, L]( decltype(parameters[0]) p) 
+        
+        auto xxzfilter = [&latt, &outdir, L]( decltype(parameters[0]) p) 
 				{
 					// write a filter to determine output file path and name
 					std::string str_beta = "beta"+std::to_string(std::get<0>(p));
@@ -316,33 +353,8 @@ int main()
 					std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
 
 					return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
-				}
-		);
-        
+				};
 
-
-
-		// ------------- execute -------------
-
-		#pragma omp parallel for
-		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
-		{
-			auto myid = i;
-			auto& marqov = sims[i];
-
-			// number of cluster updates and metropolis sweeps
-			const int ncluster = 0;
-			const int nsweeps  = 2*L;
-			
-			// number of EMCS during relaxation and measurement
-			const int nrlx = 5000;
-			const int nmsr = 15000;  
-			
-			
-			// perform simulation
-			marqov.init_hot();
-			marqov.wrmploop(nrlx, ncluster, nsweeps, myid);
-			marqov.gameloop(nmsr, ncluster, nsweeps, myid);
-		}
+        loop<Marqov<RegularLattice, XXZAntiferroSingleAniso<double,double> >>(latt, parameters, xxzfilter, 2*L); 
 	}
 }
