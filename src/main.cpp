@@ -235,12 +235,6 @@ int main()
 	int    lvsteps = registry.Get<int>("mc", "General", "lvsteps" );
 
     auto parnames = registry.GetBlock("mc", "Hamiltonian").GetKeys();
-    
-    for(auto t: out)
-        std::cout<<t<<std::endl;
-    
-    for(auto t: parnames)
-        std::cout<<t<<std::endl;
 
 	std::vector<std::vector<double>> par;
 	for (int i=0; i<parnames.size(); i++)
