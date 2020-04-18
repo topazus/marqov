@@ -103,11 +103,16 @@ class SomeRandomConnections : public DisorderType<bond_type>
 	public:
 		SomeRandomConnections(const PointCloud& cloud) : rng(0,1)
 		{
-			rng.seed(time(NULL)+std::random_device{}());	
 
+			// prepare neighbour array
 			const int npoints = cloud.size;
 			this->nbrs.resize(npoints);
+
+			// prepare random number generator
+			rng.seed(time(NULL)+std::random_device{}());	
 			rng.set_integer_range(npoints);
+
+			// the actual implementation of the geometry
 			for (int i=0; i<2*npoints; i++)
 			{
 				const int j = rng.i();
@@ -121,6 +126,7 @@ class SomeRandomConnections : public DisorderType<bond_type>
 			}
 		}
 
+		// override getweights
 		std::vector<std::vector<std::vector<bond_type>>> bnds;
 		bond_type getweights(const int i)
 		{
@@ -129,6 +135,36 @@ class SomeRandomConnections : public DisorderType<bond_type>
 };
 
 
+//template <class RegularType, typename bond_type>
+template <typename bond_type>
+class RegularRandomBond:  public DisorderType<bond_type>
+{
+	private:
+		RND rng;
+		int len, dim;
+		RegularLattice lattice;
+	
+	public:
+		RegularRandomBond(int dim, int len) : dim(dim), len(len), rng(0,1)
+		{
+			RegularLattice templattice(len, dim);
+			lattice = std::move(templattice);
+		}
+
+		// override getnbrs
+		std::vector<int> getnbrs(const int i)
+		{
+			const int alpha = 1;
+			return lattice.getnbrs(alpha, i);
+		}
+
+		// override getweights
+		std::vector<std::vector<std::vector<bond_type>>> bnds;
+		bond_type getweights(const int i)
+		{
+			return bnds[i];
+		}
+};
 
 // this class is supposed to collect everything that is needed for
 // for quenched disordered lattices; let's see if this works out ...

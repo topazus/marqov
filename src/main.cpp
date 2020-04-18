@@ -196,6 +196,8 @@ int main()
 
 	Regular2D cloud(10);
 	SomeRandomConnections<Regular2D,double> disorder(cloud);
+	RegularRandomBond<double> disorder2(2,10);
+//	RegularRandomBond disorder2(2,10);
 
 
 	std::vector<int> nbrs = disorder.getnbrs(42);
