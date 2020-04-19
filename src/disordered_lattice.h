@@ -46,12 +46,12 @@ class Poissonian : public PointCloud
 
 // coordinates of a regular square lattice
 // improve me: calculate coordinates on demand
-class Regular2D : public PointCloud
+class RegularSquare : public PointCloud
 {
 	public:
 		int len;
 
-		Regular2D(int len) : len(len)
+		RegularSquare(int len) : len(len)
 		{
 			dim = 2;
 			size = len*len;
@@ -70,7 +70,7 @@ class Regular2D : public PointCloud
 
 
 
-// Base class encoding the links
+// Base class encoding the links and their weights
 template <typename bond_type = int>
 class DisorderType
 {
@@ -93,7 +93,8 @@ class DisorderType
 
 
 
-// some dummy implementation of DisorderType
+// Disorder Class implementation, example 1:
+// get a point cloud and draw some random connections 
 template <class PointCloud, typename bond_type>
 class SomeRandomConnections : public DisorderType<bond_type>
 {
@@ -135,20 +136,41 @@ class SomeRandomConnections : public DisorderType<bond_type>
 };
 
 
-//template <class RegularType, typename bond_type>
-template <typename bond_type>
+// Disorder Class implementation, example 2:
+// regular square lattice with random bond disorder
+template <typename bond_type> 
 class RegularRandomBond:  public DisorderType<bond_type>
 {
 	private:
 		RND rng;
 		int len, dim;
 		RegularLattice lattice;
+		PointCloud cloud;
 	
 	public:
-		RegularRandomBond(int dim, int len) : dim(dim), len(len), rng(0,1)
+		std::vector<std::vector<bond_type>> bnds;
+
+		RegularRandomBond(int dim, int len) : dim(dim), len(len), rng(0.9, 1.1)
 		{
+			// improve me
+			// 1. unelegant move
+			// 2. calculate point coordinates on demand
+
 			RegularLattice templattice(len, dim);
 			lattice = std::move(templattice);
+
+			RegularSquare tempcloud(len);
+			cloud = std::move(tempcloud);
+
+			for (int i=0; i<lattice.size(); i++)
+			{
+				std::vector<bond_type> bnd;
+				for (int j=0; j<lattice[i].size(); j++)
+				{
+					bnd.push_back(rng.d());
+				}
+				bnds.push_back(bnd);
+			}
 		}
 
 		// override getnbrs
@@ -159,39 +181,15 @@ class RegularRandomBond:  public DisorderType<bond_type>
 		}
 
 		// override getweights
-		std::vector<std::vector<std::vector<bond_type>>> bnds;
-		bond_type getweights(const int i)
+		std::vector<bond_type> getweights(const int i)
 		{
 			return bnds[i];
 		}
+
+		// implement getcrds
+		std::vector<double> getcrds(const int i)
+		{
+			return cloud.getcrds(i);
+		}
 };
 
-// this class is supposed to collect everything that is needed for
-// for quenched disordered lattices; let's see if this works out ...
-template <class PointCloud, class DisorderType, class BondWeights>
-class DisorderedLattice
-{
-	private:
-		int SymD;
-		RND rng;
-		PointCloud cloud;
-		DisorderType disorder;
-
-
-	public:
-		DisorderedLattice(PointCloud cloud, int SymD) : cloud(cloud), symD(symD), rng(0,1) 
-		{
-			disorder.construct(cloud);
-
-		}
-
-		std::vector<int> getnbrs(const int i)
-		{
-			return disorder.getnbrs(i);
-		}
-
-		int symD;
-
-//		std::vector<int> getnbrs(int a, int i) {return 0;}
-//		std::size_t size() const {return 0;}
-};
