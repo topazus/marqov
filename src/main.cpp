@@ -194,20 +194,33 @@ int main()
 	makeDir(logdir);
 
 
-	Regular2D cloud(10);
-	SomeRandomConnections<Regular2D,double> disorder(cloud);
-	RegularRandomBond<double> disorder2(2,10);
-//	RegularRandomBond disorder2(2,10);
+	/*
+	RegularSquare cloud(10);
+	SomeRandomConnections<RegularSquare,double> disorder2(cloud);
+	RegularRandomBond<double> disorder(2,10);
 
 
-	std::vector<int> nbrs = disorder.getnbrs(42);
+	std::vector<int> nbrs = disorder.getnbrs(1,42);
 
 	for (auto&& x: nbrs)
 		cout << x << "\t";
 	cout << endl;
 
 
+	std::vector<double> crds = disorder.getcrds(42);
+
+	for (auto&& x: crds)
+		cout << x << "\t";
+	cout << endl;
 	
+
+	std::vector<double> bnds = disorder.getbnds(1,42);
+
+	for (auto&& x: bnds)
+		cout << x << "\t";
+	cout << endl;
+	*/
+
 
 	// ------------------ live view -----------------------
 	/*
@@ -293,7 +306,8 @@ int main()
 		for (int i=0; i<nreplicas; ++i) id[i] = i;
 
 		// beta is loopvar
-		auto parameters = cart_prod(id, loopvar, par[0], par[1], par[2]);
+		auto parameters = cart_prod(id, loopvar);
+//		auto parameters = cart_prod(id, loopvar, par[0], par[1], par[2]);
 
 		// beta is not loopvar
 //		auto beta = registry.Get<double>("mc", "General", "beta");
@@ -311,10 +325,17 @@ int main()
 		// ----------- set up simulations ------------
 
 		// lattice
-		RegularLattice latt(L, dim);
+//		RegularLattice latt(L, dim);
 
 		// model
-		std::vector<Marqov<RegularLattice, XXZAntiferroSingleAniso<double,double> >> sims;
+//		std::vector<Marqov<RegularLattice, XXZAntiferroSingleAniso<double,double> >> sims;
+//		std::vector<Marqov<RegularLattice, Heisenberg<double,double> >> sims;
+
+
+		RegularRandomBond<double> latt(dim, L);
+
+		std::vector<Marqov<RegularRandomBond<double>, Ising<int> >> sims;
+
 
 		// simulation vector
 		sims.reserve(parameters.size());//MARQOV has issues with copying -> reuires reserve in vector
@@ -326,10 +347,11 @@ int main()
 				{
 					// write a filter to determine output file path and name
 					std::string str_beta = "beta"+std::to_string(std::get<0>(p));
-					std::string str_extf = "extf"+std::to_string(std::get<2>(p));
+//					std::string str_extf = "extf"+std::to_string(std::get<2>(p));
 					std::string str_id   = std::to_string(int(std::get<1>(p)));
 
-					std::string outname   = str_beta+"_"+str_extf+"_"+str_id+".h5";
+//					std::string outname   = str_beta+"_"+str_extf+"_"+str_id+".h5";
+					std::string outname   = str_beta+"_"+str_id+".h5";
 					std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
 
 					return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);

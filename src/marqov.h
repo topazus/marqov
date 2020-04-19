@@ -358,7 +358,8 @@ struct ObsTupleToObsCacheTuple
 		 void init_hot()
 		 {
 		 	const int SymD = std::tuple_size<StateVector>::value;
-			for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
+//			for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
+			for(int i = 0; i < grid.size(); ++i)
 			{
 				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
 			}

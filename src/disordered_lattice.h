@@ -1,6 +1,6 @@
 
-// base class for point clouds which is nothing
-// but a set of coordinate vectors
+// base class for point clouds which is
+// just a set of coordinate vectors
 class PointCloud
 {
 	public:
@@ -70,7 +70,7 @@ class RegularSquare : public PointCloud
 
 
 
-// Base class encoding the links and their weights
+// Disorder base class
 template <typename bond_type = int>
 class DisorderType
 {
@@ -84,7 +84,7 @@ class DisorderType
 			return nbrs[i];
 		}
 		
-		inline bond_type getweights(const int i)
+		inline std::vector<bond_type> getbnds(const int i)
 		{
 			return 1;
 		}
@@ -127,9 +127,9 @@ class SomeRandomConnections : public DisorderType<bond_type>
 			}
 		}
 
-		// override getweights
+		// override getbnds
 		std::vector<std::vector<std::vector<bond_type>>> bnds;
-		bond_type getweights(const int i)
+		bond_type getbnds(const int i)
 		{
 			return bnds[i];
 		}
@@ -174,14 +174,13 @@ class RegularRandomBond:  public DisorderType<bond_type>
 		}
 
 		// override getnbrs
-		std::vector<int> getnbrs(const int i)
+		std::vector<int> getnbrs(const int alpha, const int i)
 		{
-			const int alpha = 1;
 			return lattice.getnbrs(alpha, i);
 		}
 
-		// override getweights
-		std::vector<bond_type> getweights(const int i)
+		// override getbnds
+		std::vector<bond_type> getbnds(const int alpha, const int i)
 		{
 			return bnds[i];
 		}
@@ -191,5 +190,8 @@ class RegularRandomBond:  public DisorderType<bond_type>
 		{
 			return cloud.getcrds(i);
 		}
+
+		std::size_t size() const {return pow(len,dim);}
+
 };
 
