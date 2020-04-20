@@ -1,24 +1,16 @@
 [General]
 dim = 2
 nL = 8,12,16,24,32,48,64
-nreplicas = 1
+nreplicas = 40
 
-loopvar = beta
-lvstart = 1.70
-lvfinal = 1.90
+lvstart = 0.8
+lvfinal = 1.0
 lvsteps = 10
 loopstyle = lin
 
 
 
 [Hamiltonian] // model parameters other than temperature
-
-names = extfield, aniso, singleaniso
-
-extfield = 1.8
-aniso = 0.8
-singleaniso = 0.2
-
 
 
 [IO]

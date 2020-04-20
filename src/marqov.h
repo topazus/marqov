@@ -93,6 +93,7 @@ struct ObsTupleToObsCacheTuple
          * @param mybeta the temperature that governs the Metropolis dynamics
          * @param args A template parameter pack for the Hamiltonian
          */
+
         template <class ...Ts>
 		Marqov(Grid& lattice, std::string outfile, double mybeta, Ts&& ... args) : ham(std::forward<Ts>(args) ... ),
 													grid(lattice), 

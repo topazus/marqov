@@ -146,14 +146,15 @@ class RegularRandomBond:  public DisorderType<bond_type>
 		int len, dim;
 		RegularLattice lattice;
 		PointCloud cloud;
+		double p;
 	
 	public:
 		std::vector<std::vector<bond_type>> bnds;
 
-		RegularRandomBond(int dim, int len) : dim(dim), len(len), rng(0.9, 1.1)
+		RegularRandomBond(int dim, int len, double p) : dim(dim), len(len), p(p), rng(0,1)
 		{
 			// improve me
-			// 1. unelegant move
+			// 1. get rid of unelegant "move"
 			// 2. calculate point coordinates on demand
 
 			RegularLattice templattice(len, dim);
@@ -162,12 +163,17 @@ class RegularRandomBond:  public DisorderType<bond_type>
 			RegularSquare tempcloud(len);
 			cloud = std::move(tempcloud);
 
+			// prepare random number generator
+			rng.seed(time(NULL)+std::random_device{}());	
+
+			// construct bonds
 			for (int i=0; i<lattice.size(); i++)
 			{
 				std::vector<bond_type> bnd;
 				for (int j=0; j<lattice[i].size(); j++)
 				{
-					bnd.push_back(rng.d());
+					if (rng.d() < p) bnd.push_back(1.0);
+					else             bnd.push_back(-1.0);
 				}
 				bnds.push_back(bnd);
 			}

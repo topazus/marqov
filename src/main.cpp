@@ -271,28 +271,12 @@ int main()
 	const auto nL        = registry.Get<std::vector<int> >("mc", "General", "nL" );
 	const int  nreplicas = registry.Get<int>("mc", "General", "nreplicas" );
 
-	auto lvname    = registry.Get<std::string>("mc", "General", "loopvar" );
 	auto loopstyle = registry.Get<std::string>("mc", "General", "loopstyle" );
 
 	double lvstart = registry.Get<double>("mc", "General", "lvstart" );
 	double lvfinal = registry.Get<double>("mc", "General", "lvfinal" );
 	int    lvsteps = registry.Get<int>("mc", "General", "lvsteps" );
 
-	auto parnames = registry.Get<std::vector<std::string>>("mc", "Hamiltonian", "names"); 
-
-	
-
-	std::vector<std::vector<double>> par;
-	for (int i=0; i<parnames.size(); i++)
-	{
-		auto parname = parnames[i];
-		if (parname != lvname)
-		{
-			std::vector<double> parval = {0};
-			parval[0] = registry.Get<double>("mc", "Hamiltonian", parnames[i]);
-			par.push_back(parval);
-		}
-	}
 
 	// create range for loop variable
 	std::vector<double> loopvar = create_range(lvstart, lvfinal, lvsteps);
@@ -318,95 +302,41 @@ int main()
 		cout << endl << "L = " << L << endl << endl;
 		makeDir(outdir+"/"+std::to_string(L));
 
-        
-
-		// ------------ create parameter vector ---------------
-
-		// todo: improve this section
-		// by construction temperatures have to go first, but here 
-		// we want it sorted by "id", therefore the two are swaped afterwards
-
-		// replicas index (used as a fake Hamiltonian parameter)
-		std::vector<double> id(nreplicas);
-		for (int i=0; i<nreplicas; ++i) id[i] = i;
-
-		// beta is loopvar
-		auto parameters = cart_prod(id, loopvar);
-//		auto parameters = cart_prod(id, loopvar, par[0], par[1], par[2]);
-
-		// beta is not loopvar
-//		auto beta = registry.Get<double>("mc", "General", "beta");
-//		auto parameters = cart_prod(id, beta, loopvar, par[0], par[1]);
-	
-
-		// swap "id" and "temperature"
-		for (auto& param_tuple : parameters) 
-			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
-
-       
-
-
-
-		// ----------- set up simulations ------------
-
-		// lattice
-//		RegularLattice latt(L, dim);
-
-		// model
-//		std::vector<Marqov<RegularLattice, XXZAntiferroSingleAniso<double,double> >> sims;
-//		std::vector<Marqov<RegularLattice, Heisenberg<double,double> >> sims;
-
-
-		RegularRandomBond<double> latt(dim, L);
-
-		std::vector<Marqov<RegularRandomBond<double>, Ising<int> >> sims;
-
-
-		// simulation vector
-		sims.reserve(parameters.size());//MARQOV has issues with copying -> reuires reserve in vector
-
-
-		fillsims(	parameters, 
-				sims, 
-				[&latt, &outdir, L]( decltype(parameters[0]) p) 
-				{
-					// write a filter to determine output file path and name
-					std::string str_beta = "beta"+std::to_string(std::get<0>(p));
-//					std::string str_extf = "extf"+std::to_string(std::get<2>(p));
-					std::string str_id   = std::to_string(int(std::get<1>(p)));
-
-//					std::string outname   = str_beta+"_"+str_extf+"_"+str_id+".h5";
-					std::string outname   = str_beta+"_"+str_id+".h5";
-					std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
-
-					return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
-				}
-		);
-        
-
-
-
-		// ------------- execute -------------
-
-		#pragma omp parallel for
-		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
+		for (int k=0; k<lvsteps; k++)
 		{
-			auto myid = i;
-			auto& marqov = sims[i];
 
-			// number of cluster updates and metropolis sweeps
-			const int ncluster = L;
-			const int nsweeps  = L;
-			
-			// number of EMCS during relaxation and measurement
-			const int nrlx = 500;
-			const int nmsr = 1000;  
-			
-			
-			// perform simulation
-			marqov.init_hot();
-			marqov.wrmploop(nrlx, ncluster, nsweeps, myid);
-			marqov.gameloop(nmsr, ncluster, nsweeps, myid);
+			const double beta = 2.0;
+			const double p = loopvar[k];
+
+        
+			#pragma omp parallel for
+			for(std::size_t i = 0; i < nreplicas; ++i) //for OMP
+			{
+				std::string str_var = "var"+std::to_string(p);
+				std::string str_id   = std::to_string(i);
+				std::string outname   = str_var+"_"+str_id+".h5";
+				std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
+
+
+				// lattice and model
+				RegularRandomBond<double> latt(dim, L, p);
+				Marqov<RegularRandomBond<double>, Ising<int>> sim(latt, outsubdir+outname, beta);
+
+
+				// number of cluster updates and metropolis sweeps
+				const int ncluster = 0;
+				const int nsweeps  = L;
+				
+				// number of EMCS during relaxation and measurement
+				const int nrlx = 1000;
+				const int nmsr = 5000;  
+				
+				
+				// perform simulation
+				sim.init_hot();
+				sim.wrmploop(nrlx, ncluster, nsweeps, i);
+				sim.gameloop(nmsr, ncluster, nsweeps, i);
+			}
 		}
 	}
 }
