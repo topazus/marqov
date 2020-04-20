@@ -109,6 +109,13 @@ class Ising
 		}
 
 
+		// think about this ... (see update.h)
+		template <typename bond_type>
+		inline double wolff_scalarize(const std::vector<bond_type>& bond)
+		{
+			return bond[0];
+		}
+
 	
 };
 #endif

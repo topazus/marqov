@@ -43,10 +43,14 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_general(int rsite, const DirType
 
 			// compute 'Wolff coupling'
 			const double global_coupling = ham.interactions[a]->J;
-			const double local_coupling = 1.0; // not yet implemented: grid.getcoupling(...)
-			const double coupling = global_coupling
-								* local_coupling
-								* ham.wolff_coupling(currentsv, candidate, rdir);
+			const auto   local_coupling  = grid.getbnds(a, currentnbr)[0];
+
+			// even more general would be somthing like that:
+			// const auto   local_coupling  = ham.wolff_scalarize(grid.getbnds(a, currentnbr));
+			// overkill, or even necessary?
+
+			const double wolff_coupling  = ham.wolff_coupling(currentsv, candidate, rdir);
+			const double coupling = global_coupling * local_coupling * wolff_coupling;
 
 			// test whether site is added to the cluster
 			if (coupling > 0)
@@ -203,9 +207,10 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
 
         for (int i = 0; i < nbrs.size(); ++i)
         {
-            auto mynbr = nbrs[i];
-            auto myvec = ham.interactions[a]->operator()(statespace[mynbr]);
-            averagevector = averagevector + myvec;
+            auto idx = nbrs[i];
+            auto nbr = ham.interactions[a]->operator()(statespace[idx]);
+		  auto cpl = grid.getbnds(a, idx);
+            averagevector = averagevector + scal(cpl,nbr);
         }
         interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
     }
@@ -227,7 +232,7 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
     for (int g = 0; g < ham.Ngamma; ++g)
     {
         multisiteenergynew += ham.multisite[g]->operator()(svnew, rsite, statespace);//FIXME: think about this...
-        multisiteenergyold += ham.multisite[g]->operator()(svold, rsite, statespace);//FIXME: think about this...
+        multisiteenergyold += ham.multisite[g]->operator()(svold, rsite, statespace);
         //forgot k_gamma
     }
     

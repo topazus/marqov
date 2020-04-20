@@ -129,7 +129,7 @@ class SomeRandomConnections : public DisorderType<bond_type>
 
 		// override getbnds
 		std::vector<std::vector<std::vector<bond_type>>> bnds;
-		bond_type getbnds(const int i)
+		std::vector<bond_type> getbnds(const int i)
 		{
 			return bnds[i];
 		}

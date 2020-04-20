@@ -85,6 +85,31 @@ StateVector operator - (StateVector lhs,  StateVector rhs)
     return res;
 }
 
+inline double scal(const double& a, const double& b)
+{
+    return a*b;
+}
+
+template <class VecType, class StateVector>
+inline StateVector scal(const VecType& a, const StateVector& b)
+{
+    StateVector retval(b);
+    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    retval[i] *= a[i];
+    return retval;
+}
+
+/*
+template<class VecType>
+inline typename VecType::value_type scal(const VecType& a, const VecType& b)
+{
+    VecType retval(a);
+    for(int i = 0; i < std::tuple_size<VecType>::value; ++i)
+    retval[i] *= b[i];
+    return retval;
+}
+*/
+
 inline double dot(const double& a, const double& b)
 {
     return a*b;
@@ -370,12 +395,12 @@ int main()
 			auto& marqov = sims[i];
 
 			// number of cluster updates and metropolis sweeps
-			const int ncluster = 0;
-			const int nsweeps  = 2*L;
+			const int ncluster = L;
+			const int nsweeps  = L;
 			
 			// number of EMCS during relaxation and measurement
 			const int nrlx = 500;
-			const int nmsr = 1500;  
+			const int nmsr = 1000;  
 			
 			
 			// perform simulation
