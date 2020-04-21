@@ -227,9 +227,8 @@ class RegularRandomBond:  public DisorderType<bond_type>
 			rng.seed(time(NULL)+std::random_device{}());	
 
 
-			bnds.resize(lattice.size());
-
 			// construct bonds
+			bnds.resize(lattice.size());
 			for (int i=0; i<lattice.size(); i++)
 			{
 				for (int j=0; j<lattice[i].size(); j++) // why does lattice[i].size even work?
@@ -243,7 +242,7 @@ class RegularRandomBond:  public DisorderType<bond_type>
 				}
 			}
 
-			// "symmetrize"
+			// "symmetrize" bonds
 			for (int i=0; i<lattice.size(); i++)
 			{
 				auto lnbrs = lattice.getnbrs(1,i);
@@ -251,7 +250,6 @@ class RegularRandomBond:  public DisorderType<bond_type>
 				for (int j=0; j<lattice[i].size(); j++)
 				{
 					// find i in bnds[lnbr] and replace its value by bnds[i][j]
-
 					auto lnbr = lnbrs[j];
 					auto nbrs_temp = lattice.getnbrs(1, lnbr);
 

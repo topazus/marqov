@@ -5,7 +5,7 @@ nreplicas = 40
 
 lvstart = 0.830
 lvfinal = 0.980
-lvsteps = 10
+lvsteps = 7
 loopstyle = lin
 
 
