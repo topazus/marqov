@@ -86,11 +86,6 @@ class DisorderType
 		{
 			return nbrs[i];
 		}
-		
-		inline std::vector<bond_type> getbnds(const int alpha, const int i, const int j)
-		{
-			return 1;
-		}
 
 		std::size_t size() const {return npoints;}
 
@@ -290,3 +285,76 @@ class RegularRandomBond:  public DisorderType<bond_type>
 
 };
 
+template <typename bond_type> 
+class RegularRandomBond2:  public DisorderType<bond_type>
+{
+	private:
+		RND rng;
+		int len, dim;
+		RegularLattice lattice;
+		RegularSquare cloud; // only for 2D!!!
+		double p;
+        using DisorderType<bond_type>::getbnds;
+	
+	public:
+		std::vector<std::vector<std::vector<bond_type>>> bnds;
+		
+		RegularRandomBond2(int dim, int len, double p) : dim(dim), len(len), p(p), rng(0,1), lattice(len,dim), cloud(len)
+		{
+			// improve me:
+			// calculate point coordinates on demand
+
+			// prepare random number generator
+			rng.seed(time(NULL)+std::random_device{}());	
+
+
+			bnds.resize(lattice.size());
+
+			// construct bonds
+			for (int i=0; i<lattice.size(); i++)
+			{
+				for (int j=0; j<lattice[i].size(); j++) // why does lattice[i].size even work?
+				{
+					bond_type bndval;
+
+					if (rng.d() < p) bndval = 1;
+					else             bndval = -1;
+
+					bnds[i].push_back(std::vector<bond_type>{bndval});
+				}
+			}
+
+			// "symmetrize"
+			for (int i=0; i<lattice.size(); i++)
+			{
+				auto lnbrs = lattice.getnbrs(1,i);
+
+				for (int j=0; j<lattice[i].size(); j++)
+				{
+					// find i in bnds[lnbr] and replace its value by bnds[i][j]
+
+					auto lnbr = lnbrs[j];
+					auto nbrs_temp = lattice.getnbrs(1, lnbr);
+
+					auto it  = std::find(nbrs_temp.begin(), nbrs_temp.end(), i);
+					auto idx = std::distance(nbrs_temp.begin(), it);
+
+					bnds[lnbr][idx] = bnds[i][j];
+				}
+			}
+		}
+
+		// override getnbrs
+		std::vector<int> getnbrs(const int alpha, const int i)
+		{
+			return lattice.getnbrs(alpha, i);
+		}
+		// implement getcrds
+		std::vector<double> getcrds(const int i)
+		{
+			return cloud.getcrds(i);
+		}
+
+		std::size_t size() const {return pow(len,dim);}
+
+};
