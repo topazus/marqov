@@ -6,6 +6,7 @@ class PointCloud
 	public:
 		int dim, size;
 		PointCloud(){}
+		PointCloud(int size, int dim) : size(size), dim(dim) {}
 
 		std::vector<std::vector<double>> crds;
 
@@ -23,11 +24,8 @@ class Poissonian : public PointCloud
 		RND rng;
 
 	public:
-		Poissonian(int dim, int size) : rng(0,1)
+		Poissonian(int dim, int size) : PointCloud(size, dim), rng(0,1)
 		{
-			dim = dim;
-			size = size;
-
 			rng.seed(time(NULL)+std::random_device{}());
 
 			for (int i=0; i<size; i++)
@@ -51,7 +49,7 @@ class RegularSquare : public PointCloud
 	public:
 		int len;
 
-		RegularSquare(int len) : len(len)
+		RegularSquare(int len) : len(len), PointCloud(len*len, 2)
 		{
 			dim = 2;
 			size = len*len;
