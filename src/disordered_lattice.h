@@ -87,7 +87,7 @@ class DisorderType
 			return nbrs[i];
 		}
 		
-		inline std::vector<bond_type> getbnds(const int i)
+		inline std::vector<bond_type> getbnds(const int alpha, const int i, const int j)
 		{
 			return 1;
 		}
@@ -111,7 +111,7 @@ private:
 	RND rng;
 
 public:
-	std::vector<std::vector<bond_type>> bnds;
+	std::vector<std::vector<std::vector<bond_type>>> bnds;
 
 	SuperChaos(const PointCloud& cloud) : DisorderType<bond_type>(cloud.size()), rng(0,1)
 	{
@@ -135,12 +135,14 @@ public:
 			auto kcrds = cloud.getcrds(k);
 
 			if (i!=k && distancePBSQ_nD(jcrds,kcrds) < 0.1) // make me 1/L dependent
+			// improve me: make sure bond does not already exist!
 			{
 				this->nbrs[j].push_back(k);
 				this->nbrs[k].push_back(j);
 			}
 		}
 
+		/* under construction
 		
 		// compute weights
 		for (int k=0; k<npoints; k++)
@@ -149,16 +151,15 @@ public:
 			for (int m=0; m<this->nbrs[k].size(); m++)
 			{
 				bond_type subtemp;
-				/* under construction
 				for (int n=0; n<sizeof(bond_type); n++)
 				{
 					bond_type[n] = rng.d();
 				}
-				*/
 				temp.push_back(subtemp);
 			}
 			bnds[k] = temp;
 		}
+				*/
 	}
 
 	// override getbnds
@@ -220,8 +221,8 @@ class RegularRandomBond:  public DisorderType<bond_type>
 		double p;
 	
 	public:
-		std::vector<std::vector<bond_type>> bnds;
-
+		std::vector<std::vector<std::vector<bond_type>>> bnds;
+		
 		RegularRandomBond(int dim, int len, double p) : dim(dim), len(len), p(p), rng(0,1)
 		{
 			// improve me
@@ -231,22 +232,50 @@ class RegularRandomBond:  public DisorderType<bond_type>
 			RegularLattice templattice(len, dim);
 			lattice = std::move(templattice);
 
-			RegularSquare tempcloud(len);
+			RegularSquare tempcloud(len); // only 2D!!
 			cloud = std::move(tempcloud);
 
 			// prepare random number generator
 			rng.seed(time(NULL)+std::random_device{}());	
 
-			// construct bonds
+
+			bnds.resize(lattice.size());
+
+			// construct bonds // UNDER CONSTRUCTION
 			for (int i=0; i<lattice.size(); i++)
 			{
-				std::vector<bond_type> bnd;
+				std::vector<std::vector<bond_type>> bnd;
+				//for (int j=0; j<2*dim; j++)
 				for (int j=0; j<lattice[i].size(); j++)
 				{
-					if (rng.d() < p) bnd.push_back(1.0);
-					else             bnd.push_back(-1.0);
+					bond_type bndval;
+
+					if (rng.d() < p) bndval = 1;
+					else             bndval = -1;
+
+					bnds[i].push_back(std::vector<bond_type>(bndval));
 				}
-				bnds.push_back(bnd);
+			}
+					cout << "test" << endl;
+
+			// "symmetrize" // UNDER CONSTRUCTION
+			for (int i=0; i<lattice.size(); i++)
+			{
+				auto lnbrs = lattice.getnbrs(1,i);
+
+				for (int j=0; j<lattice[i].size(); j++)
+				{
+					// find i in bnds[lnbr] and replace its value by bnds[i][j]
+
+					auto lnbr = lnbrs[j];
+					auto nbrs_temp = lattice.getnbrs(1, lnbr);
+
+					auto it  = std::find(nbrs_temp.begin(), nbrs_temp.end(), i);
+					auto idx = std::distance(nbrs_temp.begin(), it);
+
+					bnds[lnbr][idx] = bnds[i][j];
+
+				}
 			}
 		}
 
@@ -257,9 +286,9 @@ class RegularRandomBond:  public DisorderType<bond_type>
 		}
 
 		// override getbnds
-		std::vector<bond_type> getbnds(const int alpha, const int i)
+		std::vector<bond_type> getbnds(const int alpha, const int i, const int j)
 		{
-			return bnds[i];
+			return bnds[i][j];
 		}
 
 		// implement getcrds

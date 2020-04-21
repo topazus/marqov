@@ -43,7 +43,11 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_general(int rsite, const DirType
 
 			// compute 'Wolff coupling'
 			const double global_coupling = ham.interactions[a]->J;
+			const auto   local_coupling  = 1;
+
+			/* under construction
 			const auto   local_coupling  = grid.getbnds(a, currentnbr)[0];
+			*/
 
 			// even more general would be somthing like that:
 			// const auto   local_coupling  = ham.wolff_scalarize(grid.getbnds(a, currentnbr));
@@ -209,7 +213,7 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
         {
             auto idx = nbrs[i];
             auto nbr = ham.interactions[a]->operator()(statespace[idx]);
-		  auto cpl = grid.getbnds(a, idx);
+		  auto cpl = grid.getbnds(a, rsite, i);
             averagevector = averagevector + scal(cpl,nbr);
         }
         interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));

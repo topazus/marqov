@@ -324,7 +324,9 @@ int main()
 
 				Poissonian cloud(2,100);
 				ErdosRenyi latt2(100, 0.1);
-				cout << latt2.size() << endl;
+
+//				SuperChaos<PointCloud,std::vector<double>> latt3(cloud);
+//				cout << latt2.size() << endl;
 
 				// number of cluster updates and metropolis sweeps
 				const int ncluster = 0;
