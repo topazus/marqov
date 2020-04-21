@@ -85,13 +85,13 @@ StateVector operator - (StateVector lhs,  StateVector rhs)
     return res;
 }
 
-inline double scal(const double& a, const double& b)
+inline double mult(const double& a, const double& b)
 {
     return a*b;
 }
 
 template <class VecType, class StateVector>
-inline StateVector scal(const VecType& a, const StateVector& b)
+inline StateVector mult(const VecType& a, const StateVector& b)
 {
     StateVector retval(b);
     for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
@@ -99,16 +99,6 @@ inline StateVector scal(const VecType& a, const StateVector& b)
     return retval;
 }
 
-/*
-template<class VecType>
-inline typename VecType::value_type scal(const VecType& a, const VecType& b)
-{
-    VecType retval(a);
-    for(int i = 0; i < std::tuple_size<VecType>::value; ++i)
-    retval[i] *= b[i];
-    return retval;
-}
-*/
 
 inline double dot(const double& a, const double& b)
 {
@@ -322,9 +312,8 @@ int main()
 				RegularRandomBond<double> latt(dim, L, p);
 				Marqov<RegularRandomBond<double>, Ising<int>> sim(latt, outsubdir+outname, beta);
 
-				Poissonian cloud(2,100);
-				ErdosRenyi latt2(100, 0.1);
-
+//				Poissonian cloud(2,100);
+//				ErdosRenyi latt2(100, 0.1);
 //				SuperChaos<PointCloud,std::vector<double>> latt3(cloud);
 //				cout << latt2.size() << endl;
 

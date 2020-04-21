@@ -211,11 +211,13 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
 
         for (int i = 0; i < nbrs.size(); ++i)
         {
-            auto idx = nbrs[i];
-            auto nbr = ham.interactions[a]->operator()(statespace[idx]);
-		  auto cpl = grid.getbnds(a, rsite, i);
-            averagevector = averagevector + scal(cpl,nbr);
+			auto idx = nbrs[i];
+			auto nbr = ham.interactions[a]->operator()(statespace[idx]);
+
+			auto cpl = grid.getbnds(a, rsite, i);
+			averagevector = averagevector + mult(cpl,nbr);
         }
+
         interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
     }
 
