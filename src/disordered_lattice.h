@@ -1,6 +1,6 @@
+#include "distance.h"
 
-// base class for point clouds which is
-// just a set of coordinate vectors
+// Point cloud base class
 class PointCloud
 {
 	public:
@@ -44,7 +44,7 @@ class Poissonian : public PointCloud
 };
 
 
-// coordinates of a regular square lattice
+// regular square point cloud
 // improve me: calculate coordinates on demand
 class RegularSquare : public PointCloud
 {
@@ -70,14 +70,19 @@ class RegularSquare : public PointCloud
 
 
 
-// Disorder base class
+// -----------------------------------------
+// ---------- Disorder base class ----------
+
 template <typename bond_type = int>
 class DisorderType
 {
+	protected:
+		int npoints;
+		DisorderType(){}
+		DisorderType(int npoints) : npoints(npoints) {}
+
 	public:
 		std::vector<std::vector<int>> nbrs;
-
-		DisorderType(){}
 
 		std::vector<int> getnbrs(const int i)
 		{
@@ -89,55 +94,123 @@ class DisorderType
 			return 1;
 		}
 
+		std::size_t size() const {return npoints;}
+
 };
 
 
 
-// Disorder Class implementation, example 1:
-// get a point cloud and draw some random connections 
+
+// ------------------------------
+// Disorder Example 1: SuperChaos
+// ------------------------------
+
 template <class PointCloud, typename bond_type>
-class SomeRandomConnections : public DisorderType<bond_type>
+class SuperChaos : public DisorderType<bond_type>
 {
-	private:
-		RND rng;
-	
-	public:
-		SomeRandomConnections(const PointCloud& cloud) : rng(0,1)
+private:
+	int symD;
+	RND rng;
+
+public:
+	std::vector<std::vector<bond_type>> bnds;
+
+	SuperChaos(const PointCloud& cloud) : DisorderType<bond_type>(cloud.size()), rng(0,1)
+	{
+		// prepare neighbour array
+		const int npoints = cloud.size;
+		this->nbrs.resize(npoints);
+		this->bnds.resize(npoints);
+
+		// prepare random number generator
+		rng.seed(time(NULL)+std::random_device{}());	
+		rng.set_integer_range(npoints);
+
+
+		// draw bonds
+		for (int i=0; i<2*npoints; i++) // make me variable
 		{
+			const int j = rng.i();
+			const int k = rng.i();
 
-			// prepare neighbour array
-			const int npoints = cloud.size;
-			this->nbrs.resize(npoints);
+			auto jcrds = cloud.getcrds(j);
+			auto kcrds = cloud.getcrds(k);
 
-			// prepare random number generator
-			rng.seed(time(NULL)+std::random_device{}());	
-			rng.set_integer_range(npoints);
-
-			// the actual implementation of the geometry
-			for (int i=0; i<2*npoints; i++)
+			if (i!=k && distancePBSQ_nD(jcrds,kcrds) < 0.1) // make me 1/L dependent
 			{
-				const int j = rng.i();
-				const int k = rng.i();
-	
-				if (i!=k)
-				{
-					this->nbrs[j].push_back(k);
-					this->nbrs[k].push_back(j);
-				}
+				this->nbrs[j].push_back(k);
+				this->nbrs[k].push_back(j);
 			}
 		}
 
-		// override getbnds
-		std::vector<std::vector<std::vector<bond_type>>> bnds;
-		std::vector<bond_type> getbnds(const int i)
+		
+		// compute weights
+		for (int k=0; k<npoints; k++)
 		{
-			return bnds[i];
+			std::vector<bond_type> temp;
+			for (int m=0; m<this->nbrs[k].size(); m++)
+			{
+				bond_type subtemp;
+				/* under construction
+				for (int n=0; n<sizeof(bond_type); n++)
+				{
+					bond_type[n] = rng.d();
+				}
+				*/
+				temp.push_back(subtemp);
+			}
+			bnds[k] = temp;
+		}
+	}
+
+	// override getbnds
+	std::vector<bond_type> getbnds(const int i)
+	{
+		return bnds[i];
+	}
+};
+
+
+
+// -------------------------------------
+// Disorder Example 2: Erdos-Renyj Graph
+// -------------------------------------
+class ErdosRenyi : public DisorderType<int>
+{
+	private:
+		int p;
+		RND rng;
+	
+	public:
+		ErdosRenyi(int npoints, double p) : DisorderType(npoints), p(p), rng(0,1)
+		{
+			// prepare neighbour array
+			this->nbrs.resize(npoints);
+	
+			// seed random number generator
+			rng.seed(time(NULL)+std::random_device{}());	
+	
+			// the actual implementation
+			// of the Erdos-Renyj Graph
+			for (int i=0; i<npoints; i++)
+			{
+				for (int j=i+1; j<npoints; j++)
+				{
+					if (rng.d() < p)
+					{
+						this->nbrs[i].push_back(j);
+						this->nbrs[j].push_back(i);
+					}
+				}
+			}
 		}
 };
 
 
-// Disorder Class implementation, example 2:
-// regular square lattice with random bond disorder
+
+// --------------------------------------------------------------------
+// Disorder Example 3: Regular square lattice with random bond disorder
+// --------------------------------------------------------------------
 template <typename bond_type> 
 class RegularRandomBond:  public DisorderType<bond_type>
 {

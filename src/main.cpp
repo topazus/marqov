@@ -279,7 +279,7 @@ int main()
 
 
 	// create range for loop variable
-	std::vector<double> loopvar = create_range(lvstart, lvfinal, lvsteps);
+	std::vector<double> loopvar = create_range(lvstart, lvfinal, lvsteps, "linear", 0);
 
 	// write values in external fields in logfile
 	std::string logfile = registry.Get<std::string>("mc", "IO", "logfile" );
@@ -305,7 +305,7 @@ int main()
 		for (int k=0; k<lvsteps; k++)
 		{
 
-			const double beta = 2.0;
+			const double beta = 1/1.5;
 			const double p = loopvar[k];
 
         
@@ -322,14 +322,17 @@ int main()
 				RegularRandomBond<double> latt(dim, L, p);
 				Marqov<RegularRandomBond<double>, Ising<int>> sim(latt, outsubdir+outname, beta);
 
+				Poissonian cloud(2,100);
+				ErdosRenyi latt2(100, 0.1);
+				cout << latt2.size() << endl;
 
 				// number of cluster updates and metropolis sweeps
 				const int ncluster = 0;
-				const int nsweeps  = L;
+				const int nsweeps  = 15;
 				
 				// number of EMCS during relaxation and measurement
-				const int nrlx = 1000;
-				const int nmsr = 5000;  
+				const int nrlx = 5000;
+				const int nmsr = 10000;  
 				
 				
 				// perform simulation
