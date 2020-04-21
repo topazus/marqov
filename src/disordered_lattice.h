@@ -217,23 +217,16 @@ class RegularRandomBond:  public DisorderType<bond_type>
 		RND rng;
 		int len, dim;
 		RegularLattice lattice;
-		PointCloud cloud;
+		RegularSquare cloud; // only for 2D!!!
 		double p;
 	
 	public:
 		std::vector<std::vector<std::vector<bond_type>>> bnds;
 		
-		RegularRandomBond(int dim, int len, double p) : dim(dim), len(len), p(p), rng(0,1)
+		RegularRandomBond(int dim, int len, double p) : dim(dim), len(len), p(p), rng(0,1), lattice(len,dim), cloud(len)
 		{
-			// improve me
-			// 1. get rid of unelegant "move"
-			// 2. calculate point coordinates on demand
-
-			RegularLattice templattice(len, dim);
-			lattice = std::move(templattice);
-
-			RegularSquare tempcloud(len); // only 2D!!
-			cloud = std::move(tempcloud);
+			// improve me:
+			// calculate point coordinates on demand
 
 			// prepare random number generator
 			rng.seed(time(NULL)+std::random_device{}());	
@@ -241,24 +234,21 @@ class RegularRandomBond:  public DisorderType<bond_type>
 
 			bnds.resize(lattice.size());
 
-			// construct bonds // UNDER CONSTRUCTION
+			// construct bonds
 			for (int i=0; i<lattice.size(); i++)
 			{
-				std::vector<std::vector<bond_type>> bnd;
-				//for (int j=0; j<2*dim; j++)
-				for (int j=0; j<lattice[i].size(); j++)
+				for (int j=0; j<lattice[i].size(); j++) // why does lattice[i].size even work?
 				{
 					bond_type bndval;
 
 					if (rng.d() < p) bndval = 1;
 					else             bndval = -1;
 
-					bnds[i].push_back(std::vector<bond_type>(bndval));
+					bnds[i].push_back(std::vector<bond_type>{bndval});
 				}
 			}
-					cout << "test" << endl;
 
-			// "symmetrize" // UNDER CONSTRUCTION
+			// "symmetrize"
 			for (int i=0; i<lattice.size(); i++)
 			{
 				auto lnbrs = lattice.getnbrs(1,i);
@@ -274,7 +264,6 @@ class RegularRandomBond:  public DisorderType<bond_type>
 					auto idx = std::distance(nbrs_temp.begin(), it);
 
 					bnds[lnbr][idx] = bnds[i][j];
-
 				}
 			}
 		}
