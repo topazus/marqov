@@ -21,11 +21,11 @@
   <img src="toldin2009phasediagram.png" width="40%" alt="Grids" class="center"></p>
 
   Due to the glassy behaviour, numerical simulations are restricted to small lattice sizes, especially for low temperatures. Standard metropolis dynamics should work everywhere in the phase diagram, however, parallel tempering seems to be the prefered method here, especially at low temperatures. Cluster algorithms are said to be very inefficient in most parts of the phase diagram.
-  To test the disorder class, we simulated at $`T=1.5`$ for a number of probabilities around the PF line, where a continous transition controlled by Ising universality with strong logarithmic correction should emerge. Using 40 disorder replicas for every temperature, as well as a number of 5000 equilibration steps and 10.000 measurements, where between every step 15 metropolos lattice sweeps have been performed, the transition could be located at $`p_c\approx 0.913`$
+  To test the disorder class, we simulated at $`T=1.5`$ for a number of probabilities around the PF line, where a continous transition controlled by Ising universality with strong logarithmic correction should emerge. Using 40 disorder replicas for every temperature, as well as a number of 3000 equilibration steps and 10.000 measurements, where between every step 15 metropolos lattice sweeps have been performed, the transition could be located at $`p_c\approx 0.913`$
   <p align="center">
   <img src="SquareSpinGlassT1.5Binder.png" width="50%" alt="Grids" class="center"></p>
   
-  A data collapse of the critical region in the bond exchange probability seems to confirm the Ising scenario. Corresponding simulations took about 100 CPU hours.
+  A data collapse of the critical region in the bond exchange probability seems to confirm the Ising scenario. Corresponding simulations took about 400 CPU hours.
   <p align="center">
   <img src="SquareSpinGlassT1.5Chi.png" width="50%" alt="Grids" class="center"></p>
 
