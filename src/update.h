@@ -183,17 +183,29 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_Heisenberg(int rsite, const Stat
 	return clustersize;
 }
 
-template<class> struct type_sink { typedef void type; }; // consumes a type, and makes it `void`
+
+
+
+template<class> 
+struct type_sink { typedef void type; }; // consumes a type, and makes it `void`
+
+
 template<class T> using type_sink_t = typename type_sink<T>::type;
-template<class L, class=void> struct has_bonds : std::false_type {};
-template<class Lattice> struct has_bonds<Lattice, type_sink_t< decltype( std::declval<Lattice>().getbonds(std::declval<int>(), std::declval<int>(), std::declval<int>()) ) > > : std::true_type {};
+template<class L, class=void> 
+struct has_bonds : std::false_type {};
+
+
+template<class Lattice> 
+struct has_bonds<Lattice, type_sink_t< decltype( std::declval<Lattice>().getbonds(std::declval<int>(), std::declval<int>(), std::declval<int>()) ) > > : std::true_type {};
+
 
 template <class Lattice, class NbrType>
 auto callbonds_helper(Lattice& grid, int a, int rsite, int i, NbrType nbr, std::true_type)
 {
     auto cpl = grid.getbnds(a, rsite, i);
-    return scal(cpl, nbr);
+    return mult(cpl, nbr);
 }
+
 
 template <class Lattice, class NbrType>
 auto callbonds_helper(Lattice& grid, int a, int rsite, int i, NbrType nbr, std::false_type)
@@ -201,16 +213,18 @@ auto callbonds_helper(Lattice& grid, int a, int rsite, int i, NbrType nbr, std::
     return nbr;
 }
 
+
 template <class Lattice, class NbrType>
 auto callbonds(Lattice& grid, int a, int rsite, int i, NbrType nbr)
 {
     return callbonds_helper(grid, a, rsite, i, nbr, typename has_bonds<Lattice>::type());
 }
 
+
+
+
 // Single Metropolis update step statevectors on a lattice
 // returns an integer which encodes whether the flip attempt was successful (1) or not (0)
-
-// todo: does not support locally fluctating (e.g. random) interaction strengths
 
 template <class Grid, class Hamiltonian> 
 inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
