@@ -49,6 +49,10 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_general(int rsite, const DirType
 			const auto   local_coupling  = grid.getbnds(a, currentnbr)[0];
 			*/
 
+			// Wolff and Swendsen-Wang cluster algorithms are only valid if 
+			// all interactions are ferromagnetic, i.e., if all J_ij > 0 (Zhu et. al 2015)
+
+
 			// even more general would be somthing like that:
 			// const auto   local_coupling  = ham.wolff_scalarize(grid.getbnds(a, currentnbr));
 			// overkill, or even necessary?
