@@ -5,12 +5,15 @@
 #include <cstdlib>
 #include <fstream>
 #include <algorithm>
+#include <tuple>
 #include "rndwrapper.h"
 #include "regular_lattice.h"
 #include "vectorhelpers.h"
 #include "helpers.h"
 #include "cartprod.h"
 #include "registry.h"
+#include "marqov.h"
+#include "neighbourclass.h"
 
 
 //helper, delete later
@@ -60,64 +63,6 @@ struct GetTrait<std::vector<std::string> >//helper trait to break up a string at
     }
 };
 
-class Grid 
-{
-    std::vector<int> getnbr(int i);
-};
-
-// ------- elementary state vector calculus
-
-template <class StateVector>
-StateVector operator + (StateVector lhs,  StateVector rhs)
-{
-    StateVector res(lhs);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
-    res[i] += rhs[i];
-    return res;
-}
-
-template <class StateVector>
-StateVector operator - (StateVector lhs,  StateVector rhs)
-{
-    StateVector res(lhs);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
-    res[i] -= rhs[i];
-    return res;
-}
-
-inline double dot(const double& a, const double& b)
-{
-    return a*b;
-}
-
-template<class VecType>
-inline typename VecType::value_type dot(const VecType& a, const VecType& b)
-{
-    typedef typename VecType::value_type FPType;
-    return std::inner_product(begin(a), end(a), begin(b), 0.0);
-}
-
-
-template <class StateVector>
-inline void reflect(StateVector& vec, const StateVector mirror)
-{
-	const int SymD = std::tuple_size<StateVector>::value;
-	
-	const double dotp = dot(vec,mirror);
-
-	for (int i=0; i<SymD; i++) vec[i] -= 2*dotp*mirror[i];
-}	
-
-template <class Container>
-inline void normalize(Container& a)
-{
-	typename Container::value_type tmp_abs=std::sqrt(dot(a, a));
-
-	for (int i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
-}
-
-
-
 template <class StateVector>
 inline void coutsv(StateVector& vec)
 {
@@ -159,6 +104,52 @@ void fillsims(const std::vector<Args>& args, std::vector<T>& sims, Callable c)
         emplace_from_tuple(sims, c(p));
 }
 
+template <class Hamiltonian, class Lattice, class Parameters, class Callable>
+void loop(const std::vector<Parameters>& params, Callable filter, int nsweeps)
+{
+		// model
+		std::vector<Marqov<Lattice, Hamiltonian> > sims;
+
+		// simulation vector
+		sims.reserve(params.size());//MARQOV has issues with copying -> requires reserve in vector
+
+		fillsims(	params, sims, filter);
+
+//init
+        #pragma omp parallel for
+		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
+		{
+			auto myid = i;
+			auto& marqov = sims[i];
+
+			// number of cluster updates and metropolis sweeps
+			const int ncluster = 0;
+			
+			// number of EMCS during relaxation and measurement
+			const int nrlx = 5000;
+			// perform simulation
+			marqov.init_hot();
+			marqov.wrmploop(nrlx, ncluster, nsweeps, myid);
+		}
+
+std::cout<<"warmup done"<<std::endl;
+		// ------------- execute -------------
+
+		#pragma omp parallel for
+		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
+		{
+			auto myid = i;
+			auto& marqov = sims[i];
+
+			// number of cluster updates and metropolis sweeps
+			const int ncluster = 0;
+			
+			// number of EMCS during relaxation and measurement
+			const int nmsr = 15000;  
+			// perform simulation
+			marqov.gameloop(nmsr, ncluster, nsweeps, myid);
+		}
+}
 
 // ---------------------------------------
 
@@ -171,85 +162,11 @@ const int myid = 0; // remove once a parallelization is available
 #include "XXZAntiferro.h"
 #include "XXZAntiferroSingleAniso.h"
 
-#include "marqov.h"
-
-int main()
+template <class Hamiltonian, class Params, class Callable>
+void RegularLatticeloop(RegistryDB& reg, const std::string outdir, std::string logdir, const std::vector<Params>& parameters, Callable filter)
 {
-	// read config files
-	RegistryDB registry("../src/config");
-
-
-	// remove old output and prepare new one
-	std::string outdir = registry.Get<std::string>("mc", "IO", "outdir" );
-	std::string logdir = registry.Get<std::string>("mc", "IO", "logdir" );
-
-	std::string command;
-	command = "rm -r " + outdir;
-	system(command.c_str());
-	command = "rm -r " + logdir;
-	system(command.c_str());
-
-	makeDir(outdir);
-	makeDir(logdir);
-	
-
-	// ------------------ live view -----------------------
-	/*
-
-		const int L = 30;
-		RegularLattice lattice(L, 3);
-		std::string outfile = outdir+"temp.h5";
-		Marqov<RegularLattice, XXZAntiferro<double,double> > marqov(lattice, outfile, 1/0.36);
-		marqov.init_hot();
-		const int ncluster = 0;
-		const int nsweeps  = L/2; 
-		marqov.wrmploop(50, ncluster, nsweeps);
-		marqov.gameloop_liveview();
-
-	*/
-	// ----------------------------------------------------
-
-
-
-	// --------- unpack configuration file ---------
-
-	const auto dim       = registry.Get<int>("mc", "General", "dim" );
-	const auto nL        = registry.Get<std::vector<int> >("mc", "General", "nL" );
-	const int  nreplicas = registry.Get<int>("mc", "General", "nreplicas" );
-
-	auto lvname    = registry.Get<std::string>("mc", "General", "loopvar" );
-	auto loopstyle = registry.Get<std::string>("mc", "General", "loopstyle" );
-
-	double lvstart = registry.Get<double>("mc", "General", "lvstart" );
-	double lvfinal = registry.Get<double>("mc", "General", "lvfinal" );
-	int    lvsteps = registry.Get<int>("mc", "General", "lvsteps" );
-
-	auto parnames = registry.Get<std::vector<std::string>>("mc", "Hamiltonian", "names"); 
-
-
-	std::vector<std::vector<double>> par;
-	for (int i=0; i<parnames.size(); i++)
-	{
-		auto parname = parnames[i];
-		if (parname != lvname)
-		{
-			std::vector<double> parval = {0};
-			parval[0] = registry.Get<double>("mc", "Hamiltonian", parnames[i]);
-			par.push_back(parval);
-		}
-	}
-
-	// create range for loop variable
-	std::vector<double> loopvar = create_range(lvstart, lvfinal, lvsteps);
-
-	// write values in external fields in logfile
-	std::string logfile = registry.Get<std::string>("mc", "IO", "logfile" );
-	std::ofstream os(logdir+"/"+logfile);
-		os << std::setprecision(7);
-		for (int i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;
-	os.close();
-
-
+    const auto dim       = reg.Get<int>("mc", "General", "dim" );
+	const auto nL        = reg.Get<std::vector<int> >("mc", "General", "nL" );
 
 	// ---------------- main loop -----------------
 
@@ -259,17 +176,95 @@ int main()
 	for (int j=0; j<nL.size(); j++)
 	{
 		// extract lattice size and prepare directories
-		const int L = nL[j];
+		int L = nL[j];
 		cout << endl << "L = " << L << endl << endl;
 		makeDir(outdir+"/"+std::to_string(L));
+		// lattice
+		RegularLattice latt(L, dim);
+        auto f = [&filter, &latt, &outdir, L](auto p){return filter(latt, outdir, L, p);};//partially apply filter
+        loop<Hamiltonian, RegularLattice>(parameters, f, 2*L); 
+	}
+}
 
-        
+void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
+{
+    const std::string ham = registry.Get<std::string>("mc", "General", "Hamiltonian" );
+    const int  nreplicas = registry.Get<int>("mc", "General", "nreplicas" );
+    auto defaultfilter = [](auto& latt, std::string outdir, int L, auto p)
+    {
+        // write a filter to determine output file path and name
+        std::string str_beta = "beta"+std::to_string(std::get<0>(p));
+        std::string outname   = str_beta+".h5";
+        std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
+        return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
+    };
+    if (ham == "Ising")
+    {
+        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
+        std::vector<double> myj = {1.0};
+        auto parameters = cart_prod(betas, myj);
+        RegularLatticeloop<Ising<int> >(registry, outdir, logdir, parameters, defaultfilter);
+    }
+    else if (ham == "Heisenberg")
+    {
+        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
+        std::vector<double> myj = {1.0};
+        auto parameters = cart_prod(betas, myj);
+        RegularLatticeloop<Heisenberg<double, double> >(registry, outdir, logdir, parameters, defaultfilter);
+    }
+    else if (ham == "Phi4")
+    {
+        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
+        std::vector<double> myj = {1.0};
+        auto parameters = cart_prod(betas, myj, myj);
+        RegularLatticeloop<Phi4<double, double> >(registry, outdir, logdir, parameters, defaultfilter);
+    }
+    else if (ham == "BlumeCapel")
+    {
+        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
+        std::vector<double> myj = {1.0};
+        auto parameters = cart_prod(betas, myj);
+        RegularLatticeloop<BlumeCapel<int> >(registry, outdir, logdir, parameters, defaultfilter);
+    }
+    else if(ham == "XXZAntiferro")
+    {
+        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
+        std::vector<double> myj = {1.0};
+        auto parameters = cart_prod(betas, myj, myj,myj);
+        RegularLatticeloop<XXZAntiferro<double, double> >(registry, outdir, logdir, parameters, defaultfilter);
+    }
+    else if(ham == "XXZAntiferroSingleAniso")
+    {
+        	// --------- unpack configuration file ---------
 
-		// ------------ create parameter vector ---------------
+	auto lvname    = registry.Get<std::string>("mc", "General", "loopvar" );
+	auto loopstyle = registry.Get<std::string>("mc", "General", "loopstyle" );
+
+	double lvstart = registry.Get<double>("mc", "General", "lvstart" );
+	double lvfinal = registry.Get<double>("mc", "General", "lvfinal" );
+	int    lvsteps = registry.Get<int>("mc", "General", "lvsteps" );
+
+    auto parnames = registry.GetBlock("mc", ham).GetKeys();
+
+	std::vector<std::vector<double>> par;
+	for (int i=0; i<parnames.size(); i++)
+	{
+		auto parname = parnames[i];
+		if (parname != lvname)
+		{
+			std::vector<double> parval = {0};
+			parval[0] = registry.Get<double>("mc", ham, parnames[i]);
+			par.push_back(parval);
+		}
+	}
+
+	// create range for loop variable
+	std::vector<double> loopvar = create_range(lvstart, lvfinal, lvsteps);
+        // ------------ create parameter vector ---------------
 
 		// todo: improve this section
 		// by construction temperatures have to go first, but here 
-		// we want it sorted by "id", therefore the two are swaped afterwards
+		// we want it sorted by "id", therefore the two are swapped afterwards
 
 		// replicas index (used as a fake Hamiltonian parameter)
 		std::vector<double> id(nreplicas);
@@ -287,25 +282,14 @@ int main()
 		for (auto& param_tuple : parameters) 
 			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
 
-       
 
-
-
-		// ----------- set up simulations ------------
-
-		// lattice
-		RegularLattice latt(L, dim);
-
-		// model
-		std::vector<Marqov<RegularLattice, XXZAntiferroSingleAniso<double,double> >> sims;
-
-		// simulation vector
-		sims.reserve(parameters.size());//MARQOV has issues with copying -> reuires reserve in vector
-
-
-		fillsims(	parameters, 
-				sims, 
-				[&latt, &outdir, L]( decltype(parameters[0]) p) 
+	// write values in external fields in logfile
+	std::string logfile = registry.Get<std::string>("mc", "IO", "logfile" );
+	std::ofstream os(logdir+"/"+logfile);
+		os << std::setprecision(7);
+		for (int i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;
+	os.close();
+                auto xxzfilter = [](RegularLattice& latt, std::string outdir, int L, decltype(parameters[0]) p)
 				{
 					// write a filter to determine output file path and name
 					std::string str_beta = "beta"+std::to_string(std::get<0>(p));
@@ -316,33 +300,44 @@ int main()
 					std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
 
 					return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
-				}
-		);
-        
+				};
+            RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outdir, logdir, parameters, xxzfilter);
+    }
+    else if(ham == "IregularIsing")
+    {
+        std::vector<std::vector<int> > dummy;
+        Neighbours<int32_t> nbrs(dummy);
+        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
+        std::vector<double> myj = {1.0};
+        auto parameters = cart_prod(betas, myj);
+        		// extract lattice size and prepare directories
+		int L = nbrs.size();
+		cout << endl << "L = " << L << endl << endl;
+		makeDir(outdir+"/"+std::to_string(L));
+		// lattice
+        auto f = [&defaultfilter, &nbrs, &outdir, L](auto p){return defaultfilter(nbrs, outdir, L, p);};//partially apply filter
+        loop<Ising<int>, Neighbours<int32_t> >(parameters, f, 2*L);
+    }
+}
 
+int main()
+{
+	// read config files
+	RegistryDB registry("../src/config");
 
+	// remove old output and prepare new one
+	std::string outdir = registry.Get<std::string>("mc", "IO", "outdir" );
+	std::string logdir = registry.Get<std::string>("mc", "IO", "logdir" );
 
-		// ------------- execute -------------
+    //FIXME: NEVER DELETE USER DATA
+	std::string command;
+	command = "rm -r " + outdir;
+	system(command.c_str());
+	command = "rm -r " + logdir;
+	system(command.c_str());
 
-		#pragma omp parallel for
-		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
-		{
-			auto myid = i;
-			auto& marqov = sims[i];
-
-			// number of cluster updates and metropolis sweeps
-			const int ncluster = 0;
-			const int nsweeps  = 2*L;
-			
-			// number of EMCS during relaxation and measurement
-			const int nrlx = 5000;
-			const int nmsr = 15000;  
-			
-			
-			// perform simulation
-			marqov.init_hot();
-			marqov.wrmploop(nrlx, ncluster, nsweeps, myid);
-			marqov.gameloop(nmsr, ncluster, nsweeps, myid);
-		}
-	}
+	makeDir(outdir);
+	makeDir(logdir);
+	
+selectsim(registry, outdir, logdir);
 }

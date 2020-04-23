@@ -29,6 +29,57 @@ auto _call(Function f, Object& obj, Tuple t) {
 	return _call(f, obj, t, std::make_index_sequence<size>{});
 }
 
+// ------- elementary state vector calculus
+
+template <class StateVector>
+StateVector operator + (StateVector lhs,  StateVector rhs)
+{
+    StateVector res(lhs);
+    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    res[i] += rhs[i];
+    return res;
+}
+
+template <class StateVector>
+StateVector operator - (StateVector lhs,  StateVector rhs)
+{
+    StateVector res(lhs);
+    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    res[i] -= rhs[i];
+    return res;
+}
+
+inline double dot(const double& a, const double& b)
+{
+    return a*b;
+}
+
+template<class VecType>
+inline typename VecType::value_type dot(const VecType& a, const VecType& b)
+{
+    typedef typename VecType::value_type FPType;
+    return std::inner_product(begin(a), end(a), begin(b), 0.0);
+}
+
+
+template <class StateVector>
+inline void reflect(StateVector& vec, const StateVector mirror)
+{
+	const int SymD = std::tuple_size<StateVector>::value;
+	
+	const double dotp = dot(vec,mirror);
+
+	for (int i=0; i<SymD; i++) vec[i] -= 2*dotp*mirror[i];
+}	
+
+template <class Container>
+inline void normalize(Container& a)
+{
+	typename Container::value_type tmp_abs=std::sqrt(dot(a, a));
+
+	for (int i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
+}
+
 // --------------------------- MARQOV CLASS -------------------------------
 
 template <class Grid, class Hamiltonian>
@@ -118,20 +169,36 @@ struct ObsTupleToObsCacheTuple
         Marqov(Marqov&& other) = default;
         Marqov& operator=(Marqov&& other) = default;
 
-		template<size_t N = 0, typename... Ts, typename... Args>
+        //For reference: this template is just to cool to forget....
+// 		template<size_t N = 0, typename... Ts, typename... Args>
+// 		inline typename std::enable_if_t<N == sizeof...(Ts), void>
+// 		marqov_measure(std::tuple<Ts...>& t, Args... args) {}
+// 		
+// 		template<size_t N = 0, typename... Ts, typename... Args>
+// 		inline typename std::enable_if_t<N < sizeof...(Ts), void>
+// 		marqov_measure(std::tuple<Ts...>& t, Args... args)
+// 		{
+// 		     auto retval = _call(&std::tuple_element<N, 
+// 							 std::tuple<Ts...> >::type::template measure<Args...>,
+// 							 std::get<N>(t), 
+// 							 std::make_tuple(std::forward<Args>(args)...) );
+// 			marqov_measure<N + 1, Ts...>(t, args...);
+//              std::get<N>(obscache)<<retval;
+// 		}
+		template<size_t N = 0, typename... Ts, typename S, typename G>
 		inline typename std::enable_if_t<N == sizeof...(Ts), void>
-		marqov_measure(std::tuple<Ts...>& t, Args... args) {}
+		marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid) {}
 		
-		template<size_t N = 0, typename... Ts, typename... Args>
+		template<size_t N = 0, typename... Ts, typename S, typename G>
 		inline typename std::enable_if_t<N < sizeof...(Ts), void>
-		marqov_measure(std::tuple<Ts...>& t, Args... args)
+		marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid)
 		{
 		     auto retval = _call(&std::tuple_element<N, 
-							 std::tuple<Ts...> >::type::template measure<Args...>,
+							 std::tuple<Ts...> >::type::template measure<StateSpace, G>,
 							 std::get<N>(t), 
-							 std::make_tuple(args...) );
-			marqov_measure<N + 1, Ts...>(t, args...);
-            std::get<N>(obscache)<<retval;
+                            std::forward_as_tuple(s, grid) );
+			marqov_measure<N + 1, Ts...>(t, s, grid);
+             std::get<N>(obscache)<<retval;
 		}
 
 
@@ -387,8 +454,6 @@ struct ObsTupleToObsCacheTuple
 
 	//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
 	typename Hamiltonian::template MetroInitializer<RND> metro;//C++11
-
-	// obs now handled differently
 
 	// number of EMCS
 	static constexpr int nstep = 250;
