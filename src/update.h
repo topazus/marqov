@@ -6,12 +6,12 @@
 // implement me: does not support locally fluctating (e.g. random) interaction strengths yet
 
 
-template <class Grid, class Hamiltonian> 
+template <class Grid, class Hamiltonian, template<class> class RefType>
 template <class DirType>
-inline int Marqov<Grid, Hamiltonian>::wolffstep_general(int rsite, const DirType& rdir)
+inline int Marqov<Grid, Hamiltonian, RefType>::wolffstep_general(int rsite, const DirType& rdir)
 {
 	// prepare stack
-	std::vector<int> cstack(grid.size(), 0);
+	std::vector<int> cstack(this->grid.size(), 0);
 
 	// add initial site and flip it
 	int q = 0;
@@ -30,7 +30,7 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_general(int rsite, const DirType
 	
 		// get its neighbours
 		int a = 0; // to be replaced by loop over Nalpha
-		const auto nbrs = grid.getnbrs(a, currentidx);
+		const auto nbrs = this->grid.getnbrs(a, currentidx);
 
 		// loop over neighbours
 		for (int i = 0; i < nbrs.size(); ++i)
@@ -68,11 +68,11 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_general(int rsite, const DirType
 // in the plain Ising model, the Wolff couling is a constant, which can be
 // exploited for optimization
 
-template <class Grid, class Hamiltonian> 
-inline int Marqov<Grid, Hamiltonian>::wolffstep_Ising(int rsite)
+template <class Grid, class Hamiltonian, template<class> class RefType>
+inline int Marqov<Grid, Hamiltonian, RefType>::wolffstep_Ising(int rsite)
 {
 	// prepare stack
-	std::vector<int> cstack(grid.size(), 0);
+	std::vector<int> cstack(this->grid.size(), 0);
 
 	// add initial site and flip it
 	int q = 0;
@@ -95,10 +95,10 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_Ising(int rsite)
 		q--;
 	
 		// get its neighbours
-		const auto nbrs = grid.getnbrs(a, currentidx);
+		const auto nbrs = this->grid.getnbrs(a, currentidx);
 
 		// loop over neighbours
-		for (int i = 0; i < nbrs.size(); ++i)
+		for (int i = 0; i < this->nbrs.size(); ++i)
 		{
 			// extract corresponding sv
 			const auto currentnbr = nbrs[i];
@@ -128,10 +128,10 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_Ising(int rsite)
 
 
 
-template <class Grid, class Hamiltonian> 
-inline int Marqov<Grid, Hamiltonian>::wolffstep_Heisenberg(int rsite, const StateVector& rdir)
+template <class Grid, class Hamiltonian, template<class> class RefType>
+inline int Marqov<Grid, Hamiltonian, RefType>::wolffstep_Heisenberg(int rsite, const StateVector& rdir)
 {
-	std::vector<int> cstack(grid.size(), 0);
+	std::vector<int> cstack(this->grid.size(), 0);
 	int q = 0;
 	ham.wolff_flip(statespace[rsite], rdir);
 	cstack[q] = rsite;
@@ -148,8 +148,8 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_Heisenberg(int rsite, const Stat
 		const double coupling = ham.interactions[a]->J; 
 		const auto proj1 = coupling*dot(statespace[current], rdir);
 
-		const auto nbrs = grid.getnbrs(a, current);
-		for (int i = 0; i < nbrs.size(); ++i)
+		const auto nbrs = this->grid.getnbrs(a, current);
+		for (int i = 0; i < this->nbrs.size(); ++i)
 		{
 			const auto currentidx = nbrs[i];
 			StateVector& candidate = statespace[currentidx];
@@ -186,8 +186,8 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_Heisenberg(int rsite, const Stat
 
 // todo: does not support locally fluctating (e.g. random) interaction strengths
 
-template <class Grid, class Hamiltonian> 
-inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
+template <class Grid, class Hamiltonian, template<class> class RefType>
+inline int Marqov<Grid, Hamiltonian, RefType>::metropolisstep(int rsite)
 {
     StateVector& svold = statespace[rsite];
     StateVector svnew = metro.newsv(svold);
@@ -196,7 +196,7 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
     double interactionenergydiff = 0;
     for(int a = 0; a < ham.Nalpha; ++a)
     {
-        auto nbrs = grid.getnbrs(a, rsite);
+        auto nbrs = this->grid.getnbrs(a, rsite);
         StateVector averagevector = {0};
 
         for (int i = 0; i < nbrs.size(); ++i)
@@ -217,8 +217,6 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
        // multiply the constant
        onsiteenergydiff += dot(ham.onsite[b]->h, diff);
     }
-   
-    
     // multi-site energy
     double multisiteenergyold = 0;
     double multisiteenergynew = 0;
@@ -245,7 +243,6 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
         svold = svnew;
         retval = 1;
     }
-
     return retval;
 }
 
