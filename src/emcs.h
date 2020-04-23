@@ -14,18 +14,31 @@ double Marqov<Grid, Hamiltonian>::elementaryMCstep(const int ncluster, const int
 	for (int j=0; j<ncluster; j++)
 	{
 		const int rsite = rng.i();
-		const auto rdir = rnddir<RND, typename StateVector::value_type, SymD>(rng);
-		avgclustersize += wolffstep_general(rsite, rdir);
+
+		// random direction
+//		const auto rdir = rnddir<RND, typename StateVector::value_type, SymD>(rng);
+//		avgclustersize += wolffstep_general(rsite, rdir);
+
+		// loop colors
+		for (int i=0; i<3; i++) avgclustersize += wolffstep_general(rsite, i);
 	}
 
 
 	// Metropolis sweeps
 	for (int j=0; j<nsweeps; j++)
 	{
+
+		// loop colors
+		for (int s = 0; s<3; s++)
+		{
+
 		for(int i = 0; i < grid.size(); ++i)
 		{
 			const int rsite = rng.i();
-			metropolisstep(rsite);
+//			metropolisstep(rsite);
+//			metropolisstep(rsite,ham.reduce,0);
+			metropolisstep(rsite, reduce_ref, reduce_cpy, s);
+		}
 		}
 	}
 

@@ -57,7 +57,7 @@ public:
 };
 
 
-template <class StateVector, class RNG>
+template <class rStateVector, class RNG>
 class AshkinTeller_Initializer
 {
 	public:
@@ -66,10 +66,11 @@ class AshkinTeller_Initializer
 
 		// specifies how a random new state vector is generated
 		// in this case a simple spin flip
-		StateVector newsv(const StateVector& svold) 
+		rStateVector newsv(const rStateVector& svold) 
 		{
-			StateVector retval(svold); 
-			retval[0] = -retval[0];
+			rStateVector retval(svold); 
+			retval = -retval;			// if int
+//			retval[0] = -retval[0];		// if array<int>
 			return retval;
 		};
 };
@@ -84,9 +85,13 @@ class AshkinTeller
 		double K = 0.5;
 
 		constexpr static int SymD = 3;
+		constexpr static int rSymD = 1;
 		typedef std::array<SpinType, SymD> StateVector;
+//		typedef std::array<SpinType, rSymD> rStateVector; // reduced StateVector
+		typedef int rStateVector; // reduced StateVector
+
 		template <typename RNG>
-		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
+		using MetroInitializer = AshkinTeller_Initializer<rStateVector, RNG>;
 
 		static constexpr uint Nalpha = 1;
 		static constexpr uint Nbeta = 0;
@@ -130,5 +135,18 @@ class AshkinTeller
 			sv[a] *= -1;
 		}
 
+		/* 
+		rStateVector reduce(StateVector sv, int comp)
+		*/
+
 };
 #endif
+
+		// obvious improvements that should be made:
+		// - unify us ...
+		// - move into Hamiltonian and use the StateVector typdefs
+		// - should return array<int,1> rather than int ...
+
+		int& reduce_ref(std::array<int,3>& sv, int comp) {return sv[comp];}
+		int  reduce_cpy(std::array<int,3>  sv, int comp) {return sv[comp];}
+

@@ -1,11 +1,11 @@
 [General]
 dim = 2
-nL = 8,12,16,24,32,48
+nL = 8,12,16,24,32,64,128
 nreplicas = 40
 
-lvstart = 0.830
-lvfinal = 0.980
-lvsteps = 7
+lvstart = 0.24
+lvfinal = 0.30
+lvsteps = 10
 loopstyle = lin
 
 

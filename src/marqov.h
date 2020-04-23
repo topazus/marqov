@@ -36,6 +36,7 @@ class Marqov
 {
 	public:
 		typedef typename Hamiltonian::StateVector StateVector;
+		typedef typename Hamiltonian::rStateVector rStateVector;
 		typedef StateVector* StateSpace;
 
 //Local classes. We gain access to all Types of Marqov        
@@ -338,14 +339,18 @@ struct ObsTupleToObsCacheTuple
 
 
 	
-		 // only for the Ising model so far!
-		 void init_cold()
+		 void init_cold_Ising_like()
 		 {
+		 	const int SymD = std::tuple_size<StateVector>::value;
 			for(int i = 0; i < grid.size(); ++i)
 			{
-				statespace[i][0] = -1;
+				for(int j = 0; j < SymD; ++j)
+				{
+					statespace[i][j] = -1;
+				}
 			}
 		 }
+
 		 void init_cold_Heisenberg()
 		 {
 			for(int i = 0; i < grid.size(); ++i)
@@ -371,6 +376,10 @@ struct ObsTupleToObsCacheTuple
 
 
 	inline int metropolisstep(int rsite);
+
+	template <typename callable1, typename callable2>
+	inline int metropolisstep(int rsite, callable1 filter_ref, callable2 filter_copy, int comp);
+
 	inline int wolffstep(int rsite, const StateVector& rdir);
 	inline int wolffstep_Ising(int rsite);
 	inline int wolffstep_Heisenberg(int rsite, const StateVector& rdir);

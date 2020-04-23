@@ -90,6 +90,11 @@ inline double mult(const double& a, const double& b)
     return a*b;
 }
 
+inline double mult(const double& a, const int& b)
+{
+    return a*double(b);
+}
+
 template <class VecType, class StateVector>
 inline StateVector mult(const VecType& a, const StateVector& b)
 {
@@ -185,6 +190,7 @@ const int myid = 0; // remove once a parallelization is available
 #include "BlumeCapel.h"
 #include "XXZAntiferro.h"
 #include "XXZAntiferroSingleAniso.h"
+#include "AshkinTeller.h"
 
 #include "marqov.h"
 #include "disordered_lattice.h"
@@ -207,34 +213,6 @@ int main()
 
 	makeDir(outdir);
 	makeDir(logdir);
-
-
-	/*
-	RegularSquare cloud(10);
-	SomeRandomConnections<RegularSquare,double> disorder2(cloud);
-	RegularRandomBond<double> disorder(2,10);
-
-
-	std::vector<int> nbrs = disorder.getnbrs(1,42);
-
-	for (auto&& x: nbrs)
-		cout << x << "\t";
-	cout << endl;
-
-
-	std::vector<double> crds = disorder.getcrds(42);
-
-	for (auto&& x: crds)
-		cout << x << "\t";
-	cout << endl;
-	
-
-	std::vector<double> bnds = disorder.getbnds(1,42);
-
-	for (auto&& x: bnds)
-		cout << x << "\t";
-	cout << endl;
-	*/
 
 
 	// ------------------ live view -----------------------
@@ -295,39 +273,41 @@ int main()
 		for (int k=0; k<lvsteps; k++)
 		{
 
-			const double beta = 1/1.5;
-			const double p = loopvar[k];
+//			const double beta = 1/1.5;
+//			const double p = loopvar[k];
+			
+			const double beta = loopvar[k];
 
         
 			#pragma omp parallel for
-			for(std::size_t i = 0; i < nreplicas; ++i) //for OMP
+			for(std::size_t i = 0; i < nreplicas; ++i)
 			{
-				std::string str_var = "var"+std::to_string(p);
+				std::string str_var = "var"+std::to_string(beta);
 				std::string str_id   = std::to_string(i);
 				std::string outname   = str_var+"_"+str_id+".h5";
 				std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
 
 
 				// lattice and model
-				RegularRandomBond<double> latt(dim, L, p);
-				Marqov<RegularRandomBond<double>, Ising<int>> sim(latt, outsubdir+outname, beta);
+//				RegularRandomBond<double> latt(dim, L, p);
+//				Marqov<RegularRandomBond<double>, Ising<int>> sim(latt, outsubdir+outname, beta);
 
-//				Poissonian cloud(2,100);
-//				ErdosRenyi latt2(100, 0.1);
-//				SuperChaos<PointCloud,std::vector<double>> latt3(cloud);
-//				cout << latt2.size() << endl;
+				RegularLattice latt(L, dim);
+				Marqov<RegularLattice, AshkinTeller<int>> sim(latt, outsubdir+outname, beta);
+
 
 				// number of cluster updates and metropolis sweeps
-				const int ncluster = 0;
+				const int ncluster = 1;
 				const int nsweeps  = 10;
 				
 				// number of EMCS during relaxation and measurement
-				const int nrlx = 3000;
-				const int nmsr = 10000;  
+				const int nrlx = 500;
+				const int nmsr = 1500;  
 				
 				
 				// perform simulation
-				sim.init_hot();
+//				sim.init_hot();
+				sim.init_cold_Ising_like();
 				sim.wrmploop(nrlx, ncluster, nsweeps, i);
 				sim.gameloop(nmsr, ncluster, nsweeps, i);
 			}

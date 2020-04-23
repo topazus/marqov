@@ -47,15 +47,15 @@ inline int Marqov<Grid, Hamiltonian>::wolffstep_general(int rsite, const DirType
 
 			/* under construction
 			const auto   local_coupling  = grid.getbnds(a, currentnbr)[0];
-			*/
 
-			// Wolff and Swendsen-Wang cluster algorithms are only valid if 
-			// all interactions are ferromagnetic, i.e., if all J_ij > 0 (Zhu et. al 2015)
+			// !!!  Wolff and Swendsen-Wang cluster algorithms are only valid if 
+			// !!!  all interactions are ferromagnetic, i.e., if all J_ij > 0 (Zhu et. al 2015)
 
 
 			// even more general would be somthing like that:
 			// const auto   local_coupling  = ham.wolff_scalarize(grid.getbnds(a, currentnbr));
 			// overkill, or even necessary?
+			*/
 
 			const double wolff_coupling  = ham.wolff_coupling(currentsv, candidate, rdir);
 			const double coupling = global_coupling * local_coupling * wolff_coupling;
@@ -287,4 +287,57 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
     return retval;
 }
 
+
+
+// filtered Metropolis prototype ....
+
+// takes a function which takes a StateVector and returns a reduced StateVector
+
+template <class Grid, class Hamiltonian>
+template <typename callable1, typename callable2>
+inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite, callable1 filter_ref, callable2 filter_cpy, int comp)
+{
+    rStateVector& svold = filter_ref(statespace[rsite], comp);
+    rStateVector svnew = metro.newsv(svold);
+
+    // interaction part
+    double interactionenergydiff = 0;
+    for(int a = 0; a < ham.Nalpha; ++a)
+    {
+        auto nbrs = grid.getnbrs(a, rsite);
+        rStateVector averagevector = {0};
+
+        for (int i = 0; i < nbrs.size(); ++i)
+        {
+            auto idx = nbrs[i];
+            auto nbr = filter_cpy(ham.interactions[a]->operator()(statespace[idx]), comp);
+//            averagevector = averagevector + callbonds<Grid>(grid, a, rsite, i, nbr);
+
+		StateVector& svoldfull = statespace[rsite];
+		auto nbrfull = ham.interactions[a]->operator()(statespace[idx]);
+
+			auto cpl = -ham.wolff_coupling(svoldfull, nbrfull, comp);
+            averagevector = averagevector + mult(cpl,nbr);
+        }
+        interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
+    }
+
+    // (...)
+
+    double dE 	= interactionenergydiff;
+
+    int retval = 0;
+    if ( dE <= 0 )
+    {
+        svold = svnew;
+        retval = 1;
+    }
+    else if (rng.d() < exp(-beta*dE))
+    {
+        svold = svnew;
+        retval = 1;
+    }
+
+    return retval;
+}
 #endif
