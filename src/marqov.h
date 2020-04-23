@@ -14,6 +14,8 @@
 #include <stdexcept>
 #include "cachecontainer.h"
 
+namespace MARQOV
+{
 template<typename Function, typename Object, typename Tuple, size_t ... I>
 auto _call(Function f, Object& obj, Tuple t, std::index_sequence<I ...>) {
 	return (obj.*f)(std::get<I>(t) ...);
@@ -457,5 +459,5 @@ struct ObsTupleToObsCacheTuple
 
 #include "update.h"
 #include "emcs.h"
-
+}
 #endif

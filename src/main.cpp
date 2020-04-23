@@ -104,6 +104,8 @@ void fillsims(const std::vector<Args>& args, std::vector<T>& sims, Callable c)
         emplace_from_tuple(sims, c(p));
 }
 
+using namespace MARQOV;
+
 template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void loop(const std::vector<Parameters>& params, Callable filter, int nsweeps)
 {
