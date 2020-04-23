@@ -65,7 +65,7 @@ inline int Marqov<Grid, Hamiltonian, RefType>::wolffstep_general(int rsite, cons
 
 
 
-// in the plain Ising model, the Wolff couling is a constant, which can be
+// in the plain Ising model, the Wolff coupling is a constant, which can be
 // exploited for optimization
 
 template <class Grid, class Hamiltonian, template<class> class RefType>
