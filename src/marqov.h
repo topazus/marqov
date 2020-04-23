@@ -14,10 +14,6 @@
 #include <stdexcept>
 #include "cachecontainer.h"
 
-using std::cout;
-using std::endl;
-using std::flush;
-
 template<typename Function, typename Object, typename Tuple, size_t ... I>
 auto _call(Function f, Object& obj, Tuple t, std::index_sequence<I ...>) {
 	return (obj.*f)(std::get<I>(t) ...);
@@ -275,13 +271,13 @@ struct ObsTupleToObsCacheTuple
 			for (int j=0; j<ncol; j++) 
 			{
 				sum[j] = sum[j] / double(nmeasure) / double(nsites);
-				cout << sum[j] << " ";
+				std::cout << sum[j] << " ";
 			}
-			cout << endl;
+			std::cout << std::endl;
 
 			// summation formula
 			double retval = 0.5*ham.beta*(sum[0]+sum[1]+sum[2]+sum[3]+sum[4]+sum[5]) - sum[6] - 2*ham.lambda*sum[7] + 0.5*SymD;
-			cout << retval << endl << endl;
+			std::cout << retval << "\n\n";
 
 		}
 					
@@ -314,7 +310,7 @@ struct ObsTupleToObsCacheTuple
 			for (int k=0; k<10; k++)
 			{
 
-				if (myid == 0) cout << "." << flush;
+				if (myid == 0) std::cout << "." << std::flush;
 				for (int i=0; i<nsteps/10; ++i)
 				{
 					avgclustersize += elementaryMCstep(ncluster, nsweeps);
@@ -324,19 +320,19 @@ struct ObsTupleToObsCacheTuple
 				}
 			}
 
-			if (myid == 0) cout << "|" << endl << avgclustersize/nsteps << endl;
+			if (myid == 0) std::cout << "|\n" << avgclustersize/nsteps << std::endl;
 //			finalize_consistency_check();
 		}
 	
 	    	void wrmploop(const int nsteps, const int ncluster, const int nsweeps, int myid)
 		{
-			if (myid == 0) cout << "|";
+			if (myid == 0) std::cout << "|";
 			for (int k=0; k<10; k++)
 			{
-				if (myid == 0) cout << "." << flush;
+				if (myid == 0) std::cout << "." << std::flush;
 				for (int i=0; i<nsteps/10; ++i) elementaryMCstep(ncluster, nsweeps);
 			}
-			if (myid == 0) cout << "|";
+			if (myid == 0) std::cout << "|";
 		}
 	
 
@@ -352,7 +348,7 @@ struct ObsTupleToObsCacheTuple
 			{
 				avgclustersize += elementaryMCstep(ncluster, nsweeps);
 			}
-			cout << avgclustersize/nsteps << endl;
+			std::cout << avgclustersize/nsteps << std::endl;
 		}
 
 
@@ -379,27 +375,27 @@ struct ObsTupleToObsCacheTuple
 
 		void visualize_state_2d(int dim=2, double threshold=0.3)
 		{
-			cout << "_";
-			for(int i = 0; i < grid.length; ++i) cout << " _";
-			cout << endl;
+			std::cout << "_";
+			for(int i = 0; i < grid.length; ++i) std::cout << " _";
+			std::cout <<"\n";
 			for(int i = 0; i < grid.length; ++i)
 			{
-				cout << "|";
+				std::cout << "|";
 				for(int j = 0; j < grid.length; ++j)
 				{
 					int curridx = grid.length*i+j;
 					double current = statespace[curridx][dim];
 
-					if (current > threshold) cout << "O ";
-					else if (current < -threshold) cout << "  ";
-					else if (current > 0) cout << "o ";
-					else if (current < 0) cout << ". ";
+					if (current > threshold) std::cout << "O ";
+					else if (current < -threshold) std::cout << "  ";
+					else if (current > 0) std::cout << "o ";
+					else if (current < 0) std::cout << ". ";
 				}
-				cout << "|" << endl;
+				std::cout << "|\n";
 			}
-			cout << "‾";
-			for(int i = 0; i < grid.length; ++i) cout << " ‾";
-			cout << endl << endl;
+			std::cout << "‾";
+			for(int i = 0; i < grid.length; ++i) std::cout << " ‾";
+			std::cout <<"\n\n";
 		}
 
 
