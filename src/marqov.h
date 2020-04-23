@@ -189,7 +189,11 @@ struct ObsTupleToObsCacheTuple
 		}
 		
 		
-		/** Alternate constructor*/
+		/** Alternate constructor if you require Marqov to instantiate and embed the lattice for you
+         * @param outfile Where to create the output file
+         * @param mybeta the temperature that governs the Metropolis dynamics
+         * @param p A pair containing in the second Argument the lattice parameters and in the first the Hamiltonian parameters
+         */
         template <class ...HArgs, class ... LArgs>
 		Marqov(std::string outfile, double mybeta, std::pair<std::tuple<HArgs...>, std::tuple<LArgs...> >&& p) : RefType<Grid>(std::forward<LArgs>(p.second)...), ham(std::forward<HArgs>(p.first) ... ),
 //													grid(lattice), 
