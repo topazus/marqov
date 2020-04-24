@@ -9,7 +9,6 @@
 // 3-color the Ashkin-Teller model (prototype)
 
 // numerically treated as embedded Ising models (compare Zhu et. al 2015)
-// at the moment Metropolis is not working! only Wolff!
 // make sure you set up a the EMCS properly
 
 // todo: pass Hamiltonian parameters through the constructor
@@ -51,13 +50,13 @@ class AshkinTeller_interaction : public Interaction<StateVector>
 public:
 	AshkinTeller_interaction()
 	{
-		this->J = -1;	// +1 ferro, -1 antiferro
+		this->J = -1;
 	}
 	StateVector operator() (const StateVector& phi) {return phi;};
 };
 
 
-template <class rStateVector, class RNG>
+template <class redStateVector, class RNG>
 class AshkinTeller_Initializer
 {
 	public:
@@ -66,11 +65,11 @@ class AshkinTeller_Initializer
 
 		// specifies how a random new state vector is generated
 		// in this case a simple spin flip
-		rStateVector newsv(const rStateVector& svold) 
+		redStateVector newsv(const redStateVector& svold) 
 		{
-			rStateVector retval(svold); 
-			retval = -retval;			// if int
-//			retval[0] = -retval[0];		// if array<int>
+			redStateVector retval(svold); 
+			retval = -retval;			// 
+//			retval[0] = -retval[0];		// if redStateVector was array<int>
 			return retval;
 		};
 };
@@ -87,11 +86,10 @@ class AshkinTeller
 		constexpr static int SymD = 3;
 		constexpr static int rSymD = 1;
 		typedef std::array<SpinType, SymD> StateVector;
-//		typedef std::array<SpinType, rSymD> rStateVector; // reduced StateVector
-		typedef int rStateVector; // reduced StateVector
+		typedef int redStateVector; // reduced StateVector
 
 		template <typename RNG>
-		using MetroInitializer = AshkinTeller_Initializer<rStateVector, RNG>;
+		using MetroInitializer = AshkinTeller_Initializer<redStateVector, RNG>;
 
 		static constexpr uint Nalpha = 1;
 		static constexpr uint Nbeta = 0;
@@ -112,21 +110,30 @@ class AshkinTeller
 			return std::make_tuple(obs_m);
 		}
 
+
+
+		// we need to use the filtered Metropolis method in order to access the 
+		// embedded Ising models
+
+		template <class color = int>
+		inline double metro_coupling(StateVector& sv1, StateVector& sv2, const color a=0)
+		{
+			switch (a)
+			{
+				case 0: return J + K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
+				case 1: return J + K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
+				case 2: return J + K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
+			}
+		}
+
 		// using the Wolff cluster algorithm requires to implement
 		// the functions 'wolff_coupling' and 'wolff_flip'
 
 		template <class color = int>
 		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const color a=0)
 		{
-//			cout << sv1[0] << "  " << sv1[1] << "  " << sv1[2] << endl;
 			if (sv1[a] == sv2[a]) return 0.0;
-			else
-			{
-				if      (a==0) return - (J + K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]));
-				else if (a==1) return - (J + K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]));
-				else if (a==2) return - (J + K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]));
-			}
-
+			else return - metro_coupling(sv1, sv2, a);
 		}
 
 		template <class color = int>
@@ -135,13 +142,9 @@ class AshkinTeller
 			sv[a] *= -1;
 		}
 
-		/* 
-		rStateVector reduce(StateVector sv, int comp)
-		*/
-
 };
-#endif
 
+		// filter functions
 		// obvious improvements that should be made:
 		// - unify us ...
 		// - move into Hamiltonian and use the StateVector typdefs
@@ -150,3 +153,4 @@ class AshkinTeller
 		int& reduce_ref(std::array<int,3>& sv, int comp) {return sv[comp];}
 		int  reduce_cpy(std::array<int,3>  sv, int comp) {return sv[comp];}
 
+#endif

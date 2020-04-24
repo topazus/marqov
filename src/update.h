@@ -227,24 +227,27 @@ auto callbonds(Lattice& grid, int a, int rsite, int i, NbrType nbr)
 template <class Grid, class Hamiltonian> 
 inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
 {
-    StateVector& svold = statespace[rsite];
-    StateVector svnew = metro.newsv(svold);
+	// old state vector at rsite
+	StateVector& svold = statespace[rsite];
+	// propose new configuration
+	StateVector svnew = metro.newsv(svold);
+	
+	// interaction part
+	double interactionenergydiff = 0;
+	for(int a = 0; a < ham.Nalpha; ++a)
+	{
+		auto nbrs = grid.getnbrs(a, rsite);
+		StateVector averagevector = {0}; // must not be integer in general!!! fix me!!!
 
-    // interaction part
-    double interactionenergydiff = 0;
-    for(int a = 0; a < ham.Nalpha; ++a)
-    {
-        auto nbrs = grid.getnbrs(a, rsite);
-        StateVector averagevector = {0};
-
-        for (int i = 0; i < nbrs.size(); ++i)
-        {
-            auto idx = nbrs[i];
-            auto nbr = ham.interactions[a]->operator()(statespace[idx]);
-            averagevector = averagevector + callbonds<Grid>(grid, a, rsite, i, nbr);
-        }
-        interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
-    }
+		// sum over neighbours
+		for (int i = 0; i < nbrs.size(); ++i)
+		{
+			auto idx = nbrs[i];
+			auto nbr = ham.interactions[a]->operator()(statespace[idx]);
+			averagevector = averagevector + callbonds<Grid>(grid, a, rsite, i, nbr);
+		}
+		interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
+	}
 
     // onsite energy part
     double onsiteenergydiff = 0;
@@ -267,6 +270,7 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
         //forgot k_gamma
     }
     
+    // sum up energy differences
     double dE 	= interactionenergydiff + onsiteenergydiff + (multisiteenergynew - multisiteenergyold);
 
 	// improve me: what about models with discrete statevectors where the acceptance probability should be
@@ -297,44 +301,54 @@ template <class Grid, class Hamiltonian>
 template <typename callable1, typename callable2>
 inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite, callable1 filter_ref, callable2 filter_cpy, int comp)
 {
-    rStateVector& svold = filter_ref(statespace[rsite], comp);
-    rStateVector svnew = metro.newsv(svold);
+	// old state vector at rsite
+	StateVector&     svold = statespace[rsite];
+	redStateVector& rsvold = filter_ref(svold, comp);
 
-    // interaction part
-    double interactionenergydiff = 0;
-    for(int a = 0; a < ham.Nalpha; ++a)
-    {
-        auto nbrs = grid.getnbrs(a, rsite);
-        rStateVector averagevector = {0};
+	// propose new configuration
+	redStateVector  rsvnew = metro.newsv(rsvold);
+	
+	// interaction part
+	double interactionenergydiff = 0;
+	for(int a = 0; a < ham.Nalpha; ++a)
+	{
+		// extract neighbours
+		auto nbrs = grid.getnbrs(a, rsite);
+		double averagevector = {0};
+		
+		// sum over neighbours
+		for (int i = 0; i < nbrs.size(); ++i)
+		{
+			// neighbour index
+			auto idx = nbrs[i];
+			// full neighbour
+			auto nbr  = ham.interactions[a]->operator()(statespace[idx]);
+			// reduced neighbour
+			auto rnbr = filter_cpy(nbr, comp);
+			
+			// coupling in the embedded model
+			double cpl = ham.metro_coupling(svold, nbr, comp);
 
-        for (int i = 0; i < nbrs.size(); ++i)
-        {
-            auto idx = nbrs[i];
-            auto nbr = filter_cpy(ham.interactions[a]->operator()(statespace[idx]), comp);
-//            averagevector = averagevector + callbonds<Grid>(grid, a, rsite, i, nbr);
+			// compute weighted sum of neighbours
+			averagevector = averagevector + mult(cpl,rnbr);
+		}
 
-		StateVector& svoldfull = statespace[rsite];
-		auto nbrfull = ham.interactions[a]->operator()(statespace[idx]);
-
-			auto cpl = -ham.wolff_coupling(svoldfull, nbrfull, comp);
-            averagevector = averagevector + mult(cpl,nbr);
-        }
-        interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
-    }
+		interactionenergydiff += ham.interactions[a]->J * (dot(rsvnew-rsvold, averagevector));
+	}
 
     // (...)
 
-    double dE 	= interactionenergydiff;
+    double dE 	= interactionenergydiff; // + ... + ...
 
     int retval = 0;
     if ( dE <= 0 )
     {
-        svold = svnew;
+        rsvold = rsvnew;
         retval = 1;
     }
     else if (rng.d() < exp(-beta*dE))
     {
-        svold = svnew;
+        rsvold = rsvnew;
         retval = 1;
     }
 

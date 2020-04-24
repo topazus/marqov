@@ -297,8 +297,8 @@ int main()
 
 
 				// number of cluster updates and metropolis sweeps
-				const int ncluster = 1;
-				const int nsweeps  = 10;
+				const int ncluster = 5;
+				const int nsweeps  = 5;
 				
 				// number of EMCS during relaxation and measurement
 				const int nrlx = 500;

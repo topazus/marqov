@@ -36,7 +36,7 @@ class Marqov
 {
 	public:
 		typedef typename Hamiltonian::StateVector StateVector;
-		typedef typename Hamiltonian::rStateVector rStateVector;
+		typedef typename Hamiltonian::redStateVector redStateVector; // reduced StateVector 
 		typedef StateVector* StateSpace;
 
 //Local classes. We gain access to all Types of Marqov        
@@ -346,7 +346,7 @@ struct ObsTupleToObsCacheTuple
 			{
 				for(int j = 0; j < SymD; ++j)
 				{
-					statespace[i][j] = -1;
+					statespace[i][j] = 1;
 				}
 			}
 		 }
