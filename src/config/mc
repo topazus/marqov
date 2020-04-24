@@ -1,6 +1,6 @@
 [General]
 dim = 2
-nL = 8,12,16,24,32,64,128
+nL = 8,12,16,24,32,48,64
 nreplicas = 40
 
 lvstart = 0.24
@@ -13,7 +13,7 @@ Hamiltonian = Ising
 
 betas = 0.40, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48
 
-[XXZAntiferroSingleAniso] // model parameters other than temperature
+[XXZAntiferroSingleAniso]
 
 names = extfield, aniso, singleaniso
 
@@ -21,7 +21,6 @@ extfield = 4.4
 aniso = 0.8
 singleaniso = 0.2
 
-[Hamiltonian] // model parameters other than temperature
 
 
 [IO]

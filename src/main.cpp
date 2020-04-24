@@ -195,34 +195,35 @@ void fillsims(const std::vector<Args>& args, std::vector<T>& sims, Callable c)
 using namespace MARQOV;
 
 template <class Hamiltonian, class Lattice, class Parameters, class Callable>
-void loop(const std::vector<Parameters>& params, Callable filter, int nsweeps)
+void loop(const std::vector<Parameters>& params, Callable filter, int nsweeps, int ncluster)
 {
 		// model
 		std::vector<Marqov<Lattice, Hamiltonian> > sims;
 
 		// simulation vector
 		sims.reserve(params.size());//MARQOV has issues with copying -> requires reserve in vector
-
 		fillsims(	params, sims, filter);
 
-//init
-        #pragma omp parallel for
-		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
+
+
+
+		// ------------- warmup -------------
+		
+		// number of EMCS during relaxation and measurement
+		const int nrlx = 500;
+		const int nmsr = 1500;  
+
+		#pragma omp parallel for
+		for(std::size_t i = 0; i < sims.size(); ++i)
 		{
 			auto myid = i;
 			auto& marqov = sims[i];
 
-			// number of cluster updates and metropolis sweeps
-			const int ncluster = 0;
-			
-			// number of EMCS during relaxation and measurement
-			const int nrlx = 5000;
 			// perform simulation
 			marqov.init_hot();
 			marqov.wrmploop(nrlx, ncluster, nsweeps, myid);
 		}
 
-std::cout<<"warmup done"<<std::endl;
 		// ------------- execute -------------
 
 		#pragma omp parallel for
@@ -231,11 +232,6 @@ std::cout<<"warmup done"<<std::endl;
 			auto myid = i;
 			auto& marqov = sims[i];
 
-			// number of cluster updates and metropolis sweeps
-			const int ncluster = 0;
-			
-			// number of EMCS during relaxation and measurement
-			const int nmsr = 15000;  
 			// perform simulation
 			marqov.gameloop(nmsr, ncluster, nsweeps, myid);
 		}
@@ -249,24 +245,29 @@ const int myid = 0; // remove once a parallelization is available
 template <class Hamiltonian, class Params, class Callable>
 void RegularLatticeloop(RegistryDB& reg, const std::string outdir, std::string logdir, const std::vector<Params>& parameters, Callable filter)
 {
-    const auto dim       = reg.Get<int>("mc", "General", "dim" );
-	const auto nL        = reg.Get<std::vector<int> >("mc", "General", "nL" );
-
-	// ---------------- main loop -----------------
+	const auto dim = reg.Get<int>("mc", "General", "dim" );
+	const auto nL  = reg.Get<std::vector<int> >("mc", "General", "nL" );
 
 	cout << endl << "The dimension is " << dim << endl;
 
 	// lattice size loop
 	for (int j=0; j<nL.size(); j++)
 	{
-		// extract lattice size and prepare directories
+		// prepare
 		int L = nL[j];
 		cout << endl << "L = " << L << endl << endl;
 		makeDir(outdir+"/"+std::to_string(L));
+
 		// lattice
 		RegularLattice latt(L, dim);
-        auto f = [&filter, &latt, &outdir, L](auto p){return filter(latt, outdir, L, p);};//partially apply filter
-        loop<Hamiltonian, RegularLattice>(parameters, f, 2*L); 
+
+		// MC parameters
+		const int nsweeps  = 10;
+		const int ncluster = 2*L;
+
+		// set up and exectute
+		auto f = [&filter, &latt, &outdir, L](auto p){return filter(latt, outdir, L, p);}; //partially apply filter
+		loop<Hamiltonian, RegularLattice>(parameters, f, nsweeps, ncluster); 
 	}
 }
 
@@ -285,8 +286,8 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
     if (ham == "Ising")
     {
         auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
-        std::vector<double> myj = {1.0};
-        auto parameters = cart_prod(betas); //, myj);
+        std::vector<double> J = {-1.0};
+        auto parameters = cart_prod(betas, J);
         RegularLatticeloop<Ising<int> >(registry, outdir, logdir, parameters, defaultfilter);
     }
     /*
