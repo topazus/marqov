@@ -17,11 +17,12 @@ double Marqov<Grid, Hamiltonian>::elementaryMCstep(const int ncluster, const int
 		const int rsite = rng.i();
 
 		// random direction
-//		const auto rdir = rnddir<RND, typename StateVector::value_type, SymD>(rng);
-//		avgclustersize += wolffstep_general(rsite, rdir);
+		const auto rdir = rnddir<RND, typename StateVector::value_type, SymD>(rng);
+		avgclustersize += wolffstep_general(rsite, rdir);
 
+		// Ashkin Teller model
 		// loop colors
-		for (int i=0; i<ncolors; i++) avgclustersize += wolffstep_general(rsite, i);
+//		for (int i=0; i<ncolors; i++) avgclustersize += wolffstep_general(rsite, i);
 	}
 
 

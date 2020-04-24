@@ -102,9 +102,9 @@ template <class StateVector>
 class Heisenberg_interaction : public Interaction<StateVector> 
 {
 	public:
-		Heisenberg_interaction()
+		Heisenberg_interaction(double J)
 		{
-	 		this->J = -1;	// -1 ferro, +1 antiferro
+	 		this->J = -J;
 		}
 		StateVector operator() (const StateVector& phi) {return phi;};
 };
@@ -117,7 +117,7 @@ class Heisenberg
 {
 	public:
 
-		double j;
+		double J;
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
@@ -137,13 +137,11 @@ class Heisenberg
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Heisenberg(double myj) : j(myj)
-        {   interactions[0] = new Heisenberg_interaction<StateVector>(); }
+		Heisenberg(int id, double J) : J(J) {interactions[0] = new Heisenberg_interaction<StateVector>(J);}
 		
 		HeisenbergMag obs_m;
-        HeisenbergMagSq obs_msq;
 
-		auto getobs() { return std::make_tuple(obs_m, obs_msq); }
+		auto getobs() { return std::make_tuple(obs_m); }
 		
 
 		// using the Wolff cluster algorithm requires to implement 

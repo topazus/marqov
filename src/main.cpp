@@ -13,11 +13,16 @@
 #include "cartprod.h"
 #include "registry.h"
 
+
 #include <iomanip>      // std::setprecision
 using std::cout;
 using std::endl;
 using std::flush;
 using std::ofstream;
+
+#include "marqov.h"
+#include "neighbourclass.h"
+#include "svmath.h"
 
 #include "Heisenberg.h"
 #include "Ising.h"
@@ -27,8 +32,6 @@ using std::ofstream;
 #include "XXZAntiferroSingleAniso.h"
 #include "AshkinTeller.h"
 
-#include "marqov.h"
-#include "neighbourclass.h"
 
 
 //helper, delete later
@@ -78,87 +81,6 @@ class Grid
     std::vector<int> getnbr(int i);
 };
 
-// ------- elementary state vector calculus
-
-template <class StateVector>
-StateVector operator + (StateVector lhs,  StateVector rhs)
-{
-    StateVector res(lhs);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
-    res[i] += rhs[i];
-    return res;
-}
-
-template <class StateVector>
-StateVector operator - (StateVector lhs,  StateVector rhs)
-{
-    StateVector res(lhs);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
-    res[i] -= rhs[i];
-    return res;
-}
-
-inline double mult(const double& a, const double& b)
-{
-    return a*b;
-}
-
-inline double mult(const double& a, const int& b)
-{
-    return a*double(b);
-}
-
-template <class VecType, class StateVector>
-inline StateVector mult(const VecType& a, const StateVector& b)
-{
-    StateVector retval(b);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
-    retval[i] *= a[i];
-    return retval;
-}
-
-
-inline double dot(const double& a, const double& b)
-{
-    return a*b;
-}
-
-template<class VecType>
-inline typename VecType::value_type dot(const VecType& a, const VecType& b)
-{
-    typedef typename VecType::value_type FPType;
-    return std::inner_product(begin(a), end(a), begin(b), 0.0);
-}
-
-
-template <class StateVector>
-inline void reflect(StateVector& vec, const StateVector mirror)
-{
-	const int SymD = std::tuple_size<StateVector>::value;
-	
-	const double dotp = dot(vec,mirror);
-
-	for (int i=0; i<SymD; i++) vec[i] -= 2*dotp*mirror[i];
-}	
-
-template <class Container>
-inline void normalize(Container& a)
-{
-	typename Container::value_type tmp_abs=std::sqrt(dot(a, a));
-
-	for (int i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
-}
-
-
-
-template <class StateVector>
-inline void coutsv(StateVector& vec)
-{
-	const int SymD = std::tuple_size<StateVector>::value;
-	
-	for (int i=0; i<SymD; i++) cout << vec[i] << "\t";
-	cout << endl;
-}
 
 //c++17 make_from_tuple from cppreference adapted for emplace
 template <class Cont, class Tuple, std::size_t... I>
@@ -301,14 +223,18 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 		write_logfile(registry, beta);
 		RegularLatticeloop<Ising<int>>(registry, outdir, parameters, defaultfilter);
 	}
-    /*
     else if (ham == "Heisenberg")
     {
-        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
-        std::vector<double> myj = {1.0};
-        auto parameters = cart_prod(betas, myj);
-        RegularLatticeloop<Heisenberg<double, double> >(registry, outdir, logdir, parameters, defaultfilter);
+		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
+		auto parameters = cart_prod(id, beta, J);
+		for (auto& param_tuple : parameters) // swap "id" and "temperature"
+			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
+
+		write_logfile(registry, beta);
+		RegularLatticeloop<Heisenberg<double, double> >(registry, outdir, parameters, defaultfilter);
     }
+    /*
     else if (ham == "Phi4")
     {
         auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
