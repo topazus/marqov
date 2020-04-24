@@ -14,10 +14,8 @@
 #include <stdexcept>
 #include "cachecontainer.h"
 
-using std::cout;
-using std::endl;
-using std::flush;
-
+namespace MARQOV
+{
 template<typename Function, typename Object, typename Tuple, size_t ... I>
 auto _call(Function f, Object& obj, Tuple t, std::index_sequence<I ...>) {
 	return (obj.*f)(std::get<I>(t) ...);
@@ -27,6 +25,57 @@ template<typename Function, typename Object, typename Tuple>
 auto _call(Function f, Object& obj, Tuple t) {
 	static constexpr auto size = std::tuple_size<Tuple>::value;
 	return _call(f, obj, t, std::make_index_sequence<size>{});
+}
+
+// ------- elementary state vector calculus
+
+template <class StateVector>
+StateVector operator + (StateVector lhs,  StateVector rhs)
+{
+    StateVector res(lhs);
+    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    res[i] += rhs[i];
+    return res;
+}
+
+template <class StateVector>
+StateVector operator - (StateVector lhs,  StateVector rhs)
+{
+    StateVector res(lhs);
+    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    res[i] -= rhs[i];
+    return res;
+}
+
+inline double dot(const double& a, const double& b)
+{
+    return a*b;
+}
+
+template<class VecType>
+inline typename VecType::value_type dot(const VecType& a, const VecType& b)
+{
+    typedef typename VecType::value_type FPType;
+    return std::inner_product(begin(a), end(a), begin(b), 0.0);
+}
+
+
+template <class StateVector>
+inline void reflect(StateVector& vec, const StateVector mirror)
+{
+	const int SymD = std::tuple_size<StateVector>::value;
+	
+	const double dotp = dot(vec,mirror);
+
+	for (int i=0; i<SymD; i++) vec[i] -= 2*dotp*mirror[i];
+}	
+
+template <class Container>
+inline void normalize(Container& a)
+{
+	typename Container::value_type tmp_abs=std::sqrt(dot(a, a));
+
+	for (int i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
 }
 
 // --------------------------- MARQOV CLASS -------------------------------
@@ -120,20 +169,36 @@ struct ObsTupleToObsCacheTuple
         Marqov(Marqov&& other) = default;
         Marqov& operator=(Marqov&& other) = default;
 
-		template<size_t N = 0, typename... Ts, typename... Args>
+        //For reference: this template is just to cool to forget....
+// 		template<size_t N = 0, typename... Ts, typename... Args>
+// 		inline typename std::enable_if_t<N == sizeof...(Ts), void>
+// 		marqov_measure(std::tuple<Ts...>& t, Args... args) {}
+// 		
+// 		template<size_t N = 0, typename... Ts, typename... Args>
+// 		inline typename std::enable_if_t<N < sizeof...(Ts), void>
+// 		marqov_measure(std::tuple<Ts...>& t, Args... args)
+// 		{
+// 		     auto retval = _call(&std::tuple_element<N, 
+// 							 std::tuple<Ts...> >::type::template measure<Args...>,
+// 							 std::get<N>(t), 
+// 							 std::make_tuple(std::forward<Args>(args)...) );
+// 			marqov_measure<N + 1, Ts...>(t, args...);
+//              std::get<N>(obscache)<<retval;
+// 		}
+		template<size_t N = 0, typename... Ts, typename S, typename G>
 		inline typename std::enable_if_t<N == sizeof...(Ts), void>
-		marqov_measure(std::tuple<Ts...>& t, Args... args) {}
+		marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid) {}
 		
-		template<size_t N = 0, typename... Ts, typename... Args>
+		template<size_t N = 0, typename... Ts, typename S, typename G>
 		inline typename std::enable_if_t<N < sizeof...(Ts), void>
-		marqov_measure(std::tuple<Ts...>& t, Args... args)
+		marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid)
 		{
 		     auto retval = _call(&std::tuple_element<N, 
-							 std::tuple<Ts...> >::type::template measure<Args...>,
+							 std::tuple<Ts...> >::type::template measure<StateSpace, G>,
 							 std::get<N>(t), 
-							 std::make_tuple(args...) );
-			marqov_measure<N + 1, Ts...>(t, args...);
-            std::get<N>(obscache)<<retval;
+                            std::forward_as_tuple(s, grid) );
+			marqov_measure<N + 1, Ts...>(t, s, grid);
+             std::get<N>(obscache)<<retval;
 		}
 
 
@@ -210,13 +275,13 @@ struct ObsTupleToObsCacheTuple
 			for (int j=0; j<ncol; j++) 
 			{
 				sum[j] = sum[j] / double(nmeasure) / double(nsites);
-				cout << sum[j] << " ";
+				std::cout << sum[j] << " ";
 			}
-			cout << endl;
+			std::cout << std::endl;
 
 			// summation formula
 			double retval = 0.5*ham.beta*(sum[0]+sum[1]+sum[2]+sum[3]+sum[4]+sum[5]) - sum[6] - 2*ham.lambda*sum[7] + 0.5*SymD;
-			cout << retval << endl << endl;
+			std::cout << retval << "\n\n";
 
 		}
 					
@@ -249,7 +314,7 @@ struct ObsTupleToObsCacheTuple
 			for (int k=0; k<10; k++)
 			{
 
-				if (myid == 0) cout << "." << flush;
+				if (myid == 0) std::cout << "." << std::flush;
 				for (int i=0; i<nsteps/10; ++i)
 				{
 					avgclustersize += elementaryMCstep(ncluster, nsweeps);
@@ -259,19 +324,19 @@ struct ObsTupleToObsCacheTuple
 				}
 			}
 
-			if (myid == 0) cout << "|" << endl << avgclustersize/nsteps << endl;
+			if (myid == 0) std::cout << "|\n" << avgclustersize/nsteps << std::endl;
 //			finalize_consistency_check();
 		}
 	
 	    	void wrmploop(const int nsteps, const int ncluster, const int nsweeps, int myid)
 		{
-			if (myid == 0) cout << "|";
+			if (myid == 0) std::cout << "|";
 			for (int k=0; k<10; k++)
 			{
-				if (myid == 0) cout << "." << flush;
+				if (myid == 0) std::cout << "." << std::flush;
 				for (int i=0; i<nsteps/10; ++i) elementaryMCstep(ncluster, nsweeps);
 			}
-			if (myid == 0) cout << "|";
+			if (myid == 0) std::cout << "|";
 		}
 	
 
@@ -287,7 +352,7 @@ struct ObsTupleToObsCacheTuple
 			{
 				avgclustersize += elementaryMCstep(ncluster, nsweeps);
 			}
-			cout << avgclustersize/nsteps << endl;
+			std::cout << avgclustersize/nsteps << std::endl;
 		}
 
 
@@ -314,27 +379,27 @@ struct ObsTupleToObsCacheTuple
 
 		void visualize_state_2d(int dim=2, double threshold=0.3)
 		{
-			cout << "_";
-			for(int i = 0; i < grid.length; ++i) cout << " _";
-			cout << endl;
+			std::cout << "_";
+			for(int i = 0; i < grid.length; ++i) std::cout << " _";
+			std::cout <<"\n";
 			for(int i = 0; i < grid.length; ++i)
 			{
-				cout << "|";
+				std::cout << "|";
 				for(int j = 0; j < grid.length; ++j)
 				{
 					int curridx = grid.length*i+j;
 					double current = statespace[curridx][dim];
 
-					if (current > threshold) cout << "O ";
-					else if (current < -threshold) cout << "  ";
-					else if (current > 0) cout << "o ";
-					else if (current < 0) cout << ". ";
+					if (current > threshold) std::cout << "O ";
+					else if (current < -threshold) std::cout << "  ";
+					else if (current > 0) std::cout << "o ";
+					else if (current < 0) std::cout << ". ";
 				}
-				cout << "|" << endl;
+				std::cout << "|\n";
 			}
-			cout << "‾";
-			for(int i = 0; i < grid.length; ++i) cout << " ‾";
-			cout << endl << endl;
+			std::cout << "‾";
+			for(int i = 0; i < grid.length; ++i) std::cout << " ‾";
+			std::cout <<"\n\n";
 		}
 
 
@@ -399,13 +464,11 @@ struct ObsTupleToObsCacheTuple
 	//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
 	typename Hamiltonian::template MetroInitializer<RND> metro;//C++11
 
-	// obs now handled differently
-
 	// number of EMCS
 	static constexpr int nstep = 250;
 };
 
 #include "update.h"
 #include "emcs.h"
-
+}
 #endif

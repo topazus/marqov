@@ -1,7 +1,5 @@
 #ifndef UPDATE_H
 #define UPDATE_H
-
-#include <iomanip>
 #include <vector>
 
 // todo: what about the alpha-loop? currently alpha=0 hard-coded

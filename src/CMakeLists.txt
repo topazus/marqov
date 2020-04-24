@@ -1,4 +1,6 @@
 find_package(HDF5 COMPONENTS CXX)
+find_package(OpenMP)
+
 INCLUDE(CheckFunctionExists)
 
 SET(MARQOVTARGETS MARQOV mpiMARQOV)
@@ -9,9 +11,9 @@ target_include_directories(${target} PUBLIC ${HDF5_INCLUDE_DIRS})
 target_link_libraries(${target} ${HDF5_LIBRARIES})
 target_compile_features(${target} PUBLIC cxx_lambdas cxx_auto_type cxx_constexpr cxx_trailing_return_types cxx_return_type_deduction)
 
-find_package(OpenMP)
 
-add_definitions("-fopenmp")
+
+#add_definitions("-fopenmp")
 set_target_properties(MARQOV PROPERTIES LINK_FLAGS " ${LINK_FLAGS} -fopenmp")
 
 set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DHAVE_CONFIG_H" )
@@ -28,6 +30,7 @@ target_link_libraries(mpiMARQOV ${MPI_CXX_LIBRARIES})
 set_target_properties(mpiMARQOV PROPERTIES LINK_FLAGS " ${LINK_FLAGS} ${MPI_CXX_LINK_FLAGS}")
 target_compile_options(mpiMARQOV PUBLIC ${MPI_CXX_COMPILE_OPTIONS})
 target_compile_definitions(mpiMARQOV PUBLIC ${MPI_CXX_COMPILE_DEFINITIONS})
+set_target_properties(mpiMARQOV PROPERTIES LINK_FLAGS " ${LINK_FLAGS} -fopenmp")
 endif()
 #SET(CMAKE_C_COMPILER ${MPI_C_COMPILER})
 #SET(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
