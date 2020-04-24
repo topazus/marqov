@@ -78,7 +78,7 @@ class Ising
 		static constexpr uint Nbeta = 0;
 		static constexpr uint Ngamma = 0;
 		
-		Ising(double J) : J(J) {	interactions[0] = new Ising_interaction<StateVector>(J); }
+		Ising(int id, double J) : J(J) {	interactions[0] = new Ising_interaction<StateVector>(J); }
 		
 		// instantiate interaction terms (requires pointers)
 		Interaction<StateVector>* interactions[Nalpha];

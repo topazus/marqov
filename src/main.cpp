@@ -201,49 +201,45 @@ void loop(const std::vector<Parameters>& params, Callable filter, int nsweeps, i
 		std::vector<Marqov<Lattice, Hamiltonian> > sims;
 
 		// simulation vector
-		sims.reserve(params.size());//MARQOV has issues with copying -> requires reserve in vector
+		sims.reserve(params.size()); // MARQOV has issues with copying -> requires reserve in vector
 		fillsims(	params, sims, filter);
 
 
-
-
-		// ------------- warmup -------------
 		
 		// number of EMCS during relaxation and measurement
 		const int nrlx = 500;
 		const int nmsr = 1500;  
 
+		// perform simulation
 		#pragma omp parallel for
 		for(std::size_t i = 0; i < sims.size(); ++i)
 		{
 			auto myid = i;
 			auto& marqov = sims[i];
 
-			// perform simulation
 			marqov.init_hot();
 			marqov.wrmploop(nrlx, ncluster, nsweeps, myid);
-		}
-
-		// ------------- execute -------------
-
-		#pragma omp parallel for
-		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
-		{
-			auto myid = i;
-			auto& marqov = sims[i];
-
-			// perform simulation
 			marqov.gameloop(nmsr, ncluster, nsweeps, myid);
 		}
 }
 
 // ---------------------------------------
 
-const int myid = 0; // remove once a parallelization is available
+
+
+void write_logfile(RegistryDB& reg, std::vector<double> loopvar)
+{
+	std::string logdir  = reg.Get<std::string>("mc", "IO", "logdir" );
+	std::string logfile = reg.Get<std::string>("mc", "IO", "logfile" );
+	std::ofstream os(logdir+"/"+logfile);
+		os << std::setprecision(7);
+		for (int i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;
+	os.close();
+}
 
 
 template <class Hamiltonian, class Params, class Callable>
-void RegularLatticeloop(RegistryDB& reg, const std::string outdir, std::string logdir, const std::vector<Params>& parameters, Callable filter)
+void RegularLatticeloop(RegistryDB& reg, const std::string outdir, const std::vector<Params>& parameters, Callable filter)
 {
 	const auto dim = reg.Get<int>("mc", "General", "dim" );
 	const auto nL  = reg.Get<std::vector<int> >("mc", "General", "nL" );
@@ -273,23 +269,38 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outdir, std::string l
 
 void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 {
-    const std::string ham = registry.Get<std::string>("mc", "General", "Hamiltonian" );
-    const int  nreplicas = registry.Get<int>("mc", "General", "nreplicas" );
-    auto defaultfilter = [](auto& latt, std::string outdir, int L, auto p)
-    {
-        // write a filter to determine output file path and name
-        std::string str_beta = "beta"+std::to_string(std::get<0>(p));
-        std::string outname   = str_beta+".h5";
-        std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
-        return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
-    };
-    if (ham == "Ising")
-    {
-        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
-        std::vector<double> J = {-1.0};
-        auto parameters = cart_prod(betas, J);
-        RegularLatticeloop<Ising<int> >(registry, outdir, logdir, parameters, defaultfilter);
-    }
+	// extract Hamiltonian type and number of replicas
+	const std::string ham = registry.Get<std::string>("mc", "General", "Hamiltonian" );
+	const int   nreplicas = registry.Get<int>("mc", "General", "nreplicas" );
+
+	// by construction temperatures have to go first in cart_prod, but here 
+	// we want it sorted by "id", therefore the two are swapped afterwards
+	std::vector<double> id(nreplicas);
+	for (int i=0; i<nreplicas; ++i) id[i] = i;
+
+
+
+	auto defaultfilter = [](auto& latt, std::string outdir, int L, auto p)
+	{
+	    // write a filter to determine output file path and name
+	    std::string str_id    = std::to_string(int(std::get<1>(p)));
+	    std::string str_beta  = "beta"+std::to_string(std::get<0>(p));
+	    std::string outname   = str_beta+"_"+str_id+".h5";
+	    std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
+	    return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
+	};
+
+	if (ham == "Ising")
+	{
+		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
+		auto parameters = cart_prod(id, beta, J);
+		for (auto& param_tuple : parameters) // swap "id" and "temperature"
+			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
+
+		write_logfile(registry, beta);
+		RegularLatticeloop<Ising<int>>(registry, outdir, parameters, defaultfilter);
+	}
     /*
     else if (ham == "Heisenberg")
     {
