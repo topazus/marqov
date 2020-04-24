@@ -12,6 +12,21 @@
 #include "helpers.h"
 #include "cartprod.h"
 #include "registry.h"
+
+#include <iomanip>      // std::setprecision
+using std::cout;
+using std::endl;
+using std::flush;
+using std::ofstream;
+
+#include "Heisenberg.h"
+#include "Ising.h"
+#include "Phi4.h"
+#include "BlumeCapel.h"
+#include "XXZAntiferro.h"
+#include "XXZAntiferroSingleAniso.h"
+#include "AshkinTeller.h"
+
 #include "marqov.h"
 #include "neighbourclass.h"
 
@@ -20,11 +35,6 @@
 #include <typeinfo>
 #include <cxxabi.h>
 
-#include <iomanip>      // std::setprecision
-using std::cout;
-using std::endl;
-using std::flush;
-using std::ofstream;
 
 #include "systemtools.h"
 
@@ -235,13 +245,6 @@ std::cout<<"warmup done"<<std::endl;
 
 const int myid = 0; // remove once a parallelization is available
 
-#include "Heisenberg.h"
-#include "Ising.h"
-#include "Phi4.h"
-#include "BlumeCapel.h"
-#include "XXZAntiferro.h"
-#include "XXZAntiferroSingleAniso.h"
-#include "AshkinTeller.h"
 
 template <class Hamiltonian, class Params, class Callable>
 void RegularLatticeloop(RegistryDB& reg, const std::string outdir, std::string logdir, const std::vector<Params>& parameters, Callable filter)
@@ -283,9 +286,10 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
     {
         auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
         std::vector<double> myj = {1.0};
-        auto parameters = cart_prod(betas, myj);
+        auto parameters = cart_prod(betas); //, myj);
         RegularLatticeloop<Ising<int> >(registry, outdir, logdir, parameters, defaultfilter);
     }
+    /*
     else if (ham == "Heisenberg")
     {
         auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
@@ -398,6 +402,7 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
         auto f = [&defaultfilter, &nbrs, &outdir, L](auto p){return defaultfilter(nbrs, outdir, L, p);};//partially apply filter
         loop<Ising<int>, Neighbours<int32_t> >(parameters, f, 2*L);
     }
+*/
 }
 
 int main()

@@ -7,8 +7,11 @@ lvstart = 0.24
 lvfinal = 0.30
 lvsteps = 10
 loopstyle = lin
-Hamiltonian = XXZAntiferroSingleAniso
+Hamiltonian = Ising
 
+[Ising]
+
+betas = 0.40, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48
 
 [XXZAntiferroSingleAniso] // model parameters other than temperature
 

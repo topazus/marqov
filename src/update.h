@@ -290,7 +290,7 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
 }
 
 
-
+/*
 // filtered Metropolis prototype ....
 
 // takes a function which takes a StateVector and returns a reduced StateVector
@@ -352,4 +352,7 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite, callable1 filter
 
     return retval;
 }
+
+*/
+
 #endif

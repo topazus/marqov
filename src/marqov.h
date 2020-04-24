@@ -85,7 +85,7 @@ class Marqov
 {
 	public:
 		typedef typename Hamiltonian::StateVector StateVector;
-		typedef typename Hamiltonian::redStateVector redStateVector; // reduced StateVector 
+		typedef int redStateVector; // reduced StateVector (so far needed only for AT model, improve me!!!)
 		typedef StateVector* StateSpace;
 
 //Local classes. We gain access to all Types of Marqov        

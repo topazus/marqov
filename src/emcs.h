@@ -36,8 +36,8 @@ double Marqov<Grid, Hamiltonian>::elementaryMCstep(const int ncluster, const int
 			for(int i = 0; i < grid.size(); ++i)
 			{
 				const int rsite = rng.i();
-//				metropolisstep(rsite);
-				metropolisstep(rsite, reduce_ref, reduce_cpy, s);
+				metropolisstep(rsite);
+//				metropolisstep(rsite, reduce_ref, reduce_cpy, s);
 			}
 		}
 	}
