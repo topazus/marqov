@@ -41,7 +41,12 @@ namespace MARQOV
         {
         public:
             template <class ...Args>
-            NonRef(Args&&...) {}
+            NonRef(std::tuple<Args...>& args ) : NonRef(std::forward<std::tuple<Args...>>(args), 
+                                                 std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<Args...>>::type>::value>()) {}
+            template <class ...Args, size_t... S>
+            NonRef(std::tuple<Args...>&& args, std::index_sequence<S...>) : grid(std::get<S>(std::forward<std::tuple<Args...>>(args))... ) {}
+            template <class ...Args>
+            NonRef(Args&&... args) : grid(args...) {}
             L grid;
         };
     };
@@ -517,7 +522,7 @@ struct ObsTupleToObsCacheTuple
 template <class H, class L, class... LArgs, class... HArgs>
 auto makeMarqov(std::string& outfile, double beta, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> > params)
 {
-    return Marqov<H, L, detail::NonRef>(outfile, beta, params);
+//    return Marqov<L, H, detail::NonRef>(outfile, beta, params);
 }
 
 template <class H, class L, class ...Args>
@@ -525,7 +530,7 @@ auto makeMarqov2(std::true_type, L&& latt, Args&& ... args)
 {
     //The first argument is a Lattice-like type -> from this we infer that 
     //We get a reference to sth. already allocated
-    return Marqov<H, L, detail::Ref>(latt, args...);
+    return Marqov<L, H, detail::Ref>(latt, args...);
 }
 
 template <class H, class L, class ...Args>
