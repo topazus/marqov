@@ -1,11 +1,10 @@
 [General]
 dim = 2
-nL = 8,12,16,24,32,48
-nreplicas = 1
+nL = 8,12,16,24,32,64,128
+nreplicas = 40
 
-loopvar = beta
-lvstart = 0.91
-lvfinal = 0.93
+lvstart = 0.24
+lvfinal = 0.30
 lvsteps = 10
 loopstyle = lin
 Hamiltonian = XXZAntiferroSingleAniso
@@ -19,6 +18,7 @@ extfield = 4.4
 aniso = 0.8
 singleaniso = 0.2
 
+[Hamiltonian] // model parameters other than temperature
 
 
 [IO]

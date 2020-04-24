@@ -63,6 +63,84 @@ struct GetTrait<std::vector<std::string> >//helper trait to break up a string at
     }
 };
 
+class Grid 
+{
+    std::vector<int> getnbr(int i);
+};
+
+// ------- elementary state vector calculus
+
+template <class StateVector>
+StateVector operator + (StateVector lhs,  StateVector rhs)
+{
+    StateVector res(lhs);
+    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    res[i] += rhs[i];
+    return res;
+}
+
+template <class StateVector>
+StateVector operator - (StateVector lhs,  StateVector rhs)
+{
+    StateVector res(lhs);
+    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    res[i] -= rhs[i];
+    return res;
+}
+
+inline double mult(const double& a, const double& b)
+{
+    return a*b;
+}
+
+inline double mult(const double& a, const int& b)
+{
+    return a*double(b);
+}
+
+template <class VecType, class StateVector>
+inline StateVector mult(const VecType& a, const StateVector& b)
+{
+    StateVector retval(b);
+    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    retval[i] *= a[i];
+    return retval;
+}
+
+
+inline double dot(const double& a, const double& b)
+{
+    return a*b;
+}
+
+template<class VecType>
+inline typename VecType::value_type dot(const VecType& a, const VecType& b)
+{
+    typedef typename VecType::value_type FPType;
+    return std::inner_product(begin(a), end(a), begin(b), 0.0);
+}
+
+
+template <class StateVector>
+inline void reflect(StateVector& vec, const StateVector mirror)
+{
+	const int SymD = std::tuple_size<StateVector>::value;
+	
+	const double dotp = dot(vec,mirror);
+
+	for (int i=0; i<SymD; i++) vec[i] -= 2*dotp*mirror[i];
+}	
+
+template <class Container>
+inline void normalize(Container& a)
+{
+	typename Container::value_type tmp_abs=std::sqrt(dot(a, a));
+
+	for (int i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
+}
+
+
+
 template <class StateVector>
 inline void coutsv(StateVector& vec)
 {
@@ -163,6 +241,7 @@ const int myid = 0; // remove once a parallelization is available
 #include "BlumeCapel.h"
 #include "XXZAntiferro.h"
 #include "XXZAntiferroSingleAniso.h"
+#include "AshkinTeller.h"
 
 template <class Hamiltonian, class Params, class Callable>
 void RegularLatticeloop(RegistryDB& reg, const std::string outdir, std::string logdir, const std::vector<Params>& parameters, Callable filter)
@@ -239,7 +318,6 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
     {
         	// --------- unpack configuration file ---------
 
-	auto lvname    = registry.Get<std::string>("mc", "General", "loopvar" );
 	auto loopstyle = registry.Get<std::string>("mc", "General", "loopstyle" );
 
 	double lvstart = registry.Get<double>("mc", "General", "lvstart" );
