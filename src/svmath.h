@@ -1,6 +1,8 @@
 #ifndef SVMATH_H
 #define SVMATH_H
-
+#include <tuple>
+#include <cmath>
+#include <algorithm>
 
 // ------- elementary state vector calculus
 
