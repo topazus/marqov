@@ -180,7 +180,6 @@ struct ObsTupleToObsCacheTuple
          */
         template <class ...Ts>
 		Marqov(Grid& lattice, std::string outfile, double mybeta, Ts&& ... args) : RefType<Grid>(std::forward<Grid>(lattice)), ham(std::forward<Ts>(args) ... ),
-//													grid(lattice), 
 													rng(0, 1), 
 													beta(mybeta),
 													metro(rng), 
@@ -200,10 +199,7 @@ struct ObsTupleToObsCacheTuple
          * @param p A pair containing in the second Argument the lattice parameters and in the first the Hamiltonian parameters
          */
         template <class ...HArgs, class ... LArgs>
-		Marqov(std::string outfile, std::tuple<LArgs...>& largs, double mybeta, HArgs&& ... hargs) : RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)), 
-		ham(1.0),
-//		ham(std::forward<HArgs>(p.first) ... ),
-//													grid(lattice), 
+		Marqov(std::string outfile, std::tuple<LArgs...>& largs, double mybeta, HArgs&& ... hargs) : RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)), ham(std::forward<HArgs>(hargs) ... ),
 													rng(0, 1), 
 													beta(mybeta),
 													metro(rng), 
@@ -510,7 +506,6 @@ struct ObsTupleToObsCacheTuple
 
     H5::H5File dump;///< The handle for the HDF5 file. must be before the obscaches
     typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;
-//	Grid& grid;
 	RND rng;
     double beta;
 
@@ -521,11 +516,18 @@ struct ObsTupleToObsCacheTuple
 	static constexpr int nstep = 250;
 };
 
-template <class H, class L, class... LArgs, class... HArgs>
-auto makeMarqov(std::string& outfile, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> > p)
+template <class H, class L, class... LArgs, class... HArgs, size_t... S>
+auto makeMarqov3(std::string& outfile, std::tuple<LArgs...>& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
-    return Marqov<L, H, detail::NonRef>(outfile, p.first, std::get<0>(p.second), std::get<1>(p.second)
-        
+    return Marqov<L, H, detail::NonRef>(outfile, largs,
+                                        std::get<S>(std::forward<std::tuple<HArgs...>>(hargs))...);
+}
+
+template <class H, class L, class... LArgs, class... HArgs>
+auto makeMarqov(std::string& outfile, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> >& p)
+{
+    return makeMarqov3<H, L>(outfile, p.first, p.second,
+        std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
     );
 }
 
