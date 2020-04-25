@@ -234,14 +234,20 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 		write_logfile(registry, beta);
 		RegularLatticeloop<Heisenberg<double, double> >(registry, outdir, parameters, defaultfilter);
     }
-    /*
     else if (ham == "Phi4")
     {
-        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
-        std::vector<double> myj = {1.0};
-        auto parameters = cart_prod(betas, myj, myj);
-        RegularLatticeloop<Phi4<double, double> >(registry, outdir, logdir, parameters, defaultfilter);
+		auto beta   = registry.Get<std::vector<double> >("mc", ham, "beta");
+		auto lambda = registry.Get<std::vector<double> >("mc", ham, "lambda");
+		auto mass   = registry.Get<std::vector<double> >("mc", ham, "mass");
+
+		auto parameters = cart_prod(id, beta, beta, lambda, mass);
+		for (auto& param_tuple : parameters) // swap "id" and "temperature"
+			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
+
+		write_logfile(registry, beta);
+		RegularLatticeloop<Phi4<double, double> >(registry, outdir, parameters, defaultfilter);
     }
+    /*
     else if (ham == "BlumeCapel")
     {
         auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
