@@ -26,7 +26,7 @@ namespace MARQOV
         type_sink_t< decltype( std::declval<Lattice>().getnbrs(std::declval<int>(), std::declval<int>()) ) >,
         type_sink_t< decltype( std::declval<Lattice>().size() ) >
         > : std::true_type {};
-        
+
         template <class L>
         class Ref
         {

@@ -106,17 +106,75 @@ void fillsims(const std::vector<Args>& args, std::vector<T>& sims, Callable c)
 
 using namespace MARQOV;
 
+template <class H, class L, class Args, class Callable, size_t... S>
+auto createsims_impl(L&& l, std::string outfile, std::vector<Args>&& args, Callable c, std::index_sequence<S...>)
+{
+     typedef decltype(
+         makeMarqov<H>(std::forward<L>(l), outfile,
+                       std::get<S>(std::forward<Args>(args[0]))...
+                      )
+    ) MarqovType;
+}
+
+
+template<class ... Ts>
+struct sims_helper {};
+
+template <
+class H,  class L, class HArgstuple, size_t... S
+>
+struct sims_helper<H, L, HArgstuple, std::index_sequence<S...> >
+{
+typedef decltype(makeMarqov<H>(std::declval<L>(),
+                       std::declval<std::string>(),
+                       std::declval<typename std::tuple_element<S, HArgstuple>::type>()...
+)) MarqovType;
+};
+
+
+template <class H, class L, class LArgs, class HArgs, class Callable>
+auto createsims(std::string outfile, std::vector<std::pair<HArgs, LArgs> >& args, Callable c)
+{
+     typedef decltype(makeMarqov<H,L>(outfile,  args[0])) MarqovType;
+    
+    //create simulations
+    std::vector<MarqovType> sims;
+    sims.reserve(args.size());
+    
+    return sims;
+}
+
+/** The old case where the lattice is a reference passed in through the filter....
+ * @param params parameters
+ * @param c A filter
+ */
+template <class H, class L, class Args, class Callable>
+auto createsims(const std::vector<Args>& params, Callable c)
+{
+    std::size_t constexpr tsize = std::tuple_size<typename std::remove_reference<Args>::type>::value;
+    typedef typename sims_helper<H, L, Args, std::make_index_sequence<tsize> >::MarqovType MarqovType;
+
+        //create simulations
+    std::vector<MarqovType> sims;
+    sims.reserve(params.size());
+    
+    fillsims(params, sims, c);
+    
+    return sims;
+}
+
 template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void loop(const std::vector<Parameters>& params, Callable filter, int nsweeps)
 {
-		// model
-		std::vector<Marqov<Lattice, Hamiltonian> > sims;
+// 		// model
+// 		std::vector<Marqov<Lattice, Hamiltonian> > sims;
+// 
+// 		// simulation vector
+// 		sims.reserve(params.size());//MARQOV has issues with copying -> requires reserve in vector
+// 
+// 		fillsims(	params, sims, filter);
 
-		// simulation vector
-		sims.reserve(params.size());//MARQOV has issues with copying -> requires reserve in vector
-
-		fillsims(	params, sims, filter);
-
+    auto sims = createsims<Hamiltonian, Lattice>(params, filter);
 //init
         #pragma omp parallel for
 		for(std::size_t i = 0; i < sims.size(); ++i) //for OMP
@@ -183,6 +241,7 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outdir, std::string l
 		makeDir(outdir+"/"+std::to_string(L));
 		// lattice
 		RegularLattice latt(L, dim);
+
         auto f = [&filter, &latt, &outdir, L](auto p){return filter(latt, outdir, L, p);};//partially apply filter
         loop<Hamiltonian, RegularLattice>(parameters, f, 2*L); 
 	}
@@ -304,8 +363,29 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 					return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
 				};
             RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outdir, logdir, parameters, xxzfilter);
+            
+            int L = 8;
+            RegularLattice dummylatt(L, 2);
+            auto f = [&xxzfilter, &dummylatt, &outdir, &L](auto p){return xxzfilter(dummylatt, outdir, L, p);};//partially apply filter
+//            createsims<XXZAntiferroSingleAniso<double,double> >(dummylatt, outdir, parameters, f);
     }
-    else if(ham == "IregularIsing")
+    else if(ham == "IrregularIsing")
+    {
+        
+        std::vector<std::vector<int> > dummy;
+        Neighbours<int32_t> nbrs(dummy);
+        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
+        std::vector<double> myj = {1.0};
+        auto parameters = cart_prod(betas, myj);
+        		// extract lattice size and prepare directories
+		int L = nbrs.size();
+		cout << endl << "L = " << L << endl << endl;
+		makeDir(outdir+"/"+std::to_string(L));
+		// lattice
+        auto f = [&defaultfilter, &nbrs, &outdir, L](auto p){return defaultfilter(nbrs, outdir, L, p);};//partially apply filter
+        loop<Ising<int>, Neighbours<int32_t> >(parameters, f, 2*L);
+    }
+    else if(ham == "IrregularIsing2")
     {
         std::vector<std::vector<int> > dummy;
         Neighbours<int32_t> nbrs(dummy);
@@ -319,6 +399,10 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 		// lattice
         auto f = [&defaultfilter, &nbrs, &outdir, L](auto p){return defaultfilter(nbrs, outdir, L, p);};//partially apply filter
         loop<Ising<int>, Neighbours<int32_t> >(parameters, f, 2*L);
+        
+        auto t = make_pair(std::make_tuple(dummy), parameters[0]);
+        std::vector<decltype(t)> p = {t};
+//        createsims<Ising<int>, Neighbours<int32_t> >(outdir, p, f);
     }
 }
 
