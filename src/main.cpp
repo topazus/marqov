@@ -133,15 +133,16 @@ typedef decltype(makeMarqov<H>(std::declval<L>(),
 )) MarqovType;
 };
 
+/** The case where Marqov allocates a lattice
+ */
 template <class H, class L, class LArgs, class HArgs, class Callable>
-auto createsims(std::string outfile, std::vector<std::pair<HArgs, LArgs> >& args, Callable c)
+auto createsims(std::vector<std::pair<HArgs, LArgs> >& args, Callable c)
 {
-     typedef decltype(makeMarqov<H,L>(outfile,  args[0])) MarqovType;
+     typedef decltype(makeMarqov<H,L>(std::declval<std::string>(),  args[0])) MarqovType;
     
     //create simulations
     std::vector<MarqovType> sims;
     sims.reserve(args.size());
-    
     return sims;
 }
 
@@ -367,11 +368,6 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 					return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
 				};
             RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outdir, parameters, xxzfilter);
-            
-            int L = 8;
-            RegularLattice dummylatt(L, 2);
-            auto f = [&xxzfilter, &dummylatt, &outdir, &L](auto p){return xxzfilter(dummylatt, outdir, L, p);};//partially apply filter
-//            createsims<XXZAntiferroSingleAniso<double,double> >(dummylatt, outdir, parameters, f);
     }
     else if(ham == "IrregularIsing")
     {
@@ -408,7 +404,7 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
         
         auto t = make_pair(std::make_tuple(dummy), parameters[0]);
         std::vector<decltype(t)> p = {t};
-//        createsims<Ising<int>, Neighbours<int32_t> >(outdir, p, f);
+        createsims<Ising<int>, Neighbours<int32_t> >(p, f);
     }
 
 }

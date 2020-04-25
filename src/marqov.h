@@ -527,14 +527,14 @@ struct ObsTupleToObsCacheTuple
 };
 
 template <class H, class L, class... LArgs, class... HArgs, size_t... S>
-auto makeMarqov3(std::string& outfile, std::tuple<LArgs...>& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
+auto makeMarqov3(std::string outfile, std::tuple<LArgs...>& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
     return Marqov<L, H, detail::NonRef>(outfile, largs,
                                         std::get<S>(std::forward<std::tuple<HArgs...>>(hargs))...);
 }
 
 template <class H, class L, class... LArgs, class... HArgs>
-auto makeMarqov(std::string& outfile, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> >& p)
+auto makeMarqov(std::string outfile, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> >& p)
 {
     return makeMarqov3<H, L>(outfile, p.first, p.second,
         std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
