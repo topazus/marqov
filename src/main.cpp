@@ -69,12 +69,6 @@ struct GetTrait<std::vector<std::string> >//helper trait to break up a string at
     }
 };
 
-class Grid 
-{
-    std::vector<int> getnbr(int i);
-};
-
-
 //c++17 make_from_tuple from cppreference adapted for emplace
 template <class Cont, class Tuple, std::size_t... I>
 constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple&& t, std::index_sequence<I...> )
@@ -87,17 +81,6 @@ constexpr auto emplace_from_tuple(Cont&& cont,  Tuple&& t )
 {
     return emplace_from_tuple_impl(cont, std::forward<Tuple>(t),
         std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value>{});
-}
-
-/** ToDo: introduce a filter..., e.g. a lambda*/
-template <class Args, class T, class Grid>
-void fillsims(const std::vector<Args>& args, std::vector<T>& sims, Grid& grid, std::string& fn)
-{
-    for(auto p : args)
-    {
-        auto args = std::tuple_cat(std::make_tuple(grid, fn), p);
-        emplace_from_tuple(sims, args);
-    }
 }
 
 template <class Args, class T, class Callable>
