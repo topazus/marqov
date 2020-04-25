@@ -90,6 +90,31 @@ void fillsims(const std::vector<Args>& args, std::vector<T>& sims, Callable c)
         emplace_from_tuple(sims, c(p));
 }
 
+
+//c++17 make_from_tuple from cppreference adapted for emplace
+template <class Cont, class Tuple1, class Tuple2, std::size_t... I>
+constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple1&& t1, Tuple2&& t2, std::index_sequence<I...> )
+{
+  return cont.emplace_back(std::forward<Tuple1>(t1), std::get<I>(std::forward<Tuple2>(t2))...) ;
+}
+ 
+template <class Cont, class Tuple1, class Tuple2>
+constexpr auto emplace_from_tuple(Cont&& cont, Tuple1&& t1, Tuple2&& t2 )
+{
+    return emplace_from_tuple_impl(cont, std::forward<Tuple1>(t1), std::forward<Tuple2>(t2),
+        std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
+}
+
+template <class Args1, class Args2, class T, class Callable>
+void fillsims(const std::vector<std::pair<Args1, Args2> >& args, std::vector<T>& sims, Callable c)
+{
+    for(auto p : args)
+        emplace_from_tuple(sims, p.first, c(p.second));
+}
+
+
+
+
 using namespace MARQOV;
 
 template <class H, class L, class Args, class Callable, size_t... S>
@@ -119,13 +144,14 @@ typedef decltype(makeMarqov<H>(std::declval<L>(),
 /** The case where Marqov allocates a lattice
  */
 template <class H, class L, class LArgs, class HArgs, class Callable>
-auto createsims(std::vector<std::pair<HArgs, LArgs> >& args, Callable c)
+auto createsims(std::vector<std::pair<HArgs, LArgs> >& params, Callable c)
 {
-     typedef decltype(makeMarqov<H,L>(std::declval<std::string>(),  args[0])) MarqovType;
+     typedef decltype(makeMarqov<H,L>(std::declval<std::string>(),  std::declval<std::pair<HArgs, LArgs>& >())) MarqovType;
     
     //create simulations
     std::vector<MarqovType> sims;
-    sims.reserve(args.size());
+    sims.reserve(params.size());
+    fillsims(params, sims, c);
     return sims;
 }
 
@@ -381,15 +407,17 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 		int L = nbrs.size();
 		cout << endl << "L = " << L << endl << endl;
 		makeDir(outdir+"/"+std::to_string(L));
-		// lattice
-        auto f = [&defaultfilter, &nbrs, &outdir, L](auto p){return defaultfilter(nbrs, outdir, L, p);};//partially apply filter
-        loop<Ising<int>, Neighbours<int32_t> >(parameters, f, 2*L, 1);
         
-        auto t = make_pair(std::make_tuple(dummy), parameters[0]);
+        auto otherfilter = [&L](auto p)
+	{
+	    // write a filter to determine output file path and name
+	    return p;
+	};
+        
+        auto t = make_pair(std::make_tuple(dummy), std::tuple_cat(std::make_tuple(outdir), parameters[0]));
         std::vector<decltype(t)> p = {t};
-        createsims<Ising<int>, Neighbours<int32_t> >(p, f);
+        createsims<Ising<int>, Neighbours<int32_t> >(p, otherfilter);
     }
-
 }
 
 int main()

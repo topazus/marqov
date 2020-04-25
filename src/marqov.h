@@ -201,7 +201,7 @@ struct ObsTupleToObsCacheTuple
          * @param p A pair containing in the second Argument the lattice parameters and in the first the Hamiltonian parameters
          */
         template <class ...HArgs, class ... LArgs>
-		Marqov(std::string outfile, std::tuple<LArgs...>& largs, double mybeta, HArgs&& ... hargs) : RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)), ham(std::forward<HArgs>(hargs) ... ),
+		Marqov(std::tuple<LArgs...>& largs, std::string outfile, double mybeta, HArgs&& ... hargs) : RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)), ham(std::forward<HArgs>(hargs) ... ),
 													rng(0, 1), 
 													beta(mybeta),
 													metro(rng), 
@@ -461,8 +461,6 @@ struct ObsTupleToObsCacheTuple
 			for(int i = 0; i < this->grid.length; ++i) std::cout << " ‾";
 			std::cout <<"\n\n";
 		}
-
-
 	
 		 void init_cold_Ising_like()
 		 {
@@ -529,7 +527,7 @@ struct ObsTupleToObsCacheTuple
 template <class H, class L, class... LArgs, class... HArgs, size_t... S>
 auto makeMarqov3(std::string outfile, std::tuple<LArgs...>& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
-    return Marqov<L, H, detail::NonRef>(outfile, largs,
+    return Marqov<L, H, detail::NonRef>(largs,
                                         std::get<S>(std::forward<std::tuple<HArgs...>>(hargs))...);
 }
 
