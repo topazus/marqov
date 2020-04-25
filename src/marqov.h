@@ -41,12 +41,12 @@ namespace MARQOV
         {
         public:
             template <class ...Args>
-            NonRef(std::tuple<Args...>& args ) : NonRef(std::forward<std::tuple<Args...>>(args), 
+            NonRef(std::tuple<Args...>&& args ) : NonRef(std::forward<std::tuple<Args...>>(args), 
                                                  std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<Args...>>::type>::value>()) {}
             template <class ...Args, size_t... S>
             NonRef(std::tuple<Args...>&& args, std::index_sequence<S...>) : grid(std::get<S>(std::forward<std::tuple<Args...>>(args))... ) {}
-            template <class ...Args>
-            NonRef(Args&&... args) : grid(args...) {}
+//             template <class ...Args>
+//             NonRef(Args&&... args) : grid(args...) {}
             L grid;
         };
     };
@@ -117,7 +117,7 @@ inline void normalize(Container& a)
 // --------------------------- MARQOV CLASS -------------------------------
 
 template <class Grid, class Hamiltonian, template<class> class RefType = detail::Ref >
-class Marqov : public detail::Ref<Grid>
+class Marqov : public RefType<Grid>
 {
 	public:
 		typedef typename Hamiltonian::StateVector StateVector;
@@ -200,7 +200,9 @@ struct ObsTupleToObsCacheTuple
          * @param p A pair containing in the second Argument the lattice parameters and in the first the Hamiltonian parameters
          */
         template <class ...HArgs, class ... LArgs>
-		Marqov(std::string outfile, double mybeta, std::pair<std::tuple<HArgs...>, std::tuple<LArgs...> >&& p) : RefType<Grid>(std::forward<LArgs>(p.second)...), ham(std::forward<HArgs>(p.first) ... ),
+		Marqov(std::string outfile, std::tuple<LArgs...>& largs, double mybeta, HArgs&& ... hargs) : RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)), 
+		ham(1.0),
+//		ham(std::forward<HArgs>(p.first) ... ),
 //													grid(lattice), 
 													rng(0, 1), 
 													beta(mybeta),
@@ -520,9 +522,11 @@ struct ObsTupleToObsCacheTuple
 };
 
 template <class H, class L, class... LArgs, class... HArgs>
-auto makeMarqov(std::string& outfile, double beta, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> > params)
+auto makeMarqov(std::string& outfile, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> > p)
 {
-//    return Marqov<L, H, detail::NonRef>(outfile, beta, params);
+    return Marqov<L, H, detail::NonRef>(outfile, p.first, std::get<0>(p.second), std::get<1>(p.second)
+        
+    );
 }
 
 template <class H, class L, class ...Args>
