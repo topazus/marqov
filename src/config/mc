@@ -1,17 +1,32 @@
 [General]
 dim = 2
-nL = 8,12,16,24,32,48
-nreplicas = 1
+nL = 8,12,16,24,32,48,64
+nreplicas = 40
 
-loopvar = beta
-lvstart = 0.91
-lvfinal = 0.93
+lvstart = 0.24
+lvfinal = 0.30
 lvsteps = 10
 loopstyle = lin
-Hamiltonian = XXZAntiferroSingleAniso
 
+Hamiltonian = Phi4
 
-[XXZAntiferroSingleAniso] // model parameters other than temperature
+[Ising]
+
+beta = 0.40, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48
+J = -1.0
+
+[Heisenberg]
+
+beta = 0.40, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48
+J = -1.0
+
+[Phi4]
+
+beta = 0.40, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48
+lambda = 4.5
+mass = 1.0
+
+[XXZAntiferroSingleAniso]
 
 names = extfield, aniso, singleaniso
 

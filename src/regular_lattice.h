@@ -4,7 +4,11 @@ class RegularLattice
 public:
 //    friend class NArray_Iterator;
     typedef std::vector<int> value_type;
-    RegularLattice(int l, int d) : length(l), dim(d), pows(dim) {
+
+    RegularLattice() {}
+
+    RegularLattice(int l, int d) : length(l), dim(d), pows(dim) 
+    {
         numberatoms = 1;
         for(int i = 0; i < dim; ++i)
         {
@@ -12,7 +16,9 @@ public:
             numberatoms *= length;
         }
     }
+
     value_type getnbrs(int a, int i) const {return this->operator[](i);}
+
     value_type operator[](int i) const
     {
         std::vector<int> temp(2*dim);

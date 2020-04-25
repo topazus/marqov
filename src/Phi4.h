@@ -85,9 +85,9 @@ template <class StateVector>
 class Phi4_onsitesquare : public OnSite<StateVector, double> 
 {
 	public:
-		Phi4_onsitesquare(double beta)
+		Phi4_onsitesquare(double mass, double beta)
 		{
-	 		this->h = 1.0/beta;
+	 		this->h = mass/beta;
 		}
 		double operator() (const StateVector& phi) {return dot(phi,phi);};
 };
@@ -111,8 +111,8 @@ template <typename SpinType, typename MyFPType>
 class Phi4
 {
 	public:
-		double beta;
-		double lambda = 4.5;
+		int id;
+		double beta, lambda, mass;
 
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
@@ -133,15 +133,18 @@ class Phi4
 		OnSite<StateVector, FPType>* onsite[Nbeta]; //Todo: External fields not yet supported
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Phi4(double mybeta, double mylambda) : beta(mybeta), lambda(mylambda)
+		Phi4(int id, double beta, double lambda, double mass) : id(id), lambda(lambda), mass(mass), beta(beta)
 		{
-            interactions[0] = new Phi4_interaction<StateVector>();
-            onsite[0]       = new Phi4_onsitesquare<StateVector>(beta);
-            onsite[1]       = new Phi4_onsitefour<StateVector>(lambda, beta);
+			interactions[0] = new Phi4_interaction<StateVector>();
+			onsite[0]       = new Phi4_onsitesquare<StateVector>(mass, beta);
+			onsite[1]       = new Phi4_onsitefour<StateVector>(lambda, beta);
 		}
 
 		Phi4Mag obs_m;
 		auto getobs() { return std::make_tuple(obs_m);}
+
+
+		// --- Wolff ---
 
 		template <class A>
 		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)

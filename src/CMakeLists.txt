@@ -13,7 +13,7 @@ target_compile_features(${target} PUBLIC cxx_lambdas cxx_auto_type cxx_constexpr
 
 
 
-#add_definitions("-fopenmp")
+add_definitions("-fopenmp")
 set_target_properties(MARQOV PROPERTIES LINK_FLAGS " ${LINK_FLAGS} -fopenmp")
 
 set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DHAVE_CONFIG_H" )

@@ -37,9 +37,9 @@ template <class StateVector>
 class Ising_interaction : public Interaction<StateVector> 
 {
 public:
-	Ising_interaction()
+	Ising_interaction(double J)
 	{
-		this->J = -1;	// +1 ferro, -1 antiferro
+		this->J = J;
 	}
 	StateVector operator() (const StateVector& phi) {return phi;};
 };
@@ -68,7 +68,7 @@ template <typename SpinType = int>
 class Ising
 {
 	public:
-		double j;
+		double J;
 		constexpr static int SymD = 1;
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
@@ -78,7 +78,7 @@ class Ising
 		static constexpr uint Nbeta = 0;
 		static constexpr uint Ngamma = 0;
 		
-		Ising(double myj) : j(myj) {	interactions[0] = new Ising_interaction<StateVector>(); }
+		Ising(int id, double J) : J(J) {	interactions[0] = new Ising_interaction<StateVector>(J); }
 		
 		// instantiate interaction terms (requires pointers)
 		Interaction<StateVector>* interactions[Nalpha];
@@ -91,6 +91,7 @@ class Ising
 		{
 			return std::make_tuple(obs_m);
 		}
+
 
 		// using the Wolff cluster algorithm requires to implement
 		// the functions 'wolff_coupling' and 'wolff_flip'
@@ -108,6 +109,13 @@ class Ising
 			sv[0] *= -1;
 		}
 
+
+		// think about this ... (see update.h)
+		template <typename bond_type>
+		inline double wolff_scalarize(const std::vector<bond_type>& bond)
+		{
+			return bond[0];
+		}
 
 	
 };

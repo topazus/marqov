@@ -121,6 +121,7 @@ class Marqov : public RefType<Grid>
 {
 	public:
 		typedef typename Hamiltonian::StateVector StateVector;
+		typedef int redStateVector; // reduced StateVector (so far needed only for AT model, improve me!!!)
 		typedef StateVector* StateSpace;
 
 //Local classes. We gain access to all Types of Marqov        
@@ -178,6 +179,7 @@ struct ObsTupleToObsCacheTuple
          * @param mybeta the temperature that governs the Metropolis dynamics
          * @param args A template parameter pack for the Hamiltonian
          */
+
         template <class ...Ts>
 		Marqov(Grid& lattice, std::string outfile, double mybeta, Ts&& ... args) : RefType<Grid>(std::forward<Grid>(lattice)), ham(std::forward<Ts>(args) ... ),
 													rng(0, 1), 
@@ -462,14 +464,18 @@ struct ObsTupleToObsCacheTuple
 
 
 	
-		 // only for the Ising model so far!
-		 void init_cold()
+		 void init_cold_Ising_like()
 		 {
+		 	const int SymD = std::tuple_size<StateVector>::value;
 			for(int i = 0; i < this->grid.size(); ++i)
 			{
-				statespace[i][0] = -1;
+				for(int j = 0; j < SymD; ++j)
+				{
+					statespace[i][j] = 1;
+				}
 			}
 		 }
+
 		 void init_cold_Heisenberg()
 		 {
 			for(int i = 0; i < this->grid.size(); ++i)
@@ -483,7 +489,7 @@ struct ObsTupleToObsCacheTuple
 		 void init_hot()
 		 {
 		 	const int SymD = std::tuple_size<StateVector>::value;
-			for(decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
+			for(int i = 0; i < this->grid.size(); ++i)
 			{
 				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
 			}
@@ -494,6 +500,10 @@ struct ObsTupleToObsCacheTuple
 
 
 	inline int metropolisstep(int rsite);
+
+	template <typename callable1, typename callable2>
+	inline int metropolisstep(int rsite, callable1 filter_ref, callable2 filter_copy, int comp);
+
 	inline int wolffstep(int rsite, const StateVector& rdir);
 	inline int wolffstep_Ising(int rsite);
 	inline int wolffstep_Heisenberg(int rsite, const StateVector& rdir);
