@@ -1,7 +1,8 @@
 #ifndef UPDATE_H
 #define UPDATE_H
 #include <vector>
-
+#include <type_traits>
+#include <cmath>
 // todo: what about the alpha-loop? currently alpha=0 hard-coded
 // implement me: does not support locally fluctating (e.g. random) interaction strengths yet
 
@@ -235,7 +236,8 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
 	for(int a = 0; a < ham.Nalpha; ++a)
 	{
 		auto nbrs = grid.getnbrs(a, rsite);
-		StateVector averagevector = {0}; // must not be integer in general!!! fix me!!!
+        typedef decltype(ham.interactions[a]->operator()(statespace[0])) CommonType;
+		CommonType averagevector = {0};
 
 		// sum over neighbours
 		for (int i = 0; i < nbrs.size(); ++i)
