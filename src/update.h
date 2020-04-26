@@ -218,7 +218,18 @@ auto callbonds(Lattice& grid, int a, int rsite, int i, NbrType nbr)
 }
 
 
-
+template<class A, class B>
+struct Promote_Array
+{
+    //Get Element types
+    typedef decltype(std::declval<A>()[0]) AElemType;
+    typedef decltype(std::declval<B>()[0]) BElemType;
+    // get result type of addition
+    typedef typename std::common_type<AElemType, BElemType>::type CommonType;
+    // return A if the common type is A, else B
+    typedef typename std::conditional<std::is_same<AElemType, CommonType>::value
+    , A, B>::type CommonArray;
+};
 
 // Single Metropolis update step statevectors on a lattice
 // returns an integer which encodes whether the flip attempt was successful (1) or not (0)
@@ -236,8 +247,10 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
 	for(int a = 0; a < ham.Nalpha; ++a)
 	{
 		auto nbrs = grid.getnbrs(a, rsite);
-        typedef decltype(ham.interactions[a]->operator()(statespace[0])) CommonType;
-		CommonType averagevector = {0};
+        typedef decltype(ham.interactions[a]->operator()(statespace[0])) InteractionType;
+        typedef decltype(callbonds<Grid>(grid, a, rsite, 0, ham.interactions[a]->operator()(statespace[0]))) BondType;
+        
+		typename Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};
 
 		// sum over neighbours
 		for (int i = 0; i < nbrs.size(); ++i)
@@ -258,7 +271,6 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite)
        // multiply the constant
        onsiteenergydiff += dot(ham.onsite[b]->h, diff);
     }
-   
     
     // multi-site energy
     double multisiteenergyold = 0;
