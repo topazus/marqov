@@ -222,8 +222,8 @@ template<class A, class B>
 struct Promote_Array
 {
     //Get Element types
-    typedef decltype(std::declval<A>()[0]) AElemType;
-    typedef decltype(std::declval<B>()[0]) BElemType;
+    typedef decltype(dot(std::declval<A>(), std::declval<A>())) AElemType;
+    typedef decltype(dot(std::declval<B>(), std::declval<B>())) BElemType;
     // get result type of addition
     typedef typename std::common_type<AElemType, BElemType>::type CommonType;
     // return A if the common type is A, else B
