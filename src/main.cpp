@@ -69,13 +69,17 @@ struct GetTrait<std::vector<std::string> >//helper trait to break up a string at
     }
 };
 
-//c++17 make_from_tuple from cppreference adapted for emplace
+//C++17 make_from_tuple from cppreference adapted for emplace.
 template <class Cont, class Tuple, std::size_t... I>
 constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple&& t, std::index_sequence<I...> )
 {
   return cont.emplace_back(std::get<I>(std::forward<Tuple>(t))...) ;
 }
- 
+
+/** A function to construct an object in a container directly from a tuple
+ * @param cont the container where we append to.
+ * @param t the tuple containing the arguments.
+ */
 template <class Cont, class Tuple>
 constexpr auto emplace_from_tuple(Cont&& cont,  Tuple&& t )
 {
@@ -117,22 +121,10 @@ void fillsims(const std::vector<std::pair<Args1, Args2> >& args, std::vector<T>&
 
 using namespace MARQOV;
 
-template <class H, class L, class Args, class Callable, size_t... S>
-auto createsims_impl(L&& l, std::string outfile, std::vector<Args>&& args, Callable c, std::index_sequence<S...>)
-{
-     typedef decltype(
-         makeMarqov<H>(std::forward<L>(l), outfile,
-                       std::get<S>(std::forward<Args>(args[0]))...
-                      )
-    ) MarqovType;
-}
-
 template<class ... Ts>
 struct sims_helper {};
 
-template <
-class H,  class L, class HArgstuple, size_t... S
->
+template <class H,  class L, class HArgstuple, size_t... S>
 struct sims_helper<H, L, HArgstuple, std::index_sequence<S...> >
 {
 typedef decltype(makeMarqov<H>(std::declval<L>(),
@@ -141,13 +133,18 @@ typedef decltype(makeMarqov<H>(std::declval<L>(),
 )) MarqovType;
 };
 
+template <class H, class L, class HArgs, class LArgs>
+struct sims_helper<H, L, std::pair<HArgs, LArgs> >
+{
+    typedef decltype(makeMarqov<H,L>(std::declval<std::string>(),  std::declval<std::pair<HArgs, LArgs>& >())) MarqovType;
+};
+
 /** The case where Marqov allocates a lattice
  */
 template <class H, class L, class LArgs, class HArgs, class Callable>
 auto createsims(std::vector<std::pair<HArgs, LArgs> >& params, Callable c)
 {
-     typedef decltype(makeMarqov<H,L>(std::declval<std::string>(),  std::declval<std::pair<HArgs, LArgs>& >())) MarqovType;
-    
+    typedef typename sims_helper<H, L, std::pair<HArgs, LArgs> >::MarqovType MarqovType;  
     //create simulations
     std::vector<MarqovType> sims;
     sims.reserve(params.size());
@@ -168,9 +165,7 @@ auto createsims(const std::vector<Args>& params, Callable c)
         //create simulations
     std::vector<MarqovType> sims;
     sims.reserve(params.size());
-    
     fillsims(params, sims, c);
-    
     return sims;
 }
 
