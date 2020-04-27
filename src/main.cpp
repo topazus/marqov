@@ -421,13 +421,17 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 
 
 
-		std::vector<std::vector<int> > dummy;
-		Neighbours<int32_t> nbrs(dummy);
+//		std::vector<std::vector<int> > dummy;
+//		Neighbours<int32_t> nbrs(dummy);
+
+
 
 		// extract lattice size and prepare directories
-		int L = nbrs.size();
-		cout << endl << "L = " << L << endl << endl;
+//		int L = nbrs.size();
+//		cout << endl << "L = " << L << endl << endl;
 		makeDir(outdir+"/"+std::to_string(L));
+
+		int L = 42;
         
 		auto otherfilter = [&L](auto p)
 		{
@@ -438,15 +442,24 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 			auto outdir    = std::get<0>(p);
 			std::string outname   = str_beta+"_"+str_id+".h5";
 			std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
-			//	    return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
+			std::get<0>(p) = outsubdir+outname;
+
+//			int xy = std::tuple_cat(std::make_tuple(outsubdir+outname), p);
+//			return std::tuple_cat(std::make_tuple(outsubdir+outname), p);
 
 
 			return p;
 		};
+
+
+		std::pair
         
-        auto t = make_pair(std::make_tuple(dummy), std::tuple_cat(std::make_tuple(outdir), parameters[0]));
+        auto t = make_pair(std::make_tuple(8,2), std::tuple_cat(std::make_tuple(outdir), parameters[0]));
         std::vector<decltype(t)> p = {t};
-        createsims<Ising<int>, Neighbours<int32_t> >(p, otherfilter);
+        createsims<Ising<int>, RegularLattice >(p, otherfilter);
+
+//        auto t = make_pair(std::make_tuple(dummy), std::tuple_cat(std::make_tuple(outdir), parameters[0]));
+//        createsims<Ising<int>, Neighbours<int32_t> >(p, otherfilter);
     }
 }
 
