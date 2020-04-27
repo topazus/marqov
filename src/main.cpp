@@ -69,6 +69,16 @@ struct GetTrait<std::vector<std::string> >//helper trait to break up a string at
     }
 };
 
+void write_logfile(RegistryDB& reg, std::vector<double> loopvar)
+{
+	std::string logdir  = reg.Get<std::string>("mc", "IO", "logdir" );
+	std::string logfile = reg.Get<std::string>("mc", "IO", "logfile" );
+	std::ofstream os(logdir+"/"+logfile);
+		os << std::setprecision(7);
+		for (int i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;
+	os.close();
+}
+
 //C++17 make_from_tuple from cppreference adapted for emplace.
 template <class Cont, class Tuple, std::size_t... I>
 constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple&& t, std::index_sequence<I...> )
@@ -117,9 +127,11 @@ void fillsims(const std::vector<std::pair<Args1, Args2> >& args, std::vector<T>&
 }
 
 
+// ---------------------------------------
 
 
 using namespace MARQOV;
+
 
 template<class ... Ts>
 struct sims_helper {};
@@ -127,17 +139,23 @@ struct sims_helper {};
 template <class H,  class L, class HArgstuple, size_t... S>
 struct sims_helper<H, L, HArgstuple, std::index_sequence<S...> >
 {
-typedef decltype(makeMarqov<H>(std::declval<L>(),
-                       std::declval<std::string>(),
-                       std::declval<typename std::tuple_element<S, HArgstuple>::type>()...
-)) MarqovType;
+	typedef decltype(makeMarqov<H>(std::declval<L>(),
+	                       		 std::declval<std::string>(),
+	                       		 std::declval<typename std::tuple_element<S, HArgstuple>::type>()...
+							 )) MarqovType;
 };
 
 template <class H, class L, class HArgs, class LArgs>
 struct sims_helper<H, L, std::pair<HArgs, LArgs> >
 {
-    typedef decltype(makeMarqov<H,L>(std::declval<std::string>(),  std::declval<std::pair<HArgs, LArgs>& >())) MarqovType;
+    typedef decltype(makeMarqov<H,L>(std::declval<std::string>(),  
+    							  std::declval<std::pair<HArgs, LArgs>& >()
+							  )) MarqovType;
 };
+
+
+// ---------------------------------------
+
 
 /** The case where Marqov allocates a lattice
  */
@@ -169,6 +187,10 @@ auto createsims(const std::vector<Args>& params, Callable c)
     return sims;
 }
 
+
+// ---------------------------------------
+
+
 template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void loop(const std::vector<Parameters>& params, Callable filter, int nsweeps,  int ncluster)
 {
@@ -190,17 +212,9 @@ void loop(const std::vector<Parameters>& params, Callable filter, int nsweeps,  
 		}
 }
 
+
 // ---------------------------------------
 
-void write_logfile(RegistryDB& reg, std::vector<double> loopvar)
-{
-	std::string logdir  = reg.Get<std::string>("mc", "IO", "logdir" );
-	std::string logfile = reg.Get<std::string>("mc", "IO", "logfile" );
-	std::ofstream os(logdir+"/"+logfile);
-		os << std::setprecision(7);
-		for (int i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;
-	os.close();
-}
 
 template <class Hamiltonian, class Params, class Callable>
 void RegularLatticeloop(RegistryDB& reg, const std::string outdir, const std::vector<Params>& parameters, Callable filter)
@@ -230,6 +244,10 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outdir, const std::ve
 		loop<Hamiltonian, RegularLattice>(parameters, f, nsweeps, ncluster); 
 	}
 }
+
+
+// ---------------------------------------
+
 
 void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 {
@@ -389,31 +407,54 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 		// lattice
         auto f = [&defaultfilter, &nbrs, &outdir, L](auto p){return defaultfilter(nbrs, outdir, L, p);};//partially apply filter
         loop<Ising<int>, Neighbours<int32_t> >(parameters, f, 2*L, 1);
-    }
-    else if(ham == "IrregularIsing2")
-    {
-        std::vector<std::vector<int> > dummy;
-        Neighbours<int32_t> nbrs(dummy);
-        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
-        std::vector<double> myj = {1.0};
-        std::vector<int> myid = {1};
-        auto parameters = cart_prod(betas, myid, myj);
-        		// extract lattice size and prepare directories
+	}
+	else if(ham == "IrregularIsing2")
+	{
+		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
+		auto parameters = cart_prod(id, beta, J);
+		for (auto& param_tuple : parameters) // swap "id" and "temperature"
+			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
+
+		write_logfile(registry, beta);
+//		RegularLatticeloop<Ising<int>>(registry, outdir, parameters, defaultfilter);
+
+
+
+		std::vector<std::vector<int> > dummy;
+		Neighbours<int32_t> nbrs(dummy);
+
+		// extract lattice size and prepare directories
 		int L = nbrs.size();
 		cout << endl << "L = " << L << endl << endl;
 		makeDir(outdir+"/"+std::to_string(L));
         
-        auto otherfilter = [&L](auto p)
-	{
-	    // write a filter to determine output file path and name
-	    return p;
-	};
+		auto otherfilter = [&L](auto p)
+		{
+			// write a filter to determine output file path and name
+			auto str_id    = std::to_string(int(std::get<2>(p)));
+			auto str_beta  = "beta"+std::to_string(std::get<1>(p));
+			auto str_J     = "J"+std::to_string(std::get<3>(p));
+			auto outdir    = std::get<0>(p);
+			std::string outname   = str_beta+"_"+str_id+".h5";
+			std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
+			//	    return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
+
+
+			return p;
+		};
         
         auto t = make_pair(std::make_tuple(dummy), std::tuple_cat(std::make_tuple(outdir), parameters[0]));
         std::vector<decltype(t)> p = {t};
         createsims<Ising<int>, Neighbours<int32_t> >(p, otherfilter);
     }
 }
+
+
+
+
+
+
 
 int main()
 {
