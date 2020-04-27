@@ -247,7 +247,7 @@ inline int Marqov<Grid, Hamiltonian, RefType>::metropolisstep(int rsite)
 	{
 		auto nbrs = this->grid.getnbrs(a, rsite);
 		typedef decltype(ham.interactions[a]->operator()(statespace[0])) InteractionType;
-		typedef decltype(callbonds<Grid>(grid, a, rsite, 0, ham.interactions[a]->operator()(statespace[0]))) BondType;
+		typedef decltype(callbonds<Grid>(this->grid, a, rsite, 0, ham.interactions[a]->operator()(statespace[0]))) BondType;
         
 		typename Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};
 		// sum over neighbours
