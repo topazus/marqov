@@ -1,7 +1,8 @@
 #ifndef UPDATE_H
 #define UPDATE_H
 #include <vector>
-
+#include <type_traits>
+#include <cmath>
 // todo: what about the alpha-loop? currently alpha=0 hard-coded
 // implement me: does not support locally fluctating (e.g. random) interaction strengths yet
 
@@ -217,7 +218,18 @@ auto callbonds(Lattice& grid, int a, int rsite, int i, NbrType nbr)
 }
 
 
-
+template<class A, class B>
+struct Promote_Array
+{
+    //Get Element types
+    typedef decltype(dot(std::declval<A>(), std::declval<A>())) AElemType;
+    typedef decltype(dot(std::declval<B>(), std::declval<B>())) BElemType;
+    // get result type of addition
+    typedef typename std::common_type<AElemType, BElemType>::type CommonType;
+    // return A if the common type is A, else B
+    typedef typename std::conditional<std::is_same<AElemType, CommonType>::value
+    , A, B>::type CommonArray;
+};
 
 // Single Metropolis update step statevectors on a lattice
 // returns an integer which encodes whether the flip attempt was successful (1) or not (0)
@@ -234,7 +246,10 @@ inline int Marqov<Grid, Hamiltonian, RefType>::metropolisstep(int rsite)
 	for(int a = 0; a < ham.Nalpha; ++a)
 	{
 		auto nbrs = this->grid.getnbrs(a, rsite);
-		StateVector averagevector = {0}; // must not be integer in general!!! fix me!!!
+		typedef decltype(ham.interactions[a]->operator()(statespace[0])) InteractionType;
+		typedef decltype(callbonds<Grid>(grid, a, rsite, 0, ham.interactions[a]->operator()(statespace[0]))) BondType;
+        
+		typename Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};
 		// sum over neighbours
 		for (int i = 0; i < nbrs.size(); ++i)
 		{
