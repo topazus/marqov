@@ -123,7 +123,10 @@ template <class Args1, class Args2, class T, class Callable>
 void fillsims(const std::vector<std::pair<Args1, Args2> >& args, std::vector<T>& sims, Callable c)
 {
     for(auto p : args)
-        emplace_from_tuple(sims, p.first, c(p.second));
+    {
+        auto t1 = c(p);
+        emplace_from_tuple(sims, t1.first, t1.second);
+    }
 }
 
 
@@ -429,30 +432,23 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 		// extract lattice size and prepare directories
 //		int L = nbrs.size();
 //		cout << endl << "L = " << L << endl << endl;
-		makeDir(outdir+"/"+std::to_string(L));
 
 		int L = 42;
-        
+		makeDir(outdir+"/"+std::to_string(L));
 		auto otherfilter = [&L](auto p)
 		{
 			// write a filter to determine output file path and name
-			auto str_id    = std::to_string(int(std::get<2>(p)));
-			auto str_beta  = "beta"+std::to_string(std::get<1>(p));
-			auto str_J     = "J"+std::to_string(std::get<3>(p));
-			auto outdir    = std::get<0>(p);
+            auto& lp = p.first;
+            auto& hp = p.second;
+			auto str_id    = std::to_string(int(std::get<2>(hp)));
+			auto str_beta  = "beta"+std::to_string(std::get<1>(hp));
+			auto str_J     = "J"+std::to_string(std::get<3>(hp));
+			auto outdir    = std::get<0>(hp);
 			std::string outname   = str_beta+"_"+str_id+".h5";
 			std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
-			std::get<0>(p) = outsubdir+outname;
-
-//			int xy = std::tuple_cat(std::make_tuple(outsubdir+outname), p);
-//			return std::tuple_cat(std::make_tuple(outsubdir+outname), p);
-
-
+			std::get<0>(hp) = outsubdir+outname;
 			return p;
 		};
-
-
-		std::pair
         
         auto t = make_pair(std::make_tuple(8,2), std::tuple_cat(std::make_tuple(outdir), parameters[0]));
         std::vector<decltype(t)> p = {t};
