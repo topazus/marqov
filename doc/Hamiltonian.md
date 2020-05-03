@@ -191,8 +191,15 @@ The following Hamiltonians fit into this framework with the respective substitut
     ```  
     At a first glance, an implementation of this Hamiltonian is not straightforwardly possible based on the above general form, as it requires an interaction term that couples spins of *different* families. However, one can use standard embedding techniques to numerical handle the Ashkin-Teller as $N$ Ising models, coupled via their interaction strengths.  <br><br>
 
+* Example 11: **Real projective sigma model**
+    ```math
+    \mathcal{H} =   -\frac{J}{2}\sum\limits_{\langle i,j\rangle} \left(\vec{\phi}_i\vec{\phi}_j\right)^2
+    ```  
+    Due to the interaction term contributing quadratically, this model also does not fit the general Hamiltonian in a straightfoward way. However, there is again embedding techniques available, as described in detail in `Caracciolo, Edwards, Pelissetto, Sokal. Nucl. Phys. B 403, 475-541 (1993).` <br><br>
 
-* Example 11: **Disordered Baxter-Wu model**
+
+
+* Example 12: **Disordered Baxter-Wu model**
 
     ```math
     \mathcal{H} = -J\sum\limits_{\langle i,j,k\rangle} \epsilon_i \epsilon_j \epsilon_k \phi_i\phi_j\phi_k,
