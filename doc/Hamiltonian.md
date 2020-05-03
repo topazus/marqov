@@ -1,4 +1,3 @@
-
 # The General Hamiltonian
 Our General Hamiltonian is of the form
 
@@ -195,11 +194,11 @@ The following Hamiltonians fit into this framework with the respective substitut
 
 * Example 11: **Disordered Baxter-Wu model**
 
-        ```math
-        \mathcal{H} = -J\sum\limits_{\langle i,j,k\rangle} \epsilon_i \epsilon_j \epsilon_k \phi_i\phi_j\phi_k,
-                        \quad\text{where}\quad \epsilon_i,\epsilon_j,\epsilon_k\in\{0,1\}
-        ```
-        defined on a triangular two-dimensional lattice, where particles are e.g. regular Ising spins...
+    ```math
+    \mathcal{H} = -J\sum\limits_{\langle i,j,k\rangle} \epsilon_i \epsilon_j \epsilon_k \phi_i\phi_j\phi_k,
+                    \quad\text{where}\quad \epsilon_i,\epsilon_j,\epsilon_k\in\{0,1\}
+    ```
+    defined on a triangular two-dimensional lattice, where particles are e.g. regular Ising spins...
 
 
-        *Is this model covered? The third interaction partner might be sneaked in via the interaction D?*
+    *Is this model covered? The third interaction partner might be sneaked in via the interaction D?*
