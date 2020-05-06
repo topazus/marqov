@@ -20,16 +20,18 @@ namespace MARQOV
     {
         /** The standard constructor. It requires a filename, the rest of the positional parameters are optional.
          */
-        MARQOVConfig(std::string of, int i = 0, int s = 0, int ugli = 10, int ws = 100, int gls = 200, int nc = 20, int ns = 10) : outfile(of), id(i), seed(s), gli(ugli), warmupsteps(ws), gameloopsteps(gls), ncluster(nc), nsweeps(ns) {}
-        MARQOVConfig(const MARQOVConfig& rhs) = delete;
+        MARQOVConfig(std::string of, double b, int i = 0, int s = 0, int ugli = 10, int nst = 250, int ws = 100, int gls = 200, int nc = 20, int nsw = 10) : outfile(of), beta(b), id(i), seed(s), gli(ugli), warmupsteps(ws), gameloopsteps(gls), ncluster(nc), nsweeps(nsw) {}
+        MARQOVConfig(const MARQOVConfig& rhs) = default;///< FIXME: Think about wether we can get rid of it.
         MARQOVConfig& operator=(const MARQOVConfig& rhs) = delete;
         MARQOVConfig(MARQOVConfig&& other) = default;
         MARQOVConfig& operator=(MARQOVConfig&& other) = default;
         std::string outfile;
+        double beta;///< FIXME: Oh beta.... Part of MARQOV or part of Ham ?
         std::string logpath;///< The logpath. For lack of a better place it is currently stored here.
         int id;
         int seed; ///< Doing this correctly opens a whole can of worms.... At one point we need to dump the state of the RNG for restart.
         int gli; ///< The unknown gameloop integer
+        int nsteps;
         int warmupsteps;
         int gameloopsteps;
         int ncluster;
@@ -38,10 +40,12 @@ namespace MARQOV
         MARQOVConfig& setid(int i) {id = i; return *this;}
         MARQOVConfig& setseed(int s) {seed = s; return *this;}
         MARQOVConfig& setgli(int c) {gli = c; return *this;}
+        MARQOVConfig& setnsteps(int ns) {nsteps = ns; return *this;}
         MARQOVConfig& setwarmupsteps(int w) {warmupsteps = w; return *this;}
         MARQOVConfig& setgameloopsteps(int g) {gameloopsteps = g; return *this;}
         MARQOVConfig& setncluster(int nc) {ncluster = nc; return *this;}
         MARQOVConfig& setnsweeps(int ns) {nsweeps = ns; return *this;}
+        MARQOVConfig& setbeta(double b) {beta = b; return *this;}
     };
     namespace detail
     {
@@ -207,12 +211,11 @@ struct ObsTupleToObsCacheTuple
          * @param args A template parameter pack for the Hamiltonian
          */
 
-        template <class ...Ts>
-		Marqov(Grid& lattice, std::string outfile, double mybeta, Ts&& ... args) : RefType<Grid>(std::forward<Grid>(lattice)), ham(std::forward<Ts>(args) ... ),
-													rng(0, 1), 
-													beta(mybeta),
-													metro(rng), 
-													dump(outfile, H5F_ACC_TRUNC ),
+        template <class ...HArgs>
+		Marqov(Grid& lattice, std::string outfile, double mybeta, HArgs&& ... args) : RefType<Grid>(std::forward<Grid>(lattice)),
+		                                                                              ham(std::forward<HArgs>(args) ... ),
+		                                                                              mcfg("out.txt", 1.0),
+													rng(0, 1), beta(mybeta), metro(rng),  dump(outfile, H5F_ACC_TRUNC ),
 													obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
 		{
 //			rng.seed(15); cout << "seed is fixed!" << endl << endl;
@@ -228,11 +231,10 @@ struct ObsTupleToObsCacheTuple
          * @param p A pair containing in the second Argument the lattice parameters and in the first the Hamiltonian parameters
          */
         template <class ...HArgs, class ... LArgs>
-		Marqov(std::tuple<LArgs...>& largs, std::string outfile, double mybeta, HArgs&& ... hargs) : RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)), ham(std::forward<HArgs>(hargs) ... ),
-													rng(0, 1), 
-													beta(mybeta),
-													metro(rng), 
-													dump(outfile, H5F_ACC_TRUNC ),
+		Marqov(std::tuple<LArgs...>& largs, std::string outfile, double mybeta, HArgs&& ... hargs) : RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
+		                                                                                             ham(std::forward<HArgs>(hargs) ... ),
+                                                                                                     mcfg("out.txt", 1.0),
+                                                                                                     rng(0, 1), beta(mybeta), metro(rng),  dump(outfile, H5F_ACC_TRUNC ),
 													obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
 		{
 //			rng.seed(15); cout << "seed is fixed!" << endl << endl;
@@ -394,7 +396,6 @@ struct ObsTupleToObsCacheTuple
 	    
 	    	void gameloop(const int nsteps, const int ncluster, const int nsweeps, int myid)
 		{
-
 //			prepare_consistency_check(checkidxs);
 
 			double avgclustersize = 0;
@@ -537,6 +538,7 @@ struct ObsTupleToObsCacheTuple
 
 	StateSpace statespace;
 	Hamiltonian ham;
+    MARQOVConfig mcfg;
     typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
 
     H5::H5File dump;///< The handle for the HDF5 file. must be before the obscaches
