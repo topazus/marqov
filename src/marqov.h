@@ -16,6 +16,33 @@
 
 namespace MARQOV
 {
+    struct MARQOVConfig
+    {
+        /** The standard constructor. It requires a filename, the rest of the positional parameters are optional.
+         */
+        MARQOVConfig(std::string of, int i = 0, int s = 0, int ugli = 10, int ws = 100, int gls = 200, int nc = 20, int ns = 10) : outfile(of), id(i), seed(s), gli(ugli), warmupsteps(ws), gameloopsteps(gls), ncluster(nc), nsweeps(ns) {}
+        MARQOVConfig(const MARQOVConfig& rhs) = delete;
+        MARQOVConfig& operator=(const MARQOVConfig& rhs) = delete;
+        MARQOVConfig(MARQOVConfig&& other) = default;
+        MARQOVConfig& operator=(MARQOVConfig&& other) = default;
+        std::string outfile;
+        std::string logpath;///< The logpath. For lack of a better place it is currently stored here.
+        int id;
+        int seed; ///< Doing this correctly opens a whole can of worms.... At one point we need to dump the state of the RNG for restart.
+        int gli; ///< The unknown gameloop integer
+        int warmupsteps;
+        int gameloopsteps;
+        int ncluster;
+        int nsweeps;
+        /** A chain of setters to emulate the named parameter idiom.*/
+        MARQOVConfig& setid(int i) {id = i; return *this;}
+        MARQOVConfig& setseed(int s) {seed = s; return *this;}
+        MARQOVConfig& setgli(int c) {gli = c; return *this;}
+        MARQOVConfig& setwarmupsteps(int w) {warmupsteps = w; return *this;}
+        MARQOVConfig& setgameloopsteps(int g) {gameloopsteps = g; return *this;}
+        MARQOVConfig& setncluster(int nc) {ncluster = nc; return *this;}
+        MARQOVConfig& setnsweeps(int ns) {nsweeps = ns; return *this;}
+    };
     namespace detail
     {
         template<class> struct type_sink { typedef void type; }; // consumes a type, and makes it `void`
