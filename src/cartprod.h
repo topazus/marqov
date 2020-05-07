@@ -12,7 +12,7 @@ struct cartprodhelper
     static auto call(const T& t, Ts ... ts)
     {
     /* Plan: First we recurse into the remaining template parameters and obtain the resulting vector.
-     *       Now we can cenerate new tuples by taking an entry from the other tuple and combining them with all of our elements.
+     *       Now we can generate new tuples by taking an entry from the other tuple and combining them with all of our elements.
      *       Then we return the resulting vector in the hope that it might become part of another recursion.
      */
         //get other vector through recursion
