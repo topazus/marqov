@@ -210,7 +210,7 @@ struct ObsTupleToObsCacheTuple
          */
 
         template <class ...HArgs>
-		Marqov(Grid& lattice, MARQOVConfig& mc, double mybeta, HArgs&& ... args) : RefType<Grid>(std::forward<Grid>(lattice)),
+		Marqov(Grid& lattice, MARQOVConfig mc, double mybeta, HArgs&& ... args) : RefType<Grid>(std::forward<Grid>(lattice)),
 		                                                                              ham(std::forward<HArgs>(args) ... ),
 		                                                                              mcfg(mc),
 													rng(0, 1), beta(mybeta), metro(rng),  dump(mc.outfile, H5F_ACC_TRUNC ),

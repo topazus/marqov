@@ -92,34 +92,23 @@ void write_logfile(RegistryDB& reg, std::vector<double> loopvar)
 	os.close();
 }
 
-//C++17 make_from_tuple from cppreference adapted for emplace.
-template <class Cont, class Tuple, std::size_t... I>
-constexpr auto emplace_from_tuple_impl(Cont&& cont, MARQOV::MARQOVConfig&& mc, Tuple&& t, std::index_sequence<I...> )
-{
-  return cont.emplace_back(std::get<I>(std::forward<decltype(mc)>(mc), std::forward<Tuple>(t))...) ;
-}
-
-/** A function to construct an object in a container directly from a tuple
- * @param cont the container where we append to.
- * @param t the tuple containing the arguments.
- */
-template <class Cont, class T, class Tuple>
-constexpr auto emplace_from_tuple(Cont&& cont, T&& mc, Tuple&& t )
-{
-    return emplace_from_tuple_impl(cont, std::forward<T>(mc), std::forward<Tuple>(t),
-        std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value>{});
-}
-
-template <class Args, class T, class Callable>
-void fillsims(const std::vector<std::pair<MARQOV::MARQOVConfig, Args>>& args, std::vector<T>& sims, Callable c)
-{
-    for(auto p : args)
-    {
-        auto t1 = c(p);
-        emplace_from_tuple(sims, t1.first, t1.second);
-    }
-}
-
+// //C++17 make_from_tuple from cppreference adapted for emplace.
+// template <class Cont, class Latt, class Tuple, std::size_t... I>
+// constexpr auto emplace_from_tuple_impl(Cont&& cont, Latt&& latt, MARQOV::MARQOVConfig&& mc, Tuple&& t, std::index_sequence<I...> )
+// {
+//   return cont.emplace_back(std::forward<Latt>(latt), std::forward<decltype(mc)>(mc), std::get<I>(std::forward<Tuple>(t))...) ;
+// }
+// 
+// /** A function to construct an object in a container directly from a tuple
+//  * @param cont the container where we append to.
+//  * @param t the tuple containing the arguments.
+//  */
+// template <class Cont, class T, class Tuple, class Latt>
+// constexpr auto emplace_from_tuple(Cont&& cont, Latt&& latt, T&& mc, Tuple&& t )
+// {
+//     return emplace_from_tuple_impl(cont, std::forward<Latt>(latt), std::forward<T>(mc), std::forward<Tuple>(t),
+//         std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value>{});
+// }
 
 //c++17 make_from_tuple from cppreference adapted for emplace
 template <class Cont, class Tuple1, class Tuple2, std::size_t... I>
@@ -145,6 +134,15 @@ void fillsims(const std::vector<Triple<Args1, MARQOV::MARQOVConfig, Args2> >& ar
     }
 }
 
+template <class Args, class T, class Callable>
+void fillsims(const std::vector<std::pair<MARQOV::MARQOVConfig, Args>>& args, std::vector<T>& sims, Callable c)
+{
+    for(auto p : args)
+    {
+        auto t1 = c(p);
+        emplace_from_tuple(sims, std::forward<decltype(std::get<0>(t1))>(std::get<0>(t1)), std::forward<MARQOV::MARQOVConfig>(std::get<1>(t1)), std::get<2>(t1));
+    }
+}
 
 // ---------------------------------------
 
@@ -211,23 +209,27 @@ auto createsims(const std::vector<std::pair<MARQOVConfig, Args>>& params, Callab
 
 
 template <class Hamiltonian, class Lattice, class Parameters, class Callable>
-void loop(const std::vector<Parameters>& params, Callable filter, int nsweeps,  int ncluster)
+void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable filter)
 {
+    // number of EMCS during relaxation and measurement
+    mc.setwarmupsteps(500).setgameloopsteps(1500);
+    std::vector<std::pair<MARQOVConfig, Parameters> > params;
+    for(int i = 0; i < hamparams.size(); ++i)
+    {
+        auto mc2(mc);
+        mc2.setid(i);
+        params.push_back(make_pair(mc2, hamparams[i]));
+    }
     auto sims = createsims<Hamiltonian, Lattice>(params, filter);
-		// number of EMCS during relaxation and measurement
-		const int nrlx = 500;
-		const int nmsr = 1500;  
-
 		// perform simulation
 		#pragma omp parallel for
 		for(std::size_t i = 0; i < sims.size(); ++i)
 		{
-			auto myid = i;
 			auto& marqov = sims[i];
 
 			marqov.init_hot();
-			marqov.wrmploop(nrlx, ncluster, nsweeps, myid);
-			marqov.gameloop(nmsr, ncluster, nsweeps, myid);
+			marqov.wrmploop(1, 1, 1, 1);
+			marqov.gameloop(1, 1, 1, 1);
 		}
 }
 
@@ -258,7 +260,7 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outdir, const std::ve
 		const int nsweeps  = 10;
 		const int ncluster = 2*L;
 
-		// set up and exectute
+		// set up and execute
 		auto f = [&filter, &latt, &outdir, L](auto p){return filter(latt, outdir, L, p);}; //partially apply filter
 		loop<Hamiltonian, RegularLattice>(parameters, f, nsweeps, ncluster); 
 	}
@@ -281,14 +283,14 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 
 
 
-	auto defaultfilter = [](auto& latt, std::string outdir, int L, auto p)
+	auto defaultfilter = [](auto& latt, auto p)
 	{
 	    // write a filter to determine output file path and name
-	    std::string str_id    = std::to_string(int(std::get<1>(p)));
-	    std::string str_beta  = "beta"+std::to_string(std::get<0>(p));
-	    std::string outname   = str_beta+"_"+str_id+".h5";
-	    std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
-	    return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
+// 	    std::string str_id    = std::to_string(int(std::get<1>(p)));
+// 	    std::string str_beta  = "beta"+std::to_string(std::get<0>(p));
+// 	    std::string outname   = str_beta+"_"+str_id+".h5";
+// 	    std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
+ 	    return std::tuple_cat(std::forward_as_tuple(latt), p);
 	};
 
 	if (ham == "Ising")
@@ -412,20 +414,21 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 //     }
     else if(ham == "IrregularIsing")
     {
-/*        
         std::vector<std::vector<int> > dummy;
         Neighbours<int32_t> nbrs(dummy);
         auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
         std::vector<double> myj = {1.0};
         std::vector<int> myid = {1};
-        auto parameters = cart_prod(betas, myid, myj);
+        auto hamparams = cart_prod(betas, myid, myj);
         		// extract lattice size and prepare directories
 		int L = nbrs.size();
 		cout << endl << "L = " << L << endl << endl;
-		makeDir(outdir+"/"+std::to_string(L));
+        MARQOVConfig mc(outdir+"/"+std::to_string(L));
+        mc.setid(1).setnsweeps(2*L).setncluster(1);
+		makeDir(mc.outfile);
 		// lattice
-        auto f = [&defaultfilter, &nbrs, &outdir, L](auto p){return defaultfilter(nbrs, outdir, L, p);};//partially apply filter
-        loop<Ising<int>, Neighbours<int32_t> >(parameters, f, 2*L, 1);*/
+        auto f = [&defaultfilter, &nbrs](auto p){return defaultfilter(nbrs, p);};//partially apply filter
+        loop<Ising<int>, Neighbours<int32_t> >(mc, hamparams, f);
 	}
 	else if(ham == "IrregularIsing2")
 	{
@@ -457,13 +460,13 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
             auto& lp = p.first;
             auto& mp = p.second;
             auto& hp = p.third;
-// 			auto str_id    = std::to_string(int(std::get<2>(hp)));
-// 			auto str_beta  = "beta"+std::to_string(std::get<1>(hp));
-// 			auto str_J     = "J"+std::to_string(std::get<3>(hp));
-// 			auto outdir    = mp.outfile;
-// 			std::string outname   = str_beta+"_"+str_id+".h5";
-// 			std::string outsubdir = outdir+"/"+std::to_string(std::get<1>(lp))+"/";
-//             mp.outfile = outsubdir+outname;
+ 			auto str_id    = std::to_string(int(std::get<2>(hp)));
+			auto str_beta  = "beta"+std::to_string(std::get<1>(hp));
+//			auto str_J     = "J"+std::to_string(std::get<3>(hp));
+			auto outdir    = mp.outfile;
+			std::string outname   = str_beta+"_"+str_id+".h5";
+			std::string outsubdir = outdir+"/"+std::to_string(std::get<1>(lp))+"/";
+            mp.outfile = outsubdir+outname;
 			return p;
 		};
         MARQOVConfig mc(outdir);
