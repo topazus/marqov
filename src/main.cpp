@@ -34,7 +34,20 @@ using std::ofstream;
 
 #include "systemtools.h"
 
-//two examples on how to extend the parsing capapbilities of the registry
+template <class T1, class T2, class T3>
+class Triple
+{
+public:
+    Triple(T1 t1, T2 t2, T3 t3) : first(t1), second(t2), third(t3) {}
+    T1 first;
+    T2 second;
+    T3 third;
+};
+
+template< class T1, class T2, class T3 >
+constexpr auto make_triple( T1&& t, T2&& u, T3&& v) {return Triple<typename std::decay<T1>::type, typename std::decay<T2>::type, typename std::decay<T3>::type>(t,u,v);}
+
+//two examples on how to extend the parsing capabilities of the registry
 template <typename T>
 struct GetTrait<std::vector<T> >//helper trait to break up a string at various predefined seperators
 {
@@ -81,51 +94,54 @@ void write_logfile(RegistryDB& reg, std::vector<double> loopvar)
 
 //C++17 make_from_tuple from cppreference adapted for emplace.
 template <class Cont, class Tuple, std::size_t... I>
-constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple&& t, std::index_sequence<I...> )
+constexpr auto emplace_from_tuple_impl(Cont&& cont, MARQOV::MARQOVConfig&& mc, Tuple&& t, std::index_sequence<I...> )
 {
-  return cont.emplace_back(std::get<I>(std::forward<Tuple>(t))...) ;
+  return cont.emplace_back(std::get<I>(std::forward<decltype(mc)>(mc), std::forward<Tuple>(t))...) ;
 }
 
 /** A function to construct an object in a container directly from a tuple
  * @param cont the container where we append to.
  * @param t the tuple containing the arguments.
  */
-template <class Cont, class Tuple>
-constexpr auto emplace_from_tuple(Cont&& cont,  Tuple&& t )
+template <class Cont, class T, class Tuple>
+constexpr auto emplace_from_tuple(Cont&& cont, T&& mc, Tuple&& t )
 {
-    return emplace_from_tuple_impl(cont, std::forward<Tuple>(t),
+    return emplace_from_tuple_impl(cont, std::forward<T>(mc), std::forward<Tuple>(t),
         std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value>{});
 }
 
 template <class Args, class T, class Callable>
-void fillsims(const std::vector<Args>& args, std::vector<T>& sims, Callable c)
-{
-    for(auto p : args)
-        emplace_from_tuple(sims, c(p));
-}
-
-
-//c++17 make_from_tuple from cppreference adapted for emplace
-template <class Cont, class Tuple1, class Tuple2, std::size_t... I>
-constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple1&& t1, Tuple2&& t2, std::index_sequence<I...> )
-{
-  return cont.emplace_back(std::forward<Tuple1>(t1), std::get<I>(std::forward<Tuple2>(t2))...) ;
-}
- 
-template <class Cont, class Tuple1, class Tuple2>
-constexpr auto emplace_from_tuple(Cont&& cont, Tuple1&& t1, Tuple2&& t2 )
-{
-    return emplace_from_tuple_impl(cont, std::forward<Tuple1>(t1), std::forward<Tuple2>(t2),
-        std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
-}
-
-template <class Args1, class Args2, class T, class Callable>
-void fillsims(const std::vector<std::pair<Args1, Args2> >& args, std::vector<T>& sims, Callable c)
+void fillsims(const std::vector<std::pair<MARQOV::MARQOVConfig, Args>>& args, std::vector<T>& sims, Callable c)
 {
     for(auto p : args)
     {
         auto t1 = c(p);
         emplace_from_tuple(sims, t1.first, t1.second);
+    }
+}
+
+
+//c++17 make_from_tuple from cppreference adapted for emplace
+template <class Cont, class Tuple1, class Tuple2, std::size_t... I>
+constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple1&& t1, MARQOV::MARQOVConfig&& mc, Tuple2&& t2, std::index_sequence<I...> )
+{
+  return cont.emplace_back(std::forward<Tuple1>(t1), std::forward<MARQOV::MARQOVConfig>(mc), std::get<I>(std::forward<Tuple2>(t2))...) ;
+}
+ 
+template <class Cont, class Tuple1, class Tuple2>
+constexpr auto emplace_from_tuple(Cont&& cont, Tuple1&& t1, MARQOV::MARQOVConfig&& mc, Tuple2&& t2 )
+{
+    return emplace_from_tuple_impl(cont, std::forward<Tuple1>(t1), std::forward<MARQOV::MARQOVConfig>(mc), std::forward<Tuple2>(t2),
+        std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
+}
+
+template <class Args1, class Args2, class T, class Callable>
+void fillsims(const std::vector<Triple<Args1, MARQOV::MARQOVConfig, Args2> >& args, std::vector<T>& sims, Callable c)
+{
+    for(auto p : args)
+    {
+        auto t1 = c(p);
+        emplace_from_tuple(sims, t1.first, std::forward<MARQOV::MARQOVConfig>(t1.second), t1.third);
     }
 }
 
@@ -143,16 +159,16 @@ template <class H,  class L, class HArgstuple, size_t... S>
 struct sims_helper<H, L, HArgstuple, std::index_sequence<S...> >
 {
 	typedef decltype(makeMarqov<H>(std::declval<L>(),
-	                       		 std::declval<std::string>(),
+	                       		 std::declval<MARQOVConfig>(),
 	                       		 std::declval<typename std::tuple_element<S, HArgstuple>::type>()...
 							 )) MarqovType;
 };
 
 template <class H, class L, class HArgs, class LArgs>
-struct sims_helper<H, L, std::pair<HArgs, LArgs> >
+struct sims_helper<H, L, Triple<LArgs, MARQOVConfig, HArgs> >
 {
-    typedef decltype(makeMarqov<H,L>(std::declval<std::string>(),  
-    							  std::declval<std::pair<HArgs, LArgs>& >()
+    typedef decltype(makeMarqov<H,L>(std::declval<MARQOVConfig>(),  
+    							  std::declval<std::pair<LArgs, HArgs>& >()
 							  )) MarqovType;
 };
 
@@ -163,9 +179,9 @@ struct sims_helper<H, L, std::pair<HArgs, LArgs> >
 /** The case where Marqov allocates a lattice
  */
 template <class H, class L, class LArgs, class HArgs, class Callable>
-auto createsims(std::vector<std::pair<HArgs, LArgs> >& params, Callable c)
+auto createsims(std::vector<Triple<LArgs, MARQOVConfig, HArgs> >& params, Callable c)
 {
-    typedef typename sims_helper<H, L, std::pair<HArgs, LArgs> >::MarqovType MarqovType;  
+    typedef typename sims_helper<H, L, Triple<LArgs, MARQOVConfig, HArgs> >::MarqovType MarqovType;  
     //create simulations
     std::vector<MarqovType> sims;
     sims.reserve(params.size());
@@ -178,12 +194,12 @@ auto createsims(std::vector<std::pair<HArgs, LArgs> >& params, Callable c)
  * @param c A filter
  */
 template <class H, class L, class Args, class Callable>
-auto createsims(const std::vector<Args>& params, Callable c)
+auto createsims(const std::vector<std::pair<MARQOVConfig, Args>>& params, Callable c)
 {
     std::size_t constexpr tsize = std::tuple_size<typename std::remove_reference<Args>::type>::value;
     typedef typename sims_helper<H, L, Args, std::make_index_sequence<tsize> >::MarqovType MarqovType;
 
-        //create simulations
+    //create simulations
     std::vector<MarqovType> sims;
     sims.reserve(params.size());
     fillsims(params, sims, c);
@@ -276,127 +292,127 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 	};
 
 	if (ham == "Ising")
-	{
-		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
-		auto parameters = cart_prod(id, beta, J);
-		for (auto& param_tuple : parameters) // swap "id" and "temperature"
-			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
-
-		write_logfile(registry, beta);
-		RegularLatticeloop<Ising<int>>(registry, outdir, parameters, defaultfilter);
-	}
-    else if (ham == "Heisenberg")
-    {
-		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
-		auto parameters = cart_prod(id, beta, J);
-		for (auto& param_tuple : parameters) // swap "id" and "temperature"
-			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
-
-		write_logfile(registry, beta);
-		RegularLatticeloop<Heisenberg<double, double> >(registry, outdir, parameters, defaultfilter);
-    }
-    else if (ham == "Phi4")
-    {
-		auto beta   = registry.Get<std::vector<double> >("mc", ham, "beta");
-		auto lambda = registry.Get<std::vector<double> >("mc", ham, "lambda");
-		auto mass   = registry.Get<std::vector<double> >("mc", ham, "mass");
-
-		auto parameters = cart_prod(id, beta, beta, lambda, mass);
-		for (auto& param_tuple : parameters) // swap "id" and "temperature"
-			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
-
-		write_logfile(registry, beta);
-		RegularLatticeloop<Phi4<double, double> >(registry, outdir, parameters, defaultfilter);
-    }
-    /*
-    else if (ham == "BlumeCapel")
-    {
-        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
-        std::vector<double> myj = {1.0};
-        auto parameters = cart_prod(betas, myj);
-        RegularLatticeloop<BlumeCapel<int> >(registry, outdir, logdir, parameters, defaultfilter);
-    }
-    else if(ham == "XXZAntiferro")
-    {
-        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
-        std::vector<double> myj = {1.0};
-        auto parameters = cart_prod(betas, myj, myj,myj);
-        RegularLatticeloop<XXZAntiferro<double, double> >(registry, outdir, logdir, parameters, defaultfilter);
-    }*/
-    else if(ham == "XXZAntiferroSingleAniso")
-    {
-        	// --------- unpack configuration file ---------
-    auto lvname    = registry.Get<std::string>("mc", "General", "loopvar" );
-	auto loopstyle = registry.Get<std::string>("mc", "General", "loopstyle" );
-
-	double lvstart = registry.Get<double>("mc", "General", "lvstart" );
-	double lvfinal = registry.Get<double>("mc", "General", "lvfinal" );
-	int    lvsteps = registry.Get<int>("mc", "General", "lvsteps" );
-
-    auto parnames = registry.GetBlock("mc", ham).GetKeys();
-
-	std::vector<std::vector<double>> par;
-	for (int i=0; i<parnames.size(); i++)
-	{
-		auto parname = parnames[i];
-		if (parname != lvname)
-		{
-			std::vector<double> parval = {0};
-			parval[0] = registry.Get<double>("mc", ham, parnames[i]);
-			par.push_back(parval);
-		}
-	}
-
-	// create range for loop variable
-	std::vector<double> loopvar = create_range(lvstart, lvfinal, lvsteps);
-        // ------------ create parameter vector ---------------
-
-		// todo: improve this section
-		// by construction temperatures have to go first, but here 
-		// we want it sorted by "id", therefore the two are swapped afterwards
-
-		// replicas index (used as a fake Hamiltonian parameter)
-		std::vector<double> id(nreplicas);
-		for (int i=0; i<nreplicas; ++i) id[i] = i;
-
-		// beta is loopvar
-		auto parameters = cart_prod(id, loopvar, par[0], par[1], par[2]);
-
-		// beta is not loopvar
-//		auto beta = registry.Get<double>("mc", "General", "beta");
-//		auto parameters = cart_prod(id, beta, loopvar, par[0], par[1]);
-	
-
-		// swap "id" and "temperature"
-		for (auto& param_tuple : parameters) 
-			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
-
-
-	// write values in external fields in logfile
-	std::string logfile = registry.Get<std::string>("mc", "IO", "logfile" );
-	std::ofstream os(logdir+"/"+logfile);
-		os << std::setprecision(7);
-		for (int i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;
-	os.close();
-                auto xxzfilter = [](RegularLattice& latt, std::string outdir, int L, decltype(parameters[0]) p)
-				{
-					// write a filter to determine output file path and name
-					std::string str_beta = "beta"+std::to_string(std::get<0>(p));
-					std::string str_extf = "extf"+std::to_string(std::get<2>(p));
-					std::string str_id   = std::to_string(int(std::get<1>(p)));
-
-					std::string outname   = str_beta+"_"+str_extf+"_"+str_id+".h5";
-					std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
-
-					return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
-				};
-            RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outdir, parameters, xxzfilter);
-    }
+	{ }
+// 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+// 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
+// 		auto parameters = cart_prod(id, beta, J);
+// 		for (auto& param_tuple : parameters) // swap "id" and "temperature"
+// 			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
+// 
+// 		write_logfile(registry, beta);
+// 		RegularLatticeloop<Ising<int>>(registry, outdir, parameters, defaultfilter);
+// 	}
+//     else if (ham == "Heisenberg")
+//     {
+// 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+// 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
+// 		auto parameters = cart_prod(id, beta, J);
+// 		for (auto& param_tuple : parameters) // swap "id" and "temperature"
+// 			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
+// 
+// 		write_logfile(registry, beta);
+// 		RegularLatticeloop<Heisenberg<double, double> >(registry, outdir, parameters, defaultfilter);
+//     }
+//     else if (ham == "Phi4")
+//     {
+// 		auto beta   = registry.Get<std::vector<double> >("mc", ham, "beta");
+// 		auto lambda = registry.Get<std::vector<double> >("mc", ham, "lambda");
+// 		auto mass   = registry.Get<std::vector<double> >("mc", ham, "mass");
+// 
+// 		auto parameters = cart_prod(id, beta, beta, lambda, mass);
+// 		for (auto& param_tuple : parameters) // swap "id" and "temperature"
+// 			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
+// 
+// 		write_logfile(registry, beta);
+// 		RegularLatticeloop<Phi4<double, double> >(registry, outdir, parameters, defaultfilter);
+//     }
+//     /*
+//     else if (ham == "BlumeCapel")
+//     {
+//         auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
+//         std::vector<double> myj = {1.0};
+//         auto parameters = cart_prod(betas, myj);
+//         RegularLatticeloop<BlumeCapel<int> >(registry, outdir, logdir, parameters, defaultfilter);
+//     }
+//     else if(ham == "XXZAntiferro")
+//     {
+//         auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
+//         std::vector<double> myj = {1.0};
+//         auto parameters = cart_prod(betas, myj, myj,myj);
+//         RegularLatticeloop<XXZAntiferro<double, double> >(registry, outdir, logdir, parameters, defaultfilter);
+//     }*/
+//     else if(ham == "XXZAntiferroSingleAniso")
+//     {
+//         	// --------- unpack configuration file ---------
+//     auto lvname    = registry.Get<std::string>("mc", "General", "loopvar" );
+// 	auto loopstyle = registry.Get<std::string>("mc", "General", "loopstyle" );
+// 
+// 	double lvstart = registry.Get<double>("mc", "General", "lvstart" );
+// 	double lvfinal = registry.Get<double>("mc", "General", "lvfinal" );
+// 	int    lvsteps = registry.Get<int>("mc", "General", "lvsteps" );
+// 
+//     auto parnames = registry.GetBlock("mc", ham).GetKeys();
+// 
+// 	std::vector<std::vector<double>> par;
+// 	for (int i=0; i<parnames.size(); i++)
+// 	{
+// 		auto parname = parnames[i];
+// 		if (parname != lvname)
+// 		{
+// 			std::vector<double> parval = {0};
+// 			parval[0] = registry.Get<double>("mc", ham, parnames[i]);
+// 			par.push_back(parval);
+// 		}
+// 	}
+// 
+// 	// create range for loop variable
+// 	std::vector<double> loopvar = create_range(lvstart, lvfinal, lvsteps);
+//         // ------------ create parameter vector ---------------
+// 
+// 		// todo: improve this section
+// 		// by construction temperatures have to go first, but here 
+// 		// we want it sorted by "id", therefore the two are swapped afterwards
+// 
+// 		// replicas index (used as a fake Hamiltonian parameter)
+// 		std::vector<double> id(nreplicas);
+// 		for (int i=0; i<nreplicas; ++i) id[i] = i;
+// 
+// 		// beta is loopvar
+// 		auto parameters = cart_prod(id, loopvar, par[0], par[1], par[2]);
+// 
+// 		// beta is not loopvar
+// //		auto beta = registry.Get<double>("mc", "General", "beta");
+// //		auto parameters = cart_prod(id, beta, loopvar, par[0], par[1]);
+// 	
+// 
+// 		// swap "id" and "temperature"
+// 		for (auto& param_tuple : parameters) 
+// 			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
+// 
+// 
+// 	// write values in external fields in logfile
+// 	std::string logfile = registry.Get<std::string>("mc", "IO", "logfile" );
+// 	std::ofstream os(logdir+"/"+logfile);
+// 		os << std::setprecision(7);
+// 		for (int i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;
+// 	os.close();
+//                 auto xxzfilter = [](RegularLattice& latt, std::string outdir, int L, decltype(parameters[0]) p)
+// 				{
+// 					// write a filter to determine output file path and name
+// 					std::string str_beta = "beta"+std::to_string(std::get<0>(p));
+// 					std::string str_extf = "extf"+std::to_string(std::get<2>(p));
+// 					std::string str_id   = std::to_string(int(std::get<1>(p)));
+// 
+// 					std::string outname   = str_beta+"_"+str_extf+"_"+str_id+".h5";
+// 					std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
+// 
+// 					return std::tuple_cat(std::forward_as_tuple(latt), std::make_tuple(outsubdir+outname), p);
+// 				};
+//             RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outdir, parameters, xxzfilter);
+//     }
     else if(ham == "IrregularIsing")
     {
-        
+/*        
         std::vector<std::vector<int> > dummy;
         Neighbours<int32_t> nbrs(dummy);
         auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
@@ -409,7 +425,7 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 		makeDir(outdir+"/"+std::to_string(L));
 		// lattice
         auto f = [&defaultfilter, &nbrs, &outdir, L](auto p){return defaultfilter(nbrs, outdir, L, p);};//partially apply filter
-        loop<Ising<int>, Neighbours<int32_t> >(parameters, f, 2*L, 1);
+        loop<Ising<int>, Neighbours<int32_t> >(parameters, f, 2*L, 1);*/
 	}
 	else if(ham == "IrregularIsing2")
 	{
@@ -435,22 +451,23 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 
 		int L = 42;
 		makeDir(outdir+"/"+std::to_string(L));
-		auto otherfilter = [&L](auto p)
+		auto otherfilter = [](auto p)
 		{
 			// write a filter to determine output file path and name
             auto& lp = p.first;
-            auto& hp = p.second;
-			auto str_id    = std::to_string(int(std::get<2>(hp)));
-			auto str_beta  = "beta"+std::to_string(std::get<1>(hp));
-			auto str_J     = "J"+std::to_string(std::get<3>(hp));
-			auto outdir    = std::get<0>(hp);
-			std::string outname   = str_beta+"_"+str_id+".h5";
-			std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
-			std::get<0>(hp) = outsubdir+outname;
+            auto& mp = p.second;
+            auto& hp = p.third;
+// 			auto str_id    = std::to_string(int(std::get<2>(hp)));
+// 			auto str_beta  = "beta"+std::to_string(std::get<1>(hp));
+// 			auto str_J     = "J"+std::to_string(std::get<3>(hp));
+// 			auto outdir    = mp.outfile;
+// 			std::string outname   = str_beta+"_"+str_id+".h5";
+// 			std::string outsubdir = outdir+"/"+std::to_string(std::get<1>(lp))+"/";
+//             mp.outfile = outsubdir+outname;
 			return p;
 		};
-        
-        auto t = make_pair(std::make_tuple(8,2), std::tuple_cat(std::make_tuple(outdir), parameters[0]));
+        MARQOVConfig mc(outdir);
+        auto t = make_triple(std::make_tuple(8,2), mc, parameters[0]);
         std::vector<decltype(t)> p = {t};
         createsims<Ising<int>, RegularLattice >(p, otherfilter);
 

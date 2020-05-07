@@ -20,13 +20,12 @@ namespace MARQOV
     {
         /** The standard constructor. It requires a filename, the rest of the positional parameters are optional.
          */
-        MARQOVConfig(std::string of, double b, int i = 0, int s = 0, int ugli = 10, int nst = 250, int ws = 100, int gls = 200, int nc = 20, int nsw = 10) : outfile(of), beta(b), id(i), seed(s), gli(ugli), warmupsteps(ws), gameloopsteps(gls), ncluster(nc), nsweeps(nsw) {}
+        MARQOVConfig(std::string of, int i = 0, int s = 0, int ugli = 10, int nst = 250, int ws = 100, int gls = 200, int nc = 20, int nsw = 10) : outfile(of), id(i), seed(s), gli(ugli), warmupsteps(ws), gameloopsteps(gls), ncluster(nc), nsweeps(nsw) {}
         MARQOVConfig(const MARQOVConfig& rhs) = default;///< FIXME: Think about wether we can get rid of it.
         MARQOVConfig& operator=(const MARQOVConfig& rhs) = delete;
         MARQOVConfig(MARQOVConfig&& other) = default;
         MARQOVConfig& operator=(MARQOVConfig&& other) = default;
         std::string outfile;
-        double beta;///< FIXME: Oh beta.... Part of MARQOV or part of Ham ?
         std::string logpath;///< The logpath. For lack of a better place it is currently stored here.
         int id;
         int seed; ///< Doing this correctly opens a whole can of worms.... At one point we need to dump the state of the RNG for restart.
@@ -45,7 +44,6 @@ namespace MARQOV
         MARQOVConfig& setgameloopsteps(int g) {gameloopsteps = g; return *this;}
         MARQOVConfig& setncluster(int nc) {ncluster = nc; return *this;}
         MARQOVConfig& setnsweeps(int ns) {nsweeps = ns; return *this;}
-        MARQOVConfig& setbeta(double b) {beta = b; return *this;}
     };
     namespace detail
     {
@@ -212,10 +210,10 @@ struct ObsTupleToObsCacheTuple
          */
 
         template <class ...HArgs>
-		Marqov(Grid& lattice, std::string outfile, double mybeta, HArgs&& ... args) : RefType<Grid>(std::forward<Grid>(lattice)),
+		Marqov(Grid& lattice, MARQOVConfig& mc, double mybeta, HArgs&& ... args) : RefType<Grid>(std::forward<Grid>(lattice)),
 		                                                                              ham(std::forward<HArgs>(args) ... ),
-		                                                                              mcfg("out.txt", 1.0),
-													rng(0, 1), beta(mybeta), metro(rng),  dump(outfile, H5F_ACC_TRUNC ),
+		                                                                              mcfg(mc),
+													rng(0, 1), beta(mybeta), metro(rng),  dump(mc.outfile, H5F_ACC_TRUNC ),
 													obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
 		{
 //			rng.seed(15); cout << "seed is fixed!" << endl << endl;
@@ -231,10 +229,10 @@ struct ObsTupleToObsCacheTuple
          * @param p A pair containing in the second Argument the lattice parameters and in the first the Hamiltonian parameters
          */
         template <class ...HArgs, class ... LArgs>
-		Marqov(std::tuple<LArgs...>& largs, std::string outfile, double mybeta, HArgs&& ... hargs) : RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
+		Marqov(std::tuple<LArgs...>& largs, MARQOVConfig mc, double mybeta, HArgs&& ... hargs) : RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
 		                                                                                             ham(std::forward<HArgs>(hargs) ... ),
-                                                                                                     mcfg("out.txt", 1.0),
-                                                                                                     rng(0, 1), beta(mybeta), metro(rng),  dump(outfile, H5F_ACC_TRUNC ),
+                                                                                                     mcfg("out.txt"),
+                                                                                                     rng(0, 1), beta(mybeta), metro(rng),  dump(mc.outfile, H5F_ACC_TRUNC ),
 													obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
 		{
 //			rng.seed(15); cout << "seed is fixed!" << endl << endl;
@@ -554,32 +552,32 @@ struct ObsTupleToObsCacheTuple
 };
 
 template <class H, class L, class... LArgs, class... HArgs, size_t... S>
-auto makeMarqov3(std::string outfile, std::tuple<LArgs...>& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
+auto makeMarqov3(MARQOVConfig& mc, std::tuple<LArgs...>&& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
-    return Marqov<L, H, detail::NonRef>(largs,
+    return Marqov<L, H, detail::NonRef>(largs, mc, 
                                         std::get<S>(std::forward<std::tuple<HArgs...>>(hargs))...);
 }
 
 template <class H, class L, class... LArgs, class... HArgs>
-auto makeMarqov(std::string outfile, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> >& p)
+auto makeMarqov(MARQOVConfig mc, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> >& p)
 {
-    return makeMarqov3<H, L>(outfile, p.first, p.second,
+    return makeMarqov3<H, L>(mc, std::forward<decltype(p.first)>(p.first), p.second,
         std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
     );
 }
 
 template <class H, class L, class ...Args>
-auto makeMarqov2(std::true_type, L&& latt, Args&& ... args)
+auto makeMarqov2(std::true_type, L&& latt, MARQOVConfig&& mc, Args&& ... args)
 {
     //The first argument is a Lattice-like type -> from this we infer that 
     //We get a reference to sth. already allocated
-    return Marqov<L, H, detail::Ref>(latt, args...);
+    return Marqov<L, H, detail::Ref>(latt, mc, args...);
 }
 
 template <class H, class L, class ...Args>
-auto makeMarqov(L&& latt, Args&&... args)
+auto makeMarqov(L&& latt, MARQOVConfig&& mc, Args&&... args)
 {
-    return makeMarqov2<H>(typename detail::is_Lattice<L>::type(), latt, args...);
+    return makeMarqov2<H>(typename detail::is_Lattice<L>::type(), latt, std::forward<MARQOVConfig>(mc), args...);
 }
 
 #include "update.h"
