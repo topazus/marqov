@@ -5,6 +5,7 @@
 #include <string>
 #include <functional>
 #include "hamiltonianparts.h"
+#include "metropolis.h"
 
 // ------------------------------ OBSERVABLES ---------------------------
 
@@ -118,5 +119,56 @@ class Ising
 		}
 
 	
+};
+
+template <class Lattice>
+struct MARQOV::Metropolis<Ising<int>, Lattice>
+{
+    template <class StateSpace, class M, class RNG>
+    static int move(const Ising<int>& ham, const Lattice& grid, int rsite, StateSpace& statespace, M& metro, RNG& rng, double beta)
+    {
+        typedef typename Ising<int>::StateVector StateVector;
+    	// old state vector at rsite
+	StateVector& svold = statespace[rsite];
+	// propose new configuration
+	StateVector svnew = metro.newsv(svold);
+	
+	// interaction part
+	double interactionenergydiff = 0;
+	for(int a = 0; a < ham.Nalpha; ++a)
+	{
+		auto nbrs = grid.getnbrs(a, rsite);
+		typedef decltype(ham.interactions[a]->operator()(statespace[0])) InteractionType;
+		typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->operator()(statespace[0]))) BondType;
+        
+		typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};
+		// sum over neighbours
+		for (int i = 0; i < nbrs.size(); ++i)
+		{
+			auto idx = nbrs[i];
+			auto nbr = ham.interactions[a]->operator()(statespace[idx]);
+			averagevector = averagevector + MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
+		}
+		interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
+	}
+    // sum up energy differences
+    double dE 	= interactionenergydiff;
+
+	// improve me: what about models with discrete statevectors where the acceptance probability should be
+	// looked up in tables? -> specialized Metropolis routine for this case??
+
+    int retval = 0;
+    if ( dE <= 0 )
+    {
+        svold = svnew;
+        retval = 1;
+    }
+    else if (rng.d() < exp(-beta*dE))
+    {
+        svold = svnew;
+        retval = 1;
+    }
+    return retval;
+    }
 };
 #endif
