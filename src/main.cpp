@@ -140,7 +140,9 @@ void fillsims(const std::vector<std::pair<MARQOV::MARQOVConfig, Args>>& args, st
     for(auto p : args)
     {
         auto t1 = c(p);
-        emplace_from_tuple(sims, std::forward<decltype(std::get<0>(t1))>(std::get<0>(t1)), std::forward<MARQOV::MARQOVConfig>(std::get<1>(t1)), std::get<2>(t1));
+        emplace_from_tuple(	sims, 
+	   					std::forward<decltype(std::get<0>(t1))>(std::get<0>(t1)), 
+						std::forward<MARQOV::MARQOVConfig>(std::get<1>(t1)), std::get<2>(t1));
     }
 }
 
@@ -211,26 +213,28 @@ auto createsims(const std::vector<std::pair<MARQOVConfig, Args>>& params, Callab
 template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable filter)
 {
-    // number of EMCS during relaxation and measurement
-    mc.setwarmupsteps(500).setgameloopsteps(1500);
-    std::vector<std::pair<MARQOVConfig, Parameters> > params;
-    for(int i = 0; i < hamparams.size(); ++i)
-    {
-        auto mc2(mc);
-        mc2.setid(i);
-        params.push_back(make_pair(mc2, hamparams[i]));
-    }
-    auto sims = createsims<Hamiltonian, Lattice>(params, filter);
-		// perform simulation
-		#pragma omp parallel for
-		for(std::size_t i = 0; i < sims.size(); ++i)
-		{
-			auto& marqov = sims[i];
+	// number of EMCS during relaxation and measurement
+	mc.setwarmupsteps(500).setgameloopsteps(1500);
+	std::vector<std::pair<MARQOVConfig, Parameters> > params;
+	for(int i = 0; i < hamparams.size(); ++i)
+	{
+	    auto mc2(mc);
+	    mc2.setid(i);
+	    params.push_back(make_pair(mc2, hamparams[i]));
+	}
 
-			marqov.init_hot();
-			marqov.wrmploop();
-			marqov.gameloop();
-		}
+	auto sims = createsims<Hamiltonian, Lattice>(params, filter);
+
+	// perform simulation
+	#pragma omp parallel for
+	for(std::size_t i = 0; i < sims.size(); ++i)
+	{
+		auto& marqov = sims[i];
+
+		marqov.init_hot();
+		marqov.wrmploop();
+		marqov.gameloop();
+	}
 }
 
 
@@ -449,7 +453,18 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 
 		makeDir(outdir+"/"+std::to_string(L));
 
-		createsims<Ising<int>, RegularLattice >(p, otherfilter);
+		auto sims = createsims<Ising<int>, RegularLattice >(p, otherfilter);
+
+		// perform simulation
+		#pragma omp parallel for
+		for(std::size_t i = 0; i < sims.size(); ++i)
+		{
+			auto& marqov = sims[i];
+	
+			marqov.init_hot();
+			marqov.wrmploop();
+			marqov.gameloop();
+		}
 
 //        auto t = make_pair(std::make_tuple(dummy), std::tuple_cat(std::make_tuple(outdir), parameters[0]));
 //        createsims<Ising<int>, Neighbours<int32_t> >(p, otherfilter);
