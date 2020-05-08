@@ -293,7 +293,8 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 	{
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
-		auto parameters = cart_prod(beta, J);//FIXME: is this really intended to have nreplicas of each (beta, J)
+		auto parameters = cart_prod(beta, J);
+		//FIXME: is this really intended to have nreplicas of each (beta, J) -> yes ;)
 
 		write_logfile(registry, beta);
  		RegularLatticeloop<Ising<int>>(registry, outdir, parameters, defaultfilter);
@@ -416,40 +417,39 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 		auto parameters = cart_prod(beta, J);
 
 		write_logfile(registry, beta);
-//		RegularLatticeloop<Ising<int>>(registry, outdir, parameters, defaultfilter);
 
-
-
-//		std::vector<std::vector<int> > dummy;
-//		Neighbours<int32_t> nbrs(dummy);
-
-
-
-		// extract lattice size and prepare directories
-//		int L = nbrs.size();
-//		cout << endl << "L = " << L << endl << endl;
-
-		int L = 42;
-		makeDir(outdir+"/"+std::to_string(L));
 		auto otherfilter = [](auto p)
 		{
 			// write a filter to determine output file path and name
-            auto& lp = p.first;
-            auto& mp = p.second;
-            auto& hp = p.third;
+            	auto& lp = p.first;
+            	auto& mp = p.second;
+            	auto& hp = p.third;
+
  			auto str_id    = std::to_string(mp.id);
-			auto str_beta  = "beta"+std::to_string(std::get<1>(hp));
-//			auto str_J     = "J"+std::to_string(std::get<3>(hp));
+			auto str_beta  = "beta"+std::to_string(std::get<0>(hp));
+			auto str_L     = std::to_string(std::get<0>(lp));
 			auto outdir    = mp.outfile;
+
 			std::string outname   = str_beta+"_"+str_id+".h5";
-			std::string outsubdir = outdir+"/"+std::to_string(std::get<1>(lp))+"/";
-            mp.outfile = outsubdir+outname;
+			std::string outsubdir = outdir+"/"+str_L+"/";
+
+            	mp.outfile = outsubdir+outname;
+
 			return p;
 		};
-        MARQOVConfig mc(outdir);
-        auto t = make_triple(std::make_tuple(8,2), mc, parameters[0]);
-        std::vector<decltype(t)> p = {t};
-        createsims<Ising<int>, RegularLattice >(p, otherfilter);
+
+		MARQOVConfig mc(outdir);
+
+		const int L   = 42;
+		const int dim = 2;
+		
+		auto t = make_triple(std::make_tuple(L,dim), mc, parameters[0]);
+		
+		std::vector<decltype(t)> p = {t};
+
+		makeDir(outdir+"/"+std::to_string(L));
+
+		createsims<Ising<int>, RegularLattice >(p, otherfilter);
 
 //        auto t = make_pair(std::make_tuple(dummy), std::tuple_cat(std::make_tuple(outdir), parameters[0]));
 //        createsims<Ising<int>, Neighbours<int32_t> >(p, otherfilter);
