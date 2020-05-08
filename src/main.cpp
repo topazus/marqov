@@ -286,10 +286,10 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 	auto defaultfilter = [](auto& latt, auto p)
 	{
 	    // write a filter to determine output file path and name
-// 	    std::string str_id    = std::to_string(int(std::get<1>(p)));
-// 	    std::string str_beta  = "beta"+std::to_string(std::get<0>(p));
-// 	    std::string outname   = str_beta+"_"+str_id+".h5";
-// 	    std::string outsubdir = outdir+"/"+std::to_string(L)+"/";
+	    std::string str_id    = std::to_string(p.first.id);
+	    std::string str_beta  = "beta"+std::to_string(std::get<0>(p.second));
+	    std::string outname   = str_beta+"_"+str_id+".h5";
+	    std::string outsubdir = p.first.outfile+"/"+std::to_string(latt.size())+"/";
  	    return std::tuple_cat(std::forward_as_tuple(latt), p);
 	};
 
