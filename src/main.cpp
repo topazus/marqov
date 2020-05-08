@@ -228,8 +228,8 @@ void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable f
 			auto& marqov = sims[i];
 
 			marqov.init_hot();
-			marqov.wrmploop(1, 1, 1, 1);
-			marqov.gameloop(1, 1, 1, 1);
+			marqov.wrmploop();
+			marqov.gameloop();
 		}
 }
 

@@ -5,14 +5,14 @@
 
 
 template <class Grid, class Hamiltonian, template<class> class RefType>
-double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep(const int ncluster, const int nsweeps)
+double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep()
 {
 	const int SymD = std::tuple_size<StateVector>::value;
 	const int ncolors = 3;
 
 	// cluster updates
 	double avgclustersize = 0;
-	for (int j=0; j<ncluster; j++)
+	for (int j=0; j < mcfg.ncluster; j++)
 	{
 		const int rsite = rng.i();
 
@@ -28,7 +28,7 @@ double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep(const int ncluster, 
 
 
 	// Metropolis sweeps
-	for (int j=0; j<nsweeps; j++)
+	for (int j=0; j<mcfg.nsweeps; j++)
 	{
 		// loop colors
 		for (int s = 0; s<ncolors; s++)
@@ -43,6 +43,6 @@ double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep(const int ncluster, 
 		}
 	}
 
-	return avgclustersize/ncluster/ncolors;
+	return avgclustersize/mcfg.ncluster/ncolors;
 }
 #endif

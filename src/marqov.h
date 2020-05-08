@@ -231,7 +231,7 @@ struct ObsTupleToObsCacheTuple
         template <class ...HArgs, class ... LArgs>
 		Marqov(std::tuple<LArgs...>& largs, MARQOVConfig mc, double mybeta, HArgs&& ... hargs) : RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
 		                                                                                             ham(std::forward<HArgs>(hargs) ... ),
-                                                                                                     mcfg("out.txt"),
+                                                                                                     mcfg(mc),
                                                                                                      rng(0, 1), beta(mybeta), metro(rng),  dump(mc.outfile, H5F_ACC_TRUNC ),
 													obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
 		{
@@ -390,43 +390,41 @@ struct ObsTupleToObsCacheTuple
 
 
 
-		double elementaryMCstep(const int ncluster, const int nsweeps);
+		double elementaryMCstep();
 	    
-	    	void gameloop(const int nsteps, const int ncluster, const int nsweeps, int myid)
+        void gameloop()
 		{
 //			prepare_consistency_check(checkidxs);
 
 			double avgclustersize = 0;
-			for (int k=0; k<10; k++)
+			for (int k=0; k < this->mcfg.gli; k++)
 			{
 
-				if (myid == 0) std::cout << "." << std::flush;
-				for (int i=0; i<nsteps/10; ++i)
+				if (this->mcfg.id == 0) std::cout << "." << std::flush;
+				for (int i=0; i < this->mcfg.gameloopsteps/10; ++i)
 				{
-					avgclustersize += elementaryMCstep(ncluster, nsweeps);
+					avgclustersize += elementaryMCstep();
 					auto obs = ham.getobs();
 					marqov_measure(obs, statespace, this->grid);
 //					perform_consistency_check(checkidxs);
 				}
 			}
 
-			if (myid == 0) std::cout << "|\n" << avgclustersize/nsteps << std::endl;
+			if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.nsteps << std::endl;
 //			finalize_consistency_check();
 		}
 	
-	    	void wrmploop(const int nsteps, const int ncluster, const int nsweeps, int myid)
+	    	void wrmploop()
 		{
-			if (myid == 0) std::cout << "|";
-			for (int k=0; k<10; k++)
+			if (this->mcfg.id == 0) std::cout << "|";
+			for (int k=0; k < this->mcfg.gli; k++)
 			{
-				if (myid == 0) std::cout << "." << std::flush;
-				for (int i=0; i<nsteps/10; ++i) elementaryMCstep(ncluster, nsweeps);
+				if (this->mcfg.id == 0) std::cout << "." << std::flush;
+				for (int i=0; i < this->mcfg.warmupsteps/10; ++i) elementaryMCstep();
 			}
-			if (myid == 0) std::cout << "|";
+			if (this->mcfg.id == 0) std::cout << "|";
 		}
 	
-
-
 
 		// -------------- special purpose functions ----------------
 
@@ -451,7 +449,7 @@ struct ObsTupleToObsCacheTuple
 			for (int i = 0; i < nframes; ++i)
 			{
 
-				for (int j=0; j<nsweepsbetweenframe; j++) elementaryMCstep(ncluster, nsweeps);
+				for (int j=0; j<nsweepsbetweenframe; j++) elementaryMCstep();
 					
 				unsigned int microsec = 30000; 
 				usleep(microsec);
@@ -520,9 +518,6 @@ struct ObsTupleToObsCacheTuple
 		 }
 
 	private:
-
-
-
 	inline int metropolisstep(int rsite);
 
 	template <typename callable1, typename callable2>
@@ -546,9 +541,6 @@ struct ObsTupleToObsCacheTuple
 
 	//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
 	typename Hamiltonian::template MetroInitializer<RND> metro;//C++11
-
-	// number of EMCS
-	static constexpr int nstep = 250;
 };
 
 template <class H, class L, class... LArgs, class... HArgs, size_t... S>
