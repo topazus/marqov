@@ -4,15 +4,15 @@
 // Defines the Elementary Monte Carlo Step (EMCS)
 
 
-template <class Grid, class Hamiltonian>
-double Marqov<Grid, Hamiltonian>::elementaryMCstep(const int ncluster, const int nsweeps)
+template <class Grid, class Hamiltonian, template<class> class RefType>
+double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep()
 {
 	const int SymD = std::tuple_size<StateVector>::value;
 	const int ncolors = 3;
 
 	// cluster updates
 	double avgclustersize = 0;
-	for (int j=0; j<ncluster; j++)
+	for (int j=0; j < mcfg.ncluster; j++)
 	{
 		const int rsite = rng.i();
 
@@ -28,13 +28,13 @@ double Marqov<Grid, Hamiltonian>::elementaryMCstep(const int ncluster, const int
 
 
 	// Metropolis sweeps
-	for (int j=0; j<nsweeps; j++)
+	for (int j=0; j<mcfg.nsweeps; j++)
 	{
 		// loop colors
 		for (int s = 0; s<ncolors; s++)
 		{
 			// loop sites
-			for(int i = 0; i < grid.size(); ++i)
+			for(int i = 0; i < this->grid.size(); ++i)
 			{
 				const int rsite = rng.i();
 				metropolisstep(rsite);
@@ -43,8 +43,6 @@ double Marqov<Grid, Hamiltonian>::elementaryMCstep(const int ncluster, const int
 		}
 	}
 
-	return avgclustersize/ncluster/ncolors;
+	return avgclustersize/mcfg.ncluster/ncolors;
 }
-		
-
 #endif

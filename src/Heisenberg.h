@@ -137,7 +137,7 @@ class Heisenberg
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Heisenberg(int id, double J) : J(J) {interactions[0] = new Heisenberg_interaction<StateVector>(J);}
+		Heisenberg(double J) : J(J) {interactions[0] = new Heisenberg_interaction<StateVector>(J);}
 		
 		HeisenbergMag obs_m;
 

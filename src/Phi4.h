@@ -111,7 +111,6 @@ template <typename SpinType, typename MyFPType>
 class Phi4
 {
 	public:
-		int id;
 		double beta, lambda, mass;
 
 		constexpr static int SymD = 3;
@@ -133,7 +132,7 @@ class Phi4
 		OnSite<StateVector, FPType>* onsite[Nbeta]; //Todo: External fields not yet supported
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Phi4(int id, double beta, double lambda, double mass) : id(id), lambda(lambda), mass(mass), beta(beta)
+		Phi4(double beta, double lambda, double mass) : lambda(lambda), mass(mass), beta(beta)
 		{
 			interactions[0] = new Phi4_interaction<StateVector>();
 			onsite[0]       = new Phi4_onsitesquare<StateVector>(mass, beta);

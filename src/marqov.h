@@ -16,6 +16,71 @@
 
 namespace MARQOV
 {
+    struct MARQOVConfig
+    {
+        /** The standard constructor. It requires a filename, the rest of the positional parameters are optional.
+         */
+        MARQOVConfig(std::string of, int i = 0, int s = 0, int ugli = 10, int nst = 250, int ws = 100, int gls = 200, int nc = 20, int nsw = 10) : outfile(of), id(i), seed(s), gli(ugli), warmupsteps(ws), gameloopsteps(gls), ncluster(nc), nsweeps(nsw) {}
+        MARQOVConfig(const MARQOVConfig& rhs) = default;///< FIXME: Think about wether we can get rid of it.
+        MARQOVConfig& operator=(const MARQOVConfig& rhs) = delete;
+        MARQOVConfig(MARQOVConfig&& other) = default;
+        MARQOVConfig& operator=(MARQOVConfig&& other) = default;
+        std::string outfile;
+        std::string logpath;///< The logpath. For lack of a better place it is currently stored here.
+        int id;
+        int seed; ///< Doing this correctly opens a whole can of worms.... At one point we need to dump the state of the RNG for restart.
+        int gli; ///< The unknown gameloop integer
+        int nsteps;
+        int warmupsteps;
+        int gameloopsteps;
+        int ncluster;
+        int nsweeps;
+        /** A chain of setters to emulate the named parameter idiom.*/
+        MARQOVConfig& setid(int i) {id = i; return *this;}
+        MARQOVConfig& setseed(int s) {seed = s; return *this;}
+        MARQOVConfig& setgli(int c) {gli = c; return *this;}
+        MARQOVConfig& setnsteps(int ns) {nsteps = ns; return *this;}
+        MARQOVConfig& setwarmupsteps(int w) {warmupsteps = w; return *this;}
+        MARQOVConfig& setgameloopsteps(int g) {gameloopsteps = g; return *this;}
+        MARQOVConfig& setncluster(int nc) {ncluster = nc; return *this;}
+        MARQOVConfig& setnsweeps(int ns) {nsweeps = ns; return *this;}
+    };
+    namespace detail
+    {
+        template<class> struct type_sink { typedef void type; }; // consumes a type, and makes it `void`
+        template<class T> using type_sink_t = typename type_sink<T>::type;
+        template<class L, class=void, class=void> struct is_Lattice : std::false_type {};
+
+        template<class Lattice> struct is_Lattice<Lattice,
+        type_sink_t< decltype( std::declval<Lattice>().getnbrs(std::declval<int>(), std::declval<int>()) ) >,
+        type_sink_t< decltype( std::declval<Lattice>().size() ) >
+        > : std::true_type {};
+
+        template <class L>
+        class Ref
+        {
+        public:
+            template<class... Args>
+            Ref(L&& l, Args&& ... args) : grid(l) {}
+            L& grid;
+        };
+
+        template <class L>
+        class NonRef
+        {
+        public:
+            template <class ...Args>
+            NonRef(std::tuple<Args...>&& args ) : NonRef(std::forward<std::tuple<Args...>>(args), 
+                                                 std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<Args...>>::type>::value>()) {}
+            template <class ...Args, size_t... S>
+            NonRef(std::tuple<Args...>&& args, std::index_sequence<S...>) : grid(std::get<S>(std::forward<std::tuple<Args...>>(args))... ) {}
+//             template <class ...Args>
+//             NonRef(Args&&... args) : grid(args...) {}
+            L grid;
+        };
+    };
+    
+    
 template<typename Function, typename Object, typename Tuple, size_t ... I>
 auto _call(Function f, Object& obj, Tuple t, std::index_sequence<I ...>) {
 	return (obj.*f)(std::get<I>(t) ...);
@@ -80,8 +145,8 @@ inline void normalize(Container& a)
 
 // --------------------------- MARQOV CLASS -------------------------------
 
-template <class Grid, class Hamiltonian>
-class Marqov 
+template <class Grid, class Hamiltonian, template<class> class RefType = detail::Ref >
+class Marqov : public RefType<Grid>
 {
 	public:
 		typedef typename Hamiltonian::StateVector StateVector;
@@ -144,13 +209,11 @@ struct ObsTupleToObsCacheTuple
          * @param args A template parameter pack for the Hamiltonian
          */
 
-        template <class ...Ts>
-		Marqov(Grid& lattice, std::string outfile, double mybeta, Ts&& ... args) : ham(std::forward<Ts>(args) ... ),
-													grid(lattice), 
-													rng(0, 1), 
-													beta(mybeta),
-													metro(rng), 
-													dump(outfile, H5F_ACC_TRUNC ),
+        template <class ...HArgs>
+		Marqov(Grid& lattice, MARQOVConfig mc, double mybeta, HArgs&& ... args) : RefType<Grid>(std::forward<Grid>(lattice)),
+		                                                                              ham(std::forward<HArgs>(args) ... ),
+		                                                                              mcfg(mc),
+													rng(0, 1), beta(mybeta), metro(rng),  dump(mc.outfile, H5F_ACC_TRUNC ),
 													obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
 		{
 //			rng.seed(15); cout << "seed is fixed!" << endl << endl;
@@ -158,6 +221,30 @@ struct ObsTupleToObsCacheTuple
 			rng.set_integer_range(lattice.size());
 			statespace = new typename Hamiltonian::StateVector[lattice.size()];
 		}
+		
+		
+		/** Alternate constructor if you require Marqov to instantiate and embed the lattice for you
+         * @param outfile Where to create the output file
+         * @param mybeta the temperature that governs the Metropolis dynamics
+         * @param p A pair containing in the second Argument the lattice parameters and in the first the Hamiltonian parameters
+         */
+        template <class ...HArgs, class ... LArgs>
+		Marqov(std::tuple<LArgs...>& largs, MARQOVConfig mc, double mybeta, HArgs&& ... hargs) : RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
+		                                                                                             ham(std::forward<HArgs>(hargs) ... ),
+                                                                                                     mcfg(mc),
+                                                                                                     rng(0, 1), beta(mybeta), metro(rng),  dump(mc.outfile, H5F_ACC_TRUNC ),
+													obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
+		{
+//			rng.seed(15); cout << "seed is fixed!" << endl << endl;
+			rng.seed(time(NULL)+std::random_device{}());
+			rng.set_integer_range(this->grid.size());
+			statespace = new typename Hamiltonian::StateVector[this->grid.size()];
+		}
+		
+		
+		
+		
+		
 
 		// Destructor
 		~Marqov() {
@@ -217,7 +304,7 @@ struct ObsTupleToObsCacheTuple
 				std::vector<double> subsubcheck;
 
 				const auto checksite = statespace[checkidx];
-				const auto nbrs = grid.getnbrs(0, checkidx);
+				const auto nbrs = this->grid.getnbrs(0, checkidx);
 
 				for (int i = 0; i < nbrs.size(); ++i)
 				{
@@ -290,7 +377,7 @@ struct ObsTupleToObsCacheTuple
 		// default: all (good statistic, but requires a somewhat large amount of memory)
 		void prepare_consistency_check(std::vector<int>& checkidxs)
 		{
-			for (int i=0; i<grid.size(); i++)
+			for (int i=0; i<this->grid.size(); i++)
 			{
 				checkidxs.push_back(i);
 			}
@@ -303,44 +390,41 @@ struct ObsTupleToObsCacheTuple
 
 
 
-		double elementaryMCstep(const int ncluster, const int nsweeps);
+		double elementaryMCstep();
 	    
-	    	void gameloop(const int nsteps, const int ncluster, const int nsweeps, int myid)
+        void gameloop()
 		{
-
 //			prepare_consistency_check(checkidxs);
 
 			double avgclustersize = 0;
-			for (int k=0; k<10; k++)
+			for (int k=0; k < this->mcfg.gli; k++)
 			{
 
-				if (myid == 0) std::cout << "." << std::flush;
-				for (int i=0; i<nsteps/10; ++i)
+				if (this->mcfg.id == 0) std::cout << "." << std::flush;
+				for (int i=0; i < this->mcfg.gameloopsteps/10; ++i)
 				{
-					avgclustersize += elementaryMCstep(ncluster, nsweeps);
+					avgclustersize += elementaryMCstep();
 					auto obs = ham.getobs();
-					marqov_measure(obs, statespace, grid);
+					marqov_measure(obs, statespace, this->grid);
 //					perform_consistency_check(checkidxs);
 				}
 			}
 
-			if (myid == 0) std::cout << "|\n" << avgclustersize/nsteps << std::endl;
+			if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.nsteps << std::endl;
 //			finalize_consistency_check();
 		}
 	
-	    	void wrmploop(const int nsteps, const int ncluster, const int nsweeps, int myid)
+	    	void wrmploop()
 		{
-			if (myid == 0) std::cout << "|";
-			for (int k=0; k<10; k++)
+			if (this->mcfg.id == 0) std::cout << "|";
+			for (int k=0; k < this->mcfg.gli; k++)
 			{
-				if (myid == 0) std::cout << "." << std::flush;
-				for (int i=0; i<nsteps/10; ++i) elementaryMCstep(ncluster, nsweeps);
+				if (this->mcfg.id == 0) std::cout << "." << std::flush;
+				for (int i=0; i < this->mcfg.warmupsteps/10; ++i) elementaryMCstep();
 			}
-			if (myid == 0) std::cout << "|";
+			if (this->mcfg.id == 0) std::cout << "|";
 		}
 	
-
-
 
 		// -------------- special purpose functions ----------------
 
@@ -365,7 +449,7 @@ struct ObsTupleToObsCacheTuple
 			for (int i = 0; i < nframes; ++i)
 			{
 
-				for (int j=0; j<nsweepsbetweenframe; j++) elementaryMCstep(ncluster, nsweeps);
+				for (int j=0; j<nsweepsbetweenframe; j++) elementaryMCstep();
 					
 				unsigned int microsec = 30000; 
 				usleep(microsec);
@@ -380,14 +464,14 @@ struct ObsTupleToObsCacheTuple
 		void visualize_state_2d(int dim=2, double threshold=0.3)
 		{
 			std::cout << "_";
-			for(int i = 0; i < grid.length; ++i) std::cout << " _";
+			for(int i = 0; i < this->grid.length; ++i) std::cout << " _";
 			std::cout <<"\n";
-			for(int i = 0; i < grid.length; ++i)
+			for(int i = 0; i < this->grid.length; ++i)
 			{
 				std::cout << "|";
-				for(int j = 0; j < grid.length; ++j)
+				for(int j = 0; j < this->grid.length; ++j)
 				{
-					int curridx = grid.length*i+j;
+					int curridx = this->grid.length*i+j;
 					double current = statespace[curridx][dim];
 
 					if (current > threshold) std::cout << "O ";
@@ -398,16 +482,14 @@ struct ObsTupleToObsCacheTuple
 				std::cout << "|\n";
 			}
 			std::cout << "‾";
-			for(int i = 0; i < grid.length; ++i) std::cout << " ‾";
+			for(int i = 0; i < this->grid.length; ++i) std::cout << " ‾";
 			std::cout <<"\n\n";
 		}
-
-
 	
 		 void init_cold_Ising_like()
 		 {
 		 	const int SymD = std::tuple_size<StateVector>::value;
-			for(int i = 0; i < grid.size(); ++i)
+			for(int i = 0; i < this->grid.size(); ++i)
 			{
 				for(int j = 0; j < SymD; ++j)
 				{
@@ -418,7 +500,7 @@ struct ObsTupleToObsCacheTuple
 
 		 void init_cold_Heisenberg()
 		 {
-			for(int i = 0; i < grid.size(); ++i)
+			for(int i = 0; i < this->grid.size(); ++i)
 			{
 				statespace[i][0] = -1;
 				statespace[i][1] = 0;
@@ -429,17 +511,13 @@ struct ObsTupleToObsCacheTuple
 		 void init_hot()
 		 {
 		 	const int SymD = std::tuple_size<StateVector>::value;
-//			for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
-			for(int i = 0; i < grid.size(); ++i)
+			for(int i = 0; i < this->grid.size(); ++i)
 			{
 				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
 			}
 		 }
 
 	private:
-
-
-
 	inline int metropolisstep(int rsite);
 
 	template <typename callable1, typename callable2>
@@ -453,20 +531,46 @@ struct ObsTupleToObsCacheTuple
 
 	StateSpace statespace;
 	Hamiltonian ham;
+    MARQOVConfig mcfg;
     typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
 
     H5::H5File dump;///< The handle for the HDF5 file. must be before the obscaches
     typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;
-	Grid& grid;
 	RND rng;
     double beta;
 
 	//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
 	typename Hamiltonian::template MetroInitializer<RND> metro;//C++11
-
-	// number of EMCS
-	static constexpr int nstep = 250;
 };
+
+template <class H, class L, class... LArgs, class... HArgs, size_t... S>
+auto makeMarqov3(MARQOVConfig& mc, std::tuple<LArgs...>&& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
+{
+    return Marqov<L, H, detail::NonRef>(largs, mc, 
+                                        std::get<S>(std::forward<std::tuple<HArgs...>>(hargs))...);
+}
+
+template <class H, class L, class... LArgs, class... HArgs>
+auto makeMarqov(MARQOVConfig mc, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> >& p)
+{
+    return makeMarqov3<H, L>(mc, std::forward<decltype(p.first)>(p.first), p.second,
+        std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
+    );
+}
+
+template <class H, class L, class ...Args>
+auto makeMarqov2(std::true_type, L&& latt, MARQOVConfig&& mc, Args&& ... args)
+{
+    //The first argument is a Lattice-like type -> from this we infer that 
+    //We get a reference to sth. already allocated
+    return Marqov<L, H, detail::Ref>(latt, mc, args...);
+}
+
+template <class H, class L, class ...Args>
+auto makeMarqov(L&& latt, MARQOVConfig&& mc, Args&&... args)
+{
+    return makeMarqov2<H>(typename detail::is_Lattice<L>::type(), latt, std::forward<MARQOVConfig>(mc), args...);
+}
 
 #include "update.h"
 #include "emcs.h"
