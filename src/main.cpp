@@ -251,18 +251,16 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outdir, const std::ve
 		// prepare
 		int L = nL[j];
 		cout << endl << "L = " << L << endl << endl;
-		makeDir(outdir+"/"+std::to_string(L));
+        MARQOVConfig mc(outdir+"/"+std::to_string(L));
+        mc.setnsweeps(10).setncluster(2*L);
+		makeDir(mc.outfile);
 
 		// lattice
 		RegularLattice latt(L, dim);
 
-		// MC parameters
-		const int nsweeps  = 10;
-		const int ncluster = 2*L;
-
 		// set up and execute
-		auto f = [&filter, &latt, &outdir, L](auto p){return filter(latt, outdir, L, p);}; //partially apply filter
-		loop<Hamiltonian, RegularLattice>(parameters, f, nsweeps, ncluster); 
+ 		auto f = [&filter, &latt, &outdir, L](auto p){return filter(latt, p);}; //partially apply filter
+ 		loop<Hamiltonian, RegularLattice>(mc, parameters, f);
 	}
 }
 
@@ -276,12 +274,9 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 	const std::string ham = registry.Get<std::string>("mc", "General", "Hamiltonian" );
 	const int   nreplicas = registry.Get<int>("mc", "General", "nreplicas" );
 
-	// by construction temperatures have to go first in cart_prod, but here 
-	// we want it sorted by "id", therefore the two are swapped afterwards
-	std::vector<double> id(nreplicas);
-	for (int i=0; i<nreplicas; ++i) id[i] = i;
-
-
+    std::vector<MARQOVConfig> mcs(nreplicas, MARQOVConfig(outdir));
+    for (int i = 0; i < nreplicas; ++i)
+        mcs[i].setid(i);
 
 	auto defaultfilter = [](auto& latt, auto p)
 	{
@@ -294,16 +289,14 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 	};
 
 	if (ham == "Ising")
-	{ }
-// 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
-// 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
-// 		auto parameters = cart_prod(id, beta, J);
-// 		for (auto& param_tuple : parameters) // swap "id" and "temperature"
-// 			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
-// 
-// 		write_logfile(registry, beta);
-// 		RegularLatticeloop<Ising<int>>(registry, outdir, parameters, defaultfilter);
-// 	}
+	{
+		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
+		auto parameters = cart_prod(beta, J);//FIXME: is this really intended to have nreplicas of each (beta, J)
+
+		write_logfile(registry, beta);
+ 		RegularLatticeloop<Ising<int>>(registry, outdir, parameters, defaultfilter);
+	}
 //     else if (ham == "Heisenberg")
 //     {
 // 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
@@ -418,8 +411,7 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
         Neighbours<int32_t> nbrs(dummy);
         auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
         std::vector<double> myj = {1.0};
-        std::vector<int> myid = {1};
-        auto hamparams = cart_prod(betas, myid, myj);
+        auto hamparams = cart_prod(betas, myj);
         		// extract lattice size and prepare directories
 		int L = nbrs.size();
 		cout << endl << "L = " << L << endl << endl;
@@ -434,9 +426,7 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 	{
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
-		auto parameters = cart_prod(id, beta, J);
-		for (auto& param_tuple : parameters) // swap "id" and "temperature"
-			std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
+		auto parameters = cart_prod(beta, J);
 
 		write_logfile(registry, beta);
 //		RegularLatticeloop<Ising<int>>(registry, outdir, parameters, defaultfilter);
@@ -460,7 +450,7 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
             auto& lp = p.first;
             auto& mp = p.second;
             auto& hp = p.third;
- 			auto str_id    = std::to_string(int(std::get<2>(hp)));
+ 			auto str_id    = std::to_string(mp.id);
 			auto str_beta  = "beta"+std::to_string(std::get<1>(hp));
 //			auto str_J     = "J"+std::to_string(std::get<3>(hp));
 			auto outdir    = mp.outfile;
