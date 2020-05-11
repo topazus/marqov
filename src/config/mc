@@ -1,14 +1,9 @@
 [General]
 dim = 2
-nL = 8,12,16,24,32,48,64
-nreplicas = 40
+nL = 8,12,16,24,32,48
+nreplicas = 100
 
-lvstart = 0.24
-lvfinal = 0.30
-lvsteps = 10
-loopstyle = lin
-
-Hamiltonian = IrregularIsing2
+Hamiltonian = XXZAntiferroSingleAniso
 
 [Ising]
 
@@ -33,9 +28,8 @@ mass = 1.0
 
 [XXZAntiferroSingleAniso]
 
-names = extfield, aniso, singleaniso
-
-extfield = 4.4
+beta = 3.333333
+extfield = 1.80, 1.81, 1.82, 1.83, 1.84, 1.85, 1.86, 1.87, 1.88, 1.90
 aniso = 0.8
 singleaniso = 0.2
 

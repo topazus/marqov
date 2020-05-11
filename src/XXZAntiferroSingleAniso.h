@@ -226,7 +226,7 @@ template <typename SpinType, typename MyFPType>
 class XXZAntiferroSingleAniso
 {
 	public:
-        	double Delta, H, D;
+        	double Delta, H, D, id;
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
@@ -246,7 +246,7 @@ class XXZAntiferroSingleAniso
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		XXZAntiferroSingleAniso(double myH, double myDelta, double myD) : H(myH), Delta(myDelta), D(myD)
+		XXZAntiferroSingleAniso(double id, double myH, double myDelta, double myD) : H(myH), Delta(myDelta), D(myD), id(id)
 		{
 			interactions[0] = new XXZAntiferroSingleAniso_interaction<StateVector>(Delta); 
 			onsite[0]       = new XXZAntiferroSingleAniso_extfield<StateVector>(H);

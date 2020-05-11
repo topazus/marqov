@@ -214,7 +214,9 @@ template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable filter)
 {
 	// number of EMCS during relaxation and measurement
-	mc.setwarmupsteps(500).setgameloopsteps(1500);
+	mc.setwarmupsteps(350);
+	mc.setgameloopsteps(1500);
+
 	std::vector<std::pair<MARQOVConfig, Parameters> > params;
 	for(int i = 0; i < hamparams.size(); ++i)
 	{
@@ -255,8 +257,11 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outdir, const std::ve
 		// prepare
 		int L = nL[j];
 		cout << endl << "L = " << L << endl << endl;
-        MARQOVConfig mc(outdir+"/"+std::to_string(L));
-        mc.setnsweeps(10).setncluster(2*L);
+
+        	MARQOVConfig mc(outdir+"/"+std::to_string(L));
+        	mc.setnsweeps(10);
+		mc.setncluster(0);
+
 		makeDir(mc.outfile);
 
 		// lattice
@@ -277,6 +282,11 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
 	// extract Hamiltonian type and number of replicas
 	const std::string ham = registry.Get<std::string>("mc", "General", "Hamiltonian" );
 	const int   nreplicas = registry.Get<int>("mc", "General", "nreplicas" );
+
+	// by construction temperatures have to go first in cart_prod, but sometimes
+	// we want it sorted by "id", therefore the two are swapped afterwards
+	std::vector<double> id(nreplicas);
+	for (int i=0; i<nreplicas; ++i) id[i] = i;
 
     std::vector<MARQOVConfig> mcs(nreplicas, MARQOVConfig(outdir));
     for (int i = 0; i < nreplicas; ++i)
@@ -339,64 +349,34 @@ void selectsim(RegistryDB& registry, std::string outdir, std::string logdir)
     }
     else if(ham == "XXZAntiferroSingleAniso")
     {
-        	// --------- unpack configuration file ---------
-    auto lvname    = registry.Get<std::string>("mc", "General", "loopvar" );
-	auto loopstyle = registry.Get<std::string>("mc", "General", "loopstyle" );
+		auto beta        = registry.Get<std::vector<double>>("mc", ham, "beta");
+		auto extfield    = registry.Get<std::vector<double>>("mc", ham, "extfield");
+		auto aniso       = registry.Get<std::vector<double>>("mc", ham, "aniso");
+		auto singleaniso = registry.Get<std::vector<double>>("mc", ham, "singleaniso");
 
-	double lvstart = registry.Get<double>("mc", "General", "lvstart" );
-	double lvfinal = registry.Get<double>("mc", "General", "lvfinal" );
-	int    lvsteps = registry.Get<int>("mc", "General", "lvsteps" );
+		auto parameters = cart_prod(id, beta, extfield, aniso, singleaniso);
 
-    auto parnames = registry.GetBlock("mc", ham).GetKeys();
+		for (auto& param_tuple : parameters) // swap "id" and "temperature"
+					std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
 
-	std::vector<std::vector<double>> par;
-	for (int i=0; i<parnames.size(); i++)
-	{
-		auto parname = parnames[i];
-		if (parname != lvname)
-		{
-			std::vector<double> parval = {0};
-			parval[0] = registry.Get<double>("mc", ham, parnames[i]);
-			par.push_back(parval);
-		}
+		write_logfile(registry, extfield);
+
+		auto xxzfilter = [](RegularLattice& latt, auto p)
+		{	
+			// write a filter to determine output file path and name
+			std::string str_id    = std::to_string(int(std::get<1>(p.second)));
+//			std::string str_id    = std::to_string(p.first.id);
+			std::string str_beta  = "beta"+std::to_string(std::get<0>(p.second));
+			std::string str_extf  = "extf"+std::to_string(std::get<2>(p.second));
+			
+			std::string outname   = str_beta+"_"+str_extf+"_"+str_id+".h5";
+			std::string outsubdir = p.first.outfile+"/";
+			p.first.outfile = outsubdir + outname;
+			return std::tuple_cat(std::forward_as_tuple(latt), p);
+		};
+
+		RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outdir, parameters, xxzfilter);
 	}
-
-	// create range for loop variable
-	std::vector<double> loopvar = create_range(lvstart, lvfinal, lvsteps);
-        // ------------ create parameter vector ---------------
-
-		// todo: improve this section
-		// by construction temperatures have to go first, but here 
-		// we want it sorted by "id", therefore the two are swapped afterwards
-
-		// beta is loopvar
-		auto parameters = cart_prod(loopvar, par[0], par[1], par[2]);
-
-		// beta is not loopvar
-//		auto beta = registry.Get<double>("mc", "General", "beta");
-//		auto parameters = cart_prod(id, beta, loopvar, par[0], par[1]);
-
-	// write values in external fields in logfile
-	std::string logfile = registry.Get<std::string>("mc", "IO", "logfile" );
-	std::ofstream os(logdir+"/"+logfile);
-		os << std::setprecision(7);
-		for (int i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;
-	os.close();
-                auto xxzfilter = [](RegularLattice& latt, auto p)
-				{
-	    // write a filter to determine output file path and name
-	    std::string str_id    = std::to_string(p.first.id);
-	    std::string str_beta  = "beta"+std::to_string(std::get<0>(p.second));
-					// write a filter to determine output file path and name
-					std::string str_extf = "extf"+std::to_string(std::get<2>(p.second));
-
-					std::string outname   = str_beta+"_"+str_extf+"_"+str_id+".h5";
-	    std::string outsubdir = p.first.outfile+"/"+std::to_string(latt.size())+"/";
-        p.first.outfile = outsubdir;
- 	    return std::tuple_cat(std::forward_as_tuple(latt), p);
-				};
-            RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outdir, parameters, xxzfilter);
-    }
     else if(ham == "IrregularIsing")
     {
         std::vector<std::vector<int> > dummy;
