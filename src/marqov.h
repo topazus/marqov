@@ -18,15 +18,40 @@ namespace MARQOV
 {
     struct MARQOVConfig
     {
-        /** The standard constructor. It requires a filename, the rest of the positional parameters are optional.
-         */
-        MARQOVConfig(std::string of, int i = 0, int s = 0, int ugli = 10, int nst = 250, int ws = 100, int gls = 200, int nc = 20, int nsw = 10) : outfile(of), id(i), seed(s), gli(ugli), warmupsteps(ws), gameloopsteps(gls), ncluster(nc), nsweeps(nsw) {}
-        MARQOVConfig(const MARQOVConfig& rhs) = default;///< FIXME: Think about wether we can get rid of it.
+        //
+	   // The standard constructor. It requires an outpath, the rest of the positional parameters are optional.
+        //
+
+        MARQOVConfig(std::string op, 
+	   			 int i = 0, 
+				 int s = 0, 
+				 int ugli = 10, 
+				 int nst = 250, 
+				 int ws = 100, 
+				 int gls = 200, 
+				 int nc = 20, 
+				 int nsw = 10) : outpath(op), 
+				 			  id(i), 
+							  seed(s), 
+							  gli(ugli), 
+							  warmupsteps(ws), 
+							  gameloopsteps(gls), 
+							  ncluster(nc), 
+							  nsweeps(nsw) {}
+
+        MARQOVConfig(const MARQOVConfig& rhs) = default; //< FIXME: Think about wether we can get rid of it.
         MARQOVConfig& operator=(const MARQOVConfig& rhs) = delete;
         MARQOVConfig(MARQOVConfig&& other) = default;
         MARQOVConfig& operator=(MARQOVConfig&& other) = default;
-        std::string outfile;
-        std::string logpath;///< The logpath. For lack of a better place it is currently stored here.
+
+
+	   // Output
+	   std::string outname; // the output filename; is empty but will be specified by a filter!
+        std::string outpath; // the outpath; full filename will be "outpath/outfile.h5"
+        std::string logpath; // the logpath. For lack of a better place it is currently stored here.
+
+
+	   // MC variables
         int id;
         int seed; ///< Doing this correctly opens a whole can of worms.... At one point we need to dump the state of the RNG for restart.
         int gli; ///< The unknown gameloop integer
@@ -35,6 +60,8 @@ namespace MARQOV
         int gameloopsteps;
         int ncluster;
         int nsweeps;
+
+
         /** A chain of setters to emulate the named parameter idiom.*/
         MARQOVConfig& setid(int i) {id = i; return *this;}
         MARQOVConfig& setseed(int s) {seed = s; return *this;}
@@ -197,53 +224,69 @@ struct ObsTupleToObsCacheTuple
     }
 };
 
-		std::vector<std::vector<std::vector<double>>> check;
-		std::vector<int> checkidxs;
+	std::vector<std::vector<std::vector<double>>> check;
+	std::vector<int> checkidxs;
+	
 
-		/** The initial constructor call.
-         * First we have the parameters for the MARQOV class, then follows the arbitrary number of
-         * arguments for a particular Hamiltonian.
-         * @param lattice The instantiated lattice object
-         * @param outfile Where to create the output file
-         * @param mybeta the temperature that governs the Metropolis dynamics
-         * @param args A template parameter pack for the Hamiltonian
-         */
 
-        template <class ...HArgs>
-		Marqov(Grid& lattice, MARQOVConfig mc, double mybeta, HArgs&& ... args) : RefType<Grid>(std::forward<Grid>(lattice)),
-		                                                                              ham(std::forward<HArgs>(args) ... ),
-		                                                                              mcfg(mc),
-													rng(0, 1), beta(mybeta), metro(rng),  dump(mc.outfile, H5F_ACC_TRUNC ),
-													obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
-		{
-//			rng.seed(15); cout << "seed is fixed!" << endl << endl;
-			rng.seed(time(NULL)+std::random_device{}());
-			rng.set_integer_range(lattice.size());
-			statespace = new typename Hamiltonian::StateVector[lattice.size()];
-		}
+
+	
+	/** ----- The original constructor call -----
+	* First we have the parameters for the MARQOV class, then follows the arbitrary number of
+	* arguments for a particular Hamiltonian.
+	* @param lattice The instantiated lattice object
+	* @param outfile Where to create the output file
+	* @param mybeta the temperature that governs the Metropolis dynamics
+	* @param args A template parameter pack for the Hamiltonian
+	*/
+	
+	template <class ...HArgs>
+	Marqov(Grid& lattice, MARQOVConfig mc, double mybeta, HArgs&& ... args) : 
+		RefType<Grid>(std::forward<Grid>(lattice)),
+		ham(std::forward<HArgs>(args) ... ),
+		mcfg(mc),
+		rng(0, 1), 
+		beta(mybeta), 
+		metro(rng),  
+		dump(mc.outpath+mc.outname+".h5", H5F_ACC_TRUNC ),
+		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
+	{
+		//rng.seed(15); cout << "seed is fixed!" << endl << endl;
+		rng.seed(time(NULL)+std::random_device{}());
+		rng.set_integer_range(lattice.size());
+		statespace = new typename Hamiltonian::StateVector[lattice.size()];
+	}
 		
 		
-		/** Alternate constructor if you require Marqov to instantiate and embed the lattice for you
-         * @param outfile Where to create the output file
-         * @param mybeta the temperature that governs the Metropolis dynamics
-         * @param p A pair containing in the second Argument the lattice parameters and in the first the Hamiltonian parameters
-         */
-        template <class ...HArgs, class ... LArgs>
-		Marqov(std::tuple<LArgs...>& largs, MARQOVConfig mc, double mybeta, HArgs&& ... hargs) : RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
-		                                                                                             ham(std::forward<HArgs>(hargs) ... ),
-                                                                                                     mcfg(mc),
-                                                                                                     rng(0, 1), beta(mybeta), metro(rng),  dump(mc.outfile, H5F_ACC_TRUNC ),
-													obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
-		{
-//			rng.seed(15); cout << "seed is fixed!" << endl << endl;
-			rng.seed(time(NULL)+std::random_device{}());
-			rng.set_integer_range(this->grid.size());
-			statespace = new typename Hamiltonian::StateVector[this->grid.size()];
-		}
+	/** ----- Alternate constructor -----
+	* if you require Marqov to instantiate and embed the lattice for you
+	* @param outfile Where to create the output file
+	* @param mybeta the temperature that governs the Metropolis dynamics
+	* @param p A pair containing in the second Argument the lattice parameters and in the first the Hamiltonian parameters
+	*/
+
+	template <class ...HArgs, class ... LArgs>
+	Marqov(std::tuple<LArgs...>& largs, MARQOVConfig mc, double mybeta, HArgs&& ... hargs) : 
+		RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
+		ham(std::forward<HArgs>(hargs) ... ),
+		mcfg(mc),
+		rng(0, 1), 
+		beta(mybeta), 
+		metro(rng),  
+		dump(mc.outpath+mc.outname+".h5", H5F_ACC_TRUNC ),
+		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
+	{
+		// rng.seed(15); cout << "seed is fixed!" << endl << endl;
+		rng.seed(time(NULL)+std::random_device{}());
+		rng.set_integer_range(this->grid.size());
+		statespace = new typename Hamiltonian::StateVector[this->grid.size()];
+	}
 		
 		
 		
-		
+	
+
+
 		
 
 		// Destructor

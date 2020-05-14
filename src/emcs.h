@@ -8,7 +8,7 @@ template <class Grid, class Hamiltonian, template<class> class RefType>
 double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep()
 {
 	const int SymD = std::tuple_size<StateVector>::value;
-	const int ncolors = 3;
+	const int ncolors = 1;
 
 	// cluster updates
 	double avgclustersize = 0;
@@ -19,10 +19,6 @@ double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep()
 		// random direction
 		const auto rdir = rnddir<RND, typename StateVector::value_type, SymD>(rng);
 		avgclustersize += wolffstep_general(rsite, rdir);
-
-		// Ashkin Teller model
-		// loop colors
-//		for (int i=0; i<ncolors; i++) avgclustersize += wolffstep_general(rsite, i);
 	}
 
 
@@ -38,7 +34,6 @@ double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep()
 			{
 				const int rsite = rng.i();
 				metropolisstep(rsite);
-//				metropolisstep(rsite, reduce_ref, reduce_cpy, s);
 			}
 		}
 	}
