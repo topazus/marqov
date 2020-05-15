@@ -121,8 +121,12 @@ class Ising
 	
 };
 
+namespace MARQOV {
+    //Work around GCC Bug for specializations of things in namespaces:
+    //https://gcc.gnu.org/bugzilla/show_bug.cgi?id=56480
+    // still occurs on 6.4.0
 template <class Lattice>
-struct MARQOV::Metropolis<Ising<int>, Lattice>
+struct Metropolis<Ising<int>, Lattice>
 {
     template <class StateSpace, class M, class RNG>
     static int move(const Ising<int>& ham, const Lattice& grid, int rsite, StateSpace& statespace, M& metro, RNG& rng, double beta)
@@ -171,4 +175,5 @@ struct MARQOV::Metropolis<Ising<int>, Lattice>
     return retval;
     }
 };
+}
 #endif
