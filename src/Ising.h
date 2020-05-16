@@ -129,7 +129,7 @@ template <class Lattice>
 struct Metropolis<Ising<int>, Lattice>
 {
     template <class StateSpace, class M, class RNG>
-    static int move(const Ising<int>& ham, const Lattice& grid, int rsite, StateSpace& statespace, M& metro, RNG& rng, double beta)
+    static int move(const Ising<int>& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNG& rng, double beta, int rsite)
     {
         typedef typename Ising<int>::StateVector StateVector;
     	// old state vector at rsite
