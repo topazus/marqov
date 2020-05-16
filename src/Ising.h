@@ -98,14 +98,14 @@ class Ising
 		// the functions 'wolff_coupling' and 'wolff_flip'
 
 		template <class A = bool>
-		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a=0)
+		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a=0) const 
 		{
 			if (sv1[0] == sv2[0]) return 0.0;
 			else return -1.0;
 		}
 
 		template <class A = bool>
-		inline void wolff_flip(StateVector& sv, const A a=0)
+		inline void wolff_flip(StateVector& sv, const A a=0) const 
 		{
 			sv[0] *= -1;
 		}

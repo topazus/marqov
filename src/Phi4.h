@@ -146,13 +146,13 @@ class Phi4
 		// --- Wolff ---
 
 		template <class A>
-		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
+		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a) const 
 		{
 			return dot(sv1, a) * dot(sv2, a);
 		}
 
 		template <class A>
-		inline void wolff_flip(StateVector& sv, const A a)
+		inline void wolff_flip(StateVector& sv, const A a) const
 		{
 			const double dotp = dot(sv, a);
 			for (int i=0; i<SymD; i++) sv[i] -= 2*dotp*a[i];
