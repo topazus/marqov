@@ -1,6 +1,7 @@
 #ifndef EMCS_H
 #define EMCS_H
-
+#include "metropolis.h"
+#include "wolff.h"
 // Defines the Elementary Monte Carlo Step (EMCS)
 
 
@@ -18,9 +19,8 @@ double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep()
 
 		// random direction
 		const auto rdir = rnddir<RND, typename StateVector::value_type, SymD>(rng);
-		avgclustersize += wolffstep_general(rsite, rdir);
+		avgclustersize += wolffstep(rsite, rdir);
 	}
-
 
 
 	// Metropolis sweeps
