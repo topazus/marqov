@@ -156,69 +156,6 @@ inline int Marqov<Grid, Hamiltonian, RefType>::wolffstep_general(int rsite, cons
 /*
 
 
-// in the plain Ising model, the Wolff coupling is a constant, which can be
-// exploited for optimization
-
-template <class Grid, class Hamiltonian, template<class> class RefType>
-inline int Marqov<Grid, Hamiltonian, RefType>::wolffstep_Ising(int rsite)
-{
-	// prepare stack
-	std::vector<int> cstack(this->grid.size(), 0);
-
-	// add initial site and flip it
-	int q = 0;
-	cstack[q] = rsite;
-	const int val = statespace[rsite][0];
-	ham.wolff_flip(statespace[rsite]);
-	int clustersize = 1;
-
-	// compute 'Wolff probability' 
-	const int a = 0; // plain Ising model has only one interaction term
-	const double coupling = ham.interactions[a]->J;
-	const double prob = -std::expm1(+2.0*beta*coupling);
-	
-	// loop over stack as long as non-empty
-	while (q>=0)
-	{
-		// extract last sv in stack
-		const int currentidx = cstack[q];
-		StateVector& currentsv = statespace[currentidx];
-		q--;
-	
-		// get its neighbours
-		const auto nbrs = this->grid.getnbrs(a, currentidx);
-
-		// loop over neighbours
-		for (int i = 0; i < this->nbrs.size(); ++i)
-		{
-			// extract corresponding sv
-			const auto currentnbr = nbrs[i];
-			StateVector& candidate = statespace[currentnbr];
-
-			// test whether site is added to the cluster
-			if (candidate[0] == val)
-			{
-				if (rng.d() < prob)
-				{
-					q++;
-					cstack[q] = currentnbr;
-					clustersize++;
-					ham.wolff_flip(candidate);
-				}
-			}
-		}
-	}
-
-	return clustersize;
-}
-
-
-
-
-
-
-
-
 template <class Grid, class Hamiltonian, template<class> class RefType>
 inline int Marqov<Grid, Hamiltonian, RefType>::wolffstep_Heisenberg(int rsite, const StateVector& rdir)
 {
