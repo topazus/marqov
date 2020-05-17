@@ -472,6 +472,28 @@ struct ObsTupleToObsCacheTuple
 		// -------------- special purpose functions ----------------
 
 
+          void full_output_2D(int dim=0)
+          {
+               const int LL = this->grid.length;
+
+               ofstream os;
+               os.open("../log/fullout-"+std::to_string(LL)+"-"+std::to_string(beta)+".dat");
+
+               for (int i=0; i<LL; i++)
+               {
+                    for (int j=0; j<LL; j++)
+                    {
+                         int curridx = LL*i+j;
+                         double current = statespace[curridx][dim];
+                         os << current << "\t";
+                    }
+                    os << endl;
+               }
+          }
+
+
+
+
 	    	void debugloop(const int nsteps, const int ncluster, const int nsweeps)
 		{
 			double avgclustersize = 0;

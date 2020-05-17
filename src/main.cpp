@@ -214,8 +214,8 @@ template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable filter)
 {
 	// number of EMCS during relaxation and measurement
-	mc.setwarmupsteps(350);
-	mc.setgameloopsteps(1500);
+	mc.setwarmupsteps(1000);
+	mc.setgameloopsteps(5000);
 
 	std::vector<std::pair<MARQOVConfig, Parameters> > params;
 	for(int i = 0; i < hamparams.size(); ++i)
@@ -261,8 +261,8 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
         	MARQOVConfig mc(outpath);
-        	mc.setnsweeps(10);
-		mc.setncluster(0);
+        	mc.setnsweeps(5);
+		mc.setncluster(2*L);
 
 		makeDir(mc.outpath);
 
@@ -304,7 +304,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		
 		std::string str_id    = std::to_string(mp.id);
 		std::string str_beta  = "beta"+std::to_string(std::get<0>(p.second));
-		mp.outname = str_beta+"_"+str_id;
+		mp.outname = str_beta;
 		return std::tuple_cat(std::forward_as_tuple(latt), p);
 	};
 
@@ -342,10 +342,13 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
     }
     else if (ham == "BlumeCapel")
     {
-        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
-        std::vector<double> myj = {1.0};
-        auto parameters = cart_prod(betas, myj);
-        RegularLatticeloop<BlumeCapel<int> >(registry, outbasedir, parameters, defaultfilter);
+		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
+		auto D    = registry.Get<std::vector<double> >("mc", ham, "D");
+		auto parameters = cart_prod(beta, J, D);
+
+		write_logfile(registry, beta);
+ 		RegularLatticeloop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
     }
     else if(ham == "XXZAntiferro")
     {
