@@ -246,10 +246,18 @@ void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable f
 template <class Hamiltonian, class Params, class Callable>
 void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& parameters, Callable filter)
 {
-	const auto dim = reg.Get<int>("mc", "General", "dim" );
-	const auto nL  = reg.Get<std::vector<int> >("mc", "General", "nL" );
+	const auto dim 		= reg.Get<int>("mc", "General", "dim" );
+	const auto nreplicas 	= reg.Get<int>("mc", "General", "nreplicas" );
+	const auto nL  		= reg.Get<std::vector<int>>("mc", "General", "nL" );
+	const std::string name 	= reg.Get<std::string>("mc", "General", "Hamiltonian" );
+	const std::string nLs 	= reg.Get<std::string>("mc", "General", "nL" );
 
-	cout << endl << "The dimension is " << dim << endl;
+	cout << endl;
+	cout << "Hamiltonian: \t" << name << endl;
+	cout << "Dimension: \t" << dim << endl;
+	cout << "Lattice sizes:\t" << nLs << endl;
+	cout << "Replicas:\t" << nreplicas << endl;
+
 
 	// lattice size loop
 	for (int j=0; j<nL.size(); j++)
