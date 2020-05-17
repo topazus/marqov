@@ -98,14 +98,14 @@ class Ising
 		// the functions 'wolff_coupling' and 'wolff_flip'
 
 		template <class A = bool>
-		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a=0)
+		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a=0) const 
 		{
 			if (sv1[0] == sv2[0]) return 0.0;
 			else return -1.0;
 		}
 
 		template <class A = bool>
-		inline void wolff_flip(StateVector& sv, const A a=0)
+		inline void wolff_flip(StateVector& sv, const A a=0) const 
 		{
 			sv[0] *= -1;
 		}
@@ -129,7 +129,7 @@ template <class Lattice>
 struct Metropolis<Ising<int>, Lattice>
 {
     template <class StateSpace, class M, class RNG>
-    static int move(const Ising<int>& ham, const Lattice& grid, int rsite, StateSpace& statespace, M& metro, RNG& rng, double beta)
+    static int move(const Ising<int>& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNG& rng, double beta, int rsite)
     {
         typedef typename Ising<int>::StateVector StateVector;
     	// old state vector at rsite
@@ -175,5 +175,64 @@ struct Metropolis<Ising<int>, Lattice>
     return retval;
     }
 };
+
+template <class Lattice>
+struct Wolff<Ising<int>, Lattice>
+{
+    template <class DirType, class RNG, class StateSpace>
+    static inline int move(const Ising<int>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite, const DirType&)
+    {
+        typedef typename Ising<int>::StateVector StateVector;
+        // prepare stack
+	std::vector<int> cstack(grid.size(), 0);
+
+	// add initial site and flip it
+	int q = 0;
+	cstack[q] = rsite;
+	const int val = statespace[rsite][0];
+	ham.wolff_flip(statespace[rsite]);
+	int clustersize = 1;
+
+	// compute 'Wolff probability' 
+	const int a = 0; // plain Ising model has only one interaction term
+	const double coupling = ham.interactions[a]->J;
+	const double prob = -std::expm1(+2.0*beta*coupling);
+	
+	// loop over stack as long as non-empty
+	while (q>=0)
+	{
+		// extract last sv in stack
+		const int currentidx = cstack[q];
+		StateVector& currentsv = statespace[currentidx];
+		q--;
+	
+		// get its neighbours
+		const auto nbrs = grid.getnbrs(a, currentidx);
+
+		// loop over neighbours
+		for (int i = 0; i < nbrs.size(); ++i)
+		{
+			// extract corresponding sv
+			const auto currentnbr = nbrs[i];
+			StateVector& candidate = statespace[currentnbr];
+
+			// test whether site is added to the cluster
+			if (candidate[0] == val)
+			{
+				if (rng.d() < prob)
+				{
+					q++;
+					cstack[q] = currentnbr;
+					clustersize++;
+					ham.wolff_flip(candidate);
+				}
+			}
+		}
+	}
+
+	return clustersize;
+    }
+};
+
 }
 #endif

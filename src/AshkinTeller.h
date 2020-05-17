@@ -130,14 +130,14 @@ class AshkinTeller
 		// the functions 'wolff_coupling' and 'wolff_flip'
 
 		template <class color = int>
-		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const color a=0)
+		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const color a=0) const
 		{
 			if (sv1[a] == sv2[a]) return 0.0;
 			else return - metro_coupling(sv1, sv2, a);
 		}
 
 		template <class color = int>
-		inline void wolff_flip(StateVector& sv, const color a=0)
+		inline void wolff_flip(StateVector& sv, const color a=0) const
 		{
 			sv[a] *= -1;
 		}

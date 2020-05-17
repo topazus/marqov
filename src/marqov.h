@@ -588,11 +588,8 @@ struct ObsTupleToObsCacheTuple
 	template <typename callable1, typename callable2>
 	inline int metropolisstep(int rsite, callable1 filter_ref, callable2 filter_copy, int comp);
 
-	inline int wolffstep(int rsite, const StateVector& rdir);
-	inline int wolffstep_Ising(int rsite);
-	inline int wolffstep_Heisenberg(int rsite, const StateVector& rdir);
 	template <typename DirType>
-	inline int wolffstep_general(int rsite, const DirType& rdir);
+	inline int wolffstep(int rsite, const DirType& rdir);
 
 	StateSpace statespace;
 	Hamiltonian ham;
@@ -637,7 +634,6 @@ auto makeMarqov(L&& latt, MARQOVConfig&& mc, Args&&... args)
     return makeMarqov2<H>(typename detail::is_Lattice<L>::type(), latt, std::forward<MARQOVConfig>(mc), args...);
 }
 
-#include "update.h"
 #include "emcs.h"
 }
 #endif

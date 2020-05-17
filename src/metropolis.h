@@ -47,12 +47,12 @@ template <class Hamiltonian, class Lattice>
 struct Metropolis
 {
     template <class StateSpace, class M, class RNG>
-    static int move(const Hamiltonian& ham, const Lattice& grid, int rsite, StateSpace& statespace, M& metro, RNG& rng, double beta);
+    static int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNG& rng, double beta, int rsite);
 };
 
 template <class Hamiltonian, class Lattice>
 template <class StateSpace, class M, class RNG>
-int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, int rsite, StateSpace& statespace, M& metro, RNG& rng, double beta)
+int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNG& rng, double beta, int rsite)
 {
     typedef typename Hamiltonian::StateVector StateVector;
     	// old state vector at rsite
@@ -123,7 +123,7 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
 template <class Grid, class Hamiltonian, template<class> class RefType>
 inline int Marqov<Grid, Hamiltonian, RefType>::metropolisstep(int rsite)
 {
-    return Metropolis<Hamiltonian, Grid>::move(this->ham, this->grid, rsite, statespace, this->metro, this->rng, this->beta);
+    return Metropolis<Hamiltonian, Grid>::move(this->ham, this->grid, statespace, this->metro, this->rng, this->beta, rsite);
 }
 
 
