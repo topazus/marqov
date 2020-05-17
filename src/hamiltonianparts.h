@@ -21,7 +21,7 @@ template <class StateSpace, class StateVector>
 class MultiSite
 {
 	public: 
-	    const double k;
+	    double k;
 	    virtual double operator() (const StateVector& sv, int svpos, StateSpace s) = 0;
 	private:
 };
