@@ -191,7 +191,7 @@ namespace MARQOV
 		const auto proj1 = coupling*dot(statespace[current], rdir);
 
 		const auto nbrs = grid.getnbrs(0, current);
-		for (int i = 0; i < nbrs.size(); ++i)
+		for (std::size_t i = 0; i < nbrs.size(); ++i)
 		{
 			const auto currentidx = nbrs[i];
 			StateVector& candidate = statespace[currentidx];

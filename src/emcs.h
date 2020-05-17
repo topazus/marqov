@@ -25,7 +25,7 @@ double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep()
 	for (int j=0; j<mcfg.nsweeps; j++)
 	{
 		// loop sites
-		for(int i = 0; i < this->grid.size(); ++i)
+		for(decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
 		{
 			const int rsite = rng.i();
 			metropolisstep(rsite);

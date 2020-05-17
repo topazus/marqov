@@ -139,7 +139,7 @@ struct Metropolis<Ising<int>, Lattice>
 	
 	// interaction part
 	double interactionenergydiff = 0;
-	for(int a = 0; a < ham.Nalpha; ++a)
+	for(typename std::remove_cv<decltype(ham.Nalpha)> ::type a = 0; a < ham.Nalpha; ++a)
 	{
 		auto nbrs = grid.getnbrs(a, rsite);
 		typedef decltype(ham.interactions[a]->operator()(statespace[0])) InteractionType;
@@ -147,7 +147,7 @@ struct Metropolis<Ising<int>, Lattice>
         
 		typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};
 		// sum over neighbours
-		for (int i = 0; i < nbrs.size(); ++i)
+		for (std::size_t i = 0; i < nbrs.size(); ++i)
 		{
 			auto idx = nbrs[i];
 			auto nbr = ham.interactions[a]->operator()(statespace[idx]);
@@ -203,14 +203,14 @@ struct Wolff<Ising<int>, Lattice>
 	{
 		// extract last sv in stack
 		const int currentidx = cstack[q];
-		StateVector& currentsv = statespace[currentidx];
+//		StateVector& currentsv = statespace[currentidx];
 		q--;
 	
 		// get its neighbours
 		const auto nbrs = grid.getnbrs(a, currentidx);
 
 		// loop over neighbours
-		for (int i = 0; i < nbrs.size(); ++i)
+		for (std::size_t i = 0; i < nbrs.size(); ++i)
 		{
 			// extract corresponding sv
 			const auto currentnbr = nbrs[i];

@@ -125,7 +125,7 @@ template <class StateVector>
 StateVector operator + (StateVector lhs,  StateVector rhs)
 {
     StateVector res(lhs);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
     res[i] += rhs[i];
     return res;
 }
@@ -134,7 +134,7 @@ template <class StateVector>
 StateVector operator - (StateVector lhs,  StateVector rhs)
 {
     StateVector res(lhs);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
     res[i] -= rhs[i];
     return res;
 }
@@ -147,7 +147,7 @@ inline double dot(const double& a, const double& b)
 template<class VecType>
 inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 {
-    typedef typename VecType::value_type FPType;
+//    typedef typename VecType::value_type FPType;
     return std::inner_product(begin(a), end(a), begin(b), 0.0);
 }
 
@@ -245,11 +245,11 @@ struct ObsTupleToObsCacheTuple
 		RefType<Grid>(std::forward<Grid>(lattice)),
 		ham(std::forward<HArgs>(args) ... ),
 		mcfg(mc),
-		rng(0, 1), 
-		beta(mybeta), 
-		metro(rng),  
 		dump(mc.outpath+mc.outname+".h5", H5F_ACC_TRUNC ),
-		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
+        obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs())),
+		rng(0, 1), 
+		beta(mybeta),
+		metro(rng)
 	{
 		//rng.seed(15); cout << "seed is fixed!" << endl << endl;
 		rng.seed(time(NULL)+std::random_device{}());
@@ -270,11 +270,11 @@ struct ObsTupleToObsCacheTuple
 		RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
-		rng(0, 1), 
-		beta(mybeta), 
-		metro(rng),  
 		dump(mc.outpath+mc.outname+".h5", H5F_ACC_TRUNC ),
-		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
+        obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs())),
+		rng(0, 1), 
+		beta(mybeta),
+		metro(rng)
 	{
 		// rng.seed(15); cout << "seed is fixed!" << endl << endl;
 		rng.seed(time(NULL)+std::random_device{}());
@@ -576,7 +576,7 @@ struct ObsTupleToObsCacheTuple
 		 void init_hot()
 		 {
 		 	const int SymD = std::tuple_size<StateVector>::value;
-			for(int i = 0; i < this->grid.size(); ++i)
+			for(decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
 			{
 				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
 			}

@@ -41,7 +41,7 @@ int Wolff<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& gri
 		const auto nbrs = grid.getnbrs(a, currentidx);
 
 		// loop over neighbours
-		for (int i = 0; i < nbrs.size(); ++i)
+		for (std::size_t i = 0; i < nbrs.size(); ++i)
 		{
 			// extract corresponding sv
 			const auto currentnbr = nbrs[i];

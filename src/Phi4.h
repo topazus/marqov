@@ -61,7 +61,7 @@ class Phi4_Initializer
             double oldlen = std::sqrt(dot(osv, osv));
             double newlen = oldlen + amp*r;
             auto newdir = rnddir<RNG, double, SymD>(rng);
-            for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+            for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
                 newdir[i] *= newlen;
 			return newdir;
 		};
@@ -132,7 +132,7 @@ class Phi4
 		OnSite<StateVector, FPType>* onsite[Nbeta]; //Todo: External fields not yet supported
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Phi4(double beta, double lambda, double mass) : lambda(lambda), mass(mass), beta(beta)
+		Phi4(double beta, double lambda, double mass) : beta(beta), lambda(lambda), mass(mass)
 		{
 			interactions[0] = new Phi4_interaction<StateVector>();
 			onsite[0]       = new Phi4_onsitesquare<StateVector>(mass, beta);

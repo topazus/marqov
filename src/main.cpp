@@ -87,8 +87,8 @@ void write_logfile(RegistryDB& reg, std::vector<double> loopvar)
 	std::string logdir  = reg.Get<std::string>("mc", "IO", "logdir" );
 	std::string logfile = reg.Get<std::string>("mc", "IO", "logfile" );
 	std::ofstream os(logdir+"/"+logfile);
-		os << std::setprecision(7);
-		for (int i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;
+	os << std::setprecision(7);
+	for (std::size_t i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;
 	os.close();
 }
 
@@ -218,7 +218,7 @@ void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable f
 	mc.setgameloopsteps(5000);
 
 	std::vector<std::pair<MARQOVConfig, Parameters> > params;
-	for(int i = 0; i < hamparams.size(); ++i)
+	for(std::size_t i = 0; i < hamparams.size(); ++i)
 	{
 	    auto mc2(mc);
 	    mc2.setid(i);
@@ -260,7 +260,7 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std
 
 
 	// lattice size loop
-	for (int j=0; j<nL.size(); j++)
+	for (std::size_t j=0; j<nL.size(); j++)
 	{
 		// prepare
 		int L = nL[j];
@@ -311,7 +311,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto& hp = p.second;	// Hamiltonian params
 		
 		std::string str_id    = std::to_string(mp.id);
-		std::string str_beta  = "beta"+std::to_string(std::get<0>(p.second));
+		std::string str_beta  = "beta"+std::to_string(std::get<0>(hp));
 		mp.outname = str_beta;
 		return std::tuple_cat(std::forward_as_tuple(latt), p);
 	};
@@ -347,7 +347,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		// this requires some gymnastics ...
 		std::vector<double> dummy = {0.0};
 		auto parameters = cart_prod(beta, dummy, lambda, mass);
-		for (int i=0; i<parameters.size(); i++) std::get<1>(parameters[i]) = std::get<0>(parameters[i]);
+		for (std::size_t i=0; i<parameters.size(); i++) std::get<1>(parameters[i]) = std::get<0>(parameters[i]);
 
 		write_logfile(registry, beta);
 		RegularLatticeloop<Phi4<double, double> >(registry, outbasedir, parameters, defaultfilter);

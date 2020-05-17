@@ -246,7 +246,7 @@ class XXZAntiferroSingleAniso
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		XXZAntiferroSingleAniso(double id, double myH, double myDelta, double myD) : H(myH), Delta(myDelta), D(myD), id(id)
+		XXZAntiferroSingleAniso(double id, double myH, double myDelta, double myD) : Delta(myDelta), H(myH), D(myD), id(id)
 		{
 			interactions[0] = new XXZAntiferroSingleAniso_interaction<StateVector>(Delta); 
 			onsite[0]       = new XXZAntiferroSingleAniso_extfield<StateVector>(H);

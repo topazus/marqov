@@ -52,7 +52,7 @@ inline double dot(const double& a, const double& b)
 template<class VecType>
 inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 {
-    typedef typename VecType::value_type FPType;
+//    typedef typename VecType::value_type FPType;
     return std::inner_product(begin(a), end(a), begin(b), 0.0);
 }
 
@@ -72,7 +72,7 @@ inline void normalize(Container& a)
 {
 	typename Container::value_type tmp_abs=std::sqrt(dot(a, a));
 
-	for (int i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
+	for (decltype(a.size()) i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
 }
 
 
