@@ -343,7 +343,11 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto lambda = registry.Get<std::vector<double> >("mc", ham, "lambda");
 		auto mass   = registry.Get<std::vector<double> >("mc", ham, "mass");
 
-		auto parameters = cart_prod(beta, beta, lambda, mass);
+		// we need "beta" as an explicit parameter in the Hamiltonian
+		// this requires some gymnastics ...
+		std::vector<double> dummy = {0.0};
+		auto parameters = cart_prod(beta, dummy, lambda, mass);
+		for (int i=0; i<parameters.size(); i++) std::get<1>(parameters[i]) = std::get<0>(parameters[i]);
 
 		write_logfile(registry, beta);
 		RegularLatticeloop<Phi4<double, double> >(registry, outbasedir, parameters, defaultfilter);
