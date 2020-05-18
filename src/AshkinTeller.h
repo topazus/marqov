@@ -137,18 +137,13 @@ struct Metropolis<AshkinTeller<int>, Lattice>
 	typedef int ReducedStateVector;
 
 
-	static inline double metro_coupling(StateVector& sv1, StateVector& sv2, const int color=0)
+	static inline double metro_coupling(StateVector& sv1, StateVector& sv2, const int color, const AshkinTeller<int>& ham)
 	{
-
-		// todo: get us from the Hamiltonian
-		int J = -1;
-		int K = 0.5;
-
 		switch (color)
 		{
-			case 0: return J + K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
-			case 1: return J + K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
-			case 2: return J + K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
+			case 0: return ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
+			case 1: return ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
+			case 2: return ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
 		}
 	}
 
@@ -207,7 +202,7 @@ struct Metropolis<AshkinTeller<int>, Lattice>
 				// reduced neighbour
 				auto rnbr = nbr[color];
 				// coupling
-				auto cpl = metro_coupling(svold, nbr, color);
+				auto cpl = metro_coupling(svold, nbr, color, ham);
 				// sum
 				averagevector = averagevector + mult(cpl,rnbr);
 			}
