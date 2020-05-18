@@ -7,13 +7,10 @@
 #include "hamiltonianparts.h"
 #include "metropolis.h"
 
-// 3-color the Ashkin-Teller model (prototype)
+// the 3-color Ashkin-Teller model
 
 // numerically treated as embedded Ising models (compare Zhu et. al 2015)
 // make sure you set up a the EMCS properly
-
-// todo: pass Hamiltonian parameters through the constructor
-
 
 
 // ------------------------------ OBSERVABLES ---------------------------
@@ -32,9 +29,10 @@ class AshkinTellerMag
 
 			for (int i=0; i<N; i++)
 			{
-					mag += statespace[i][0];
-					mag += statespace[i][1];
-					mag += statespace[i][2];
+//				cout << statespace[i][0] << "\t" << statespace[i][1] << "\t" << statespace[i][2] << endl;
+				mag += statespace[i][0];
+				mag += statespace[i][1];
+				mag += statespace[i][2];
 			}
 
 			return std::abs(mag)/double(3*N);
@@ -126,16 +124,14 @@ class AshkinTeller
 };
 
 
-namespace MARQOV {
+namespace MARQOV 
+{
 
 template <class Lattice>
 struct Metropolis<AshkinTeller<int>, Lattice>
 {
-
-
 	typedef typename AshkinTeller<int>::StateVector StateVector;
 	typedef int ReducedStateVector;
-
 
 	static inline double metro_coupling(StateVector& sv1, StateVector& sv2, const int color, const AshkinTeller<int>& ham)
 	{
@@ -171,11 +167,11 @@ struct Metropolis<AshkinTeller<int>, Lattice>
 						double beta, 
 						int rsite)
 	{
-
+		int retval = 0;
 		for (int color=0; color<3; color++)
 		{
 	    		// old state vector at rsite
-			StateVector        svold  = statespace[rsite];
+			StateVector&        svold = statespace[rsite];
 			ReducedStateVector rsvold = svold[color];
 
 			// propose new configuration
@@ -193,7 +189,7 @@ struct Metropolis<AshkinTeller<int>, Lattice>
 			double averagevector = 0; 
 
 			// sum over neighbours
-			for (std::size_t i = 0; i < nbrs.size(); ++i)
+			for (std::size_t i=0; i<nbrs.size(); ++i)
 			{
 				// neighbour index
 				auto idx = nbrs[i];
@@ -206,24 +202,23 @@ struct Metropolis<AshkinTeller<int>, Lattice>
 				// sum
 				averagevector = averagevector + mult(cpl,rnbr);
 			}
-			interactionenergydiff += ham.interactions[a]->J * (dot(rsvnew - rsvold, averagevector));
 
-			// sum up energy differences
-			double dE 	= interactionenergydiff;
+			// energy difference
+			const double dE = dot(rsvnew - rsvold, averagevector);
 			
-			int retval = 0;
 			if ( dE <= 0 )
 			{
 				metro_flip(svold,color);
-				retval = 1;
+				retval++;
 			}
 			else if (rng.d() < exp(-beta*dE))
 			{
 				metro_flip(svold,color);
-				retval = 1;
+				retval++;
 			}
-			return retval;
 		}
+
+		return retval;
 	}
 };	
 

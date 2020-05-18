@@ -20,7 +20,7 @@ double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep()
 //		avgclustersize += wolffstep(rsite, rdir);
 
 		// Ashkin-Teller: random color
-//		const int color = 0;
+//		const int color = 0;  // randomize me!
 //		avgclustersize += wolffstep(rsite, color);
 	}
 

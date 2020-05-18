@@ -233,7 +233,8 @@ void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable f
 	{
 		auto& marqov = sims[i];
 
-		marqov.init_hot();
+//		marqov.init_hot();
+		marqov.init_cold_Ising_like(); cout << "AT init is on!!!" << endl;
 		marqov.wrmploop();
 		marqov.gameloop();
 	}
