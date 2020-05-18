@@ -99,7 +99,7 @@ class AshkinTeller
 
 
 
-		// using the Wolff cluster algorithm requires to implement
+		// using the general Wolff cluster algorithm requires to implement
 		// the functions 'wolff_coupling' and 'wolff_flip'
 
 		template <class color = int>
@@ -140,9 +140,9 @@ struct Metropolis<AshkinTeller<int>, Lattice>
 	static inline double metro_coupling(StateVector& sv1, StateVector& sv2, const int color=0)
 	{
 
+		// todo: get us from the Hamiltonian
 		int J = -1;
 		int K = 0.5;
-		// get us from the Hamiltonian
 
 		switch (color)
 		{
@@ -177,60 +177,58 @@ struct Metropolis<AshkinTeller<int>, Lattice>
 						int rsite)
 	{
 
-
-		int color = 1;
-		// do not forget the color loop!
-
-
-	    	// old state vector at rsite
-		StateVector        svold  = statespace[rsite];
-		ReducedStateVector rsvold = svold[color];
-
-		// propose new configuration
-		ReducedStateVector rsvnew = metro_newconf(rsvold);
-		
-		// interaction part
-		double interactionenergydiff = 0;
-
-		// set interaction family
-		const int a = 0;
-
-		// extract neighbours
-		auto nbrs = grid.getnbrs(a, rsite);
-
-		double averagevector = 0; 
-
-		// sum over neighbours
-		for (std::size_t i = 0; i < nbrs.size(); ++i)
+		for (int color=0; color<3; color++)
 		{
-			// neighbour index
-			auto idx = nbrs[i];
-			// full neighbour
-			auto nbr = ham.interactions[a]->operator()(statespace[idx]);
-			// reduced neighbour
-			auto rnbr = nbr[color];
-			// coupling
-			auto cpl = metro_coupling(svold, nbr, color);
-			// sum
-			averagevector = averagevector + mult(cpl,rnbr);
+	    		// old state vector at rsite
+			StateVector        svold  = statespace[rsite];
+			ReducedStateVector rsvold = svold[color];
+
+			// propose new configuration
+			ReducedStateVector rsvnew = metro_newconf(rsvold);
+			
+			// interaction part
+			double interactionenergydiff = 0;
+
+			// set interaction family
+			const int a = 0;
+
+			// extract neighbours
+			auto nbrs = grid.getnbrs(a, rsite);
+
+			double averagevector = 0; 
+
+			// sum over neighbours
+			for (std::size_t i = 0; i < nbrs.size(); ++i)
+			{
+				// neighbour index
+				auto idx = nbrs[i];
+				// full neighbour
+				auto nbr = ham.interactions[a]->operator()(statespace[idx]);
+				// reduced neighbour
+				auto rnbr = nbr[color];
+				// coupling
+				auto cpl = metro_coupling(svold, nbr, color);
+				// sum
+				averagevector = averagevector + mult(cpl,rnbr);
+			}
+			interactionenergydiff += ham.interactions[a]->J * (dot(rsvnew - rsvold, averagevector));
+
+			// sum up energy differences
+			double dE 	= interactionenergydiff;
+			
+			int retval = 0;
+			if ( dE <= 0 )
+			{
+				metro_flip(svold,color);
+				retval = 1;
+			}
+			else if (rng.d() < exp(-beta*dE))
+			{
+				metro_flip(svold,color);
+				retval = 1;
+			}
+			return retval;
 		}
-		interactionenergydiff += ham.interactions[a]->J * (dot(rsvnew - rsvold, averagevector));
-
-	    // sum up energy differences
-	    double dE 	= interactionenergydiff;
-
-	    int retval = 0;
-	    if ( dE <= 0 )
-	    {
-			metro_flip(svold,color);
-	        	retval = 1;
-	    }
-	    else if (rng.d() < exp(-beta*dE))
-	    {
-			metro_flip(svold,color);
-	        	retval = 1;
-	    }
-	    return retval;
 	}
 };	
 
