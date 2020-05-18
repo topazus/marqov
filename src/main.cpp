@@ -362,6 +362,16 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
  		RegularLatticeloop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
     }
+    else if (ham == "AshinTeller")
+    {
+		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
+		auto K    = registry.Get<std::vector<double> >("mc", ham, "K");
+		auto parameters = cart_prod(beta, J, K);
+
+		write_logfile(registry, beta);
+ 		RegularLatticeloop<AshkinTeller<int>>(registry, outbasedir, parameters, defaultfilter);
+    }
     else if(ham == "XXZAntiferro")
     {
         auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
