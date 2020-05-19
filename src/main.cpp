@@ -215,7 +215,7 @@ void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable f
 {
 	// number of EMCS during relaxation and measurement
 	mc.setwarmupsteps(5000);
-	mc.setgameloopsteps(15000);
+	mc.setgameloopsteps(100000);
 
 	std::vector<std::pair<MARQOVConfig, Parameters> > params;
 	for(std::size_t i = 0; i < hamparams.size(); ++i)
@@ -270,7 +270,7 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
         	MARQOVConfig mc(outpath);
-        	mc.setnsweeps(5);
+        	mc.setnsweeps(0);
 		mc.setncluster(50);
 
 		makeDir(mc.outpath);
