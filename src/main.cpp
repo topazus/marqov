@@ -214,8 +214,8 @@ template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable filter)
 {
 	// number of EMCS during relaxation and measurement
-	mc.setwarmupsteps(1000);
-	mc.setgameloopsteps(5000);
+	mc.setwarmupsteps(5000);
+	mc.setgameloopsteps(15000);
 
 	std::vector<std::pair<MARQOVConfig, Parameters> > params;
 	for(std::size_t i = 0; i < hamparams.size(); ++i)
@@ -271,7 +271,7 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std
 
         	MARQOVConfig mc(outpath);
         	mc.setnsweeps(5);
-		mc.setncluster(2*L);
+		mc.setncluster(50);
 
 		makeDir(mc.outpath);
 

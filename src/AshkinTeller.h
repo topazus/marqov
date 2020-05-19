@@ -95,37 +95,114 @@ class AshkinTeller
 			return std::make_tuple(obs_m);
 		}
 
-
-
-		// using the general Wolff cluster algorithm requires to implement
-		// the functions 'wolff_coupling' and 'wolff_flip'
-
-		template <class color = int>
-		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const color a=0) const
-		{
-			if (sv1[a] == sv2[a]) return 0.0;
-			else
-			{
-				switch (a)
-				{
-					case 0: return J + K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
-					case 1: return J + K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
-					case 2: return J + K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
-				}
-			}
-		}
-
-		template <class color = int>
-		inline void wolff_flip(StateVector& sv, const color a=0) const
-		{
-			sv[a] *= -1;
-		}
-
 };
 
 
 namespace MARQOV 
 {
+
+template <class Lattice>
+struct Wolff<AshkinTeller<int>, Lattice>
+{
+
+	typedef typename AshkinTeller<int>::StateVector StateVector;
+
+	static inline double wolff_coupling(const StateVector& sv1, 
+								 const StateVector& sv2, 
+								 const int color, 
+								 const AshkinTeller<int>& ham) 
+	{
+		if (sv1[color] == sv2[color]) return 0.0;
+		else
+		{
+			switch (color)
+			{
+				case 0: return ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
+				case 1: return ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
+				case 2: return ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
+			}
+		}
+	}
+
+	static inline void wolff_flip(StateVector& sv, const int color)
+	{
+		sv[color] *= -1;
+	}
+
+
+
+    template <class DirType, class RNG, class StateSpace>
+    static inline int move(	const AshkinTeller<int>& ham, 
+						const Lattice& grid, 
+						StateSpace& statespace, 
+						RNG& rng, 
+						double beta, 
+						int rsite, 
+						const DirType&)
+    {
+        typedef typename AshkinTeller<int>::StateVector StateVector;
+
+
+		const int ncolors = 3;
+		int clustersize_sum = 0;
+		for (int color=0; color<ncolors; color++) // better select a random color
+		{
+
+			// prepare stack
+     		std::vector<int> cstack(grid.size(), 0);
+
+     		// add initial site and flip it
+     		int q = 0;
+     		cstack[q] = rsite;
+
+     		wolff_flip(statespace[rsite], color);
+     		int clustersize = 1;
+
+     		// loop over stack as long as non-empty
+     		while (q>=0)
+     		{
+         			 // extract last sv in stack
+         			 const int currentidx = cstack[q];
+	    			 StateVector& currentsv = statespace[currentidx];
+         			 q--;
+
+         			 // get its neighbours
+				const int a = 0; // spin family (hard-coded)
+         			 const auto nbrs = grid.getnbrs(a, currentidx);
+
+         			 // loop over neighbours
+         			 for (std::size_t i = 0; i < nbrs.size(); ++i)
+         			 {
+         			      // extract corresponding sv
+         			      const auto currentnbr = nbrs[i];
+         			      StateVector& candidate = statespace[currentnbr];
+
+					const double coupling  = - wolff_coupling(currentsv, candidate, color, ham);
+
+         			      // test whether site is added to the cluster
+					if (coupling > 0)
+         			      {
+         			           if (rng.d() < -std::expm1(-2.0*beta*coupling))
+         			           {
+         			                q++;
+         			                cstack[q] = currentnbr;
+         			                clustersize++;
+         			                wolff_flip(candidate, color);
+         			           }
+         			      }
+         			 }
+         		}
+			clustersize_sum += clustersize;
+		}
+
+		return clustersize_sum/ncolors;
+	}
+};
+
+
+
+
+
 
 template <class Lattice>
 struct Metropolis<AshkinTeller<int>, Lattice>
@@ -168,7 +245,7 @@ struct Metropolis<AshkinTeller<int>, Lattice>
 						int rsite)
 	{
 		int retval = 0;
-		for (int color=0; color<3; color++)
+		for (int color=0; color<3; color++) // better select a random color
 		{
 	    		// old state vector at rsite
 			StateVector&        svold = statespace[rsite];
@@ -181,6 +258,7 @@ struct Metropolis<AshkinTeller<int>, Lattice>
 			double interactionenergydiff = 0;
 
 			// set interaction family
+			
 			const int a = 0;
 
 			// extract neighbours

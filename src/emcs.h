@@ -16,8 +16,8 @@ double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep()
 		const int rsite = rng.i();
 
 		// Heisenberg; random direction
-//		const auto rdir = rnddir<RND, typename StateVector::value_type, SymD>(rng);
-//		avgclustersize += wolffstep(rsite, rdir);
+		const auto rdir = rnddir<RND, typename StateVector::value_type, SymD>(rng);
+		avgclustersize += wolffstep(rsite, rdir);
 
 		// Ashkin-Teller: random color
 //		const int color = 0;  // randomize me!
