@@ -71,6 +71,7 @@ class AshkinTeller
 		constexpr static int SymD = 3;
 		typedef std::array<SpinType, SymD> StateVector;
 
+		typedef AshkinTeller<int> myHamiltonian;
 		template <typename RNG>
 		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
 
@@ -101,20 +102,18 @@ class AshkinTeller
 
 namespace MARQOV 
 {
-	// some typedefs
-	typedef AshkinTeller<int> myHamiltonian;
-	typedef typename myHamiltonian::StateVector StateVector;
-	typedef int ReducedStateVector;
-	
-
 
 	// Wolff
 	template <class Lattice>
-	struct Wolff<myHamiltonian, Lattice>
+	struct Wolff<AshkinTeller<int>, Lattice>
 	{
 
+		// some typedefs
+		typedef typename AshkinTeller<int>::StateVector StateVector;
+		typedef int ReducedStateVector;
+
 		// Wolff coupling
-		static inline double wolff_coupling(StateVector& sv1, StateVector& sv2, int color, myHamiltonian& ham) 
+		static inline double wolff_coupling(StateVector& sv1, StateVector& sv2, int color, AshkinTeller<int>& ham) 
 		{
 			if (sv1[color] == sv2[color]) return 0.0;
 			else
@@ -134,7 +133,7 @@ namespace MARQOV
 	
 		// The actual Wolff step
 		template <class DirType, class RNG, class StateSpace>
-		static inline int move(myHamiltonian& ham, Lattice& grid, StateSpace& statespace, 
+		static inline int move(AshkinTeller<int>& ham, Lattice& grid, StateSpace& statespace, 
 						   RNG& rng, double beta, int rsite, const DirType&)
 		{
 			const int ncolors = 3;
@@ -199,11 +198,16 @@ namespace MARQOV
 	
 	// Metropolis
 	template <class Lattice>
-	struct Metropolis<myHamiltonian, Lattice>
+	struct Metropolis<AshkinTeller<int>, Lattice>
 	{
 
+		// some typedefs
+		typedef typename AshkinTeller<int>::StateVector StateVector;
+		typedef int ReducedStateVector;
+
+
 		// coupling of the embedded Ising model
-		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, myHamiltonian& ham)
+		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, AshkinTeller<int>& ham)
 		{
 			switch (color)
 			{
