@@ -72,6 +72,12 @@ namespace MARQOV
         MARQOVConfig& setncluster(int nc) {ncluster = nc; return *this;}
         MARQOVConfig& setnsweeps(int ns) {nsweeps = ns; return *this;}
     };
+    
+    template<class> 
+struct type_sink { typedef void type; }; // consumes a type, and makes it `void`
+
+template<class T> using type_sink_t = typename type_sink<T>::type;
+    
     namespace detail
     {
         template<class> struct type_sink { typedef void type; }; // consumes a type, and makes it `void`
@@ -105,6 +111,13 @@ namespace MARQOV
 //             NonRef(Args&&... args) : grid(args...) {}
             L grid;
         };
+        
+        //A helper to decide whether a Hamiltonian provides a init function
+        template<class S, class H, class=void> struct has_init : std::false_type {};
+        template<class StateSpace, class H>
+        struct has_init<StateSpace, H,
+        type_sink_t< decltype( std::declval<H>().getbnds(std::declval<StateSpace>() ) ) > > : std::true_type {};
+
     };
     
     
@@ -282,9 +295,27 @@ struct ObsTupleToObsCacheTuple
 		statespace = new typename Hamiltonian::StateVector[this->grid.size()];
 	}
 		
+		template <typename StateSpace, class H, typename... Ts>
+		auto haminit_helper(std::true_type, StateSpace& statespace, H& ham, Ts&& ... ts)
+        {
+            return ham.initStateSpace(statespace, std::forward<Ts>(ts) ...);
+        }
+        
+        // If there's no user defined function we do a random initialization
+        template <typename StateSpace, class H, typename... Ts>
+		auto haminit_helper(std::false_type, StateSpace& statespace, H& ham, Ts&& ... ts)
+        {
+            
+        }
 		
-		
-	
+
+		template <typename... Ts>
+		auto init(Ts&& ... ts)
+        {
+            return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian>::type(),
+                this->statespace, this->ham, std::forward<Ts>(ts)...);
+//            this->ham.initStateSpace(std::forward<Ts>(ts) ...)
+        }
 
 
 		
@@ -550,7 +581,7 @@ struct ObsTupleToObsCacheTuple
 			for(int i = 0; i < this->grid.length; ++i) std::cout << " ‾";
 			std::cout <<"\n\n";
 		}
-	
+		
 		 void init_cold_Ising_like()
 		 {
 		 	const int SymD = std::tuple_size<StateVector>::value;

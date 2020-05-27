@@ -4,10 +4,7 @@
 #include <type_traits>
 #include <cmath>
 
-template<class> 
-struct type_sink { typedef void type; }; // consumes a type, and makes it `void`
-
-template<class T> using type_sink_t = typename type_sink<T>::type;
+//A helper to decide in the Metropolis code whether a lattice provides the getbond function
 template<class L, class=void> struct has_bonds : std::false_type {};
 template<class Lattice> struct has_bonds<Lattice, type_sink_t< decltype( std::declval<Lattice>().getbnds(std::declval<int>(), std::declval<int>(), std::declval<int>()) ) > > : std::true_type {};
 
