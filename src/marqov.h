@@ -294,6 +294,15 @@ struct ObsTupleToObsCacheTuple
 		rng.set_integer_range(this->grid.size());
 		statespace = new typename Hamiltonian::StateVector[this->grid.size()];
 	}
+	
+		 void init_hot()
+		 {
+		 	const int SymD = std::tuple_size<StateVector>::value;
+			for(decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
+			{
+				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
+			}
+		 }
 		
 		template <typename StateSpace, class H, typename... Ts>
 		auto haminit_helper(std::true_type, StateSpace& statespace, H& ham, Ts&& ... ts)
@@ -303,22 +312,38 @@ struct ObsTupleToObsCacheTuple
         
         // If there's no user defined function we do a random initialization
         template <typename StateSpace, class H, typename... Ts>
-		auto haminit_helper(std::false_type, StateSpace& statespace, H& ham, Ts&& ... ts)
+		auto haminit_helper(std::false_type, StateSpace& statespace, H& ham, Ts&& ... ts) -> void
         {
-            
+            this->init_hot();
         }
-		
 
 		template <typename... Ts>
 		auto init(Ts&& ... ts)
         {
-            return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian>::type(),
-                this->statespace, this->ham, std::forward<Ts>(ts)...);
-//            this->ham.initStateSpace(std::forward<Ts>(ts) ...)
+            return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian>::type(), this->statespace, this->ham, std::forward<Ts>(ts)...);
         }
 
+		 void init_cold_Ising_like()
+		 {
+		 	const int SymD = std::tuple_size<StateVector>::value;
+			for(int i = 0; i < this->grid.size(); ++i)
+			{
+				for(int j = 0; j < SymD; ++j)
+				{
+					statespace[i][j] = 1;
+				}
+			}
+		 }
 
-		
+		 void init_cold_Heisenberg()
+		 {
+			for(int i = 0; i < this->grid.size(); ++i)
+			{
+				statespace[i][0] = -1;
+				statespace[i][1] = 0;
+				statespace[i][2] = 0;
+			}
+		 }
 
 		// Destructor
 		~Marqov() {
@@ -581,37 +606,6 @@ struct ObsTupleToObsCacheTuple
 			for(int i = 0; i < this->grid.length; ++i) std::cout << " ‾";
 			std::cout <<"\n\n";
 		}
-		
-		 void init_cold_Ising_like()
-		 {
-		 	const int SymD = std::tuple_size<StateVector>::value;
-			for(int i = 0; i < this->grid.size(); ++i)
-			{
-				for(int j = 0; j < SymD; ++j)
-				{
-					statespace[i][j] = 1;
-				}
-			}
-		 }
-
-		 void init_cold_Heisenberg()
-		 {
-			for(int i = 0; i < this->grid.size(); ++i)
-			{
-				statespace[i][0] = -1;
-				statespace[i][1] = 0;
-				statespace[i][2] = 0;
-			}
-		 }
-
-		 void init_hot()
-		 {
-		 	const int SymD = std::tuple_size<StateVector>::value;
-			for(decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
-			{
-				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
-			}
-		 }
 
 	private:
 	inline int metropolisstep(int rsite);
