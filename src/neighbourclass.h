@@ -45,12 +45,12 @@ void prepare_for_neighbours_class(std::vector<double>& gridx, std::vector<double
     }
     //arr is now an array where we can find the indices of neighbours with a particular number of neighbours
     std::vector<int> newarr;
-    for(uint i = 0; i < classes; ++i)
+    for(int i = 0; i < classes; ++i)
         for(uint j = 0; j < arr[i].size(); ++j)
             newarr.push_back(arr[i][j]);
         //newarr is the mapping which new index corresponds to which old index
-        std::vector<int> invnewarr(newarr.size());
-    for(int i = 0; i < newarr.size(); ++i)
+    std::vector<int> invnewarr(newarr.size());
+    for(std::size_t i = 0; i < newarr.size(); ++i)
         invnewarr[newarr[i]] = i;
     //invnewarr holds the info which old index corresponds to which new index
     // now we should have all data to map the indices to the new format.
@@ -115,7 +115,7 @@ public:
      * @param pos The position of the index that we ask
      * @return The number of neighbours of point pos.
      * */
-    inline int get_class(const IntType& pos) const
+    inline int get_class(const std::size_t& pos) const
     {
         int c = 0;
         while (((c) < nr_of_starts) && (pos >= bookkeeping[c].nbr_idx_beg )) ++c;
@@ -181,8 +181,8 @@ public:
         /*A helper structure to store some properties that we need for the construction of the data array*/
         struct Props {
             uint occurences; ///< Used to store how often a particular amount of neighbours occured
-            uint min; ///< used to store the minimum neighbour that occured for a particular class
-            uint max; ///< used to store the maximum neighbour that occured for a particular class
+            IntType min; ///< used to store the minimum neighbour that occured for a particular class
+            IntType max; ///< used to store the maximum neighbour that occured for a particular class
             uint lowest_idx; ///< used to find out where the first occurence of a particular class was
             Props () : occurences(0), min(-1), max(0), lowest_idx(-1) {}
         };
@@ -214,7 +214,7 @@ public:
         bookkeeping[0].nbr_class = it->first;
         bookkeeping[0].arr_idx_beg = 0;
         bookkeeping[0].nbr_idx_beg = it->second.lowest_idx;
-        for (uint i = 1; i < nr_of_starts; ++i)
+        for (int16_t i = 1; i < nr_of_starts; ++i)
         {
             auto prev = it;
             ++it;

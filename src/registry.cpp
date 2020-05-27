@@ -125,7 +125,7 @@ cfile::cfile(std::string& file ) : filename(file)
 #ifndef HAVE_ALPHASORT
 inline int alphasort(const void* d1, const void* d2)
 {//MINGW doesn't define this
-    return(strcmp((*static_cast<struct dirent **>(const_cast<void*>(d1) ) )->d_name, (*static_cast<struct dirent **>(const_cast<void*>(d2) ) )->d_name));
+    return(strcmp((*static_cast<dirent **>(const_cast<void*>(d1) ) )->d_name, (*static_cast<dirent **>(const_cast<void*>(d2) ) )->d_name));
 }
 #endif
 
@@ -182,7 +182,7 @@ inline int scandir(const char* dirname, struct dirent *(*namelist[]), int (*sele
 #endif
 
 static int
-IsFile (const struct dirent *used)
+IsFile (const dirent *used)
 {
     string A(used->d_name);
     if ( ( A == "." ) || ( A == ".." ) ) //Don't use these
@@ -199,7 +199,7 @@ RegistryDB::RegistryDB( const string& arg)
 int RegistryDB::Init( const string& cfgDir )
 {
     //The following Directory - Lister is taken directly from the glibc - Documentation
-    struct dirent **eps = NULL;
+    dirent **eps = NULL;
     string* configs = NULL;
     int n = scandir( cfgDir.c_str() , &eps , IsFile , alphasort );
     //cout<<"Content of Configuration Directory  " << cfgDir<<" : "<<endl;

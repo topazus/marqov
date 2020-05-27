@@ -61,7 +61,7 @@ class Phi4_Initializer
             double oldlen = std::sqrt(dot(osv, osv));
             double newlen = oldlen + amp*r;
             auto newdir = rnddir<RNG, double, SymD>(rng);
-            for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+            for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
                 newdir[i] *= newlen;
 			return newdir;
 		};
@@ -132,7 +132,7 @@ class Phi4
 		OnSite<StateVector, FPType>* onsite[Nbeta]; //Todo: External fields not yet supported
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Phi4(double beta, double lambda, double mass) : lambda(lambda), mass(mass), beta(beta)
+		Phi4(double beta, double lambda, double mass) : beta(beta), lambda(lambda), mass(mass)
 		{
 			interactions[0] = new Phi4_interaction<StateVector>();
 			onsite[0]       = new Phi4_onsitesquare<StateVector>(mass, beta);
@@ -146,13 +146,13 @@ class Phi4
 		// --- Wolff ---
 
 		template <class A>
-		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
+		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a) const 
 		{
 			return dot(sv1, a) * dot(sv2, a);
 		}
 
 		template <class A>
-		inline void wolff_flip(StateVector& sv, const A a)
+		inline void wolff_flip(StateVector& sv, const A a) const
 		{
 			const double dotp = dot(sv, a);
 			for (int i=0; i<SymD; i++) sv[i] -= 2*dotp*a[i];

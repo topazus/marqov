@@ -148,13 +148,13 @@ class Heisenberg
 		// the functions 'wolff_coupling' and 'wolff_flip'
 
 		template <class A> 
-		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a)
+		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a) const
 		{
 			return dot(sv1, a) * dot(sv2, a);
 		}
 
 		template <class A>
-		inline void wolff_flip(StateVector& sv, const A a)
+		inline void wolff_flip(StateVector& sv, const A a) const
 		{
 			const double dotp = dot(sv, a);
 			for (int i=0; i<SymD; i++) sv[i] -= 2*dotp*a[i];
@@ -163,4 +163,57 @@ class Heisenberg
 		}
 
 };
+
+namespace MARQOV
+{
+    template <class Lattice, class SpinType, class FPType>
+    struct Wolff<Heisenberg<SpinType, FPType>, Lattice>
+    {
+        template <class DirType, class RNG, class StateSpace>
+        static inline int move(const Heisenberg<SpinType, FPType>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite, const DirType& rdir)
+        {
+            typedef typename Heisenberg<SpinType, FPType>::StateVector StateVector;
+            std::vector<int> cstack(grid.size(), 0);
+            int q = 0;
+            ham.wolff_flip(statespace[rsite], rdir);
+            cstack[q] = rsite;
+            
+            int clustersize = 1;
+            int current = 0;
+            
+            while (q>=0)
+            {
+                current = cstack[q];
+                q--;
+
+		// plain Heisenberg model has only one interaction term
+		auto coupling = ham.interactions[0]->J; 
+		const auto proj1 = coupling*dot(statespace[current], rdir);
+
+		const auto nbrs = grid.getnbrs(0, current);
+		for (std::size_t i = 0; i < nbrs.size(); ++i)
+		{
+			const auto currentidx = nbrs[i];
+			StateVector& candidate = statespace[currentidx];
+
+			const auto proj2 = dot(candidate, rdir);
+
+			if (proj1*proj2 > 0)
+			{
+				const auto prob = -std::expm1(-2.0*beta*proj1*proj2);
+
+				if (rng.d() < prob)
+				{
+					q++;
+					cstack[q] = currentidx;
+					clustersize++;
+					ham.wolff_flip(candidate, rdir);
+				}
+			}
+		}
+	}
+	return clustersize;
+        }
+    };
+}
 #endif

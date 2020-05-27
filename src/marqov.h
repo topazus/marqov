@@ -125,7 +125,7 @@ template <class StateVector>
 StateVector operator + (StateVector lhs,  StateVector rhs)
 {
     StateVector res(lhs);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
     res[i] += rhs[i];
     return res;
 }
@@ -134,7 +134,7 @@ template <class StateVector>
 StateVector operator - (StateVector lhs,  StateVector rhs)
 {
     StateVector res(lhs);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
     res[i] -= rhs[i];
     return res;
 }
@@ -147,7 +147,7 @@ inline double dot(const double& a, const double& b)
 template<class VecType>
 inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 {
-    typedef typename VecType::value_type FPType;
+//    typedef typename VecType::value_type FPType;
     return std::inner_product(begin(a), end(a), begin(b), 0.0);
 }
 
@@ -245,11 +245,11 @@ struct ObsTupleToObsCacheTuple
 		RefType<Grid>(std::forward<Grid>(lattice)),
 		ham(std::forward<HArgs>(args) ... ),
 		mcfg(mc),
-		rng(0, 1), 
-		beta(mybeta), 
-		metro(rng),  
 		dump(mc.outpath+mc.outname+".h5", H5F_ACC_TRUNC ),
-		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
+        obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs())),
+		rng(0, 1), 
+		beta(mybeta),
+		metro(rng)
 	{
 		//rng.seed(15); cout << "seed is fixed!" << endl << endl;
 		rng.seed(time(NULL)+std::random_device{}());
@@ -270,11 +270,11 @@ struct ObsTupleToObsCacheTuple
 		RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
-		rng(0, 1), 
-		beta(mybeta), 
-		metro(rng),  
 		dump(mc.outpath+mc.outname+".h5", H5F_ACC_TRUNC ),
-		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs()))
+        obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs())),
+		rng(0, 1), 
+		beta(mybeta),
+		metro(rng)
 	{
 		// rng.seed(15); cout << "seed is fixed!" << endl << endl;
 		rng.seed(time(NULL)+std::random_device{}());
@@ -472,6 +472,28 @@ struct ObsTupleToObsCacheTuple
 		// -------------- special purpose functions ----------------
 
 
+          void full_output_2D(int dim=0)
+          {
+               const int LL = this->grid.length;
+
+               ofstream os;
+               os.open("../log/fullout-"+std::to_string(LL)+"-"+std::to_string(beta)+".dat");
+
+               for (int i=0; i<LL; i++)
+               {
+                    for (int j=0; j<LL; j++)
+                    {
+                         int curridx = LL*i+j;
+                         double current = statespace[curridx][dim];
+                         os << current << "\t";
+                    }
+                    os << endl;
+               }
+          }
+
+
+
+
 	    	void debugloop(const int nsteps, const int ncluster, const int nsweeps)
 		{
 			double avgclustersize = 0;
@@ -554,7 +576,7 @@ struct ObsTupleToObsCacheTuple
 		 void init_hot()
 		 {
 		 	const int SymD = std::tuple_size<StateVector>::value;
-			for(int i = 0; i < this->grid.size(); ++i)
+			for(decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
 			{
 				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
 			}
@@ -566,11 +588,8 @@ struct ObsTupleToObsCacheTuple
 	template <typename callable1, typename callable2>
 	inline int metropolisstep(int rsite, callable1 filter_ref, callable2 filter_copy, int comp);
 
-	inline int wolffstep(int rsite, const StateVector& rdir);
-	inline int wolffstep_Ising(int rsite);
-	inline int wolffstep_Heisenberg(int rsite, const StateVector& rdir);
 	template <typename DirType>
-	inline int wolffstep_general(int rsite, const DirType& rdir);
+	inline int wolffstep(int rsite, const DirType& rdir);
 
 	StateSpace statespace;
 	Hamiltonian ham;
@@ -615,7 +634,6 @@ auto makeMarqov(L&& latt, MARQOVConfig&& mc, Args&&... args)
     return makeMarqov2<H>(typename detail::is_Lattice<L>::type(), latt, std::forward<MARQOVConfig>(mc), args...);
 }
 
-#include "update.h"
 #include "emcs.h"
 }
 #endif

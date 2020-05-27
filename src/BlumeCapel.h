@@ -38,9 +38,9 @@ template <class StateVector>
 class BlumeCapel_interaction : public Interaction<StateVector> 
 {
 public:
-	BlumeCapel_interaction()
+	BlumeCapel_interaction(double J)
 	{
-		this->J = -1;	// +1 ferro, -1 antiferro
+		this->J = J;
 	}
 	StateVector operator() (const StateVector& phi) {return phi;};
 };
@@ -50,9 +50,9 @@ template <class StateVector>
 class BlumeCapel_onsite : public OnSite<StateVector, double>
 {
 	public:
-		BlumeCapel_onsite(double D, double beta)
+		BlumeCapel_onsite(double D)
 		{
-			this->h = D/beta;
+			this->h = D;
 		}
 		double operator() (const StateVector& phi) {return dot(phi,phi);};
 };
@@ -103,8 +103,7 @@ template <typename SpinType = int>
 class BlumeCapel
 {
 	public:
-		const double D = 0.655;
-		double beta;
+		double J, D;
 		constexpr static int SymD = 1;
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
@@ -119,10 +118,10 @@ class BlumeCapel
 		OnSite<StateVector, double>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 	
-		BlumeCapel(double mybeta) : beta(mybeta) 
+		BlumeCapel(double J, double D) : J(J), D(D)
 		{	
-			interactions[0] = new BlumeCapel_interaction<StateVector>(); 
-			onsite[0]       = new BlumeCapel_onsite<StateVector>(D, beta);		
+			interactions[0] = new BlumeCapel_interaction<StateVector>(J); 
+			onsite[0]       = new BlumeCapel_onsite<StateVector>(D);		
 		}
 		
 	
@@ -139,7 +138,7 @@ class BlumeCapel
 		// the functions 'wolff_coupling' and 'wolff_flip'
 
 		template <class A = bool>
-		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a=0)
+		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a=0) const
 		{
 			if (sv1[0] == 0) return 0.0;
 			if (sv1[0] == sv2[0]) return 0.0;
@@ -148,7 +147,7 @@ class BlumeCapel
 
 
 		template <class A = bool>
-		inline void wolff_flip(StateVector& sv, const A a=0)
+		inline void wolff_flip(StateVector& sv, const A a=0) const
 		{
 			sv[0] *= -static_cast<SpinType>(1.0);
 		}
