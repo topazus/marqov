@@ -143,6 +143,17 @@ class Heisenberg
 
 		auto getobs() { return std::make_tuple(obs_m); }
 		
+		template <class StateSpace, class Lattice>
+		void initstatespace(StateSpace& statespace, Lattice& grid) const
+        {
+            for(int i = 0; i < grid.size(); ++i)
+			{
+				statespace[i][0] = -1;
+                for(int j = 1; j < SymD; ++j)
+                    statespace[i][j] = 0;
+			}
+        }
+		
 
 		// using the Wolff cluster algorithm requires to implement 
 		// the functions 'wolff_coupling' and 'wolff_flip'

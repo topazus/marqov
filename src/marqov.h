@@ -113,10 +113,10 @@ template<class T> using type_sink_t = typename type_sink<T>::type;
         };
         
         //A helper to decide whether a Hamiltonian provides a init function
-        template<class S, class H, class=void> struct has_init : std::false_type {};
-        template<class StateSpace, class H>
-        struct has_init<StateSpace, H,
-        type_sink_t< decltype( std::declval<H>().getbnds(std::declval<StateSpace>() ) ) > > : std::true_type {};
+        template<class S, class H, class L, class=void, class... Ts> struct has_init : std::false_type {};
+        template<class StateSpace, class H, class L, class... Ts>
+        struct has_init<StateSpace, H, L,
+        type_sink_t< decltype( std::declval<H>().template initstatespace<StateSpace, L, Ts...>(std::declval<StateSpace&>(), std::declval<L&>(),  std::declval<Ts>()... ) ) >, Ts... > : std::true_type {};
 
     };
     
@@ -304,15 +304,15 @@ struct ObsTupleToObsCacheTuple
 			}
 		 }
 		
-		template <typename StateSpace, class H, typename... Ts>
-		auto haminit_helper(std::true_type, StateSpace& statespace, H& ham, Ts&& ... ts)
+		template <typename StateSpace, class Lattice, class H, typename... Ts>
+		auto haminit_helper(std::true_type, StateSpace& statespace, const Lattice& grid, H& ham, Ts&& ... ts)
         {
-            return ham.initStateSpace(statespace, std::forward<Ts>(ts) ...);
+            return ham.initstatespace(statespace, grid, std::forward<Ts>(ts) ...);
         }
         
         // If there's no user defined function we do a random initialization
-        template <typename StateSpace, class H, typename... Ts>
-		auto haminit_helper(std::false_type, StateSpace& statespace, H& ham, Ts&& ... ts) -> void
+        template <typename StateSpace, class Lattice, class H, typename... Ts>
+		auto haminit_helper(std::false_type, StateSpace& statespace, const Lattice&, H& ham, Ts&& ... ts) -> void
         {
             this->init_hot();
         }
@@ -320,7 +320,8 @@ struct ObsTupleToObsCacheTuple
 		template <typename... Ts>
 		auto init(Ts&& ... ts)
         {
-            return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian>::type(), this->statespace, this->ham, std::forward<Ts>(ts)...);
+//            std::string t = typename detail::has_init<StateSpace, Hamiltonian, Grid, Ts...>::type();
+            return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian, Grid, Ts... >::type(), this->statespace, this->grid, this->ham, std::forward<Ts>(ts)...);
         }
 
 		 void init_cold_Ising_like()
