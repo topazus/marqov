@@ -3,7 +3,7 @@ dim = 2
 nL = 8,12,16,24,32,48,64,96
 nreplicas = 1
 
-Hamiltonian = AshkinTeller
+Hamiltonian = Ising
 
 [Ising]
 
@@ -17,7 +17,7 @@ J = -1.0
 
 [Heisenberg]
 
-beta = 0.40, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48
+beta = 0.62, 0.64, 0.66, 0.68, 0.70, 0.72, 0.74, 0.76
 J = -1.0
 
 [BlumeCapel]

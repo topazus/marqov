@@ -88,9 +88,14 @@ class Ising
 	
 		// instantiate and choose observables
 		IsingMag       obs_m;
-		auto getobs()
+		auto getobs()	{return std::make_tuple(obs_m);}
+
+
+		// initialize state space
+		template <class StateSpace, class Lattice>
+		void initstatespace(StateSpace& statespace, Lattice& grid) const
 		{
-			return std::make_tuple(obs_m);
+			for (int i=0; i<grid.size(); ++i) statespace[i][0] = -1;
 		}
 
 
@@ -112,6 +117,11 @@ class Ising
 
 
 };
+
+
+
+
+
 
 namespace MARQOV {
     //Work around GCC Bug for specializations of things in namespaces:
