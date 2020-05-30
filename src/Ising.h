@@ -92,8 +92,8 @@ class Ising
 
 
 		// initialize state space
-		template <class StateSpace, class Lattice>
-		void initstatespace(StateSpace& statespace, Lattice& grid) const
+		template <class StateSpace, class Lattice, class RNG>
+		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
 			for (int i=0; i<grid.size(); ++i) statespace[i][0] = -1;
 		}
