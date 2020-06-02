@@ -95,7 +95,11 @@ class Ising
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
-			for (int i=0; i<grid.size(); ++i) statespace[i][0] = -1;
+			for (int i=0; i<grid.size(); i++)
+			{
+				if (rng.d() > 0.5) statespace[i][0] = 1;
+				else statespace[i][0] = -1;
+			}
 		}
 
 
@@ -132,9 +136,13 @@ namespace MARQOV {
 	template <class Lattice>
 	struct Metropolis<Ising<int>, Lattice>
 	{
+
 	    template <class StateSpace, class M, class RNG>
 	    static int move(const Ising<int>& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNG& rng, double beta, int rsite)
 	    {
+
+//			std::cout << rsite << endl;
+
 			typedef typename Ising<int>::StateVector StateVector;
 		    	// old state vector at rsite
 			StateVector& svold = statespace[rsite];

@@ -263,8 +263,8 @@ struct ObsTupleToObsCacheTuple
 		beta(mybeta),
 		metro(rng)
 	{
-		rng.seed(15); cout << "seed is fixed!" << endl << endl;
-//		rng.seed(time(NULL)+std::random_device{}());
+//		rng.seed(15); cout << "seed is fixed!" << endl << endl;
+		rng.seed(time(NULL)+std::random_device{}());
 		rng.set_integer_range(lattice.size());
 		statespace = new typename Hamiltonian::StateVector[lattice.size()];
 	}
@@ -551,9 +551,9 @@ struct ObsTupleToObsCacheTuple
 
 	    	void debugloop(const int nsteps, const int ncluster, const int nsweeps)
 		{
-			this->mcfg.setwarmupsteps(nsteps);
 			this->mcfg.setnsweeps(nsweeps);
 			this->mcfg.setncluster(ncluster);
+
 
 			double avgclustersize = 0;
 			for (int i=0; i<nsteps; ++i)

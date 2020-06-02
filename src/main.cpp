@@ -34,6 +34,14 @@ using std::ofstream;
 
 #include "systemtools.h"
 
+
+bool startswith(std::string longword, std::string shortword)
+{
+	if (longword.rfind(shortword, 0) == 0) return true;
+	else return false;
+}
+
+
 template <class T1, class T2, class T3>
 class Triple
 {
@@ -214,8 +222,8 @@ template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable filter)
 {
 	// number of EMCS during relaxation and measurement
-	mc.setwarmupsteps(1);
-	mc.setgameloopsteps(1);
+	mc.setwarmupsteps(500);
+	mc.setgameloopsteps(1500);
 
 	std::vector<std::pair<MARQOVConfig, Parameters> > params;
 	for(std::size_t i = 0; i < hamparams.size(); ++i)
@@ -233,9 +241,9 @@ void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable f
 	{
 		auto& marqov = sims[i];
 		marqov.init();
-		marqov.debugloop(10,1,1);
-//		marqov.wrmploop();
-//		marqov.gameloop();
+//		marqov.debugloop(100,0,1);
+		marqov.wrmploop();
+		marqov.gameloop();
 	}
 }
 
@@ -269,8 +277,8 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
         	MARQOVConfig mc(outpath);
-        	mc.setnsweeps(1);
-		mc.setncluster(0);
+        	mc.setnsweeps(5);
+		mc.setncluster(15);
 
 		makeDir(mc.outpath);
 
@@ -362,7 +370,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
  		RegularLatticeloop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
     }
-    else if (ham == "AshkinTeller")
+    else if (startswith(ham, "AshkinTeller"))
+//    else if (ham == "AshkinTeller")
     {
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");

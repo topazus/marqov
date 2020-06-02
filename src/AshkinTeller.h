@@ -43,17 +43,6 @@ class AshkinTellerMag
 
 // ----------------------------------------------------------------------
 
-template <class StateVector>
-class AshkinTeller_interaction : public Interaction<StateVector> 
-{
-	public:
-		AshkinTeller_interaction(double J)
-		{
-			this->J = J;
-		}
-		StateVector operator() (const StateVector& phi) {return phi;};
-};
-
 template <class StateVector, class RNG>
 class AshkinTeller_Initializer
 {
@@ -68,25 +57,15 @@ template <typename SpinType = int>
 class AshkinTeller
 {
 	public:
-		int J, K;
+		double J, K;
 		constexpr static int SymD = 3;
 		typedef std::array<SpinType, SymD> StateVector;
 		typedef AshkinTeller<int> myHamiltonian;
 		template <typename RNG>
 		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
 
-		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta = 0;
-		static constexpr uint Ngamma = 0;
+		AshkinTeller(double J, double K) : J(J), K(K) {}
 		
-		AshkinTeller(double J, double K) : J(J), K(K)
-		{	
-			interactions[0] = new AshkinTeller_interaction<StateVector>(J); 
-		}
-		
-		Interaction<StateVector>* interactions[Nalpha];
-		OnSite<StateVector, int>* onsite[Nbeta];
-		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 	
 		// instantiate and choose observables
 		AshkinTellerMag       obs_m;
@@ -103,7 +82,6 @@ class AshkinTeller
 			for (int i=0; i<grid.size(); i++)
 			{
 				for (int j=0; j<SymD; j++)
-//				for (int j=0; j<1; j++)
 				{
 					if (rng.d() > 0.5) statespace[i][j] = 1;
 					else statespace[i][j] = -1;
@@ -283,7 +261,7 @@ namespace MARQOV
 					// neighbour index
 					auto idx = nbrs[i];
 					// full neighbour
-					auto nbr = ham.interactions[a]->operator()(statespace[idx]);
+					auto nbr = statespace[idx];
 					// reduced neighbour
 					auto rnbr = nbr[color];
 					// coupling

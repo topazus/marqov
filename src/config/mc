@@ -1,9 +1,9 @@
 [General]
 dim = 2
-nL = 8,12,16,24,32,48,64,96
+nL = 8,12,16,24
 nreplicas = 1
 
-Hamiltonian = Ising
+Hamiltonian = AshkinTeller
 
 [Ising]
 
@@ -45,11 +45,17 @@ extfield = 1.80, 1.81, 1.82, 1.83, 1.84, 1.85, 1.86, 1.87, 1.88, 1.90
 aniso = 0.8
 singleaniso = 0.2
 
+[AshkinTellerDecoupled]
+
+J = -1
+K = 0.0
+beta = 0.40, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48
+
 [AshkinTeller]
 
 J = -1
-K = -0.0
-beta = 0.40, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48
+K = -0.3
+beta = 0.28, 0.29, 0.30, 0.31, 0.32, 0.33, 0.34, 0.35, 0.36, 0.37
 
 
 [IO]
