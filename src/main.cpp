@@ -34,6 +34,14 @@ using std::ofstream;
 
 #include "systemtools.h"
 
+
+bool startswith(std::string longword, std::string shortword)
+{
+	if (longword.rfind(shortword, 0) == 0) return true;
+	else return false;
+}
+
+
 template <class T1, class T2, class T3>
 class Triple
 {
@@ -214,8 +222,8 @@ template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable filter)
 {
 	// number of EMCS during relaxation and measurement
-	mc.setwarmupsteps(5000);
-	mc.setgameloopsteps(100000);
+	mc.setwarmupsteps(500);
+	mc.setgameloopsteps(1500);
 
 	std::vector<std::pair<MARQOVConfig, Parameters> > params;
 	for(std::size_t i = 0; i < hamparams.size(); ++i)
@@ -232,9 +240,8 @@ void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable f
 	for(std::size_t i = 0; i < sims.size(); ++i)
 	{
 		auto& marqov = sims[i];
-
-//		marqov.init_hot();
-		marqov.init_cold_Ising_like(); cout << "AT init is on!!!" << endl;
+		marqov.init();
+//		marqov.debugloop(100,0,1);
 		marqov.wrmploop();
 		marqov.gameloop();
 	}
@@ -270,8 +277,8 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
         	MARQOVConfig mc(outpath);
-        	mc.setnsweeps(0);
-		mc.setncluster(50);
+        	mc.setnsweeps(5);
+		mc.setncluster(15);
 
 		makeDir(mc.outpath);
 
@@ -363,7 +370,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
  		RegularLatticeloop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
     }
-    else if (ham == "AshkinTeller")
+    else if (startswith(ham, "AshkinTeller"))
+//    else if (ham == "AshkinTeller")
     {
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
@@ -480,7 +488,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		{
 			auto& marqov = sims[i];
 	
-			marqov.init_hot();
+			marqov.init();
+//			marqov.init_hot();
 			marqov.wrmploop();
 			marqov.gameloop();
 		}

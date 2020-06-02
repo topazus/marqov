@@ -72,6 +72,12 @@ namespace MARQOV
         MARQOVConfig& setncluster(int nc) {ncluster = nc; return *this;}
         MARQOVConfig& setnsweeps(int ns) {nsweeps = ns; return *this;}
     };
+    
+    template<class> 
+struct type_sink { typedef void type; }; // consumes a type, and makes it `void`
+
+template<class T> using type_sink_t = typename type_sink<T>::type;
+    
     namespace detail
     {
         template<class> struct type_sink { typedef void type; }; // consumes a type, and makes it `void`
@@ -105,6 +111,12 @@ namespace MARQOV
 //             NonRef(Args&&... args) : grid(args...) {}
             L grid;
         };
+        
+        //A helper to decide whether a Hamiltonian provides a init function
+        template<class StateSpace, class H, class L, class R, class=void, class... Ts> struct has_init : std::false_type {};
+        template<class StateSpace, class H, class L, class RNG, class... Ts>
+        struct has_init<StateSpace, H, L, RNG,
+        type_sink_t< decltype( std::declval<H>().template initstatespace<StateSpace, L, RNG, Ts...>(std::declval<StateSpace&>(), std::declval<L&>(), std::declval<RNG&>(), std::declval<Ts>()... ) ) >, Ts... > : std::true_type {};
     };
     
     
@@ -251,7 +263,7 @@ struct ObsTupleToObsCacheTuple
 		beta(mybeta),
 		metro(rng)
 	{
-		//rng.seed(15); cout << "seed is fixed!" << endl << endl;
+//		rng.seed(15); cout << "seed is fixed!" << endl << endl;
 		rng.seed(time(NULL)+std::random_device{}());
 		rng.set_integer_range(lattice.size());
 		statespace = new typename Hamiltonian::StateVector[lattice.size()];
@@ -276,18 +288,61 @@ struct ObsTupleToObsCacheTuple
 		beta(mybeta),
 		metro(rng)
 	{
-		// rng.seed(15); cout << "seed is fixed!" << endl << endl;
+//		 rng.seed(15); cout << "seed is fixed!" << endl << endl;
 		rng.seed(time(NULL)+std::random_device{}());
 		rng.set_integer_range(this->grid.size());
 		statespace = new typename Hamiltonian::StateVector[this->grid.size()];
 	}
-		
-		
-		
 	
-
-
+		 void init_hot()
+		 {
+		 	const int SymD = std::tuple_size<StateVector>::value;
+			for(decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
+			{
+				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
+			}
+		 }
 		
+		template <typename StateSpace, class Lattice, class H, typename... Ts>
+		auto haminit_helper(std::true_type, StateSpace& statespace, const Lattice& grid, H& ham, Ts&& ... ts)
+        {
+            return ham.initstatespace(statespace, grid, rng, std::forward<Ts>(ts) ...);
+        }
+        
+        // If there's no user defined function we do a random initialization
+        template <typename StateSpace, class Lattice, class H, typename... Ts>
+		auto haminit_helper(std::false_type, StateSpace& statespace, const Lattice&, H& ham, Ts&& ... ts) -> void
+        {
+            this->init_hot();
+        }
+
+		template <typename... Ts>
+		auto init(Ts&& ... ts)
+        {
+            return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian, Grid, RND, Ts... >::type(), this->statespace, this->grid, this->ham, std::forward<Ts>(ts)...);
+        }
+
+		 void init_cold_Ising_like()
+		 {
+		 	const int SymD = std::tuple_size<StateVector>::value;
+			for(int i = 0; i < this->grid.size(); ++i)
+			{
+				for(int j = 0; j < SymD; ++j)
+				{
+					statespace[i][j] = 1;
+				}
+			}
+		 }
+
+		 void init_cold_Heisenberg()
+		 {
+			for(int i = 0; i < this->grid.size(); ++i)
+			{
+				statespace[i][0] = -1;
+				statespace[i][1] = 0;
+				statespace[i][2] = 0;
+			}
+		 }
 
 		// Destructor
 		~Marqov() {
@@ -496,10 +551,14 @@ struct ObsTupleToObsCacheTuple
 
 	    	void debugloop(const int nsteps, const int ncluster, const int nsweeps)
 		{
+			this->mcfg.setnsweeps(nsweeps);
+			this->mcfg.setncluster(ncluster);
+
+
 			double avgclustersize = 0;
 			for (int i=0; i<nsteps; ++i)
 			{
-				avgclustersize += elementaryMCstep(ncluster, nsweeps);
+				avgclustersize += elementaryMCstep();
 			}
 			std::cout << avgclustersize/nsteps << std::endl;
 		}
@@ -550,37 +609,6 @@ struct ObsTupleToObsCacheTuple
 			for(int i = 0; i < this->grid.length; ++i) std::cout << " ‾";
 			std::cout <<"\n\n";
 		}
-	
-		 void init_cold_Ising_like()
-		 {
-		 	const int SymD = std::tuple_size<StateVector>::value;
-			for(int i = 0; i < this->grid.size(); ++i)
-			{
-				for(int j = 0; j < SymD; ++j)
-				{
-					statespace[i][j] = 1;
-				}
-			}
-		 }
-
-		 void init_cold_Heisenberg()
-		 {
-			for(int i = 0; i < this->grid.size(); ++i)
-			{
-				statespace[i][0] = -1;
-				statespace[i][1] = 0;
-				statespace[i][2] = 0;
-			}
-		 }
-
-		 void init_hot()
-		 {
-		 	const int SymD = std::tuple_size<StateVector>::value;
-			for(decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
-			{
-				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
-			}
-		 }
 
 	private:
 	inline int metropolisstep(int rsite);
