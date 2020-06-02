@@ -28,6 +28,8 @@
   A data collapse of the critical region in the bond exchange probability seems to confirm the Ising scenario. Corresponding simulations took about 400 CPU hours.
   <p align="center">
   <img src="SquareSpinGlassT1.5Chi.png" width="50%" alt="Grids" class="center"></p>
+  
+* Ashkin-Teller model: We use it as an example where almost nothing of the structure of the general Hamiltonian is actually used. Tested for K=0 (three decoupled Ising models) and K=0.3, where according to Zhu et. al 2015 a phase transition is located at beta = 0.315... Both cases can be reproduced!
 
 # Up next
 
