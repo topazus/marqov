@@ -230,18 +230,14 @@ class XXZAntiferroSingleAniso
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
-		
 		template <typename RNG>
 		using MetroInitializer =  XXZAntiferroSingleAniso_Initializer<StateVector, RNG>; 
-		// this construction allows to specify a number of template arguments
-		// while leaving others open (C++11 feature)
-
 		
 		static constexpr uint Nalpha = 1;
 		static constexpr uint Nbeta  = 2;
 		static constexpr uint Ngamma = 0;
 
-		// requires pointers
+		// instantiate interaction terms (requires pointers) 
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
@@ -253,11 +249,12 @@ class XXZAntiferroSingleAniso
 			onsite[1]       = new XXZAntiferroSingleAniso_onsiteaniso<StateVector>(D);
 		}
 		
+		// instantiate and choose observables
 		XXZAntiferroSingleAnisoStaggeredMagZ  obs_mstagz;
 		XXZAntiferroSingleAnisoStaggeredMagXY obs_mstagxy;
-
 		auto getobs() { return std::make_tuple(obs_mstagz, obs_mstagxy); }
-		
+
+
 
 		// using the Wolff cluster algorithm requires to implement 
 		// the functions 'wolff_coupling' and 'wolff_flip'

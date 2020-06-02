@@ -214,8 +214,8 @@ template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable filter)
 {
 	// number of EMCS during relaxation and measurement
-	mc.setwarmupsteps(5000);
-	mc.setgameloopsteps(100000);
+	mc.setwarmupsteps(1500);
+	mc.setgameloopsteps(5000);
 
 	std::vector<std::pair<MARQOVConfig, Parameters> > params;
 	for(std::size_t i = 0; i < hamparams.size(); ++i)
@@ -234,7 +234,7 @@ void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable f
 		auto& marqov = sims[i];
 		marqov.init();
 //		marqov.init_hot();
-		marqov.init_cold_Ising_like(); cout << "AT init is on!!!" << endl;
+//		marqov.init_cold_Ising_like(); cout << "AT init is on!!!" << endl;
 		marqov.wrmploop();
 		marqov.gameloop();
 	}
@@ -270,8 +270,8 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
         	MARQOVConfig mc(outpath);
-        	mc.setnsweeps(0);
-		mc.setncluster(50);
+        	mc.setnsweeps(5);
+		mc.setncluster(15);
 
 		makeDir(mc.outpath);
 
@@ -480,7 +480,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		{
 			auto& marqov = sims[i];
 	
-			marqov.init_hot();
+			marqov.init();
+//			marqov.init_hot();
 			marqov.wrmploop();
 			marqov.gameloop();
 		}

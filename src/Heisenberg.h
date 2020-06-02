@@ -139,20 +139,21 @@ class Heisenberg
 
 		Heisenberg(double J) : J(J) {interactions[0] = new Heisenberg_interaction<StateVector>(J);}
 		
-		HeisenbergMag obs_m;
 
+		// instantiate and choose observables
+		HeisenbergMag obs_m;
 		auto getobs() { return std::make_tuple(obs_m); }
 		
+
+		// state space initializer
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
-        {
-            for(int i = 0; i < grid.size(); ++i)
+		{
+			for(int i=0; i<grid.size(); ++i)
 			{
-				statespace[i][0] = -1;
-                for(int j = 1; j < SymD; ++j)
-                    statespace[i][j] = 0;
+				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
 			}
-        }
+		}
 		
 
 		// using the Wolff cluster algorithm requires to implement 

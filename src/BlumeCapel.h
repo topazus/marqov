@@ -132,7 +132,20 @@ class BlumeCapel
 			return std::make_tuple(obs_m);
 		}
 
-		// not yet implemented
+
+		// state space initializer
+		template <class StateSpace, class Lattice, class RNG>
+		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
+		{
+			for(int i=0; i<grid.size(); ++i)
+			{
+				if (rng.d() > 0.5) statespace[i][0] = 1;
+				else statespace[i][0] = -1;
+			}
+		}
+				
+
+
 
 		// using the Wolff cluster algorithm requires to implement
 		// the functions 'wolff_coupling' and 'wolff_flip'

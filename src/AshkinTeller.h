@@ -70,7 +70,6 @@ class AshkinTeller
 		int J, K;
 		constexpr static int SymD = 3;
 		typedef std::array<SpinType, SymD> StateVector;
-
 		typedef AshkinTeller<int> myHamiltonian;
 		template <typename RNG>
 		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
@@ -93,6 +92,21 @@ class AshkinTeller
 		auto getobs()
 		{
 			return std::make_tuple(obs_m);
+		}
+
+
+		// init
+		template <class StateSpace, class Lattice, class RNG>
+		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
+		{
+			for (int i=0; i<grid.size(); i++)
+			{
+				for (int j=0; j<SymD; j++)
+				{
+					if (rng.d() > 0.5) statespace[i][j] = 1;
+					else statespace[i][j] = -1;
+				}
+			}
 		}
 
 };

@@ -124,117 +124,120 @@ class Ising
 
 
 namespace MARQOV {
+
     //Work around GCC Bug for specializations of things in namespaces:
     //https://gcc.gnu.org/bugzilla/show_bug.cgi?id=56480
     // still occurs on 6.4.0
-template <class Lattice>
-struct Metropolis<Ising<int>, Lattice>
-{
-    template <class StateSpace, class M, class RNG>
-    static int move(const Ising<int>& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNG& rng, double beta, int rsite)
-    {
-        typedef typename Ising<int>::StateVector StateVector;
-    	// old state vector at rsite
-	StateVector& svold = statespace[rsite];
-	// propose new configuration
-	StateVector svnew = metro.newsv(svold);
-	
-	// interaction part
-	double interactionenergydiff = 0;
-	for(typename std::remove_cv<decltype(ham.Nalpha)> ::type a = 0; a < ham.Nalpha; ++a)
+
+	template <class Lattice>
+	struct Metropolis<Ising<int>, Lattice>
 	{
-		auto nbrs = grid.getnbrs(a, rsite);
-		typedef decltype(ham.interactions[a]->operator()(statespace[0])) InteractionType;
-		typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->operator()(statespace[0]))) BondType;
-        
-		typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};
-		// sum over neighbours
-		for (std::size_t i = 0; i < nbrs.size(); ++i)
-		{
-			auto idx = nbrs[i];
-			auto nbr = ham.interactions[a]->operator()(statespace[idx]);
-			averagevector = averagevector + MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
-		}
-		interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
-	}
-    // sum up energy differences
-    double dE 	= interactionenergydiff;
-
-	// improve me: what about models with discrete statevectors where the acceptance probability should be
-	// looked up in tables? -> specialized Metropolis routine for this case??
-
-    int retval = 0;
-    if ( dE <= 0 )
-    {
-        svold = svnew;
-        retval = 1;
-    }
-    else if (rng.d() < exp(-beta*dE))
-    {
-        svold = svnew;
-        retval = 1;
-    }
-    return retval;
-    }
-};
-
-template <class Lattice>
-struct Wolff<Ising<int>, Lattice>
-{
-    template <class DirType, class RNG, class StateSpace>
-    static inline int move(const Ising<int>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite, const DirType&)
-    {
-        typedef typename Ising<int>::StateVector StateVector;
-        // prepare stack
-	std::vector<int> cstack(grid.size(), 0);
-
-	// add initial site and flip it
-	int q = 0;
-	cstack[q] = rsite;
-	const int val = statespace[rsite][0];
-	ham.wolff_flip(statespace[rsite]);
-	int clustersize = 1;
-
-	// compute 'Wolff probability' 
-	const int a = 0; // plain Ising model has only one interaction term
-	const double coupling = ham.interactions[a]->J;
-	const double prob = -std::expm1(+2.0*beta*coupling);
-	
-	// loop over stack as long as non-empty
-	while (q>=0)
-	{
-		// extract last sv in stack
-		const int currentidx = cstack[q];
-//		StateVector& currentsv = statespace[currentidx];
-		q--;
-	
-		// get its neighbours
-		const auto nbrs = grid.getnbrs(a, currentidx);
-
-		// loop over neighbours
-		for (std::size_t i = 0; i < nbrs.size(); ++i)
-		{
-			// extract corresponding sv
-			const auto currentnbr = nbrs[i];
-			StateVector& candidate = statespace[currentnbr];
-
-			// test whether site is added to the cluster
-			if (candidate[0] == val)
+	    template <class StateSpace, class M, class RNG>
+	    static int move(const Ising<int>& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNG& rng, double beta, int rsite)
+	    {
+			typedef typename Ising<int>::StateVector StateVector;
+		    	// old state vector at rsite
+			StateVector& svold = statespace[rsite];
+			// propose new configuration
+			StateVector svnew = metro.newsv(svold);
+			
+			// interaction part
+			double interactionenergydiff = 0;
+			for(typename std::remove_cv<decltype(ham.Nalpha)> ::type a = 0; a < ham.Nalpha; ++a)
 			{
-				if (rng.d() < prob)
+				auto nbrs = grid.getnbrs(a, rsite);
+				typedef decltype(ham.interactions[a]->operator()(statespace[0])) InteractionType;
+				typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->operator()(statespace[0]))) BondType;
+				typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};
+
+				// sum over neighbours
+				for (std::size_t i = 0; i < nbrs.size(); ++i)
 				{
-					q++;
-					cstack[q] = currentnbr;
-					clustersize++;
-					ham.wolff_flip(candidate);
+					auto idx = nbrs[i];
+					auto nbr = ham.interactions[a]->operator()(statespace[idx]);
+					averagevector = averagevector + MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
+				}
+				interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
+			}
+
+	    		// sum up energy differences
+	    		double dE 	= interactionenergydiff;
+	
+	    		 // improve me: what about models with discrete statevectors where the acceptance probability should be
+	    		 // looked up in tables? -> specialized Metropolis routine for this case??
+	
+	    		int retval = 0;
+	    		if ( dE <= 0 )
+	    		{
+	    		    svold = svnew;
+	    		    retval = 1;
+	    		}
+	    		else if (rng.d() < exp(-beta*dE))
+	    		{
+	    		    svold = svnew;
+	    		    retval = 1;
+	    		}
+	    		return retval;
+	    }
+	};
+
+	template <class Lattice>
+	struct Wolff<Ising<int>, Lattice>
+	{
+		template <class DirType, class RNG, class StateSpace>
+		static inline int move(const Ising<int>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite, const DirType&)
+		{
+			typedef typename Ising<int>::StateVector StateVector;
+			// prepare stack
+			std::vector<int> cstack(grid.size(), 0);
+		
+			// add initial site and flip it
+			int q = 0;
+			cstack[q] = rsite;
+			const int val = statespace[rsite][0];
+			ham.wolff_flip(statespace[rsite]);
+			int clustersize = 1;
+		
+			// compute 'Wolff probability' 
+			const int a = 0; // plain Ising model has only one interaction term
+			const double coupling = ham.interactions[a]->J;
+			const double prob = -std::expm1(+2.0*beta*coupling);
+			
+			// loop over stack as long as non-empty
+			while (q>=0)
+			{
+				// extract last sv in stack
+				const int currentidx = cstack[q];
+	//			StateVector& currentsv = statespace[currentidx];
+				q--;
+			
+				// get its neighbours
+				const auto nbrs = grid.getnbrs(a, currentidx);
+	
+				// loop over neighbours
+				for (std::size_t i = 0; i < nbrs.size(); ++i)
+				{
+					// extract corresponding sv
+					const auto currentnbr = nbrs[i];
+					StateVector& candidate = statespace[currentnbr];
+	
+					// test whether site is added to the cluster
+					if (candidate[0] == val)
+					{
+						if (rng.d() < prob)
+						{
+							q++;
+							cstack[q] = currentnbr;
+							clustersize++;
+							ham.wolff_flip(candidate);
+						}
+					}
 				}
 			}
-		}
-	}
-
-	return clustersize;
-    }
-};
+	
+		return clustersize;
+	    }
+	};
 
 }
 #endif
