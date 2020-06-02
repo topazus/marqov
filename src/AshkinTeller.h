@@ -10,7 +10,6 @@
 // the 3-color Ashkin-Teller model
 
 // numerically treated as embedded Ising models (compare Zhu et. al 2015)
-// make sure you set up a the EMCS properly
 
 
 // ------------------------------ OBSERVABLES ---------------------------
@@ -25,16 +24,18 @@ class AshkinTellerMag
 		{
 			const int N = grid.size();
 
-			double mag = 0.0;
+			double mag1 = 0.0;
+			double mag2 = 0.0;
+			double mag3 = 0.0;
 
 			for (int i=0; i<N; i++)
 			{
-				mag += statespace[i][0];
-				mag += statespace[i][1];
-				mag += statespace[i][2];
+				mag1 += statespace[i][0];
+				mag2 += statespace[i][1];
+				mag3 += statespace[i][2];
 			}
 
-			return std::abs(mag)/double(3*N);
+			return (std::abs(mag1)+std::abs(mag2)+std::abs(mag3))/double(3*N);
 		}
 		AshkinTellerMag() : name("m") {}
 };
@@ -102,6 +103,7 @@ class AshkinTeller
 			for (int i=0; i<grid.size(); i++)
 			{
 				for (int j=0; j<SymD; j++)
+//				for (int j=0; j<1; j++)
 				{
 					if (rng.d() > 0.5) statespace[i][j] = 1;
 					else statespace[i][j] = -1;
@@ -174,7 +176,7 @@ namespace MARQOV
 	         			 q--;
 	
 	         			 // get its neighbours
-					const int a = 0; // spin family (hard-coded)
+					 const int a = 0; // spin family (hard-coded)
 	         			 const auto nbrs = grid.getnbrs(a, currentidx);
 	
 	         			 // loop over neighbours
@@ -253,6 +255,8 @@ namespace MARQOV
 		static inline int move(AshkinTeller<int>& ham, Lattice& grid, StateSpace& statespace, 
 						   M& metro, RNG& rng, double beta, int rsite)
 		{
+
+
 			int retval = 0;
 			for (int color=0; color<3; color++) // better select a random color
 			{
