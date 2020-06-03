@@ -31,6 +31,26 @@ class IsingMag
 		IsingMag() : name("m") {}
 };
 
+template <class Hamiltonian>
+class Energy
+{
+	private:
+		Hamiltonian& ham;
+
+	public:
+		Energy (Hamiltonian& ham) : ham(ham), name("e")  {};
+
+
+		std::string name;
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			return 1;
+//			this->ham. // .. copy from metropolis move
+		}
+};
+
+
 
 // ----------------------------------------------------------------------
 
@@ -79,7 +99,7 @@ class Ising
 		static constexpr uint Nbeta = 0;
 		static constexpr uint Ngamma = 0;
 		
-		Ising(double J) : J(J) {	interactions[0] = new Ising_interaction<StateVector>(J); }
+		Ising(double J) : J(J), obs_e(*this) {	interactions[0] = new Ising_interaction<StateVector>(J); }
 		
 		// instantiate interaction terms (requires pointers)
 		Interaction<StateVector>* interactions[Nalpha];
@@ -88,7 +108,8 @@ class Ising
 	
 		// instantiate and choose observables
 		IsingMag       obs_m;
-		auto getobs()	{return std::make_tuple(obs_m);}
+		Energy<Ising> 	obs_e;
+		auto getobs()	{return std::make_tuple(obs_m, obs_e);}
 
 
 		// initialize state space
