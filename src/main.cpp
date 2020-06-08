@@ -336,6 +336,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
  		RegularLatticeloop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
+	/*
     else if (ham == "Heisenberg")
     {
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
@@ -497,6 +498,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 //        auto t = make_pair(std::make_tuple(dummy), std::tuple_cat(std::make_tuple(outdir), parameters[0]));
 //        createsims<Ising<int>, Neighbours<int32_t> >(p, otherfilter);
     }
+    */
 }
 
 

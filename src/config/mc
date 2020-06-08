@@ -3,7 +3,7 @@ dim = 2
 nL = 8,12,16,24
 nreplicas = 1
 
-Hamiltonian = AshkinTeller
+Hamiltonian = Ising
 
 [Ising]
 

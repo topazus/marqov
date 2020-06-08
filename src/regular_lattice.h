@@ -19,6 +19,13 @@ public:
 
     value_type getnbrs(int a, int i) const {return this->operator[](i);}
 
+    std::vector<double> getcrds(int i) const 
+    {
+    // implement me!
+    std::vector<double> retval(3,0);
+    	return retval;
+	}
+
     value_type operator[](int i) const
     {
         std::vector<int> temp(2*dim);

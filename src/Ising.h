@@ -3,6 +3,7 @@
 #include <array>
 #include <tuple>
 #include <string>
+#include <complex>
 #include <functional>
 #include "hamiltonianparts.h"
 #include "metropolis.h"
@@ -52,6 +53,34 @@ class Energy
 
 
 
+class IsingMagFTComp
+{
+	public:
+		int dir;
+		std::string name;
+		template <class StateSpace, class Grid>
+
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			const int N = grid.size();
+			const int L = grid.length;
+
+			std::complex<double> magFTcomp = 0.0;
+
+			for (int i=0; i<N; i++)
+			{
+
+				double x = grid.getcrds(i)[dir];
+				magFTcomp += statespace[i][0] * std::exp(2*M_PI*x / double(L));
+			}
+
+			return std::pow(std::abs(magFTcomp/double(N)),2);
+		}
+
+		IsingMagFTComp(int dir=0) : dir(dir), name("x"+std::to_string(dir)) {}
+};
+
+
 // ----------------------------------------------------------------------
 
 template <class StateVector>
@@ -99,7 +128,10 @@ class Ising
 		static constexpr uint Nbeta = 0;
 		static constexpr uint Ngamma = 0;
 		
-		Ising(double J) : J(J), obs_e(*this) {	interactions[0] = new Ising_interaction<StateVector>(J); }
+		Ising(double J) : J(J), obs_e(*this), obs_fx(0), obs_fy(1)  
+		{
+			interactions[0] = new Ising_interaction<StateVector>(J); 
+		}
 		
 		// instantiate interaction terms (requires pointers)
 		Interaction<StateVector>* interactions[Nalpha];
@@ -109,7 +141,9 @@ class Ising
 		// instantiate and choose observables
 		IsingMag       obs_m;
 		Energy<Ising> 	obs_e;
-		auto getobs()	{return std::make_tuple(obs_m, obs_e);}
+		IsingMagFTComp obs_fx;
+		IsingMagFTComp obs_fy;
+		auto getobs()	{return std::make_tuple(obs_m, obs_e, obs_fx, obs_fy);}
 
 
 		// initialize state space
