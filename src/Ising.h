@@ -8,6 +8,34 @@
 #include "hamiltonianparts.h"
 #include "metropolis.h"
 
+
+// Trick to allow type promotion below
+template <typename T>
+struct identity_t { typedef T type; };
+
+/// Make working with std::complex<> nubmers suck less... allow promotion.
+#define COMPLEX_OPS(OP)                                                 \
+  template <typename _Tp>                                               \
+  std::complex<_Tp>                                                     \
+  operator OP(std::complex<_Tp> lhs, const typename identity_t<_Tp>::type & rhs) \
+  {                                                                     \
+    return lhs OP rhs;                                                  \
+  }                                                                     \
+  template <typename _Tp>                                               \
+  std::complex<_Tp>                                                     \
+  operator OP(const typename identity_t<_Tp>::type & lhs, const std::complex<_Tp> & rhs) \
+  {                                                                     \
+    return lhs OP rhs;                                                  \
+  }
+COMPLEX_OPS(+)
+COMPLEX_OPS(-)
+COMPLEX_OPS(*)
+COMPLEX_OPS(/)
+#undef COMPLEX_OPS
+
+// from https://stackoverflow.com/questions/2647858/multiplying-complex-with-constant-in-c
+
+
 // ------------------------------ OBSERVABLES ---------------------------
 
 // Magnetization
@@ -66,12 +94,13 @@ class IsingMagFTComp
 			const int L = grid.length;
 
 			std::complex<double> magFTcomp = 0.0;
+			std::complex<double> jj(0,1);
 
 			for (int i=0; i<N; i++)
 			{
 
 				double x = grid.getcrds(i)[dir];
-				magFTcomp += statespace[i][0] * std::exp(2*M_PI*x / double(L));
+				magFTcomp += statespace[i][0] * std::exp(2*M_PI*x*jj / double(L));
 			}
 
 			return std::pow(std::abs(magFTcomp/double(N)),2);
