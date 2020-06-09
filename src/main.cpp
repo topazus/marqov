@@ -222,8 +222,8 @@ template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable filter)
 {
 	// number of EMCS during relaxation and measurement
-	mc.setwarmupsteps(1000);
-	mc.setgameloopsteps(2500);
+	mc.setwarmupsteps(200);
+	mc.setgameloopsteps(500);
 
 	std::vector<std::pair<MARQOVConfig, Parameters> > params;
 	for(std::size_t i = 0; i < hamparams.size(); ++i)
@@ -336,7 +336,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
  		RegularLatticeloop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
-	/*
     else if (ham == "Heisenberg")
     {
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
@@ -421,6 +420,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
 	}
+	/*
     else if(ham == "IrregularIsing")
     {
 		std::vector<std::vector<int>> dummy;
