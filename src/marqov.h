@@ -12,8 +12,10 @@
 #include <random>
 #include <unistd.h> // provides usleep
 #include <stdexcept>
+#include <random>
 #include "cachecontainer.h"
 #include "svmath.h"
+#include "rngcache.h"
 
 namespace MARQOV
 {
@@ -216,6 +218,8 @@ struct ObsTupleToObsCacheTuple
 		beta(mybeta),
 		metro(rng)
 	{
+        RNGCache<std::ranlux48_base> rngcache(1234);
+        rngcache.real();
 //		rng.seed(15); cout << "seed is fixed!" << endl << endl;
 		rng.seed(time(NULL)+std::random_device{}());
 		rng.set_integer_range(lattice.size());

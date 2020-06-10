@@ -25,5 +25,55 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include <cstdlib>
+#include <stdexcept>
+
+template <class RNG>
+class RNGCache
+{
+public:
+    template <class ...Args>
+    RNGCache(Args&&... args) : data(NULL), pos(0), rng(std::forward<Args>(args)...)
+    {
+        int err = posix_memalign( (void**)(&data), pagesize, nrpages*pagesize );//in C++17 we can replace that with aligned_alloc
+        if (err != 0)
+            throw std::runtime_error("[RNGCache] error while allocating memory");
+        fillcache();
+    }
+    ~RNGCache()
+    {
+        free(data);
+    }
+    auto number() noexcept
+    {
+        if(pos >= nelems)
+        {
+            pos = 0;
+            fillcache();
+        }
+        return data[pos++];
+    }
+    auto real(double max = 1.0, double min = 0.0) noexcept
+    {
+        return min + number()*(max-min)/RNG::max();
+    }
+    void dump()
+    {//FIXME!!
+    }
+    static constexpr auto max() {return RNG::max();}
+private:
+    void fillcache() noexcept
+    {
+        for(int i = 0; i < nelems; ++i)
+            data[i] = rng(); //We follow C++11 convention that operator() advances the state of the RNG
+    }
+    static constexpr int pagesize = 4096;
+    static constexpr int nrpages = 2;
+    typedef decltype(std::declval<RNG>().operator()()) RNGValType;
+    static constexpr int nelems = pagesize*nrpages/8;
+    RNGValType* data;
+    int pos;
+    RNG rng;
+};
 
 #endif
