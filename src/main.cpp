@@ -327,6 +327,63 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
+
+
+
+
+	{
+		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
+		auto parameters = cart_prod(beta, J);
+
+		write_logfile(registry, beta);
+
+		auto otherfilter = [](auto p)
+		{
+			// write a filter to determine output file path and name
+            	auto& lp = p.first;
+            	auto& mp = p.second;
+            	auto& hp = p.third;
+
+ 			auto str_id    = std::to_string(mp.id);
+			auto str_beta  = "beta"+std::to_string(std::get<0>(hp));
+			auto str_L     = std::to_string(std::get<0>(lp));
+
+			mp.outname = str_beta+"_"+str_id;
+
+			return p;
+		};
+
+
+		const int L   = 42;
+		const int dim = 2;
+		
+		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+		MARQOVConfig mc(outpath);
+		makeDir(mc.outpath);
+
+		auto t = make_triple(std::make_tuple(L,dim), mc, parameters[0]);
+		std::vector<decltype(t)> p = {t};
+
+		auto sims = createsims<Ising<int>, RegularHypercubic>(p, otherfilter);
+
+		// perform simulation
+		#pragma omp parallel for
+		for(std::size_t i = 0; i < sims.size(); ++i)
+		{
+			auto& marqov = sims[i];
+	
+			marqov.init();
+			marqov.wrmploop();
+			marqov.gameloop();
+		}
+    }
+
+
+
+
+
+
 	if (ham == "Ising")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");

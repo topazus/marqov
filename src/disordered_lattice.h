@@ -1,6 +1,7 @@
 
 #include "distance.h"
 #include "regular_lattice.h"
+#include "../ext/ccl/neighbours.h"
 
 // Point cloud base class
 class PointCloud
@@ -95,6 +96,30 @@ class DisorderType
 
 
 
+template <class PointCloud>
+class ConstantCoordinationLattice : public DisorderType<int>
+{
+	private:
+		PointCloud cloud;
+	
+	public:
+		ConstantCoordinationLattice(const PointCloud& cloud) : DisorderType(cloud.size()), cloud(cloud)
+		{
+			const int npoints = cloud.size;
+			constant_coordination_lattice(cloud, nbrs);
+		}
+
+
+		// implement getcrds
+		std::vector<double> getcrds(const int i) const
+		{
+			return cloud.getcrds(i);
+		}
+
+		std::size_t size() const {return npoints;}
+};
+
+
 
 
 class RegularHypercubic
@@ -109,13 +134,13 @@ class RegularHypercubic
 
 
 		// override getnbrs
-		std::vector<int> getnbrs(const int alpha, const int i)
+		std::vector<int> getnbrs(const int alpha, const int i) const
 		{
 			return lattice.getnbrs(alpha, i);
 		}
 
 		// implement getcrds
-		std::vector<double> getcrds(const int i)
+		std::vector<double> getcrds(const int i) const
 		{
 			return lattice.getcrds(i);
 		}
