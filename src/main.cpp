@@ -7,8 +7,8 @@
 #include <algorithm>
 #include <tuple>
 #include "rndwrapper.h"
-#include "regular_lattice.h"
-#include "disordered_lattice.h"
+#include "geom/regular_lattice.h"
+#include "geom/grid.h"
 #include "vectorhelpers.h"
 #include "helpers.h"
 #include "cartprod.h"
@@ -22,7 +22,7 @@ using std::flush;
 using std::ofstream;
 
 #include "marqov.h"
-#include "neighbourclass.h"
+#include "geom/neighbourclass.h"
 #include "svmath.h"
 
 #include "Heisenberg.h"
@@ -365,7 +365,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto t = make_triple(std::make_tuple(L,dim), mc, parameters[0]);
 		std::vector<decltype(t)> p = {t};
 
-		auto sims = createsims<Ising<int>, RegularHypercubic>(p, otherfilter);
+		auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(p, otherfilter);
 
 		// perform simulation
 		#pragma omp parallel for
