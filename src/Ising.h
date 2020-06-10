@@ -181,7 +181,7 @@ class Ising
 		{
 			for (int i=0; i<grid.size(); i++)
 			{
-				if (rng.d() > 0.5) statespace[i][0] = 1;
+				if (rng.real() > 0.5) statespace[i][0] = 1;
 				else statespace[i][0] = -1;
 			}
 		}
@@ -264,7 +264,7 @@ namespace MARQOV {
 	    		    svold = svnew;
 	    		    retval = 1;
 	    		}
-	    		else if (rng.d() < exp(-beta*dE))
+	    		else if (rng.real() < exp(-beta*dE))
 	    		{
 	    		    svold = svnew;
 	    		    retval = 1;
@@ -316,7 +316,7 @@ namespace MARQOV {
 					// test whether site is added to the cluster
 					if (candidate[0] == val)
 					{
-						if (rng.d() < prob)
+						if (rng.real() < prob)
 						{
 							q++;
 							cstack[q] = currentnbr;

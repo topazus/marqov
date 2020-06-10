@@ -5,10 +5,10 @@
 #include <type_traits>
 
 // Generate random vector on the SymD-dimensional unit sphere
-template <class RND, typename valuetype, int SymD, typename Enable = void> 
+template <class RNG, typename valuetype, int SymD, typename Enable = void> 
 struct Rnddir_Helper
 {
-static auto rnddir(RND& rn) -> std::array<valuetype, SymD>
+static auto rnddir(RNG& rn) -> std::array<valuetype, SymD>
 {
 	// Spherical coordinates according to:
 	// https://sites.math.washington.edu/~morrow/335_12/sphericalCoords.pdf
@@ -19,7 +19,7 @@ static auto rnddir(RND& rn) -> std::array<valuetype, SymD>
         //set up that auxiliary data that might be erased later
         valuetype angles[SymD-1];
         for(int i = 0; i < SymD - 1; ++i)
-            angles[i] = 2.0*rn.d();
+            angles[i] = 2.0*rn.real();
         //recursion for the polar(?) angles
         for(int j = 1; j < SymD - 1; ++j)
             retval[j] = retval[j-1] * angles[j-1]*(2.0 - angles[j-1]);
@@ -42,14 +42,14 @@ typename std::enable_if<std::is_integral<inttype>::value>::type> // enable only 
 static auto rnddir(RND& rn) -> std::array<inttype, 1>
 {
     std::array<inttype, 1> retval = {1};
-    if (rn.d() < 0.5) retval[0] = -1;
+    if (rn.real() < 0.5) retval[0] = -1;
     return retval;
 }
 };
 
-template <class RND, typename valuetype, int SymD> 
-auto rnddir(RND& rn) -> std::array<valuetype, SymD>
+template <class RNG, typename valuetype, int SymD> 
+auto rnddir(RNG& rn) -> std::array<valuetype, SymD>
 {
-return Rnddir_Helper<RND, valuetype, SymD>::rnddir(rn);
+    return Rnddir_Helper<RNG, valuetype, SymD>::rnddir(rn);
 }
 #endif

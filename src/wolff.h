@@ -69,7 +69,7 @@ int Wolff<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& gri
 			// test whether site is added to the cluster
 			if (coupling > 0)
 			{
-				if (rng.d() < -std::expm1(-2.0*beta*coupling))
+				if (rng.real() < -std::expm1(-2.0*beta*coupling))
 				{
 					q++;
 					cstack[q] = currentnbr;
@@ -86,6 +86,6 @@ template <class Grid, class Hamiltonian, template<class> class RefType>
 template <class DirType>
 inline int Marqov<Grid, Hamiltonian, RefType>::wolffstep(int rsite, const DirType& rdir)
 {
-    return Wolff<Hamiltonian, Grid>::move(this->ham, this->grid, this->statespace, this->rng, this->beta, rsite, rdir);
+    return Wolff<Hamiltonian, Grid>::move(this->ham, this->grid, this->statespace, this->rngcache, this->beta, rsite, rdir);
 }
 #endif

@@ -151,7 +151,7 @@ class Heisenberg
 		{
 			for(int i=0; i<grid.size(); ++i)
 			{
-				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
+				statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
 			}
 		}
 		
@@ -214,7 +214,7 @@ namespace MARQOV
 			{
 				const auto prob = -std::expm1(-2.0*beta*proj1*proj2);
 
-				if (rng.d() < prob)
+				if (rng.real() < prob)
 				{
 					q++;
 					cstack[q] = currentidx;

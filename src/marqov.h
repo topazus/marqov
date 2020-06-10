@@ -214,15 +214,10 @@ struct ObsTupleToObsCacheTuple
 		mcfg(mc),
 		dump(mc.outpath+mc.outname+".h5", H5F_ACC_TRUNC ),
         obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs())),
-		rng(0, 1), 
+        rngcache(time(NULL)+std::random_device{}()),
 		beta(mybeta),
-		metro(rng)
+		metro(rngcache)
 	{
-        RNGCache<std::ranlux48_base> rngcache(1234);
-        rngcache.real();
-//		rng.seed(15); cout << "seed is fixed!" << endl << endl;
-		rng.seed(time(NULL)+std::random_device{}());
-		rng.set_integer_range(lattice.size());
 		statespace = new typename Hamiltonian::StateVector[lattice.size()];
 	}
 		
@@ -241,13 +236,10 @@ struct ObsTupleToObsCacheTuple
 		mcfg(mc),
 		dump(mc.outpath+mc.outname+".h5", H5F_ACC_TRUNC ),
         obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs())),
-		rng(0, 1), 
+		rngcache(time(NULL)+std::random_device{}()), 
 		beta(mybeta),
-		metro(rng)
+		metro(rngcache)
 	{
-//		 rng.seed(15); cout << "seed is fixed!" << endl << endl;
-		rng.seed(time(NULL)+std::random_device{}());
-		rng.set_integer_range(this->grid.size());
 		statespace = new typename Hamiltonian::StateVector[this->grid.size()];
 	}
 	
@@ -256,14 +248,14 @@ struct ObsTupleToObsCacheTuple
 		 	const int SymD = std::tuple_size<StateVector>::value;
 			for(decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
 			{
-				statespace[i] = rnddir<RND, typename StateVector::value_type, SymD>(rng);
+				statespace[i] = rnddir<RNGCache<RNGType>, typename StateVector::value_type, SymD>(rngcache);
 			}
 		 }
 		
 		template <typename StateSpace, class Lattice, class H, typename... Ts>
 		auto haminit_helper(std::true_type, StateSpace& statespace, const Lattice& grid, H& ham, Ts&& ... ts)
         {
-            return ham.initstatespace(statespace, grid, rng, std::forward<Ts>(ts) ...);
+            return ham.initstatespace(statespace, grid, rngcache, std::forward<Ts>(ts) ...);
         }
         
         // If there's no user defined function we do a random initialization
@@ -276,7 +268,7 @@ struct ObsTupleToObsCacheTuple
 		template <typename... Ts>
 		auto init(Ts&& ... ts)
         {
-            return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian, Grid, RND, Ts... >::type(), this->statespace, this->grid, this->ham, std::forward<Ts>(ts)...);
+            return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian, Grid, RNGCache<RNGType>, Ts... >::type(), this->statespace, this->grid, this->ham, std::forward<Ts>(ts)...);
         }
 
 		 void init_cold_Ising_like()
@@ -583,11 +575,12 @@ struct ObsTupleToObsCacheTuple
 
     H5::H5File dump;///< The handle for the HDF5 file. must be before the obscaches
     typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;
-	RND rng;
+    typedef std::ranlux48_base RNGType;
+    RNGCache<RNGType> rngcache;///< The caching RNG
     double beta;
 
 	//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
-	typename Hamiltonian::template MetroInitializer<RND> metro;//C++11
+	typename Hamiltonian::template MetroInitializer<RNGCache<RNGType> > metro;//C++11
 };
 
 template <class H, class L, class... LArgs, class... HArgs, size_t... S>

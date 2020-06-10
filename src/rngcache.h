@@ -42,6 +42,7 @@ public:
             throw std::runtime_error("[RNGCache] error while allocating memory");
         fillcache();
     }
+    RNGCache(RNGCache&& other) = default;//FIXME: think about it...
     ~RNGCache()
     {
         free(data);

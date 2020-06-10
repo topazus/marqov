@@ -75,12 +75,12 @@ class BlumeCapel_Initializer
 
 			if (state == 0)
 			{
-				if (rng.d() < 0.5)  state = -1;
+				if (rng.real() < 0.5)  state = -1;
 				else				state = +1;
 			}
 			else // +1/-1
 			{
-				if (rng.d() < 0.5) state *= -1;
+				if (rng.real() < 0.5) state *= -1;
 				else state = 0;
 			}
 
@@ -139,7 +139,7 @@ class BlumeCapel
 		{
 			for(int i=0; i<grid.size(); ++i)
 			{
-				if (rng.d() > 0.5) statespace[i][0] = 1;
+				if (rng.real() > 0.5) statespace[i][0] = 1;
 				else statespace[i][0] = -1;
 			}
 		}
