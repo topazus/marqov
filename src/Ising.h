@@ -8,7 +8,7 @@
 #include "hamiltonianparts.h"
 #include "metropolis.h"
 
-
+/*
 // Trick to allow type promotion below
 template <typename T>
 struct identity_t { typedef T type; };
@@ -34,6 +34,7 @@ COMPLEX_OPS(/)
 #undef COMPLEX_OPS
 
 // from https://stackoverflow.com/questions/2647858/multiplying-complex-with-constant-in-c
+*/
 
 
 // ------------------------------ OBSERVABLES ---------------------------
@@ -91,16 +92,15 @@ class IsingMagFTComp
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
 			const int N = grid.size();
-			const int L = grid.length;
+			const int L = grid.len;
 
 			std::complex<double> magFTcomp = 0.0;
 			std::complex<double> jj(0,1);
 
 			for (int i=0; i<N; i++)
 			{
-
 				double x = grid.getcrds(i)[dir];
-				magFTcomp += statespace[i][0] * std::exp(2*M_PI*x*jj / double(L));
+				magFTcomp += double(statespace[i][0]) * std::exp(2.0*M_PI*x*jj / double(L));
 			}
 
 			return std::pow(std::abs(magFTcomp/double(N)),2);

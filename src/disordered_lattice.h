@@ -1,4 +1,6 @@
+
 #include "distance.h"
+#include "regular_lattice.h"
 
 // Point cloud base class
 class PointCloud
@@ -69,7 +71,7 @@ class RegularSquare : public PointCloud
 
 
 // -----------------------------------------
-// ---------- Disorder base class ----------
+// ---------- DisorderType base class ----------
 
 template <typename bond_type = int>
 class DisorderType
@@ -90,6 +92,37 @@ class DisorderType
 		std::size_t size() const {return npoints;}
 
 };
+
+
+
+
+
+class RegularHypercubic
+{
+	private:
+		RegularLattice lattice;
+
+	public:
+		int len, dim, npoints;
+
+		RegularHypercubic(int len, int dim) : len(len), dim(dim), npoints(pow(len,dim)), lattice(len,dim) {};
+
+
+		// override getnbrs
+		std::vector<int> getnbrs(const int alpha, const int i)
+		{
+			return lattice.getnbrs(alpha, i);
+		}
+
+		// implement getcrds
+		std::vector<double> getcrds(const int i)
+		{
+			return lattice.getcrds(i);
+		}
+
+		std::size_t size() const {return npoints;}
+};
+
 
 
 

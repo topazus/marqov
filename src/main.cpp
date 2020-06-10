@@ -8,6 +8,7 @@
 #include <tuple>
 #include "rndwrapper.h"
 #include "regular_lattice.h"
+#include "disordered_lattice.h"
 #include "vectorhelpers.h"
 #include "helpers.h"
 #include "cartprod.h"
@@ -283,11 +284,11 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std
 		makeDir(mc.outpath);
 
 		// lattice
-		RegularLattice latt(L, dim);
+		RegularHypercubic latt(L, dim);
 
 		// set up and execute
  		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
- 		loop<Hamiltonian, RegularLattice>(mc, parameters, f);
+ 		loop<Hamiltonian, RegularHypercubic>(mc, parameters, f);
 	}
 }
 
@@ -404,7 +405,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 		// write a filter to determine output file path and name
-		auto xxzfilter = [](RegularLattice& latt, auto p)
+		auto xxzfilter = [](RegularHypercubic& latt, auto p)
 		{	
 			auto& mp = p.first;		// Monte Carlo params
 			auto& hp = p.second;	// Hamiltonian params

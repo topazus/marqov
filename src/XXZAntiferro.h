@@ -18,7 +18,7 @@ class XXZAntiferroStaggeredMagZ
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
 			const int N = grid.size();
-			const int L = grid.length;
+			const int L = grid.len;
 
 			if ((L+1) % 2 == 0) cout << "error"<< endl;
 
@@ -68,7 +68,7 @@ class XXZAntiferroStaggeredMagXY
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
 			const int N = grid.size();
-			const int L = grid.length;
+			const int L = grid.len;
 
 			if ((L+1) % 2 == 0) cout << "error"<< endl;
 

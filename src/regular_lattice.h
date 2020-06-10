@@ -1,3 +1,5 @@
+#ifndef REGULARLATTE_H
+#define REGULARLATTE_H
 
 class RegularLattice
 {
@@ -98,4 +100,4 @@ private:
     std::vector<int> pows;
 };
 
-
+#endif
