@@ -33,6 +33,8 @@ class RNGCache
 {
 public:
     template <class ...Args>
+    /** Constructor call. We pass on all arguments to the RNG.
+     */
     RNGCache(Args&&... args) : data(NULL), pos(0), rng(std::forward<Args>(args)...)
     {
         int err = posix_memalign( (void**)(&data), pagesize, nrpages*pagesize );//in C++17 we can replace that with aligned_alloc
@@ -44,7 +46,10 @@ public:
     {
         free(data);
     }
-    auto number() noexcept
+    /** Get a random uniform Integer from [0, max()]
+     * @return a random integer
+     */
+    inline auto integer() noexcept
     {
         if(pos >= nelems)
         {
@@ -53,25 +58,35 @@ public:
         }
         return data[pos++];
     }
-    auto real(double max = 1.0, double min = 0.0) noexcept
+    /** Get a random uniform float in the range (min, max)
+     *  If no arguments are specified this gives a double from [0,1)
+     * @param max the maximum floating point number to return
+     * @param min the minimum floating point number to return
+     * @return a random double from the interval [min, max)
+     */
+    inline auto real(double max = 1.0, double min = 0.0) noexcept
     {
-        return min + number()*(max-min)/RNG::max();
+        return min + integer()*(max-min)/RNG::max();
     }
+    /** In the future this should enable dumping of the internal state...
+     */
     void dump()
     {//FIXME!!
     }
+    /** The maximum integer that we support
+     */
     static constexpr auto max() {return RNG::max();}
 private:
     void fillcache() noexcept
     {
         for(int i = 0; i < nelems; ++i)
-            data[i] = rng(); //We follow C++11 convention that operator() advances the state of the RNG
+            data[i] = rng(); //We follow the C++11 convention that operator() advances the state of the RNG
     }
     static constexpr int pagesize = 4096;
     static constexpr int nrpages = 2;
-    typedef decltype(std::declval<RNG>().operator()()) RNGValType;
-    static constexpr int nelems = pagesize*nrpages/8;
-    RNGValType* data;
+    typedef decltype(std::declval<RNG>().operator()()) result_type;
+    static constexpr int nelems = pagesize*nrpages/sizeof(result_type);
+    result_type* data;
     int pos;
     RNG rng;
 };
