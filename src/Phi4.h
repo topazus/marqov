@@ -57,7 +57,7 @@ class Phi4_Initializer
 		StateVector newsv(const StateVector& osv) 
 		{
             double amp = 0.5;
-            double r = 2*rng.real() - 1.0;
+            double r = rng.real(-1.0, 1.0);
             double oldlen = std::sqrt(dot(osv, osv));
             double newlen = oldlen + amp*r;
             auto newdir = rnddir<RNG, double, SymD>(rng);
