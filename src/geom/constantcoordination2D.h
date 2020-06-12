@@ -214,40 +214,35 @@ int geometric_simulated_annealing_box(const PointCloud& cloud, std::vector<std::
 
 bool constant_coordination_lattice(const PointCloud& cloud, std::vector<std::vector<int>>& neighbours)
 {
+	// parameters
+	const int K1 = 2;				// coordination number first step
+	const int K2 = 2;				// coordination number second step
+	const int a = 50; 				// rewiring attempts multiplicator
+	const int boxlen = 4;			// box size initial connections
+	const int boxlen_r = 4;			// box size rewiring
+
+	// variables
+	const int K = K1 + K2;			// total coordination number
+	const int size = cloud.size();	// number of particles
+	const int L = cloud.len; 		// cloud must provide linear length
+
+	// rewiring attempts (per box and stage) 
+	const long int Nsteps = int(K*a*pow(boxlen_r,4));
+
+	// prepare array
 	neighbours.clear();
-
-	const int K1 = 2;						// coordination number first step
-	const int K2 = 2;						// coordination number second step
-
-	const int K = K1 + K2;					// total coordination number
-
-	const int size = cloud.size();				// number of particles
-
-	const int L = int(sqrt(size));			// linear system length
-
-	std::vector<int> nbrsizes;
-	nbrsizes.reserve(size);
-	for (uint k = 0; k < size; ++k) nbrsizes.push_back(K);
 	neighbours.resize(size);
 
 	// set up boxes for initial connection
-	const int boxlen = 4;
 	const int nboxes1D = L / boxlen;
 	const int nboxes2D = nboxes1D*nboxes1D;
 	std::vector<std::vector<std::vector<int>>> boxes(nboxes1D, std::vector<std::vector<int>>(nboxes1D));
 
 	// set up boxes for dynamical rewiring
-	const int boxlen_r = 4;
 	const int nboxes1D_r = L / boxlen_r;
 	const int nboxes2D_r = nboxes1D_r*nboxes1D_r;
 	std::vector<std::vector<std::vector<int>>> boxes_r(nboxes1D_r, std::vector<std::vector<int>>(nboxes1D_r));
 
-	// dynamical rewiring attempts (per box)
-
-//	double a = 100;	
-	double a = 50;	
-
-	const long int Nsteps = int(K*a*pow(boxlen_r,4));
      if (L%(2*boxlen)   != 0) { throw std::invalid_argument("error! L needs to be a multiple of two times the box length!"); }
      if (L%(2*boxlen_r) != 0) { throw std::invalid_argument("error! L needs to be a multiple of two times the box length!"); }
 	
