@@ -330,10 +330,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-
+	// temp: Ising on CC lattice
 	{
-		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
+		auto beta = registry.Get<std::vector<double> >("mc", "Ising on CC", "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", "Ising on CC", "J");
 		auto parameters = cart_prod(beta, J);
 
 		write_logfile(registry, beta);
@@ -355,29 +355,50 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		};
 
 
-		const int L   = 42;
-		const int dim = 2;
-		
-		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-		MARQOVConfig mc(outpath);
-		makeDir(mc.outpath);
-
-		auto t = make_triple(std::make_tuple(L,dim), mc, parameters[0]);
-		std::vector<decltype(t)> p = {t};
-
-		auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(p, otherfilter);
-
-		// perform simulation
-		#pragma omp parallel for
-		for(std::size_t i = 0; i < sims.size(); ++i)
-		{
-			auto& marqov = sims[i];
+		const auto dim 		= registry.Get<int>("mc", "General", "dim" );
+		const auto nreplicas 	= registry.Get<int>("mc", "General", "nreplicas" );
+		const auto nL  		= registry.Get<std::vector<int>>("mc", "General", "nL" );
+		const std::string name 	= registry.Get<std::string>("mc", "General", "Hamiltonian" );
+		const std::string nLs 	= registry.Get<std::string>("mc", "General", "nL" );
 	
-			marqov.init();
-			marqov.wrmploop();
-			marqov.gameloop();
+		cout << endl;
+		cout << "Hamiltonian: \t" << name << endl;
+		cout << "Dimension: \t" << dim << endl;
+		cout << "Lattice sizes:\t" << nLs << endl;
+		cout << "Replicas:\t" << nreplicas << endl;
+	
+	
+		// lattice size loop
+		for (std::size_t j=0; j<nL.size(); j++)
+		{
+			// prepare
+			int L = nL[j];
+			cout << endl << "L = " << L << endl << endl;
+			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+	
+	        	MARQOVConfig mc(outpath);
+	        	mc.setnsweeps(5);
+			mc.setncluster(15);
+	
+			makeDir(mc.outpath);
+
+			auto t = make_triple(std::make_tuple(L,dim), mc, parameters[0]);
+			std::vector<decltype(t)> p = {t};
+	
+			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(p, otherfilter);
+	
+			// perform simulation
+			#pragma omp parallel for
+			for (std::size_t i = 0; i < sims.size(); ++i)
+			{
+				auto& marqov = sims[i];
+		
+				marqov.init();
+				marqov.wrmploop();
+				marqov.gameloop();
+			}
 		}
-    }
+	}
 
 
 
@@ -429,7 +450,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
  		RegularLatticeloop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
     }
     else if (startswith(ham, "AshkinTeller"))
-//    else if (ham == "AshkinTeller")
     {
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
@@ -504,7 +524,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto f = [&defaultfilter, &nbrs](auto p){return defaultfilter(nbrs, p);}; //partially apply filter
 		loop<Ising<int>, Neighbours<int32_t> >(mc, hamparams, f);
 	}
-	else if(ham == "IrregularIsing2")
+	else if(ham == "Ising on CC")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
@@ -539,7 +559,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto t = make_triple(std::make_tuple(L,dim), mc, parameters[0]);
 		std::vector<decltype(t)> p = {t};
 
-		auto sims = createsims<Ising<int>, RegularLattice >(p, otherfilter);
+		auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(p, otherfilter);
 
 		// perform simulation
 		#pragma omp parallel for
@@ -548,15 +568,11 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			auto& marqov = sims[i];
 	
 			marqov.init();
-//			marqov.init_hot();
 			marqov.wrmploop();
 			marqov.gameloop();
 		}
-
-//        auto t = make_pair(std::make_tuple(dummy), std::tuple_cat(std::make_tuple(outdir), parameters[0]));
-//        createsims<Ising<int>, Neighbours<int32_t> >(p, otherfilter);
     }
-    */
+	*/
 }
 
 

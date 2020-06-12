@@ -39,15 +39,12 @@ class ConstantCoordinationLattice
 		PointCloud cloud;
 	
 	public:
-		int npoints;
+		int npoints, len, dim;
 		std::vector<std::vector<int>> nbrs;
-		ConstantCoordinationLattice(const int npnts, const int dim) : cloud(100,2)
+		ConstantCoordinationLattice(const int len, const int dim) : cloud(len*len, len, dim), npoints(pow(len,dim)), len(len), dim(dim)
 		{
 			constant_coordination_lattice(cloud, nbrs);
-			npoints = nbrs.size();
 		}
-
-		int len = 42; // implement me!
 
 		std::vector<int> getnbrs(const int a, const int i) const
 		{
