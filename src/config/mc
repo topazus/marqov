@@ -3,14 +3,14 @@ dim = 2
 nL = 16,32,48
 nreplicas = 1
 
-Hamiltonian = Ising
+Hamiltonian = IsingCC
 
 [Ising]
 
 beta = 0.430, 0.433, 0.436, 0.439, 0.442, 0.445, 0.448, 0.451, 0.454
 J = -1.0
 
-[Ising on CC]
+[IsingCC]
 
 beta = 0.430, 0.433, 0.436, 0.439, 0.442, 0.445, 0.448, 0.451, 0.454
 J = -1.0

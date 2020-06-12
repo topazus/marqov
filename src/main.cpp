@@ -326,14 +326,14 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	};
 
 
-
+	cout << ham << endl;
 
 
 
 	// temp: Ising on CC lattice
 	{
-		auto beta = registry.Get<std::vector<double> >("mc", "Ising on CC", "beta");
-		auto J    = registry.Get<std::vector<double> >("mc", "Ising on CC", "J");
+		auto beta = registry.Get<std::vector<double> >("mc", "IsingCC", "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", "IsingCC", "J");
 		auto parameters = cart_prod(beta, J);
 
 		write_logfile(registry, beta);
@@ -401,7 +401,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	}
 
 
-
+	
 
 
 
