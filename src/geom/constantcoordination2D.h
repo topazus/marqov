@@ -2,6 +2,8 @@
 #include <random>
 #include <cmath>
 #include <algorithm>
+#include <stdexcept>
+
 using std::cout;
 using std::endl;
 
@@ -83,10 +85,10 @@ bool force_fixed_neighbours_naive_box(const int K, std::vector< std::vector<int>
      int size = box.size();
 
 	// K must be even (Handshaking Lemma)
-     if (K%2 == 1) { cout << "error! K must be even!" << endl; }
+     if (K%2 == 1) { throw std::invalid_argument("error! K must be even!"); }
 
 	// check if there are enough points
-     if (size < K+1+2*offset) { cout << "error! Found box with too few sites!" << endl; }
+     if (size < K+1+2*offset) { throw std::invalid_argument("error! Found box with too few sites!"); }
 
      for (int i=0; i<size; i++)
      {
@@ -140,6 +142,8 @@ int geometric_simulated_annealing_box(const PointCloud& cloud, std::vector<std::
 {
 	const int nparticles = box.size();
 
+	const bool verbose = false;
+
 	// general procedure: 
 	// choose two bonds i--i1 and j--j1 (that is four points, i,i1,j,j1)
 	// remove those bonds and reconnect the points i--j and i1--j1 
@@ -190,9 +194,13 @@ int geometric_simulated_annealing_box(const PointCloud& cloud, std::vector<std::
 		else {llc++;}
 	}
 
-	double sum = double(ifc+elc+llc);
-//	cout << endl << ifc/sum <<  "\t" << llc/sum << endl;
-//	cout         << ifc     <<  "\t" << llc     << "\t" << conc << endl;
+
+	if (verbose)
+	{
+		double sum = double(ifc+elc+llc);
+		cout << endl << ifc/sum <<  "\t" << llc/sum << endl;
+		cout         << ifc     <<  "\t" << llc     << "\t" << conc << endl;
+	}
 
 	return ifc;
 }
@@ -240,8 +248,8 @@ bool constant_coordination_lattice(const PointCloud& cloud, std::vector<std::vec
 	double a = 50;	
 
 	const long int Nsteps = int(K*a*pow(boxlen_r,4));
-     if (L%(2*boxlen)   != 0) { cout << "error! L needs to be a multiple of two times the box length!" << endl; }
-     if (L%(2*boxlen_r) != 0) { cout << "error! L needs to be a multiple of two times the box length!" << endl; }
+     if (L%(2*boxlen)   != 0) { throw std::invalid_argument("error! L needs to be a multiple of two times the box length!"); }
+     if (L%(2*boxlen_r) != 0) { throw std::invalid_argument("error! L needs to be a multiple of two times the box length!"); }
 	
 	// bin the points into boxes
 	for (int i=0; i<L*L; i++)
