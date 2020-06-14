@@ -224,7 +224,7 @@ void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable f
 {
 	// number of EMCS during relaxation and measurement
 	mc.setwarmupsteps(1000);
-	mc.setgameloopsteps(1500);
+	mc.setgameloopsteps(5000);
 
 	std::vector<std::pair<MARQOVConfig, Parameters> > params;
 	for(std::size_t i = 0; i < hamparams.size(); ++i)
@@ -332,12 +332,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	// temp: Ising on CC lattice
 	{
-		auto beta = registry.Get<std::vector<double> >("mc", "IsingCC", "beta");
-		auto J    = registry.Get<std::vector<double> >("mc", "IsingCC", "J");
-		auto parameters = cart_prod(beta, J);
-
-		write_logfile(registry, beta);
-
 		auto otherfilter = [](auto p)
 		{
 			// write a filter to determine output file path and name
@@ -367,6 +361,13 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		cout << "Lattice sizes:\t" << nLs << endl;
 		cout << "Replicas:\t" << nreplicas << endl;
 	
+
+		// construct parameter space
+		auto beta = registry.Get<std::vector<double> >("mc", "IsingCC", "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", "IsingCC", "J");
+		auto parameters = cart_prod(beta, J);
+		write_logfile(registry, beta);
+
 	
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
@@ -390,11 +391,14 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 			std::vector<Triple<std::tuple<int,int>, decltype(mc), std::remove_reference_t<decltype(parameters[0])>> > params;
 
-			for(std::size_t i = 0; i < parameters.size(); ++i)
+			for(std::size_t i=0; i<parameters.size(); ++i)
 			{
-			    auto mc2(mc);
-			    mc2.setid(i);
-			    params.push_back(make_triple(std::make_tuple(L,dim), mc2, parameters[i]));
+				for (std::size_t j=0; j<nreplicas; ++j)
+				{
+					auto mctemp(mc);
+					mctemp.setid(j);
+					params.push_back(make_triple(std::make_tuple(L,dim), mctemp, parameters[i]));
+				}
 			}
 
 			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, otherfilter);

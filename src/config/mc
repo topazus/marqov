@@ -1,7 +1,7 @@
 [General]
 dim = 2
 nL = 16,32,48
-nreplicas = 1
+nreplicas = 5
 
 Hamiltonian = IsingCC
 
@@ -12,7 +12,7 @@ J = -1.0
 
 [IsingCC]
 
-beta = 0.430, 0.433, 0.436, 0.439, 0.442, 0.445, 0.448, 0.451, 0.454
+beta = 0.375, 0.380, 0.385, 0.390, 0.395, 0.400, 0.405, 0.410, 0.415, 0.420
 J = -1.0
 
 [IrregularIsing2]
