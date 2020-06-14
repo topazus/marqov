@@ -461,7 +461,7 @@ struct ObsTupleToObsCacheTuple
 				}
 			}
 
-			if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.nsteps << std::endl;
+			if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.gameloopsteps << std::endl;
 //			finalize_consistency_check();
 		}
 	

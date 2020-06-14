@@ -138,6 +138,7 @@ void fillsims(const std::vector<Triple<Args1, MARQOV::MARQOVConfig, Args2> >& ar
 {
     for(auto p : args)
     {
+    	cout << "." << std::flush;
         auto t1 = c(p);
         emplace_from_tuple(sims, t1.first, std::forward<MARQOV::MARQOVConfig>(t1.second), t1.third);
     }
@@ -382,11 +383,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			mc.setncluster(15);
 	
 			makeDir(mc.outpath);
-
-
-//			auto t = make_triple(std::make_tuple(L,dim), mc, parameters[0]);
-//			std::vector<decltype(t)> p = {t};
-//			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(p, otherfilter);
 
 
 			std::vector<Triple<std::tuple<int,int>, decltype(mc), std::remove_reference_t<decltype(parameters[0])>> > params;
