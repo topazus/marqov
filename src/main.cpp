@@ -382,11 +382,26 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	
 			makeDir(mc.outpath);
 
-			auto t = make_triple(std::make_tuple(L,dim), mc, parameters[0]);
-			std::vector<decltype(t)> p = {t};
+
+//			auto t = make_triple(std::make_tuple(L,dim), mc, parameters[0]);
+//			std::vector<decltype(t)> p = {t};
+//			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(p, otherfilter);
+
+
+			std::vector<Triple<std::tuple<int,int>, decltype(mc), std::remove_reference_t<decltype(parameters[0])>> > params;
+
+			for(std::size_t i = 0; i < parameters.size(); ++i)
+			{
+			    auto mc2(mc);
+			    mc2.setid(i);
+			    params.push_back(make_triple(std::make_tuple(L,dim), mc2, parameters[i]));
+			}
+
+			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, otherfilter);
 	
-			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(p, otherfilter);
-	
+
+
+
 			// perform simulation
 			#pragma omp parallel for
 			for (std::size_t i = 0; i < sims.size(); ++i)
