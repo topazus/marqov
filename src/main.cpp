@@ -313,6 +313,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
+	// --------- filters ---------
+
 	// filter to determine output file path and name
 	// the filter _must_ set p.first.outname!
 	auto defaultfilter = [](auto& latt, auto p)
@@ -326,99 +328,25 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		return std::tuple_cat(std::forward_as_tuple(latt), p);
 	};
 
-
-	cout << ham << endl;
-
-
-
-	// temp: Ising on CC lattice
+	auto filter_beta_id = [](auto p)
 	{
-		auto otherfilter = [](auto p)
-		{
-			// write a filter to determine output file path and name
-            	auto& lp = p.first;
-            	auto& mp = p.second;
-            	auto& hp = p.third;
+		// write a filter to determine output file path and name
+       	auto& lp = p.first;
+       	auto& mp = p.second;
+       	auto& hp = p.third;
 
- 			auto str_id    = std::to_string(mp.id);
-			auto str_beta  = "beta"+std::to_string(std::get<0>(hp));
-			auto str_L     = std::to_string(std::get<0>(lp));
+ 		auto str_id    = std::to_string(mp.id);
+		auto str_beta  = "beta"+std::to_string(std::get<0>(hp));
+		auto str_L     = std::to_string(std::get<0>(lp));
 
-			mp.outname = str_beta+"_"+str_id;
+		mp.outname = str_beta+"_"+str_id;
 
-			return p;
-		};
-
-
-		const auto dim 		= registry.Get<int>("mc", "General", "dim" );
-		const auto nreplicas 	= registry.Get<int>("mc", "General", "nreplicas" );
-		const auto nL  		= registry.Get<std::vector<int>>("mc", "General", "nL" );
-		const std::string name 	= registry.Get<std::string>("mc", "General", "Hamiltonian" );
-		const std::string nLs 	= registry.Get<std::string>("mc", "General", "nL" );
-	
-		cout << endl;
-		cout << "Hamiltonian: \t" << name << endl;
-		cout << "Dimension: \t" << dim << endl;
-		cout << "Lattice sizes:\t" << nLs << endl;
-		cout << "Replicas:\t" << nreplicas << endl;
-	
-
-		// construct parameter space
-		auto beta = registry.Get<std::vector<double> >("mc", "IsingCC", "beta");
-		auto J    = registry.Get<std::vector<double> >("mc", "IsingCC", "J");
-		auto parameters = cart_prod(beta, J);
-		write_logfile(registry, beta);
-
-	
-		// lattice size loop
-		for (std::size_t j=0; j<nL.size(); j++)
-		{
-			// prepare
-			int L = nL[j];
-			cout << endl << "L = " << L << endl << endl;
-			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-	
-	        	MARQOVConfig mc(outpath);
-	        	mc.setnsweeps(5);
-			mc.setncluster(15);
-	
-			makeDir(mc.outpath);
-
-
-			std::vector<Triple<std::tuple<int,int>, decltype(mc), std::remove_reference_t<decltype(parameters[0])>> > params;
-
-			for(std::size_t i=0; i<parameters.size(); ++i)
-			{
-				for (std::size_t j=0; j<nreplicas; ++j)
-				{
-					auto mctemp(mc);
-					mctemp.setid(j);
-					params.push_back(make_triple(std::make_tuple(L,dim), mctemp, parameters[i]));
-				}
-			}
-
-			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, otherfilter);
-	
+		return p;
+	};
 
 
 
-			// perform simulation
-			#pragma omp parallel for
-			for (std::size_t i = 0; i < sims.size(); ++i)
-			{
-				auto& marqov = sims[i];
-		
-				marqov.init();
-				marqov.wrmploop();
-				marqov.gameloop();
-			}
-		}
-	}
-
-
-	
-
-
+	// ----------------- select simulation ------------------
 
 	if (ham == "Ising")
 	{
@@ -512,6 +440,77 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		};
 
 		RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
+	}
+	else if (ham == "IsingCC")
+	{
+		const auto dim 		= registry.Get<int>("mc", "General", "dim" );
+		const auto nreplicas 	= registry.Get<int>("mc", "General", "nreplicas" );
+		const auto nL  		= registry.Get<std::vector<int>>("mc", "General", "nL" );
+		const std::string name 	= registry.Get<std::string>("mc", "General", "Hamiltonian" );
+		const std::string nLs 	= registry.Get<std::string>("mc", "General", "nL" );
+	
+		cout << endl;
+		cout << "Hamiltonian: \t" << name << endl;
+		cout << "Dimension: \t" << dim << endl;
+		cout << "Lattice sizes:\t" << nLs << endl;
+		cout << "Replicas:\t" << nreplicas << endl;
+	
+
+		// construct parameter space
+		auto beta = registry.Get<std::vector<double> >("mc", "IsingCC", "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", "IsingCC", "J");
+		auto parameters = cart_prod(beta, J);
+		write_logfile(registry, beta);
+
+	
+		// lattice size loop
+		for (std::size_t j=0; j<nL.size(); j++)
+		{
+			// prepare
+			int L = nL[j];
+			cout << endl << "L = " << L << endl << endl;
+			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+			makeDir(outpath);
+	
+
+			// set MC parameters
+	        	MARQOVConfig mc(outpath);
+	        	mc.setnsweeps(5);
+			mc.setncluster(15);
+	
+
+			// lattice parameters
+			auto LArgs = std::make_tuple(L,dim);
+
+			// unfold replicas
+			std::vector<Triple<decltype(LArgs), decltype(mc), std::remove_reference_t<decltype(parameters[0])>> > params;
+
+			for(std::size_t i=0; i<parameters.size(); ++i)
+			{
+				for (std::size_t j=0; j<nreplicas; ++j)
+				{
+					auto mctemp(mc);
+					mctemp.setid(j);
+					params.push_back(make_triple(std::make_tuple(L,dim), mctemp, parameters[i]));
+				}
+			}
+
+
+			// create simulation vector
+			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, filter_beta_id);
+	
+
+			// perform simulations
+			#pragma omp parallel for
+			for (std::size_t i = 0; i < sims.size(); ++i)
+			{
+				auto& marqov = sims[i];
+		
+				marqov.init();
+				marqov.wrmploop();
+				marqov.gameloop();
+			}
+		}
 	}
 	/*
     else if(ham == "IrregularIsing")
