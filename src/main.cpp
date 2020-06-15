@@ -56,6 +56,8 @@ public:
 template< class T1, class T2, class T3 >
 constexpr auto make_triple( T1&& t, T2&& u, T3&& v) {return Triple<typename std::decay<T1>::type, typename std::decay<T2>::type, typename std::decay<T3>::type>(t,u,v);}
 
+#include "replicate.h"
+
 //two examples on how to extend the parsing capabilities of the registry
 template <typename T>
 struct GetTrait<std::vector<T> >//helper trait to break up a string at various predefined seperators
@@ -487,17 +489,17 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 			for(std::size_t i=0; i<parameters.size(); ++i)
 			{
-				for (std::size_t j=0; j<nreplicas; ++j)
-				{
-					auto mctemp(mc);
-					mctemp.setrepid(j);
-					params.push_back(make_triple(std::make_tuple(L,dim), mctemp, parameters[i]));
-				}
+				params.push_back(make_triple(LArgs, mc, parameters[i]));
 			}
 
 
+
+			cout << params.size() << endl;
+			auto params_replicated = replicator(params, nreplicas);
+			cout << params_replicated.size() << endl;
+
 			// create simulation vector
-			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, filter_beta_id);
+			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params_replicated, filter_beta_id);
 	
 
 			// perform simulations
