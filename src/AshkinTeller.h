@@ -83,7 +83,7 @@ class AshkinTeller
 			{
 				for (int j=0; j<SymD; j++)
 				{
-					if (rng.d() > 0.5) statespace[i][j] = 1;
+					if (rng.real() > 0.5) statespace[i][j] = 1;
 					else statespace[i][j] = -1;
 				}
 			}
@@ -169,7 +169,7 @@ namespace MARQOV
 	         			      // test whether site is added to the cluster
 						if (coupling > 0)
 	         			      {
-	         			           if (rng.d() < -std::expm1(-2.0*beta*coupling))
+	         			           if (rng.real() < -std::expm1(-2.0*beta*coupling))
 	         			           {
 	         			                q++;
 	         			                cstack[q] = currentnbr;
@@ -278,7 +278,7 @@ namespace MARQOV
 					metro_flip(svold,color);
 					retval++;
 				}
-				else if (rng.d() < exp(-beta*dE))
+				else if (rng.real() < exp(-beta*dE))
 				{
 					metro_flip(svold,color);
 					retval++;

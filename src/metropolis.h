@@ -3,6 +3,7 @@
 #include <vector>
 #include <type_traits>
 #include <cmath>
+#include "rngcache.h"
 
 //A helper to decide in the Metropolis code whether a lattice provides the getbond function
 template<class L, class=void> struct has_bonds : std::false_type {};
@@ -43,13 +44,13 @@ struct Promote_Array
 template <class Hamiltonian, class Lattice>
 struct Metropolis
 {
-    template <class StateSpace, class M, class RNG>
-    static int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNG& rng, double beta, int rsite);
+    template <class StateSpace, class M, class RNGType>
+    static int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNGCache<RNGType>& rng, double beta, int rsite);
 };
 
 template <class Hamiltonian, class Lattice>
-template <class StateSpace, class M, class RNG>
-int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNG& rng, double beta, int rsite)
+template <class StateSpace, class M, class RNGType>
+int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNGCache<RNGType>& rng, double beta, int rsite)
 {
     typedef typename Hamiltonian::StateVector StateVector;
     	// old state vector at rsite
@@ -107,7 +108,7 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
         svold = svnew;
         retval = 1;
     }
-    else if (rng.d() < exp(-beta*dE))
+    else if (rng.real() < exp(-beta*dE))
     {
         svold = svnew;
         retval = 1;
@@ -120,7 +121,7 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
 template <class Grid, class Hamiltonian, template<class> class RefType>
 inline int Marqov<Grid, Hamiltonian, RefType>::metropolisstep(int rsite)
 {
-    return Metropolis<Hamiltonian, Grid>::move(this->ham, this->grid, statespace, this->metro, this->rng, this->beta, rsite);
+    return Metropolis<Hamiltonian, Grid>::move(this->ham, this->grid, statespace, this->metro, this->rngcache, this->beta, rsite);
 }
 
 
