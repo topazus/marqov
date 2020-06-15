@@ -15,7 +15,7 @@ class PointCloud
 
 		std::vector<std::vector<double>> crds;
 
-		std::vector<double> getcrds(const int i) const { return crds[i];	}
+		const std::vector<double>& getcrds(const int i) const { return crds[i];	}
 
 		double getx(const int i) const { return crds[i][0]; }
 		double gety(const int i) const { return crds[i][1]; }
