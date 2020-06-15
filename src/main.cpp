@@ -458,7 +458,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		cout << "Replicas:\t" << nreplicas << endl;
 	
 
-		// construct parameter space
+		// construct Hamiltonian parameter space
 		auto beta = registry.Get<std::vector<double> >("mc", "IsingCC", "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", "IsingCC", "J");
 		auto parameters = cart_prod(beta, J);
@@ -474,32 +474,20 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 			makeDir(outpath);
 	
-
-			// set MC parameters
-	        	MARQOVConfig mc(outpath);
-	        	mc.setnsweeps(5);
-			mc.setncluster(15);
-	
+			// Monte Carlo parameters
+	        	MARQOVConfig mp(outpath);
+	        	mp.setnsweeps(5);
+			mp.setncluster(15);
 
 			// lattice parameters
-			auto LArgs = std::make_tuple(L,dim);
+			auto lp = std::make_tuple(L,dim);
 
-			// unfold replicas
-			std::vector<Triple<decltype(LArgs), decltype(mc), std::remove_reference_t<decltype(parameters[0])>> > params;
-
-			for(std::size_t i=0; i<parameters.size(); ++i)
-			{
-				params.push_back(make_triple(LArgs, mc, parameters[i]));
-			}
-
-
-
-			cout << params.size() << endl;
-			auto params_replicated = replicator(params, nreplicas);
-			cout << params_replicated.size() << endl;
+			// form parameter triple and replicate
+			auto params  = finalize_parameter_triple(lp, mp, parameters);
+			auto rparams = replicator(params, nreplicas);
 
 			// create simulation vector
-			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params_replicated, filter_beta_id);
+			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, filter_beta_id);
 	
 
 			// perform simulations

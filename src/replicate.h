@@ -26,6 +26,18 @@ std::vector<Params> replicator(std::vector<Params>& params, int nreplicas, int s
 	return newparams;
 }
 
+template <class LArgs, class MArgs, class HArgs>
+auto finalize_parameter_triple(const LArgs& lp, const MArgs& mp, const std::vector<HArgs>& hp)
+{
+	std::vector<Triple<LArgs, MArgs, HArgs>> params;
+
+	for(std::size_t i=0; i<hp.size(); ++i) 
+	{
+		params.push_back(make_triple(lp, mp, hp[i]));
+	}
+
+	return params;
+}
 
 
 
