@@ -1,7 +1,7 @@
 [General]
 dim = 2
 nL = 16,24,32,48
-nreplicas = 1
+nreplicas = 3
 
 Hamiltonian = IsingCC
 

@@ -25,6 +25,7 @@ namespace MARQOV
 
         MARQOVConfig(std::string op, 
 	   			 int i = 0, 
+	   			 int ri = 0, 
 				 int s = 0, 
 				 int ugli = 10, 
 				 int nst = 250, 
@@ -33,6 +34,7 @@ namespace MARQOV
 				 int nc = 20, 
 				 int nsw = 10) : outpath(op), 
 				 			  id(i), 
+							  repid(ri),
 							  seed(s), 
 							  gli(ugli), 
 							  warmupsteps(ws), 
@@ -54,6 +56,7 @@ namespace MARQOV
 
 	   // MC variables
         int id;
+        int repid;
         int seed; ///< Doing this correctly opens a whole can of worms.... At one point we need to dump the state of the RNG for restart.
         int gli; ///< The unknown gameloop integer
         int nsteps;
@@ -65,6 +68,7 @@ namespace MARQOV
 
         /** A chain of setters to emulate the named parameter idiom.*/
         MARQOVConfig& setid(int i) {id = i; return *this;}
+        MARQOVConfig& setrepid(int ri) {repid = ri; return *this;}
         MARQOVConfig& setseed(int s) {seed = s; return *this;}
         MARQOVConfig& setgli(int c) {gli = c; return *this;}
         MARQOVConfig& setnsteps(int ns) {nsteps = ns; return *this;}

@@ -305,8 +305,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	// by construction temperatures have to go first in cart_prod, but sometimes
 	// we want it sorted by "id", therefore the two are swapped afterwards
-	std::vector<double> id(nreplicas);
-	for (int i=0; i<nreplicas; ++i) id[i] = i;
+	std::vector<double> repid(nreplicas);
+	for (int i=0; i<nreplicas; ++i) repid[i] = i;
 
 	std::vector<MARQOVConfig> mcs(nreplicas, MARQOVConfig(outbasedir));
 	for (int i = 0; i < nreplicas; ++i) mcs[i].setid(i);
@@ -322,7 +322,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto& mp = p.first;		// Monte Carlo params
 		auto& hp = p.second;	// Hamiltonian params
 		
-		std::string str_id    = std::to_string(mp.id);
+		std::string str_id    = std::to_string(mp.repid);
 		std::string str_beta  = "beta"+std::to_string(std::get<0>(hp));
 		mp.outname = str_beta;
 		return std::tuple_cat(std::forward_as_tuple(latt), p);
@@ -335,11 +335,11 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
        	auto& mp = p.second;
        	auto& hp = p.third;
 
- 		auto str_id    = std::to_string(mp.id);
+ 		auto str_repid = std::to_string(mp.repid);
 		auto str_beta  = "beta"+std::to_string(std::get<0>(hp));
 		auto str_L     = std::to_string(std::get<0>(lp));
 
-		mp.outname = str_beta+"_"+str_id;
+		mp.outname = str_beta+"_"+str_repid;
 
 		return p;
 	};
@@ -416,7 +416,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto aniso       = registry.Get<std::vector<double>>("mc", ham, "aniso");
 		auto singleaniso = registry.Get<std::vector<double>>("mc", ham, "singleaniso");
 
-		auto parameters = cart_prod(id, beta, extfield, aniso, singleaniso);
+		auto parameters = cart_prod(repid, beta, extfield, aniso, singleaniso);
 
 		for (auto& param_tuple : parameters) // swap "id" and "temperature"
 					std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
@@ -430,11 +430,11 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			auto& mp = p.first;		// Monte Carlo params
 			auto& hp = p.second;	// Hamiltonian params
 		
-			std::string str_id    = std::to_string(int(std::get<1>(hp)));
+			std::string str_repid = std::to_string(int(std::get<1>(hp)));
 			std::string str_beta  = "beta"+std::to_string(std::get<0>(hp));
 			std::string str_extf  = "extf"+std::to_string(std::get<2>(hp));
 			
-			mp.outname = str_beta+"_"+str_extf+"_"+str_id;
+			mp.outname = str_beta+"_"+str_extf+"_"+str_repid;
 
 			return std::tuple_cat(std::forward_as_tuple(latt), p);
 		};
@@ -490,7 +490,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 				for (std::size_t j=0; j<nreplicas; ++j)
 				{
 					auto mctemp(mc);
-					mctemp.setid(j);
+					mctemp.setrepid(j);
 					params.push_back(make_triple(std::make_tuple(L,dim), mctemp, parameters[i]));
 				}
 			}
