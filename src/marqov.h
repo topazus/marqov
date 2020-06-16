@@ -27,6 +27,7 @@ namespace MARQOV
 
         MARQOVConfig(std::string op, 
 	   			 int i = 0, 
+	   			 int ri = 0, 
 				 int s = 0, 
 				 int ugli = 10, 
 				 int nst = 250, 
@@ -35,6 +36,7 @@ namespace MARQOV
 				 int nc = 20, 
 				 int nsw = 10) : outpath(op), 
 				 			  id(i), 
+							  repid(ri),
 							  seed(s), 
 							  gli(ugli), 
 							  warmupsteps(ws), 
@@ -56,6 +58,7 @@ namespace MARQOV
 
 	   // MC variables
         int id;
+        int repid;
         int seed; ///< Doing this correctly opens a whole can of worms.... At one point we need to dump the state of the RNG for restart.
         int gli; ///< The unknown gameloop integer
         int nsteps;
@@ -67,6 +70,7 @@ namespace MARQOV
 
         /** A chain of setters to emulate the named parameter idiom.*/
         MARQOVConfig& setid(int i) {id = i; return *this;}
+        MARQOVConfig& setrepid(int ri) {repid = ri; return *this;}
         MARQOVConfig& setseed(int s) {seed = s; return *this;}
         MARQOVConfig& setgli(int c) {gli = c; return *this;}
         MARQOVConfig& setnsteps(int ns) {nsteps = ns; return *this;}
@@ -271,28 +275,6 @@ struct ObsTupleToObsCacheTuple
             return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian, Grid, RNGCache<RNGType>, Ts... >::type(), this->statespace, this->grid, this->ham, std::forward<Ts>(ts)...);
         }
 
-		 void init_cold_Ising_like()
-		 {
-		 	const int SymD = std::tuple_size<StateVector>::value;
-			for(int i = 0; i < this->grid.size(); ++i)
-			{
-				for(int j = 0; j < SymD; ++j)
-				{
-					statespace[i][j] = 1;
-				}
-			}
-		 }
-
-		 void init_cold_Heisenberg()
-		 {
-			for(int i = 0; i < this->grid.size(); ++i)
-			{
-				statespace[i][0] = -1;
-				statespace[i][1] = 0;
-				statespace[i][2] = 0;
-			}
-		 }
-
 		// Destructor
 		~Marqov() {
             delete [] statespace; dump.close();
@@ -336,104 +318,6 @@ struct ObsTupleToObsCacheTuple
 		}
 
 
-		// ----------------- consistency check ------------------
-
-		// perform consistency check according to 
-		// Hasenbusch, J. Phys. A: Math. Gen. 34 8221 (2001)
-		
-		void perform_consistency_check(std::vector<int>& checkidxs)
-		{
-			std::vector<std::vector<double>> subcheck;
-
-			for (int k=0; k<checkidxs.size(); k++)
-			{
-				const int checkidx = checkidxs[k];
-				std::vector<double> subsubcheck;
-
-				const auto checksite = statespace[checkidx];
-				const auto nbrs = this->grid.getnbrs(0, checkidx);
-
-				for (int i = 0; i < nbrs.size(); ++i)
-				{
-					const auto currentnbr = statespace[nbrs[i]];
-					subsubcheck.push_back(dot(checksite,currentnbr));
-				}
-
-				const double selfdot = dot(checksite,checksite);
-
-				subsubcheck.push_back(selfdot);
-				subsubcheck.push_back((selfdot-1)*selfdot);
-
-				subcheck.push_back(subsubcheck);
-			}
-
-			check.push_back(subcheck);
-
-			// monitor memory consumption
-			const int nsites = checkidxs.size();
-			const int nmeasure = check.size(); 
-			const int ncol = check[0][0].size(); 
-
-			constexpr static double check_GB_limit = 4.0;
-
-			if (nsites*nmeasure*ncol > check_GB_limit*1024*1024*1024/8) 
-			{
-				throw std::overflow_error(
-				"\n Running out of memory during consistency check! \n Decrease either lattice size or number of measurements!");
-			}
-		}
-
-
-		// evaluate check and display results
-		void finalize_consistency_check()
-		{
-			const int SymD = std::tuple_size<StateVector>::value;
-			const int ncol = 8;
-			const int nmeasure = check.size();
-			const int nsites = check[0].size();
-
-			std::vector<double> sum(ncol,0);
-
-			// compute averages in each column
-			for (int k=0; k<nmeasure; k++)
-			{
-				for (int i=0; i<nsites; i++)
-				{
-					for (int j=0; j<ncol; j++)
-					{
-						sum[j] += check[k][i][j];
-					}
-				}
-			}
-			
-			for (int j=0; j<ncol; j++) 
-			{
-				sum[j] = sum[j] / double(nmeasure) / double(nsites);
-				std::cout << sum[j] << " ";
-			}
-			std::cout << std::endl;
-
-			// summation formula
-			double retval = 0.5*ham.beta*(sum[0]+sum[1]+sum[2]+sum[3]+sum[4]+sum[5]) - sum[6] - 2*ham.lambda*sum[7] + 0.5*SymD;
-			std::cout << retval << "\n\n";
-
-		}
-					
-
-		// specificy site indices which will enter the check
-		// default: all (good statistic, but requires a somewhat large amount of memory)
-		void prepare_consistency_check(std::vector<int>& checkidxs)
-		{
-			for (int i=0; i<this->grid.size(); i++)
-			{
-				checkidxs.push_back(i);
-			}
-		}
-
-
-		
-		// ----------------- consistency check end ------------------
-
 
 
 
@@ -441,7 +325,6 @@ struct ObsTupleToObsCacheTuple
 	    
         void gameloop()
 		{
-//			prepare_consistency_check(checkidxs);
 
 			double avgclustersize = 0;
 			for (int k=0; k < this->mcfg.gli; k++)
@@ -453,12 +336,10 @@ struct ObsTupleToObsCacheTuple
 					avgclustersize += elementaryMCstep();
 					auto obs = ham.getobs();
 					marqov_measure(obs, statespace, this->grid);
-//					perform_consistency_check(checkidxs);
 				}
 			}
 
-			if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.nsteps << std::endl;
-//			finalize_consistency_check();
+			if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.gameloopsteps << std::endl;
 		}
 	
 	    	void wrmploop()

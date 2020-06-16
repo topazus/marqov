@@ -1,13 +1,18 @@
 [General]
 dim = 2
-nL = 8,12,16,24
-nreplicas = 1
+nL = 16,24,32,48
+nreplicas = 3
 
-Hamiltonian = Ising
+Hamiltonian = IsingCC
 
 [Ising]
 
-beta = 0.40, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48
+beta = 0.430, 0.433, 0.436, 0.439, 0.442, 0.445, 0.448, 0.451, 0.454
+J = -1.0
+
+[IsingCC]
+
+beta = 0.50, 0.52, 0.54, 0.56, 0.58, 0.60
 J = -1.0
 
 [IrregularIsing2]

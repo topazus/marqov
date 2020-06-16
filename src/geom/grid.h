@@ -1,75 +1,14 @@
+#ifndef GRID_H
+#define GRID_H
+
+
+#include "points.h"
 #include "distance.h"
-
-// Point cloud base class
-class PointCloud
-{
-	public:
-		int dim, size;
-		PointCloud(){}
-		PointCloud(int size, int dim) : size(size), dim(dim) {}
-
-		std::vector<std::vector<double>> crds;
-
-		std::vector<double> getcrds(const int i)
-		{
-			return crds[i];
-		}
-};
+#include "regular_lattice.h"
+#include "constantcoordination2D.h"
 
 
-// random Poissonian point cloud
-class Poissonian : public PointCloud
-{
-	private:
-		RND rng;
-
-	public:
-		Poissonian(int dim, int size) : PointCloud(size, dim), rng(0,1)
-		{
-			rng.seed(time(NULL)+std::random_device{}());
-
-			for (int i=0; i<size; i++)
-			{
-				std::vector<double> site;
-
-				for (int j=0; j<dim; j++)
-				{
-					site.push_back(rng.d());
-				}
-				crds.push_back(site);
-			}
-		}
-};
-
-
-// regular square point cloud
-// improve me: calculate coordinates on demand
-class RegularSquare : public PointCloud
-{
-	public:
-		int len;
-
-		RegularSquare(int len) : len(len), PointCloud(len*len, 2)
-		{
-			dim = 2;
-			size = len*len;
-			
-			const double delta = 1.0 / (double)(len);
-			for (int i=0; i<len; i++)  
-			{
-				for (int j=0; j<len; j++)
-				{
-					const std::vector<double> site = {(i+0.5)*delta, (j+0.5)*delta};
-					crds.push_back(site);
-				}
-			}
-		}
-};
-
-
-
-// -----------------------------------------
-// ---------- Disorder base class ----------
+// ---------- DisorderType base class ----------
 
 template <typename bond_type = int>
 class DisorderType
@@ -82,7 +21,7 @@ class DisorderType
 	public:
 		std::vector<std::vector<int>> nbrs;
 
-		std::vector<int> getnbrs(const int i)
+		std::vector<int> getnbrs(const int a, const int i)
 		{
 			return nbrs[i];
 		}
@@ -90,6 +29,65 @@ class DisorderType
 		std::size_t size() const {return npoints;}
 
 };
+
+
+
+template <class PointCloud>
+class ConstantCoordinationLattice
+{
+	private:
+		PointCloud cloud;
+	
+	public:
+		int npoints, len, dim;
+		std::vector<std::vector<int>> nbrs;
+		ConstantCoordinationLattice(const int len, const int dim) : cloud(len*len, len, dim), npoints(pow(len,dim)), len(len), dim(dim)
+		{
+			constant_coordination_lattice(cloud, nbrs);
+		}
+
+		std::vector<int> getnbrs(const int a, const int i) const
+		{
+			return nbrs[i];
+		}
+		// implement getcrds
+		std::vector<double> getcrds(const int i) const
+		{
+			return cloud.getcrds(i);
+		}
+
+		std::size_t size() const {return npoints;}
+};
+
+
+
+
+class RegularHypercubic
+{
+	private:
+		RegularLattice lattice;
+
+	public:
+		int len, dim, npoints;
+
+		RegularHypercubic(int len, int dim) : len(len), dim(dim), npoints(pow(len,dim)), lattice(len,dim) {};
+
+
+		// override getnbrs
+		std::vector<int> getnbrs(const int alpha, const int i) const
+		{
+			return lattice.getnbrs(alpha, i);
+		}
+
+		// implement getcrds
+		std::vector<double> getcrds(const int i) const
+		{
+			return lattice.getcrds(i);
+		}
+
+		std::size_t size() const {return npoints;}
+};
+
 
 
 
@@ -282,3 +280,5 @@ class RegularRandomBond:  public DisorderType<bond_type>
 		std::size_t size() const {return pow(len,dim);}
 
 };
+
+#endif

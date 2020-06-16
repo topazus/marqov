@@ -7,7 +7,8 @@
 #include <algorithm>
 #include <tuple>
 #include "rndwrapper.h"
-#include "regular_lattice.h"
+#include "geom/regular_lattice.h"
+#include "geom/grid.h"
 #include "vectorhelpers.h"
 #include "helpers.h"
 #include "cartprod.h"
@@ -21,7 +22,7 @@ using std::flush;
 using std::ofstream;
 
 #include "marqov.h"
-#include "neighbourclass.h"
+#include "geom/neighbourclass.h"
 #include "svmath.h"
 
 #include "Heisenberg.h"
@@ -54,6 +55,8 @@ public:
 
 template< class T1, class T2, class T3 >
 constexpr auto make_triple( T1&& t, T2&& u, T3&& v) {return Triple<typename std::decay<T1>::type, typename std::decay<T2>::type, typename std::decay<T3>::type>(t,u,v);}
+
+#include "replicate.h"
 
 //two examples on how to extend the parsing capabilities of the registry
 template <typename T>
@@ -137,6 +140,7 @@ void fillsims(const std::vector<Triple<Args1, MARQOV::MARQOVConfig, Args2> >& ar
 {
     for(auto p : args)
     {
+    	cout << "." << std::flush;
         auto t1 = c(p);
         emplace_from_tuple(sims, t1.first, std::forward<MARQOV::MARQOVConfig>(t1.second), t1.third);
     }
@@ -222,8 +226,8 @@ template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable filter)
 {
 	// number of EMCS during relaxation and measurement
-	mc.setwarmupsteps(200);
-	mc.setgameloopsteps(500);
+	mc.setwarmupsteps(1000);
+	mc.setgameloopsteps(5000);
 
 	std::vector<std::pair<MARQOVConfig, Parameters> > params;
 	for(std::size_t i = 0; i < hamparams.size(); ++i)
@@ -283,11 +287,11 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std
 		makeDir(mc.outpath);
 
 		// lattice
-		RegularLattice latt(L, dim);
+		RegularHypercubic latt(L, dim);
 
 		// set up and execute
  		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
- 		loop<Hamiltonian, RegularLattice>(mc, parameters, f);
+ 		loop<Hamiltonian, RegularHypercubic>(mc, parameters, f);
 	}
 }
 
@@ -303,13 +307,15 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	// by construction temperatures have to go first in cart_prod, but sometimes
 	// we want it sorted by "id", therefore the two are swapped afterwards
-	std::vector<double> id(nreplicas);
-	for (int i=0; i<nreplicas; ++i) id[i] = i;
+	std::vector<double> repid(nreplicas);
+	for (int i=0; i<nreplicas; ++i) repid[i] = i;
 
 	std::vector<MARQOVConfig> mcs(nreplicas, MARQOVConfig(outbasedir));
 	for (int i = 0; i < nreplicas; ++i) mcs[i].setid(i);
 
 
+
+	// --------- filters ---------
 
 	// filter to determine output file path and name
 	// the filter _must_ set p.first.outname!
@@ -318,13 +324,31 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto& mp = p.first;		// Monte Carlo params
 		auto& hp = p.second;	// Hamiltonian params
 		
-		std::string str_id    = std::to_string(mp.id);
+		std::string str_id    = std::to_string(mp.repid);
 		std::string str_beta  = "beta"+std::to_string(std::get<0>(hp));
 		mp.outname = str_beta;
 		return std::tuple_cat(std::forward_as_tuple(latt), p);
 	};
 
+	auto filter_beta_id = [](auto p)
+	{
+		// write a filter to determine output file path and name
+       	auto& lp = p.first;
+       	auto& mp = p.second;
+       	auto& hp = p.third;
 
+ 		auto str_repid = std::to_string(mp.repid);
+		auto str_beta  = "beta"+std::to_string(std::get<0>(hp));
+		auto str_L     = std::to_string(std::get<0>(lp));
+
+		mp.outname = str_beta+"_"+str_repid;
+
+		return p;
+	};
+
+
+
+	// ----------------- select simulation ------------------
 
 	if (ham == "Ising")
 	{
@@ -371,7 +395,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
  		RegularLatticeloop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
     }
     else if (startswith(ham, "AshkinTeller"))
-//    else if (ham == "AshkinTeller")
     {
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
@@ -395,7 +418,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto aniso       = registry.Get<std::vector<double>>("mc", ham, "aniso");
 		auto singleaniso = registry.Get<std::vector<double>>("mc", ham, "singleaniso");
 
-		auto parameters = cart_prod(id, beta, extfield, aniso, singleaniso);
+		auto parameters = cart_prod(repid, beta, extfield, aniso, singleaniso);
 
 		for (auto& param_tuple : parameters) // swap "id" and "temperature"
 					std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
@@ -404,21 +427,80 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 		// write a filter to determine output file path and name
-		auto xxzfilter = [](RegularLattice& latt, auto p)
+		auto xxzfilter = [](RegularHypercubic& latt, auto p)
 		{	
 			auto& mp = p.first;		// Monte Carlo params
 			auto& hp = p.second;	// Hamiltonian params
 		
-			std::string str_id    = std::to_string(int(std::get<1>(hp)));
+			std::string str_repid = std::to_string(int(std::get<1>(hp)));
 			std::string str_beta  = "beta"+std::to_string(std::get<0>(hp));
 			std::string str_extf  = "extf"+std::to_string(std::get<2>(hp));
 			
-			mp.outname = str_beta+"_"+str_extf+"_"+str_id;
+			mp.outname = str_beta+"_"+str_extf+"_"+str_repid;
 
 			return std::tuple_cat(std::forward_as_tuple(latt), p);
 		};
 
 		RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
+	}
+	else if (ham == "IsingCC")
+	{
+		const auto dim 		= registry.Get<int>("mc", "General", "dim" );
+		const auto nreplicas 	= registry.Get<int>("mc", "General", "nreplicas" );
+		const auto nL  		= registry.Get<std::vector<int>>("mc", "General", "nL" );
+		const std::string name 	= registry.Get<std::string>("mc", "General", "Hamiltonian" );
+		const std::string nLs 	= registry.Get<std::string>("mc", "General", "nL" );
+	
+		cout << endl;
+		cout << "Hamiltonian: \t" << name << endl;
+		cout << "Dimension: \t" << dim << endl;
+		cout << "Lattice sizes:\t" << nLs << endl;
+		cout << "Replicas:\t" << nreplicas << endl;
+	
+
+		// construct Hamiltonian parameter space
+		auto beta = registry.Get<std::vector<double> >("mc", "IsingCC", "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", "IsingCC", "J");
+		auto parameters = cart_prod(beta, J);
+		write_logfile(registry, beta);
+
+	
+		// lattice size loop
+		for (std::size_t j=0; j<nL.size(); j++)
+		{
+			// prepare
+			int L = nL[j];
+			cout << endl << "L = " << L << endl << endl;
+			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+			makeDir(outpath);
+	
+			// Monte Carlo parameters
+	        	MARQOVConfig mp(outpath);
+	        	mp.setnsweeps(5);
+			mp.setncluster(15);
+
+			// lattice parameters
+			auto lp = std::make_tuple(L,dim);
+
+			// form parameter triple and replicate
+			auto params  = finalize_parameter_triple(lp, mp, parameters);
+			auto rparams = replicator(params, nreplicas);
+
+			// create simulation vector
+			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, filter_beta_id);
+	
+
+			// perform simulations
+			#pragma omp parallel for
+			for (std::size_t i = 0; i < sims.size(); ++i)
+			{
+				auto& marqov = sims[i];
+		
+				marqov.init();
+				marqov.wrmploop();
+				marqov.gameloop();
+			}
+		}
 	}
 	/*
     else if(ham == "IrregularIsing")
@@ -446,7 +528,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto f = [&defaultfilter, &nbrs](auto p){return defaultfilter(nbrs, p);}; //partially apply filter
 		loop<Ising<int>, Neighbours<int32_t> >(mc, hamparams, f);
 	}
-	else if(ham == "IrregularIsing2")
+	else if(ham == "Ising on CC")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
@@ -481,7 +563,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto t = make_triple(std::make_tuple(L,dim), mc, parameters[0]);
 		std::vector<decltype(t)> p = {t};
 
-		auto sims = createsims<Ising<int>, RegularLattice >(p, otherfilter);
+		auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(p, otherfilter);
 
 		// perform simulation
 		#pragma omp parallel for
@@ -490,15 +572,11 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			auto& marqov = sims[i];
 	
 			marqov.init();
-//			marqov.init_hot();
 			marqov.wrmploop();
 			marqov.gameloop();
 		}
-
-//        auto t = make_pair(std::make_tuple(dummy), std::tuple_cat(std::make_tuple(outdir), parameters[0]));
-//        createsims<Ising<int>, Neighbours<int32_t> >(p, otherfilter);
     }
-    */
+	*/
 }
 
 
