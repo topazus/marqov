@@ -409,7 +409,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
         auto parameters = cart_prod(betas, myj, myj, myj);
         RegularLatticeloop<XXZAntiferro<double, double> >(registry, outbasedir, parameters, defaultfilter);
     }
-    /*
     else if(ham == "XXZAntiferroSingleAniso")
     {
 		auto beta        = registry.Get<std::vector<double>>("mc", ham, "beta");
@@ -417,24 +416,17 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto aniso       = registry.Get<std::vector<double>>("mc", ham, "aniso");
 		auto singleaniso = registry.Get<std::vector<double>>("mc", ham, "singleaniso");
 
-		auto parameters = cart_prod(repid, beta, extfield, aniso, singleaniso);
-
-		for (auto& param_tuple : parameters) // swap "id" and "temperature"
-					std::swap(std::get<0>(param_tuple), std::get<1>(param_tuple));
-
+		auto parameters = cart_prod(beta, extfield, aniso, singleaniso);
 		write_logfile(registry, extfield);
 
-
-		// write a filter to determine output file path and name
 		auto xxzfilter = [](RegularHypercubic& latt, auto p)
 		{	
 			auto& mp = p.first;		// Monte Carlo params
 			auto& hp = p.second;	// Hamiltonian params
 		
-			std::string str_repid = std::to_string(int(std::get<1>(hp)));
+			std::string str_repid = std::to_string(mp.repid);
 			std::string str_beta  = "beta"+std::to_string(std::get<0>(hp));
-			std::string str_extf  = "extf"+std::to_string(std::get<2>(hp));
-			
+			std::string str_extf  = "extf"+std::to_string(std::get<1>(hp));
 			mp.outname = str_beta+"_"+str_extf+"_"+str_repid;
 
 			return std::tuple_cat(std::forward_as_tuple(latt), p);
@@ -442,6 +434,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
 	}
+    /*
 	else if (ham == "IsingCC")
 	{
 		const auto dim 		= registry.Get<int>("mc", "General", "dim" );

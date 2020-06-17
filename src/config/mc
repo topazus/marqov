@@ -1,6 +1,6 @@
 [General]
 
-Hamiltonian = Ising
+Hamiltonian = XXZAntiferroSingleAniso
 
 [Ising]
 
@@ -13,6 +13,10 @@ J = -1.0
 
 [IsingCC]
 
+nL        = 8,12,16,24,32
+nreplicas = 3
+dim = 2
+
 beta = 0.50, 0.52, 0.54, 0.56, 0.58, 0.60
 J = -1.0
 
@@ -22,6 +26,10 @@ beta = 0.40, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48
 J = -1.0
 
 [Heisenberg]
+
+nL        = 8,12,16,24,32
+nreplicas = 3
+dim = 3
 
 beta = 0.62, 0.64, 0.66, 0.68, 0.70, 0.72, 0.74, 0.76
 J = -1.0
@@ -45,6 +53,10 @@ lambda = 4.5
 mass = 1.0
 
 [XXZAntiferroSingleAniso]
+
+nL        = 8,12,16,24,32
+nreplicas = 3
+dim       = 2
 
 beta = 3.333333
 extfield = 1.80, 1.81, 1.82, 1.83, 1.84, 1.85, 1.86, 1.87, 1.88, 1.90
