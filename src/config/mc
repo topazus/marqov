@@ -1,6 +1,6 @@
 [General]
 
-Hamiltonian = XXZAntiferroSingleAniso
+Hamiltonian = IsingCC
 
 [Ising]
 
@@ -13,7 +13,7 @@ J = -1.0
 
 [IsingCC]
 
-nL        = 8,12,16,24,32
+nL        = 16,24,32,48
 nreplicas = 3
 dim = 2
 

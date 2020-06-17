@@ -329,7 +329,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		return std::tuple_cat(std::forward_as_tuple(latt), p);
 	};
 
-	auto filter_beta_id = [](auto p)
+	auto defaultfilter_triple = [](auto p)
 	{
 		// write a filter to determine output file path and name
        	auto& lp = p.first;
@@ -434,21 +434,14 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
 	}
-    /*
 	else if (ham == "IsingCC")
 	{
-		const auto dim 		= registry.Get<int>("mc", "General", "dim" );
-		const auto nreplicas 	= registry.Get<int>("mc", "General", "nreplicas" );
-		const auto nL  		= registry.Get<std::vector<int>>("mc", "General", "nL" );
-		const std::string name 	= registry.Get<std::string>("mc", "General", "Hamiltonian" );
-		const std::string nLs 	= registry.Get<std::string>("mc", "General", "nL" );
-	
-		cout << endl;
-		cout << "Hamiltonian: \t" << name << endl;
-		cout << "Dimension: \t" << dim << endl;
-		cout << "Lattice sizes:\t" << nLs << endl;
-		cout << "Replicas:\t" << nreplicas << endl;
-	
+		const auto ham        = registry.Get<std::string>("mc", "General", "Hamiltonian" );
+		const auto dim 	  = registry.Get<int>("mc", ham, "dim" );
+		      auto nreplicas  = registry.Get<std::vector<int>>("mc", ham, "nreplicas" );
+		const auto nL  	  = registry.Get<std::vector<int>>("mc", ham, "nL" );
+
+		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 		// construct Hamiltonian parameter space
 		auto beta = registry.Get<std::vector<double> >("mc", "IsingCC", "beta");
@@ -470,17 +463,18 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	        	MARQOVConfig mp(outpath);
 	        	mp.setnsweeps(5);
 			mp.setncluster(15);
+			mp.setwarmupsteps(500);
+			mp.setgameloopsteps(1500);
 
 			// lattice parameters
 			auto lp = std::make_tuple(L,dim);
 
 			// form parameter triple and replicate
 			auto params  = finalize_parameter_triple(lp, mp, parameters);
-			auto rparams = replicator(params, nreplicas);
+			auto rparams = replicator(params, nreplicas[j]);
 
 			// create simulation vector
-			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, filter_beta_id);
-	
+			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
 
 			// perform simulations
 			#pragma omp parallel for
@@ -494,7 +488,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			}
 		}
 	}
-	*/
 	/*
     else if(ham == "IrregularIsing")
     {
