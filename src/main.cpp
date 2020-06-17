@@ -247,9 +247,11 @@ template <class Hamiltonian, class Params, class Callable>
 void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& hp, Callable filter)
 {
 	const auto name      = reg.Get<std::string>("mc", "General", "Hamiltonian" );
-	const auto nreplicas = reg.Get<std::vector<int>>("mc", name, "nreplicas" );
+	      auto nreplicas = reg.Get<std::vector<int>>("mc", name, "nreplicas" );
 	const auto nL  	 = reg.Get<std::vector<int>>("mc", name, "nL" );
 	const auto dim 	 = reg.Get<int>("mc", name, "dim" );
+
+	if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 	// lattice size loop
 	for (std::size_t j=0; j<nL.size(); j++)
@@ -283,7 +285,6 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std
 
 // ---------------------------------------
 
-
 std::string selectsim_startup(RegistryDB& registry)
 {
 	const auto ham        = registry.Get<std::string>("mc", "General", "Hamiltonian" );
@@ -299,10 +300,13 @@ std::string selectsim_startup(RegistryDB& registry)
 	cout << "Lattice sizes:\t" << nLs << endl;
 	cout << "Replicas:\t" << nreplicass << endl;
 
-	if ((nreplicas.size() != nL.size()) && (nreplicas.size()) != 1) throw std::invalid_argument("invalid replica configuration!");
+	if ((nreplicas.size() != nL.size()) && (nreplicas.size() != 1)) throw std::invalid_argument("invalid replica configuration!");
 
 	return ham;
 }
+
+// ---------------------------------------
+
 
 void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbasedir)
 {
@@ -354,16 +358,15 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
  		RegularLatticeloop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
-	/*
-    else if (ham == "Heisenberg")
-    {
+	else if (ham == "Heisenberg")
+	{
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
 		auto parameters = cart_prod(beta, J);
 
 		write_logfile(registry, beta);
 		RegularLatticeloop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
-    }
+	}
     else if (ham == "Phi4")
     {
 		auto beta   = registry.Get<std::vector<double> >("mc", ham, "beta");
@@ -406,6 +409,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
         auto parameters = cart_prod(betas, myj, myj, myj);
         RegularLatticeloop<XXZAntiferro<double, double> >(registry, outbasedir, parameters, defaultfilter);
     }
+    /*
     else if(ham == "XXZAntiferroSingleAniso")
     {
 		auto beta        = registry.Get<std::vector<double>>("mc", ham, "beta");
