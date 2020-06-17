@@ -223,20 +223,8 @@ auto createsims(const std::vector<std::pair<MARQOVConfig, Args>>& params, Callab
 
 
 template <class Hamiltonian, class Lattice, class Parameters, class Callable>
-void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable filter)
+void loop(const std::vector<Parameters>& params, Callable filter)
 {
-	// number of EMCS during relaxation and measurement
-	mc.setwarmupsteps(1000);
-	mc.setgameloopsteps(5000);
-
-	std::vector<std::pair<MARQOVConfig, Parameters> > params;
-	for(std::size_t i = 0; i < hamparams.size(); ++i)
-	{
-	    auto mc2(mc);
-	    mc2.setid(i);
-	    params.push_back(make_pair(mc2, hamparams[i]));
-	}
-
 	auto sims = createsims<Hamiltonian, Lattice>(params, filter);
 
 	// perform simulation
@@ -256,20 +244,12 @@ void loop(MARQOVConfig& mc, const std::vector<Parameters>& hamparams, Callable f
 
 
 template <class Hamiltonian, class Params, class Callable>
-void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& parameters, Callable filter)
+void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& hp, Callable filter)
 {
-	const auto dim 		= reg.Get<int>("mc", "General", "dim" );
-	const auto nreplicas 	= reg.Get<int>("mc", "General", "nreplicas" );
-	const auto nL  		= reg.Get<std::vector<int>>("mc", "General", "nL" );
-	const std::string name 	= reg.Get<std::string>("mc", "General", "Hamiltonian" );
-	const std::string nLs 	= reg.Get<std::string>("mc", "General", "nL" );
-
-	cout << endl;
-	cout << "Hamiltonian: \t" << name << endl;
-	cout << "Dimension: \t" << dim << endl;
-	cout << "Lattice sizes:\t" << nLs << endl;
-	cout << "Replicas:\t" << nreplicas << endl;
-
+	const auto name      = reg.Get<std::string>("mc", "General", "Hamiltonian" );
+	const auto nreplicas = reg.Get<std::vector<int>>("mc", name, "nreplicas" );
+	const auto nL  	 = reg.Get<std::vector<int>>("mc", name, "nL" );
+	const auto dim 	 = reg.Get<int>("mc", name, "dim" );
 
 	// lattice size loop
 	for (std::size_t j=0; j<nL.size(); j++)
@@ -280,18 +260,23 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std
 
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
-        	MARQOVConfig mc(outpath);
-        	mc.setnsweeps(5);
-		mc.setncluster(15);
+        	MARQOVConfig mp(outpath);
+        	mp.setnsweeps(5);
+		mp.setncluster(15);
+		mp.setwarmupsteps(500);
+		mp.setgameloopsteps(1500);
 
-		makeDir(mc.outpath);
+		makeDir(mp.outpath);
+
+		auto params = finalize_parameter_pair(mp, hp);
+		auto rparams = replicator_pair(params, nreplicas[j]);
 
 		// lattice
 		RegularHypercubic latt(L, dim);
 
 		// set up and execute
  		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
- 		loop<Hamiltonian, RegularHypercubic>(mc, parameters, f);
+ 		loop<Hamiltonian, RegularHypercubic>(rparams, f);
 	}
 }
 
@@ -299,20 +284,30 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std
 // ---------------------------------------
 
 
+std::string selectsim_startup(RegistryDB& registry)
+{
+	const auto ham        = registry.Get<std::string>("mc", "General", "Hamiltonian" );
+	const auto dim 	  = registry.Get<int>("mc", ham, "dim" );
+	const auto nreplicas  = registry.Get<std::vector<int>>("mc", ham, "nreplicas" );
+	const auto nreplicass = registry.Get<std::string>("mc", ham, "nreplicas" );
+	const auto nL  	  = registry.Get<std::vector<int>>("mc", ham, "nL" );
+	const auto nLs 	  = registry.Get<std::string>("mc", ham, "nL" );
+
+	cout << endl;
+	cout << "Hamiltonian: \t" << ham << endl;
+	cout << "Dimension: \t" << dim << endl;
+	cout << "Lattice sizes:\t" << nLs << endl;
+	cout << "Replicas:\t" << nreplicass << endl;
+
+	if ((nreplicas.size() != nL.size()) && (nreplicas.size()) != 1) throw std::invalid_argument("invalid replica configuration!");
+
+	return ham;
+}
+
 void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbasedir)
 {
-	// extract Hamiltonian type and number of replicas
-	const std::string ham = registry.Get<std::string>("mc", "General", "Hamiltonian" );
-	const int   nreplicas = registry.Get<int>("mc", "General", "nreplicas" );
 
-	// by construction temperatures have to go first in cart_prod, but sometimes
-	// we want it sorted by "id", therefore the two are swapped afterwards
-	std::vector<double> repid(nreplicas);
-	for (int i=0; i<nreplicas; ++i) repid[i] = i;
-
-	std::vector<MARQOVConfig> mcs(nreplicas, MARQOVConfig(outbasedir));
-	for (int i = 0; i < nreplicas; ++i) mcs[i].setid(i);
-
+	auto ham = selectsim_startup(registry);
 
 
 	// --------- filters ---------
@@ -324,9 +319,9 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto& mp = p.first;		// Monte Carlo params
 		auto& hp = p.second;	// Hamiltonian params
 		
-		std::string str_id    = std::to_string(mp.repid);
+		std::string str_repid = std::to_string(mp.repid);
 		std::string str_beta  = "beta"+std::to_string(std::get<0>(hp));
-		mp.outname = str_beta;
+		mp.outname = str_beta+"_"+str_repid;
 		return std::tuple_cat(std::forward_as_tuple(latt), p);
 	};
 
@@ -355,11 +350,11 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
 		auto parameters = cart_prod(beta, J);
-		//FIXME: is this really intended to have nreplicas of each (beta, J) -> yes ;)
 
 		write_logfile(registry, beta);
  		RegularLatticeloop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
+	/*
     else if (ham == "Heisenberg")
     {
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
@@ -502,6 +497,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			}
 		}
 	}
+	*/
 	/*
     else if(ham == "IrregularIsing")
     {

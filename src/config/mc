@@ -1,11 +1,12 @@
 [General]
-dim = 2
-nL = 16,24,32,48
-nreplicas = 3
 
-Hamiltonian = IsingCC
+Hamiltonian = Ising
 
 [Ising]
+
+nL        = 8,12,16,24,32
+nreplicas = 5, 5, 3, 3, 1
+dim = 2
 
 beta = 0.430, 0.433, 0.436, 0.439, 0.442, 0.445, 0.448, 0.451, 0.454
 J = -1.0
@@ -62,10 +63,9 @@ J = -1
 K = -0.3
 beta = 0.28, 0.29, 0.30, 0.31, 0.32, 0.33, 0.34, 0.35, 0.36, 0.37
 
-
 [IO]
+
 outdir = ../out
 logdir = ../log
-logfile = logfile.txt
-
+logfile = logfile.txt 
 [END]

@@ -1,0 +1,9 @@
+[General]
+
+
+[IO]
+outdir = ../out
+logdir = ../log
+logfile = logfile.txt
+
+[END]
