@@ -223,7 +223,7 @@ auto createsims(const std::vector<std::pair<MARQOVConfig, Args>>& params, Callab
 
 
 template <class Hamiltonian, class Lattice, class Parameters, class Callable>
-void loop(const std::vector<Parameters>& params, Callable filter)
+void Loop(const std::vector<Parameters>& params, Callable filter)
 {
 	auto sims = createsims<Hamiltonian, Lattice>(params, filter);
 
@@ -244,7 +244,7 @@ void loop(const std::vector<Parameters>& params, Callable filter)
 
 
 template <class Hamiltonian, class Params, class Callable>
-void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& hp, Callable filter)
+void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& hp, Callable filter)
 {
 	const auto name      = reg.Get<std::string>("mc", "General", "Hamiltonian" );
 	      auto nreplicas = reg.Get<std::vector<int>>("mc", name, "nreplicas" );
@@ -278,7 +278,7 @@ void RegularLatticeloop(RegistryDB& reg, const std::string outbasedir, const std
 
 		// set up and execute
  		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
- 		loop<Hamiltonian, RegularHypercubic>(rparams, f);
+ 		Loop<Hamiltonian, RegularHypercubic>(rparams, f);
 	}
 }
 
@@ -371,7 +371,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto parameters = cart_prod(beta, J);
 
 		write_logfile(registry, beta);
- 		RegularLatticeloop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
+ 		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
 	else if (ham == "Heisenberg")
 	{
@@ -380,7 +380,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto parameters = cart_prod(beta, J);
 
 		write_logfile(registry, beta);
-		RegularLatticeloop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
+		RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
 	}
     else if (ham == "Phi4")
     {
@@ -395,7 +395,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		for (std::size_t i=0; i<parameters.size(); i++) std::get<1>(parameters[i]) = std::get<0>(parameters[i]);
 
 		write_logfile(registry, beta);
-		RegularLatticeloop<Phi4<double, double> >(registry, outbasedir, parameters, defaultfilter);
+		RegularLatticeLoop<Phi4<double, double> >(registry, outbasedir, parameters, defaultfilter);
     }
     else if (ham == "BlumeCapel")
     {
@@ -405,7 +405,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto parameters = cart_prod(beta, J, D);
 
 		write_logfile(registry, beta);
- 		RegularLatticeloop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
+ 		RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
     }
     else if (startswith(ham, "AshkinTeller"))
     {
@@ -415,7 +415,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto parameters = cart_prod(beta, J, K);
 
 		write_logfile(registry, beta);
- 		RegularLatticeloop<AshkinTeller<int>>(registry, outbasedir, parameters, defaultfilter);
+ 		RegularLatticeLoop<AshkinTeller<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
 	else if(ham == "XXZAntiferro")
 	{
@@ -425,7 +425,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto parameters = cart_prod(beta, aniso, extfield);
 
 		write_logfile(registry, beta);
-		RegularLatticeloop<XXZAntiferro<double, double> >(registry, outbasedir, parameters, defaultfilter);
+		RegularLatticeLoop<XXZAntiferro<double, double> >(registry, outbasedir, parameters, defaultfilter);
 	}
 	else if(ham == "XXZAntiferroSingleAniso")
 	{
@@ -436,7 +436,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto parameters = cart_prod(beta, extfield, aniso, singleaniso);
 
 		write_logfile(registry, extfield);
-		RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
+		RegularLatticeLoop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
 	}
 	else if (ham == "IsingCC")
 	{
@@ -515,7 +515,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		// lattice
 		auto f = [&defaultfilter, &nbrs](auto p){return defaultfilter(nbrs, p);}; //partially apply filter
-		loop<Ising<int>, Neighbours<int32_t> >(mc, hamparams, f);
+		Loop<Ising<int>, Neighbours<int32_t> >(mc, hamparams, f);
 	}
 	else if(ham == "Ising on CC")
 	{
