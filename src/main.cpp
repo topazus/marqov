@@ -449,7 +449,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		auto beta = registry.Get<std::vector<double> >("mc", "IsingCC", "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", "IsingCC", "J");
-		auto parameters = cart_prod(beta, J);
+
+		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
 
 	
@@ -473,8 +474,9 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			auto lp = std::make_tuple(L,dim);
 
 			// form parameter triple and replicate
-			auto params  = finalize_parameter_triple(lp, mp, parameters);
+			auto params  = finalize_parameter_triple(lp, mp, hp);
 			auto rparams = replicator(params, nreplicas[j]);
+
 
 			// create simulation vector
 			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
@@ -491,81 +493,39 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			}
 		}
 	}
-	/*
-    else if(ham == "IrregularIsing")
+    else if (ham == "IrregularIsing1")
     {
-		std::vector<std::vector<int>> dummy;
-		Neighbours<int32_t> nbrs(dummy);
+		//
+		// construct irregular lattice and pass it to MARQOV as a reference
+		//
 
-		auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
-		std::vector<double> myj = {1.0};
-		auto hamparams = cart_prod(betas, myj);
-
-		// extract lattice size and prepare directories
-		int L = nbrs.size();
-		cout << endl << "L = " << L << endl << endl;
-
-		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-		MARQOVConfig mc(outpath);
-		makeDir(mc.outpath);
-
-		mc.setid(1);
-		mc.setnsweeps(2*L);
-		mc.setncluster(1);
-
-		// lattice
-		auto f = [&defaultfilter, &nbrs](auto p){return defaultfilter(nbrs, p);}; //partially apply filter
-		Loop<Ising<int>, Neighbours<int32_t> >(mc, hamparams, f);
-	}
-	else if(ham == "Ising on CC")
-	{
-		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
-		auto parameters = cart_prod(beta, J);
-
-		write_logfile(registry, beta);
-
-		auto otherfilter = [](auto p)
-		{
-			// write a filter to determine output file path and name
-            	auto& lp = p.first;
-            	auto& mp = p.second;
-            	auto& hp = p.third;
-
- 			auto str_id    = std::to_string(mp.id);
-			auto str_beta  = "beta"+std::to_string(std::get<0>(hp));
-			auto str_L     = std::to_string(std::get<0>(lp));
-
-			mp.outname = str_beta+"_"+str_id;
-
-			return p;
-		};
-
-
-		const int L   = 42;
+		const int L = 32;
 		const int dim = 2;
-		
+		ConstantCoordinationLattice<Poissonian> ccl(L,dim);
+
+		// prepare output
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-		MARQOVConfig mc(outpath);
-		makeDir(mc.outpath);
+		makeDir(outpath);
 
-		auto t = make_triple(std::make_tuple(L,dim), mc, parameters[0]);
-		std::vector<decltype(t)> p = {t};
+		// Hamiltonian parameters
+		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+		std::vector<double> myj = {-1.0};
+		auto hp = cart_prod(beta, myj);
 
-		auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(p, otherfilter);
+		// Monte Carlo parameters
+		MARQOVConfig mp(outpath);
+		mp.setrepid(1);
+		mp.setnsweeps(L);
+		mp.setncluster(10);
 
-		// perform simulation
-		#pragma omp parallel for
-		for(std::size_t i = 0; i < sims.size(); ++i)
-		{
-			auto& marqov = sims[i];
-	
-			marqov.init();
-			marqov.wrmploop();
-			marqov.gameloop();
-		}
-    }
-	*/
+		auto params = finalize_parameter_pair(mp, hp);
+
+		// partially apply filter
+		auto f = [&defaultfilter, &ccl](auto p){return defaultfilter(ccl, p);};
+
+		// perform simulations
+		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
+	}
 }
 
 

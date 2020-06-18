@@ -43,6 +43,7 @@ class ConstantCoordinationLattice
 		std::vector<std::vector<int>> nbrs;
 		ConstantCoordinationLattice(const int len, const int dim) : cloud(len*len, len, dim), npoints(pow(len,dim)), len(len), dim(dim)
 		{
+			if (dim > 2) throw std::invalid_argument("The CC lattice is currently not implemented for d="+std::to_string(dim));
 			constant_coordination_lattice(cloud, nbrs);
 		}
 
