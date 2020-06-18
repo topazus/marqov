@@ -191,7 +191,7 @@ struct sims_helper<H, L, Triple<LArgs, MARQOVConfig, HArgs> >
 /** The case where Marqov allocates a lattice
  */
 template <class H, class L, class LArgs, class HArgs, class Callable>
-auto createsims(std::vector<Triple<LArgs, MARQOVConfig, HArgs> >& params, Callable c)
+auto createsims(const std::vector<Triple<LArgs, MARQOVConfig, HArgs> >& params, Callable c)
 {
     typedef typename sims_helper<H, L, Triple<LArgs, MARQOVConfig, HArgs> >::MarqovType MarqovType;  
     //create simulations
@@ -479,7 +479,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 			// this does not work, why?
-			// Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
+		 Loop<Ising<int>, ConstantCoordinationLattice<Poissonian> >(rparams, defaultfilter_triple);
 
 
 			// create simulation vector
