@@ -314,10 +314,11 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	auto ham = selectsim_startup(registry);
 
 
-	// --------- filters ---------
+	// -------------------- filters --------------------
 
 	// filter to determine output file path and name
-	// the filter _must_ set p.first.outname!
+	// the filter _must_ set the outname
+
 	auto defaultfilter = [](auto& latt, auto p)
 	{
 		auto& mp = p.first;		// Monte Carlo params
@@ -331,7 +332,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	auto defaultfilter_triple = [](auto p)
 	{
-		// write a filter to determine output file path and name
        	auto& lp = p.first;
        	auto& mp = p.second;
        	auto& hp = p.third;
@@ -344,6 +344,21 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		return p;
 	};
+
+	auto xxzfilter = [](auto& latt, auto p)
+	{	
+		auto& mp = p.first;		// Monte Carlo params
+		auto& hp = p.second;	// Hamiltonian params
+	
+		std::string str_repid = std::to_string(mp.repid);
+		std::string str_beta  = "beta"+std::to_string(std::get<0>(hp));
+		std::string str_extf  = "extf"+std::to_string(std::get<1>(hp));
+		mp.outname = str_beta+"_"+str_extf+"_"+str_repid;
+
+		return std::tuple_cat(std::forward_as_tuple(latt), p);
+	};
+
+
 
 
 
@@ -401,37 +416,26 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		write_logfile(registry, beta);
  		RegularLatticeloop<AshkinTeller<int>>(registry, outbasedir, parameters, defaultfilter);
-    }
-    else if(ham == "XXZAntiferro")
-    {
-        auto betas = registry.Get<std::vector<double> >("mc", ham, "betas");
-        std::vector<double> myj = {1.0};
-        auto parameters = cart_prod(betas, myj, myj, myj);
-        RegularLatticeloop<XXZAntiferro<double, double> >(registry, outbasedir, parameters, defaultfilter);
-    }
-    else if(ham == "XXZAntiferroSingleAniso")
-    {
+	}
+	else if(ham == "XXZAntiferro")
+	{
+		auto beta     = registry.Get<std::vector<double>>("mc", ham, "beta");
+		auto extfield = registry.Get<std::vector<double>>("mc", ham, "extfield");
+		auto aniso    = registry.Get<std::vector<double>>("mc", ham, "aniso");
+		auto parameters = cart_prod(beta, aniso, extfield);
+
+		write_logfile(registry, beta);
+		RegularLatticeloop<XXZAntiferro<double, double> >(registry, outbasedir, parameters, defaultfilter);
+	}
+	else if(ham == "XXZAntiferroSingleAniso")
+	{
 		auto beta        = registry.Get<std::vector<double>>("mc", ham, "beta");
 		auto extfield    = registry.Get<std::vector<double>>("mc", ham, "extfield");
 		auto aniso       = registry.Get<std::vector<double>>("mc", ham, "aniso");
 		auto singleaniso = registry.Get<std::vector<double>>("mc", ham, "singleaniso");
-
 		auto parameters = cart_prod(beta, extfield, aniso, singleaniso);
+
 		write_logfile(registry, extfield);
-
-		auto xxzfilter = [](RegularHypercubic& latt, auto p)
-		{	
-			auto& mp = p.first;		// Monte Carlo params
-			auto& hp = p.second;	// Hamiltonian params
-		
-			std::string str_repid = std::to_string(mp.repid);
-			std::string str_beta  = "beta"+std::to_string(std::get<0>(hp));
-			std::string str_extf  = "extf"+std::to_string(std::get<1>(hp));
-			mp.outname = str_beta+"_"+str_extf+"_"+str_repid;
-
-			return std::tuple_cat(std::forward_as_tuple(latt), p);
-		};
-
 		RegularLatticeloop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
 	}
 	else if (ham == "IsingCC")
@@ -443,7 +447,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
-		// construct Hamiltonian parameter space
 		auto beta = registry.Get<std::vector<double> >("mc", "IsingCC", "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", "IsingCC", "J");
 		auto parameters = cart_prod(beta, J);
@@ -453,7 +456,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
 		{
-			// prepare
+			// prepare output
 			int L = nL[j];
 			cout << endl << "L = " << L << endl << endl;
 			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
