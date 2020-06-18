@@ -478,6 +478,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			auto rparams = replicator(params, nreplicas[j]);
 
 
+			// this does not work, why?
+			// Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
+
+
 			// create simulation vector
 			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
 
