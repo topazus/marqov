@@ -168,8 +168,8 @@ template <class Hamiltonian, class Params, class Callable>
 void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& hp, Callable filter)
 {
 	const auto name      = reg.Get<std::string>("mc", "General", "Hamiltonian" );
-	      auto nreplicas = reg.Get<std::vector<int>>("mc", name, "nreplicas" );
-	const auto nL  	 = reg.Get<std::vector<int>>("mc", name, "nL" );
+	      auto nreplicas = reg.Get<std::vector<int>>("mc", name, "rep" );
+	const auto nL  	 = reg.Get<std::vector<int>>("mc", name, "L" );
 	const auto dim 	 = reg.Get<int>("mc", name, "dim" );
 
 	if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
@@ -210,10 +210,10 @@ std::string selectsim_startup(RegistryDB& registry)
 {
 	const auto ham        = registry.Get<std::string>("mc", "General", "Hamiltonian" );
 	const auto dim 	  = registry.Get<int>("mc", ham, "dim" );
-	const auto nreplicas  = registry.Get<std::vector<int>>("mc", ham, "nreplicas" );
-	const auto nreplicass = registry.Get<std::string>("mc", ham, "nreplicas" );
-	const auto nL  	  = registry.Get<std::vector<int>>("mc", ham, "nL" );
-	const auto nLs 	  = registry.Get<std::string>("mc", ham, "nL" );
+	const auto nreplicas  = registry.Get<std::vector<int>>("mc", ham, "rep" );
+	const auto nreplicass = registry.Get<std::string>("mc", ham, "rep" );
+	const auto nL  	  = registry.Get<std::vector<int>>("mc", ham, "L" );
+	const auto nLs 	  = registry.Get<std::string>("mc", ham, "L" );
 
 	cout << endl;
 	cout << "Hamiltonian: \t" << ham << endl;
@@ -363,8 +363,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	{
 		const auto ham        = registry.Get<std::string>("mc", "General", "Hamiltonian" );
 		const auto dim 	  = registry.Get<int>("mc", ham, "dim" );
-		      auto nreplicas  = registry.Get<std::vector<int>>("mc", ham, "nreplicas" );
-		const auto nL  	  = registry.Get<std::vector<int>>("mc", ham, "nL" );
+		      auto nreplicas  = registry.Get<std::vector<int>>("mc", ham, "rep" );
+		const auto nL  	  = registry.Get<std::vector<int>>("mc", ham, "L" );
 
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
