@@ -338,7 +338,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
  		RegularLatticeLoop<AshkinTeller<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
-	else if(ham == "XXZAntiferro")
+	else if (ham == "XXZAntiferro")
 	{
 		auto beta     = registry.Get<std::vector<double>>("mc", ham, "beta");
 		auto extfield = registry.Get<std::vector<double>>("mc", ham, "extfield");
@@ -348,7 +348,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
 		RegularLatticeLoop<XXZAntiferro<double, double> >(registry, outbasedir, parameters, defaultfilter);
 	}
-	else if(ham == "XXZAntiferroSingleAniso")
+	else if (ham == "XXZAntiferroSingleAniso")
 	{
 		auto beta        = registry.Get<std::vector<double>>("mc", ham, "beta");
 		auto extfield    = registry.Get<std::vector<double>>("mc", ham, "extfield");
@@ -398,26 +398,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			auto params  = finalize_parameter_triple(lp, mp, hp);
 			auto rparams = replicator(params, nreplicas[j]);
 
-
-			// this does not work, why?
-		 	Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
-
-
-			/*
-			// create simulation vector
-			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
-
 			// perform simulations
-			#pragma omp parallel for
-			for (std::size_t i = 0; i < sims.size(); ++i)
-			{
-				auto& marqov = sims[i];
-		
-				marqov.init();
-				marqov.wrmploop();
-				marqov.gameloop();
-			}
-			*/
+		 	Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
 		}
 	}
     else if (ham == "IrregularIsing1")
