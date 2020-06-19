@@ -117,8 +117,10 @@ namespace MARQOV
 					case 0: return ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
 					case 1: return ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
 					case 2: return ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
+					default: throw std::invalid_argument("invalid color!");
 				}
 			}
+			return 0;
 		}
 	
 		// Wolff flip
@@ -208,7 +210,9 @@ namespace MARQOV
 				case 0: return ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
 				case 1: return ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
 				case 2: return ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
+				default: throw std::invalid_argument("invalid color!");
 			}
+			return 0;
 		}
 	
 	
