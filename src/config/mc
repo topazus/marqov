@@ -14,7 +14,7 @@ J = -1.0
 [IsingCC]
 
 nL        = 16,24,32,48
-nreplicas = 3
+nreplicas = 5
 dim = 2
 
 beta = 0.50, 0.52, 0.54, 0.56, 0.58, 0.60

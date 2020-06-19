@@ -1,6 +1,8 @@
 #ifndef REPLICATE_H
 #define REPLICATE_H
 
+#include "helpers.h" 
+
 template <class Params>
 std::vector<Params> replicator(std::vector<Params>& params, int nreplicas, int sortmode=0)
 {

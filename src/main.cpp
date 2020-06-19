@@ -6,25 +6,27 @@
 #include <fstream>
 #include <algorithm>
 #include <tuple>
-#include "rndwrapper.h"
-#include "geom/regular_lattice.h"
-#include "geom/grid.h"
-#include "vectorhelpers.h"
-#include "helpers.h"
-#include "cartprod.h"
-#include "registry.h"
+#include <iomanip>
 
-
-#include <iomanip>      // std::setprecision
 using std::cout;
 using std::endl;
 using std::flush;
 using std::ofstream;
 
-#include "marqov.h"
+#include "rndwrapper.h"
+#include "geom/regular_lattice.h"
+#include "geom/grid.h"
 #include "geom/neighbourclass.h"
+#include "vectorhelpers.h"
+#include "helpers.h"
+#include "cartprod.h"
+#include "registry.h"
+#include "systemtools.h"
+#include "replicate.h"
+#include "marqov.h"
 #include "svmath.h"
 
+// Hamiltonians
 #include "Heisenberg.h"
 #include "Ising.h"
 #include "Phi4.h"
@@ -33,135 +35,54 @@ using std::ofstream;
 #include "XXZAntiferroSingleAniso.h"
 #include "AshkinTeller.h"
 
-#include "systemtools.h"
+using namespace MARQOV;
 
 
-bool startswith(std::string longword, std::string shortword)
-{
-	if (longword.rfind(shortword, 0) == 0) return true;
-	else return false;
-}
-
-
-template <class T1, class T2, class T3>
-class Triple
-{
-public:
-    Triple(T1 t1, T2 t2, T3 t3) : first(t1), second(t2), third(t3) {}
-    T1 first;
-    T2 second;
-    T3 third;
-};
-
-template< class T1, class T2, class T3 >
-constexpr auto make_triple( T1&& t, T2&& u, T3&& v) {return Triple<typename std::decay<T1>::type, typename std::decay<T2>::type, typename std::decay<T3>::type>(t,u,v);}
-
-#include "replicate.h"
-
-//two examples on how to extend the parsing capabilities of the registry
-template <typename T>
-struct GetTrait<std::vector<T> >//helper trait to break up a string at various predefined seperators
-{
-    static std::vector<T> Convert(std::string& arg)
-    {
-        const std::string delim("; ,");
-        std::vector<T> retval;
-        std::size_t pos = 0;
-        std::size_t posold = 0;
-        do
-        {
-            retval.push_back(GetTrait<T>::Convert(arg.substr(posold, ( pos = arg.find_first_of(delim, posold) ) - posold) ));
-        } while ((posold = arg.find_first_not_of(delim, pos) ) != std::string::npos);
-        return retval;
-    }
-};
-
-template <>
-struct GetTrait<std::vector<std::string> >//helper trait to break up a string at various predefined seperators
-{
-    static std::vector<std::string> Convert(std::string arg)
-    {
-        const std::string delim("; ,");
-        std::vector<std::string> retval;
-        std::size_t pos = 0;
-        std::size_t posold = 0;
-        do
-        {
-            retval.push_back(arg.substr(posold, ( pos = arg.find_first_of(delim, posold) ) - posold) );
-        } while ((posold = arg.find_first_not_of(delim, pos) ) != std::string::npos);
-        return retval;
-    }
-};
-
-void write_logfile(RegistryDB& reg, std::vector<double> loopvar)
-{
-	std::string logdir  = reg.Get<std::string>("mc", "IO", "logdir" );
-	std::string logfile = reg.Get<std::string>("mc", "IO", "logfile" );
-	std::ofstream os(logdir+"/"+logfile);
-	os << std::setprecision(7);
-	for (std::size_t i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;
-	os.close();
-}
-
-// //C++17 make_from_tuple from cppreference adapted for emplace.
-// template <class Cont, class Latt, class Tuple, std::size_t... I>
-// constexpr auto emplace_from_tuple_impl(Cont&& cont, Latt&& latt, MARQOV::MARQOVConfig&& mc, Tuple&& t, std::index_sequence<I...> )
-// {
-//   return cont.emplace_back(std::forward<Latt>(latt), std::forward<decltype(mc)>(mc), std::get<I>(std::forward<Tuple>(t))...) ;
-// }
-// 
-// /** A function to construct an object in a container directly from a tuple
-//  * @param cont the container where we append to.
-//  * @param t the tuple containing the arguments.
-//  */
-// template <class Cont, class T, class Tuple, class Latt>
-// constexpr auto emplace_from_tuple(Cont&& cont, Latt&& latt, T&& mc, Tuple&& t )
-// {
-//     return emplace_from_tuple_impl(cont, std::forward<Latt>(latt), std::forward<T>(mc), std::forward<Tuple>(t),
-//         std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value>{});
-// }
 
 //c++17 make_from_tuple from cppreference adapted for emplace
 template <class Cont, class Tuple1, class Tuple2, std::size_t... I>
 constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple1&& t1, MARQOV::MARQOVConfig&& mc, Tuple2&& t2, std::index_sequence<I...> )
 {
-  return cont.emplace_back(std::forward<Tuple1>(t1), std::forward<MARQOV::MARQOVConfig>(mc), std::get<I>(std::forward<Tuple2>(t2))...) ;
+	return cont.emplace_back(
+		std::forward<Tuple1>(t1), 
+		std::forward<MARQOV::MARQOVConfig>(mc), 
+		std::get<I>(std::forward<Tuple2>(t2))...);
 }
  
 template <class Cont, class Tuple1, class Tuple2>
 constexpr auto emplace_from_tuple(Cont&& cont, Tuple1&& t1, MARQOV::MARQOVConfig&& mc, Tuple2&& t2 )
 {
-    return emplace_from_tuple_impl(cont, std::forward<Tuple1>(t1), std::forward<MARQOV::MARQOVConfig>(mc), std::forward<Tuple2>(t2),
-        std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
+	return emplace_from_tuple_impl(
+		cont, 
+		std::forward<Tuple1>(t1), 
+		std::forward<MARQOV::MARQOVConfig>(mc), 
+		std::forward<Tuple2>(t2),
+		std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
 }
 
 template <class Args1, class Args2, class T, class Callable>
 void fillsims(const std::vector<Triple<Args1, MARQOV::MARQOVConfig, Args2> >& args, std::vector<T>& sims, Callable c)
 {
-    for(auto p : args)
-    {
-    	cout << "." << std::flush;
-        auto t1 = c(p);
-        emplace_from_tuple(sims, t1.first, std::forward<MARQOV::MARQOVConfig>(t1.second), t1.third);
-    }
+	for(auto p : args)
+	{
+		auto t1 = c(p);
+		emplace_from_tuple(sims, t1.first, std::forward<MARQOV::MARQOVConfig>(t1.second), t1.third);
+	}
 }
 
 template <class Args, class T, class Callable>
 void fillsims(const std::vector<std::pair<MARQOV::MARQOVConfig, Args>>& args, std::vector<T>& sims, Callable c)
 {
-    for(auto p : args)
-    {
-        auto t1 = c(p);
-        emplace_from_tuple(	sims, 
-	   					std::forward<decltype(std::get<0>(t1))>(std::get<0>(t1)), 
-						std::forward<MARQOV::MARQOVConfig>(std::get<1>(t1)), std::get<2>(t1));
-    }
+	for(auto p : args)
+	{
+		auto t1 = c(p);
+		emplace_from_tuple(sims, 
+			std::forward<decltype(std::get<0>(t1))>(std::get<0>(t1)), 
+			std::forward<MARQOV::MARQOVConfig>(std::get<1>(t1)), std::get<2>(t1));
+	}
 }
 
 // ---------------------------------------
-
-
-using namespace MARQOV;
 
 
 template<class ... Ts>
@@ -479,9 +400,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 			// this does not work, why?
-		 Loop<Ising<int>, ConstantCoordinationLattice<Poissonian> >(rparams, defaultfilter_triple);
+		 	Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
 
 
+			/*
 			// create simulation vector
 			auto sims = createsims<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
 
@@ -495,6 +417,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 				marqov.wrmploop();
 				marqov.gameloop();
 			}
+			*/
 		}
 	}
     else if (ham == "IrregularIsing1")
@@ -547,7 +470,7 @@ int main()
 	std::string outbasedir = registry.Get<std::string>("mc", "IO", "outdir" );
 	std::string logbasedir = registry.Get<std::string>("mc", "IO", "logdir" );
 
-    //FIXME: NEVER DELETE USER DATA
+	//FIXME: NEVER DELETE USER DATA
 	std::string command;
 	command = "rm -r " + outbasedir;
 	system(command.c_str());
@@ -557,5 +480,5 @@ int main()
 	makeDir(outbasedir);
 	makeDir(logbasedir);
 	
-selectsim(registry, outbasedir, logbasedir);
+	selectsim(registry, outbasedir, logbasedir);
 }

@@ -257,4 +257,45 @@ inline unsigned int Block::size(void) const
 {
     return Block_Data.size();
 }
+
+
+
+
+//two examples on how to extend the parsing capabilities of the registry
+template <typename T>
+struct GetTrait<std::vector<T> >//helper trait to break up a string at various predefined seperators
+{
+    static std::vector<T> Convert(std::string& arg)
+    {
+        const std::string delim("; ,");
+        std::vector<T> retval;
+        std::size_t pos = 0;
+        std::size_t posold = 0;
+        do
+        {
+            retval.push_back(GetTrait<T>::Convert(arg.substr(posold, ( pos = arg.find_first_of(delim, posold) ) - posold) ));
+        } while ((posold = arg.find_first_not_of(delim, pos) ) != std::string::npos);
+        return retval;
+    }
+};
+
+template <>
+struct GetTrait<std::vector<std::string> >//helper trait to break up a string at various predefined seperators
+{
+    static std::vector<std::string> Convert(std::string arg)
+    {
+        const std::string delim("; ,");
+        std::vector<std::string> retval;
+        std::size_t pos = 0;
+        std::size_t posold = 0;
+        do
+        {
+            retval.push_back(arg.substr(posold, ( pos = arg.find_first_of(delim, posold) ) - posold) );
+        } while ((posold = arg.find_first_not_of(delim, pos) ) != std::string::npos);
+        return retval;
+    }
+};
+
+
+
 #endif
