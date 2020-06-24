@@ -63,6 +63,8 @@
 
 # Worm algorithm
 
+The Worm algorithm does not operate on the space of spin configuration but is rather a diagrammatic sampling method, operating on the space of bond (in the spirit of a high-temperature expansion).
+
 #### Prerequisities
 
 Understand high-temperature expansion (HTE) and (associated) diagrammatic loop counting
