@@ -52,7 +52,8 @@ template <class Hamiltonian, class Lattice>
 template <class StateSpace, class M, class RNGType>
 int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNGCache<RNGType>& rng, double beta, int rsite)
 {
-    typedef typename Hamiltonian::StateVector StateVector;
+	typedef typename Hamiltonian::StateVector StateVector;
+
     	// old state vector at rsite
 	StateVector& svold = statespace[rsite];
 	// propose new configuration
@@ -60,18 +61,24 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
 	
 	// interaction part
 	double interactionenergydiff = 0;
-	for(typename std::remove_cv<decltype(ham.Nalpha)>::type a = 0; a < ham.Nalpha; ++a)
+	for (typename std::remove_cv<decltype(ham.Nalpha)>::type a=0; a<ham.Nalpha; ++a)
 	{
-		auto nbrs = grid.getnbrs(a, rsite);
 		typedef decltype(ham.interactions[a]->operator()(statespace[0])) InteractionType;
 		typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->operator()(statespace[0]))) BondType;
+		typedef typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray CommonArray;
         
-		typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};
+		auto nbrs = grid.getnbrs(a, rsite);
+
+		CommonArray averagevector = {0};
+
 		// sum over neighbours
 		for (std::size_t i = 0; i < nbrs.size(); ++i)
 		{
+			// index of the neighbour
 			auto idx = nbrs[i];
+			// configuration of the neighbour
 			auto nbr = ham.interactions[a]->operator()(statespace[idx]);
+			// add neighbours (also accounting for bond strength if available)
 			averagevector = averagevector + MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
 		}
 		interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
@@ -79,7 +86,7 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
 
     // onsite energy part
     double onsiteenergydiff = 0;
-    for (typename std::remove_cv<decltype(ham.Nbeta)>::type b = 0; b < ham.Nbeta; ++b)
+    for (typename std::remove_cv<decltype(ham.Nbeta)>::type b=0; b<ham.Nbeta; ++b)
     {
        // compute the difference
        auto diff = ham.onsite[b]->operator()(svnew) - ham.onsite[b]->operator()(svold);
@@ -89,7 +96,8 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
     // multi-site energy
     double multisiteenergyold = 0;
     double multisiteenergynew = 0;
-    for (typename std::remove_cv<decltype(ham.Ngamma)>::type g = 0; g < ham.Ngamma; ++g)
+
+    for (typename std::remove_cv<decltype(ham.Ngamma)>::type g=0; g<ham.Ngamma; ++g)
     {
         multisiteenergynew += ham.multisite[g]->operator()(svnew, rsite, statespace);//FIXME: think about this...
         multisiteenergyold += ham.multisite[g]->operator()(svold, rsite, statespace);
