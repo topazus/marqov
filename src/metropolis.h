@@ -63,8 +63,8 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
 	double interactionenergydiff = 0;
 	for (typename std::remove_cv<decltype(ham.Nalpha)>::type a=0; a<ham.Nalpha; ++a)
 	{
-		typedef decltype(ham.interactions[a]->operator()(statespace[0])) InteractionType;
-		typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->operator()(statespace[0]))) BondType;
+		typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
+		typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
 		typedef typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray CommonArray;
         
 		auto nbrs = grid.getnbrs(a, rsite);
@@ -77,7 +77,8 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
 			// index of the neighbour
 			auto idx = nbrs[i];
 			// configuration of the neighbour
-			auto nbr = ham.interactions[a]->operator()(statespace[idx]);
+			auto nbr = ham.interactions[a]->get(statespace[idx]);
+//			auto nbr = ham.interactions[a]->get(statespace[idx]);
 			// add neighbours (also accounting for bond strength if available)
 			averagevector = averagevector + MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
 		}
@@ -89,7 +90,7 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
     for (typename std::remove_cv<decltype(ham.Nbeta)>::type b=0; b<ham.Nbeta; ++b)
     {
        // compute the difference
-       auto diff = ham.onsite[b]->operator()(svnew) - ham.onsite[b]->operator()(svold);
+       auto diff = ham.onsite[b]->get(svnew) - ham.onsite[b]->get(svold);
        // multiply the constant
        onsiteenergydiff += dot(ham.onsite[b]->h, diff);
     }
@@ -99,8 +100,8 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
 
     for (typename std::remove_cv<decltype(ham.Ngamma)>::type g=0; g<ham.Ngamma; ++g)
     {
-        multisiteenergynew += ham.multisite[g]->operator()(svnew, rsite, statespace);//FIXME: think about this...
-        multisiteenergyold += ham.multisite[g]->operator()(svold, rsite, statespace);
+        multisiteenergynew += ham.multisite[g]->get(svnew, rsite, statespace);//FIXME: think about this...
+        multisiteenergyold += ham.multisite[g]->get(svold, rsite, statespace);
         //forgot k_gamma
     }
     
@@ -163,7 +164,7 @@ inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite, callable1 filter
 			// neighbour index
 			auto idx = nbrs[i];
 			// full neighbour
-			auto nbr  = ham.interactions[a]->operator()(statespace[idx]);
+			auto nbr  = ham.interactions[a]->get(statespace[idx]);
 			// reduced neighbour
 			auto rnbr = filter_cpy(nbr, comp);
 			

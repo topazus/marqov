@@ -120,7 +120,8 @@ public:
 	{
 		this->J = J;
 	}
-	StateVector operator() (const StateVector& phi) {return phi;};
+//	StateVector operator() (const StateVector& phi) {return phi;};
+	StateVector get (const StateVector& phi) {return phi;};
 };
 
 
@@ -238,15 +239,15 @@ namespace MARQOV {
 			for(typename std::remove_cv<decltype(ham.Nalpha)> ::type a = 0; a < ham.Nalpha; ++a)
 			{
 				auto nbrs = grid.getnbrs(a, rsite);
-				typedef decltype(ham.interactions[a]->operator()(statespace[0])) InteractionType;
-				typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->operator()(statespace[0]))) BondType;
+				typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
+				typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
 				typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};
 
 				// sum over neighbours
 				for (std::size_t i = 0; i < nbrs.size(); ++i)
 				{
 					auto idx = nbrs[i];
-					auto nbr = ham.interactions[a]->operator()(statespace[idx]);
+					auto nbr = ham.interactions[a]->get(statespace[idx]);
 					averagevector = averagevector + MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
 				}
 				interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
