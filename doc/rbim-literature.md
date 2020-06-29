@@ -1,5 +1,4 @@
 
-
 ### 3D Ising Spin Glass
 
 * Absence of an Almeida-Thouless Line in Three-Dimensional Spin Glasses (G)
@@ -22,3 +21,5 @@
 
 * [Slides P. Young (2009) - Equilibration Check Slide 14](http://physics.ucsc.edu/~peter/talks/columbia.pdf)
 * [Talk M. Weigel (2019)- The Ising spin glass: new methods for old models and old methods for new models](https://www.youtube.com/watch?v=EqY4eZw7F2s)
+* Spin Glasses on GPU (with general introduction, especially on Parallel Tempering) `kumar2020`
+
