@@ -1,6 +1,6 @@
 [General]
 
-Hamiltonian = IsingCC
+Hamiltonian = Ising
 
 [Ising]
 

@@ -37,9 +37,11 @@ struct Promote_Array
     // get result type of addition
     typedef typename std::common_type<AElemType, BElemType>::type CommonType;
     // return A if the common type is A, else B
-    typedef typename std::conditional<std::is_same<AElemType, CommonType>::value
-    , A, B>::type CommonArray;
+    typedef typename std::conditional<std::is_same<AElemType, CommonType>::value, A, B>::type CommonArray;
 };
+
+
+
 
 template <class Hamiltonian, class Lattice>
 struct Metropolis
@@ -48,11 +50,13 @@ struct Metropolis
     static int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNGCache<RNGType>& rng, double beta, int rsite);
 };
 
+
 template <class Hamiltonian, class Lattice>
 template <class StateSpace, class M, class RNGType>
 int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNGCache<RNGType>& rng, double beta, int rsite)
 {
-    typedef typename Hamiltonian::StateVector StateVector;
+	typedef typename Hamiltonian::StateVector StateVector;
+
     	// old state vector at rsite
 	StateVector& svold = statespace[rsite];
 	// propose new configuration
@@ -60,18 +64,26 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
 	
 	// interaction part
 	double interactionenergydiff = 0;
-	for(typename std::remove_cv<decltype(ham.Nalpha)>::type a = 0; a < ham.Nalpha; ++a)
+	for (typename std::remove_cv<decltype(ham.Nalpha)>::type a=0; a<ham.Nalpha; ++a)
 	{
-		auto nbrs = grid.getnbrs(a, rsite);
-		typedef decltype(ham.interactions[a]->operator()(statespace[0])) InteractionType;
-		typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->operator()(statespace[0]))) BondType;
+		typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
+		typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
+		typedef typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray CommonArray;
         
-		typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};
+		auto nbrs = grid.getnbrs(a, rsite);
+
+		CommonArray averagevector = {0};
+
 		// sum over neighbours
 		for (std::size_t i = 0; i < nbrs.size(); ++i)
 		{
+			// index of the neighbour
 			auto idx = nbrs[i];
-			auto nbr = ham.interactions[a]->operator()(statespace[idx]);
+
+			// configuration of the neighbour
+			auto nbr = ham.interactions[a]->get(statespace[idx]);
+
+			// add neighbours (also accounting for bond strength if available)
 			averagevector = averagevector + MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
 		}
 		interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
@@ -79,20 +91,21 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
 
     // onsite energy part
     double onsiteenergydiff = 0;
-    for (typename std::remove_cv<decltype(ham.Nbeta)>::type b = 0; b < ham.Nbeta; ++b)
+    for (typename std::remove_cv<decltype(ham.Nbeta)>::type b=0; b<ham.Nbeta; ++b)
     {
        // compute the difference
-       auto diff = ham.onsite[b]->operator()(svnew) - ham.onsite[b]->operator()(svold);
+       auto diff = ham.onsite[b]->get(svnew) - ham.onsite[b]->get(svold);
        // multiply the constant
        onsiteenergydiff += dot(ham.onsite[b]->h, diff);
     }
     // multi-site energy
     double multisiteenergyold = 0;
     double multisiteenergynew = 0;
-    for (typename std::remove_cv<decltype(ham.Ngamma)>::type g = 0; g < ham.Ngamma; ++g)
+
+    for (typename std::remove_cv<decltype(ham.Ngamma)>::type g=0; g<ham.Ngamma; ++g)
     {
-        multisiteenergynew += ham.multisite[g]->operator()(svnew, rsite, statespace);//FIXME: think about this...
-        multisiteenergyold += ham.multisite[g]->operator()(svold, rsite, statespace);
+        multisiteenergynew += ham.multisite[g]->get(svnew, rsite, statespace);//FIXME: think about this...
+        multisiteenergyold += ham.multisite[g]->get(svold, rsite, statespace);
         //forgot k_gamma
     }
     
@@ -125,69 +138,5 @@ inline int Marqov<Grid, Hamiltonian, RefType>::metropolisstep(int rsite)
 }
 
 
-/*
-// filtered Metropolis prototype ....
-
-// takes a function which takes a StateVector and returns a reduced StateVector
-
-template <class Grid, class Hamiltonian>
-template <typename callable1, typename callable2>
-inline int Marqov<Grid, Hamiltonian>::metropolisstep(int rsite, callable1 filter_ref, callable2 filter_cpy, int comp)
-{
-	// old state vector at rsite
-	StateVector&     svold = statespace[rsite];
-	redStateVector& rsvold = filter_ref(svold, comp);
-
-	// propose new configuration
-	redStateVector  rsvnew = metro.newsv(rsvold);
-	
-	// interaction part
-	double interactionenergydiff = 0;
-	for(int a = 0; a < ham.Nalpha; ++a)
-	{
-		// extract neighbours
-		auto nbrs = grid.getnbrs(a, rsite);
-		double averagevector = {0};
-		
-		// sum over neighbours
-		for (int i = 0; i < nbrs.size(); ++i)
-		{
-			// neighbour index
-			auto idx = nbrs[i];
-			// full neighbour
-			auto nbr  = ham.interactions[a]->operator()(statespace[idx]);
-			// reduced neighbour
-			auto rnbr = filter_cpy(nbr, comp);
-			
-			// coupling in the embedded model
-			double cpl = ham.metro_coupling(svold, nbr, comp);
-
-			// compute weighted sum of neighbours
-			averagevector = averagevector + mult(cpl,rnbr);
-		}
-
-		interactionenergydiff += ham.interactions[a]->J * (dot(rsvnew-rsvold, averagevector));
-	}
-
-    // (...)
-
-    double dE 	= interactionenergydiff; // + ... + ...
-
-    int retval = 0;
-    if ( dE <= 0 )
-    {
-        rsvold = rsvnew;
-        retval = 1;
-    }
-    else if (rng.d() < exp(-beta*dE))
-    {
-        rsvold = rsvnew;
-        retval = 1;
-    }
-
-    return retval;
-}
-
-*/
 
 #endif
