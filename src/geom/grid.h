@@ -207,13 +207,14 @@ class RegularRandomBond:  public DisorderType<bond_type>
 {
 	private:
 		RND rng;
-		int len, dim;
 		RegularLattice lattice;
 		RegularSquare cloud; // only for 2D!!!
 		double p;
 	
 	public:
-		std::vector<std::vector<std::vector<bond_type>>> bnds;
+		int len, dim;
+		std::vector<std::vector<bond_type>> bnds;
+//		std::vector<std::vector<std::vector<bond_type>>> bnds;
 		
 		RegularRandomBond(int dim, int len, double p) : dim(dim), len(len), p(p), rng(0,1), lattice(len,dim), cloud(len)
 		{
@@ -235,7 +236,7 @@ class RegularRandomBond:  public DisorderType<bond_type>
 					if (rng.d() < p) bndval = 1;
 					else             bndval = -1;
 
-					bnds[i].push_back(std::vector<bond_type>{bndval});
+					bnds[i].push_back(bndval);
 				}
 			}
 
@@ -265,9 +266,11 @@ class RegularRandomBond:  public DisorderType<bond_type>
 		}
 
 		// override getbnds
-		std::vector<bond_type> getbnds(const int alpha, const int i, const int j)
+		std::vector<bond_type> getbnds(const int alpha, const int i)
+//		std::vector<bond_type> getbnds(const int alpha, const int i, const int j)
 		{
-			return bnds[i][j];
+			return bnds[i];
+//			return bnds[i][j];
 		}
 
 		// implement getcrds
