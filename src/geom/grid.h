@@ -30,8 +30,6 @@ class DisorderType
 
 };
 
-
-
 template <class PointCloud>
 class ConstantCoordinationLattice
 {

@@ -17,6 +17,7 @@ using std::ofstream;
 #include "geom/regular_lattice.h"
 #include "geom/grid.h"
 #include "geom/neighbourclass.h"
+#include "geom/io.h"
 #include "vectorhelpers.h"
 #include "helpers.h"
 #include "cartprod.h"
