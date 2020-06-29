@@ -8,9 +8,8 @@
 #include "constantcoordination2D.h"
 
 
-// ---------- DisorderType base class ----------
+// ---------------- Disordered Grid Base Class ----------------
 
-template <typename bond_type = int>
 class DisorderType
 {
 	protected:
@@ -31,6 +30,8 @@ class DisorderType
 };
 
 
+
+// ----------------- Constant Coordination --------------------
 
 template <class PointCloud>
 class ConstantCoordinationLattice
@@ -63,6 +64,8 @@ class ConstantCoordinationLattice
 
 
 
+// ----------------- Regular Hypercubic --------------------
+
 class RegularHypercubic
 {
 	private:
@@ -93,12 +96,10 @@ class RegularHypercubic
 
 
 
-// ------------------------------
-// Disorder Example 1: SuperChaos
-// ------------------------------
+// ----------------- "Super Chaos" --------------------
 
 template <class PointCloud, typename bond_type>
-class SuperChaos : public DisorderType<bond_type>
+class SuperChaos : public DisorderType
 {
 private:
 	int symD;
@@ -107,7 +108,7 @@ private:
 public:
 	std::vector<std::vector<std::vector<bond_type>>> bnds;
 
-	SuperChaos(const PointCloud& cloud) : DisorderType<bond_type>(cloud.size()), rng(0,1)
+	SuperChaos(const PointCloud& cloud) : DisorderType(cloud.size()), rng(0,1)
 	{
 		// prepare neighbour array
 		const int npoints = cloud.size;
@@ -165,10 +166,11 @@ public:
 
 
 
-// -------------------------------------
-// Disorder Example 2: Erdos-Renyj Graph
-// -------------------------------------
-class ErdosRenyi : public DisorderType<int>
+
+
+// ----------------- Erdos-Renyj Graph --------------------
+
+class ErdosRenyi : public DisorderType
 {
 	private:
 		int p;
@@ -201,43 +203,62 @@ class ErdosRenyi : public DisorderType<int>
 
 
 
-// --------------------------------------------------------------------
-// Disorder Example 3: Regular square lattice with random bond disorder
-// --------------------------------------------------------------------
-template <typename bond_type> 
-class RegularRandomBond:  public DisorderType<bond_type>
+
+// ----------------- Random Bond Disorder --------------------
+
+
+template <typename dtype=double>
+class GaussianPDF
 {
 	private:
-		RND rng;
-		int len, dim;
+		std::random_device rd{};
+		std::mt19937 gen{rd()};
+		std::normal_distribution<dtype> d;
+
+	public:
+		GaussianPDF() : d(std::normal_distribution<>{0,1}) {} 
+		GaussianPDF(double mu, double sigma) : d(std::normal_distribution<dtype>{mu,sigma}) {} 
+
+		dtype draw() {return(d(gen));}
+};
+
+template <typename dtype=int>
+class BimodalPDF
+{
+	private:
+		std::random_device rd{};
+		std::mt19937 gen{rd()};
+		std::discrete_distribution<dtype> d;
+	public:
+		BimodalPDF() : d(std::discrete_distribution<dtype>{1,0,1}) {}
+		BimodalPDF(double weight) : d(std::discrete_distribution<>{weight,0,1-weight}) {}
+
+		dtype draw() {return(d(gen)-1);}
+};
+
+
+template <class PDFType>
+class RegularRandomBond:  public DisorderType
+{
+	private:
 		RegularLattice lattice;
-		RegularSquare cloud; // only for 2D!!!
-		double p;
+		RegularSquare cloud; // only for 2D for now!!!
+		PDFType PDF;
 	
 	public:
-		std::vector<std::vector<std::vector<bond_type>>> bnds;
+		int len, dim;
+		using bond_type = decltype(PDF.draw());
+		std::vector<std::vector<bond_type>> bnds;
 		
-		RegularRandomBond(int dim, int len, double p) : dim(dim), len(len), p(p), rng(0,1), lattice(len,dim), cloud(len)
+		RegularRandomBond(int dim, int len) : dim(dim), len(len), lattice(len,dim), cloud(len)
 		{
-			// improve me:
-			// calculate point coordinates on demand
-
-			// prepare random number generator
-			rng.seed(time(NULL)+std::random_device{}());	
-
-
 			// construct bonds
 			bnds.resize(lattice.size());
 			for (int i=0; i<lattice.size(); i++)
 			{
 				for (int j=0; j<lattice[i].size(); j++) // why does lattice[i].size even work?
 				{
-					bond_type bndval;
-
-					if (rng.d() < p) bndval = 1;
-					else             bndval = -1;
-
-					bnds[i].push_back(std::vector<bond_type>{bndval});
+					bnds[i].push_back(PDF.draw());
 				}
 			}
 
@@ -267,9 +288,9 @@ class RegularRandomBond:  public DisorderType<bond_type>
 		}
 
 		// override getbnds
-		std::vector<bond_type> getbnds(const int alpha, const int i, const int j)
+		std::vector<bond_type> getbnds(const int alpha, const int i)
 		{
-			return bnds[i][j];
+			return bnds[i];
 		}
 
 		// implement getcrds

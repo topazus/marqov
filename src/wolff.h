@@ -4,7 +4,6 @@
 #include <type_traits>
 #include <cmath>
 // todo: what about the alpha-loop? currently alpha=0 hard-coded
-// implement me: does not support locally fluctating (e.g. random) interaction strengths yet
 
 template <class Hamiltonian, class Lattice>
 struct Wolff

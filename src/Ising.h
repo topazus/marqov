@@ -221,13 +221,9 @@ namespace MARQOV {
 	template <class Lattice>
 	struct Metropolis<Ising<int>, Lattice>
 	{
-
 	    template <class StateSpace, class M, class RNG>
 	    static int move(const Ising<int>& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNG& rng, double beta, int rsite)
 	    {
-
-//			std::cout << rsite << endl;
-
 			typedef typename Ising<int>::StateVector StateVector;
 		    	// old state vector at rsite
 			StateVector& svold = statespace[rsite];
@@ -274,6 +270,7 @@ namespace MARQOV {
 	    }
 	};
 
+
 	template <class Lattice>
 	struct Wolff<Ising<int>, Lattice>
 	{
@@ -301,7 +298,6 @@ namespace MARQOV {
 			{
 				// extract last sv in stack
 				const int currentidx = cstack[q];
-	//			StateVector& currentsv = statespace[currentidx];
 				q--;
 			
 				// get its neighbours
