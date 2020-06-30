@@ -27,6 +27,7 @@ using std::ofstream;
 #include "marqov.h"
 #include "svmath.h"
 
+#include "marqovqueue.h"
 // Hamiltonians
 #include "Heisenberg.h"
 #include "Ising.h"

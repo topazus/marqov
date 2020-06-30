@@ -5,7 +5,8 @@
 #include <future>
 #include <utility>
 #include <atomic>
-
+#include <mutex>
+#include <unordered_map>
 #include "marqovqueue_utils.h"
 
 class MARQOVQueue
