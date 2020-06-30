@@ -35,6 +35,7 @@ using std::ofstream;
 #include "XXZAntiferro.h"
 #include "XXZAntiferroSingleAniso.h"
 #include "AshkinTeller.h"
+#include "EdwardsAndersonIsing.h"
 
 using namespace MARQOV;
 
@@ -359,6 +360,55 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		write_logfile(registry, extfield);
 		RegularLatticeLoop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
+	}
+	/*
+	*/
+	else if (ham == "BimodalIsingEdwardsAndersonSpinGlass")
+	{
+		const auto ham        = registry.Get<std::string>("mc", "General", "Hamiltonian" );
+		const auto dim 	  = registry.Get<int>("mc", ham, "dim" );
+		      auto nreplicas  = registry.Get<std::vector<int>>("mc", ham, "rep" );
+		const auto nL  	  = registry.Get<std::vector<int>>("mc", ham, "L" );
+
+		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+
+		auto beta = registry.Get<std::vector<double> >("mc", "IsingCC", "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", "IsingCC", "J");
+
+		auto hp = cart_prod(beta, J);
+		write_logfile(registry, beta);
+
+	
+		// lattice size loop
+		for (std::size_t j=0; j<nL.size(); j++)
+		{
+			// prepare output
+			int L = nL[j];
+			cout << endl << "L = " << L << endl << endl;
+			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+			makeDir(outpath);
+	
+			// Monte Carlo parameters
+	        	MARQOVConfig mp(outpath);
+	        	mp.setnsweeps(5);
+			mp.setncluster(0);
+			mp.setwarmupsteps(500);
+			mp.setgameloopsteps(1500);
+
+			// lattice parameters
+			auto lp = std::make_tuple(L,dim);
+
+			// form parameter triple and replicate
+			auto params  = finalize_parameter_triple(lp, mp, hp);
+			auto rparams = replicator(params, nreplicas[j]);
+
+			// perform simulations
+
+			// does not compile...: // FIXME
+//		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<BimodalPDF<int>> >(rparams, defaultfilter_triple);
+			// whereas this does ... why? 
+		 	Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
+		}
 	}
 	else if (ham == "IsingCC")
 	{
