@@ -78,7 +78,7 @@ class Phi4_interaction : public Interaction<StateVector>
 		{
 	 		this->J = -1;	
 		}
-		StateVector operator() (const StateVector& phi) {return phi;};
+		StateVector get (const StateVector& phi) {return phi;};
 };
 
 template <class StateVector>
@@ -89,7 +89,7 @@ class Phi4_onsitesquare : public OnSite<StateVector, double>
 		{
 	 		this->h = mass/beta;
 		}
-		double operator() (const StateVector& phi) {return dot(phi,phi);};
+		double get (const StateVector& phi) {return dot(phi,phi);};
 };
 
 template <class StateVector>
@@ -100,7 +100,7 @@ class Phi4_onsitefour : public OnSite<StateVector, double>
 		{
 	 		this->h = lambda/beta;
 		}
-		double operator() (const StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);};
+		double get (const StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);};
 };
 
 

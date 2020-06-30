@@ -75,7 +75,7 @@ class Heisenberg_interaction : public Interaction<StateVector>
 		{
 	 		this->J = -J;
 		}
-		StateVector operator() (const StateVector& phi) {return phi;};
+		StateVector get (const StateVector& phi) {return phi;};
 };
 
 

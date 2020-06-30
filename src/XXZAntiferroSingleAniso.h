@@ -180,7 +180,7 @@ class XXZAntiferroSingleAniso_interaction : public Interaction<StateVector>
 		{
 	 		this->J = 1;
 		}
-		StateVector operator() (const StateVector& phi) 
+		StateVector get (const StateVector& phi) 
 		{
 			StateVector retval;
 
@@ -203,7 +203,7 @@ class XXZAntiferroSingleAniso_extfield : public OnSite<StateVector, double>
 		{
 			this->h = H;
 		}
-		double operator() (const StateVector& phi) {return phi[2];};
+		double get (const StateVector& phi) {return phi[2];};
 };
 
 template <class StateVector>
@@ -217,7 +217,7 @@ class XXZAntiferroSingleAniso_onsiteaniso : public OnSite<StateVector, double>
 		{
 			this->h = D;
 		}
-		double operator() (const StateVector& phi) {return pow(phi[2],2);};
+		double get (const StateVector& phi) {return pow(phi[2],2);};
 };
 
 // ------------------------------ HAMILTONIAN ---------------------------

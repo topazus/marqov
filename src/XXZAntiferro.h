@@ -148,7 +148,7 @@ class XXZAntiferro_interaction : public Interaction<StateVector>
 		{
 	 		this->J = 1;
 		}
-		StateVector operator() (const StateVector& phi) 
+		StateVector get (const StateVector& phi) 
 		{
 			StateVector retval;
 
@@ -171,7 +171,7 @@ class XXZAntiferro_extfield : public OnSite<StateVector, double>
 		{
 			this->h = H;
 		}
-		double operator() (const StateVector& phi) {return phi[2];};
+		double get (const StateVector& phi) {return phi[2];};
 };
 
 

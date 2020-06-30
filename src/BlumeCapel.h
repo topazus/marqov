@@ -37,12 +37,12 @@ class BlumeCapelMag
 template <class StateVector>
 class BlumeCapel_interaction : public Interaction<StateVector> 
 {
-public:
-	BlumeCapel_interaction(double J)
-	{
-		this->J = J;
-	}
-	StateVector operator() (const StateVector& phi) {return phi;};
+	public:
+		BlumeCapel_interaction(double J)
+		{
+			this->J = J;
+		}
+		StateVector get (const StateVector& phi) {return phi;};
 };
 
 
@@ -54,7 +54,7 @@ class BlumeCapel_onsite : public OnSite<StateVector, double>
 		{
 			this->h = D;
 		}
-		double operator() (const StateVector& phi) {return dot(phi,phi);};
+		double get (const StateVector& phi) {return dot(phi,phi);};
 };
 
 

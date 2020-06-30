@@ -295,7 +295,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
  		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
-	/*
 	else if (ham == "Heisenberg")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
@@ -404,6 +403,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		 	Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
 		}
 	}
+	/*
     else if (ham == "IrregularIsing1")
     {
 		//
