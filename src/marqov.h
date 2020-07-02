@@ -216,6 +216,7 @@ class Marqov : public RefType<Grid>
 		mcfg(mc),
 		dump(mc.outpath+mc.outname+".h5", H5F_ACC_TRUNC ),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs())),
+        obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()),
 		beta(mybeta),
 		metro(rngcache)
@@ -238,6 +239,7 @@ class Marqov : public RefType<Grid>
 		mcfg(mc),
 		dump(mc.outpath+mc.outname+".h5", H5F_ACC_TRUNC ),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs())),
+		obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()), 
 		beta(mybeta),
 		metro(rngcache)
@@ -328,7 +330,6 @@ class Marqov : public RefType<Grid>
 	    
 	void gameloop()
 	{
-
 		double avgclustersize = 0;
 		for (int k=0; k < this->mcfg.gli; k++)
 		{
@@ -337,7 +338,6 @@ class Marqov : public RefType<Grid>
 			for (int i=0; i < this->mcfg.gameloopsteps/10; ++i)
 			{
 				avgclustersize += elementaryMCstep();
-				auto obs = ham.getobs();
 				marqov_measure(obs, statespace, this->grid);
 			}
 		}
@@ -461,7 +461,9 @@ class Marqov : public RefType<Grid>
 		typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
 		
 		H5::H5File dump;///< The handle for the HDF5 file. must be before the obscaches
-		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;
+		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;//The HDF5 caches for each observable
+        ObsTs obs; //the actual observables
+
 		typedef std::ranlux48_base RNGType;
 		RNGCache<RNGType> rngcache;///< The caching RNG
 		double beta;
