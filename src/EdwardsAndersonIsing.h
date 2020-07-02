@@ -24,8 +24,7 @@ class EdwardsAndersonOrderParameter
 		{
 			const int size = grid.size();
 
-			// this ugly ... is there a way of getting to know "size" already in the constructor?
-			if (counter == 0) 
+			if (local_sum.size() == 0) 
 			{
 				local_sum.resize(size);
 				for (int i=0; i<size; i++) { local_sum[i] = 0; }

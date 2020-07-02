@@ -391,7 +391,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	        	mp.setnsweeps(25);
 			mp.setncluster(0);
 			mp.setwarmupsteps(0);
-			mp.setgameloopsteps(500);
+			mp.setgameloopsteps(1000);
 
 			// lattice parameters
 			auto lp = std::make_tuple(L,dim);
