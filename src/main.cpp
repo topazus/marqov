@@ -361,8 +361,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, extfield);
 		RegularLatticeLoop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
 	}
-	/*
-	*/
 	else if (ham == "BimodalIsingEdwardsAndersonSpinGlass")
 	{
 		const auto ham        = registry.Get<std::string>("mc", "General", "Hamiltonian" );
@@ -404,10 +402,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 			// perform simulations
 
-			// does not compile...: // FIXME
-//		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<BimodalPDF<int>> >(rparams, defaultfilter_triple);
-			// whereas this does ... why? 
-		 	Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
+		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<GaussianPDF>>(rparams, defaultfilter_triple);
 		}
 	}
 	else if (ham == "IsingCC")
@@ -453,7 +448,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		 	Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
 		}
 	}
-	/*
     else if (ham == "IrregularIsing1")
     {
 		//
@@ -487,7 +481,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		// perform simulations
 		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
 	}
-	*/
 }
 
 

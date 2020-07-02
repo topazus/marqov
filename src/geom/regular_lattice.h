@@ -4,6 +4,9 @@
 class RegularLattice
 {
 public:
+
+	int counter = 0;
+
 //    friend class NArray_Iterator;
     typedef std::vector<int> value_type;
 
