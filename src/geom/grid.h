@@ -249,7 +249,7 @@ class RegularRandomBond :  public DisorderType
 		using bond_type = decltype(PDF.draw());
 		std::vector<std::vector<bond_type>> bnds;
 		
-		RegularRandomBond(int dim, int len) : dim(dim), len(len), lattice(len,dim), npoints(pow(len,dim))
+		RegularRandomBond(int len, int dim) : dim(dim), len(len), lattice(len,dim), npoints(pow(len,dim))
 		{
 			// construct bonds
 			bnds.resize(lattice.size());
