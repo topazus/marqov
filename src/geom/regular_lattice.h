@@ -26,9 +26,8 @@ public:
 
     std::vector<double> getcrds(int i) const 
     {
-
     		// Todo: 
-		// - test me!
+		// - tested only for 2D
 		// - closed formula for the n-d case?
 		// - length of retval is known at compile time -> probably not use vectors
 
@@ -53,6 +52,13 @@ public:
 		else
 		{
 			std::cout << "error! not implemented!" << std::endl;
+		}
+
+		// normalize to unit hypercube
+		for (int i=0; i<retval.size(); i++) 
+		{ 
+			retval[i] /= length; 
+			retval[i] += 0.5/length;
 		}
 
     		return retval;
