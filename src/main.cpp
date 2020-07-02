@@ -388,10 +388,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	
 			// Monte Carlo parameters
 	        	MARQOVConfig mp(outpath);
-	        	mp.setnsweeps(5);
+	        	mp.setnsweeps(25);
 			mp.setncluster(0);
-			mp.setwarmupsteps(500);
-			mp.setgameloopsteps(1500);
+			mp.setwarmupsteps(0);
+			mp.setgameloopsteps(500);
 
 			// lattice parameters
 			auto lp = std::make_tuple(L,dim);
@@ -401,8 +401,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			auto rparams = replicator(params, nreplicas[j]);
 
 			// perform simulations
-
-		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<GaussianPDF>>(rparams, defaultfilter_triple);
+		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<BimodalPDF>>(rparams, defaultfilter_triple);
 		}
 	}
 	else if (ham == "IsingCC")

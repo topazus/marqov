@@ -17,16 +17,32 @@ class EdwardsAndersonOrderParameter
 	public:
 		int counter = 0;
 		std::string name;
+		std::vector<int> local_sum;
+
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
+			const int size = grid.size();
+
+			// this ugly ... is there a way of getting to know "size" already in the constructor?
+			if (counter == 0) 
+			{
+				local_sum.resize(size);
+				for (int i=0; i<size; i++) { local_sum[i] = 0; }
+			}
+
+			double retval = 0;
+
 			counter++;
-			cout << counter << endl;
-			//
-			//
-			//
-			//
+			for (int i=0; i<size; i++)
+			{
+				local_sum[i] += statespace[i][0];
+				retval += pow(local_sum[i],2);
+			}
+
+			return retval / double(size) / double(counter) / double(counter);
 		}
+
 		EdwardsAndersonOrderParameter() : name("qEA") {}
 };
 
@@ -42,6 +58,7 @@ class ScalarOverlap
 			//
 			//
 			//
+			return 0;
 		}
 		ScalarOverlap() : name("q") {}
 };

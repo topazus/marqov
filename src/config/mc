@@ -14,11 +14,11 @@ J = -1.0
 
 [BimodalIsingEdwardsAndersonSpinGlass]
 
-L   = 8
-rep = 1
+L   = 6,8,10,12
+rep = 10
 dim = 2
 
-beta = 0.430, 0.433, 0.436, 0.439, 0.442, 0.445, 0.448, 0.451, 0.454
+beta = 0.025, 0.05, 0.1, 0.2, 0.4, 0.8
 J = -1.0
 
 [IsingCC]
