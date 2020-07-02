@@ -361,7 +361,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, extfield);
 		RegularLatticeLoop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
 	}
-	else if (ham == "BimodalIsingEdwardsAndersonSpinGlass")
+	else if (startswith(ham, "Bimodal-Ising-EdwardsAnderson"))
 	{
 		const auto ham        = registry.Get<std::string>("mc", "General", "Hamiltonian" );
 		const auto dim 	  = registry.Get<int>("mc", ham, "dim" );

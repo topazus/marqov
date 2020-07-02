@@ -1,6 +1,6 @@
 [General]
 
-Hamiltonian = BimodalIsingEdwardsAndersonSpinGlass
+Hamiltonian = Bimodal-Ising-EdwardsAnderson-3D
 
 [Ising]
 
@@ -12,13 +12,23 @@ beta = 0.430, 0.433, 0.436, 0.439, 0.442, 0.445, 0.448, 0.451, 0.454
 J = -1.0
 
 
-[BimodalIsingEdwardsAndersonSpinGlass]
+[Bimodal-Ising-EdwardsAnderson-2D]
 
 L   = 6,8,10,12
 rep = 10
 dim = 2
 
 beta = 0.01, 0.02, 0.04, 0.08, 0.16, 0.24, 0.32, 0.48, 0.64, 0.96
+J = -1.0
+
+
+[Bimodal-Ising-EdwardsAnderson-3D]
+
+L   = 6,8,10,12,16,20,24
+rep = 60
+dim = 3
+
+beta = 0.15, 0.17, 0.19, 0.21, 0.23, 0.25, 0.27, 0.3, 0.35, 0.4, 0.5, 0.6
 J = -1.0
 
 [IsingCC]
