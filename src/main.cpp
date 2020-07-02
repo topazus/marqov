@@ -370,8 +370,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
-		auto beta = registry.Get<std::vector<double> >("mc", "IsingCC", "beta");
-		auto J    = registry.Get<std::vector<double> >("mc", "IsingCC", "J");
+		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
 
 		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
