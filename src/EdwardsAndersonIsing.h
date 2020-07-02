@@ -15,10 +15,13 @@
 class EdwardsAndersonOrderParameter
 {
 	public:
+		int counter = 0;
 		std::string name;
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
+			counter++;
+			cout << counter << endl;
 			//
 			//
 			//

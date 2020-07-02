@@ -491,11 +491,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 int main()
 {
-
-		RegularRandomBond<GaussianPDF> test(2,32);
-		save_geometry(test, "test.mrqv");
-
-
 	// read config files
 	RegistryDB registry("../src/config");
 
