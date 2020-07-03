@@ -45,6 +45,64 @@ class EdwardsAndersonOrderParameter
 		EdwardsAndersonOrderParameter() : name("qEA") {}
 };
 
+
+
+// spin glass susceptibility
+class SpinGlassSusceptibility
+{
+	public:
+		int counter = 0;
+		std::string name;
+		std::vector<int> sum_i, sum_ij;
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			const int size = grid.size();
+
+			if (sum_ij.size() == 0) 
+			{
+				sum_ij.resize(size*size);
+				for (int i=0; i<size*size; i++) sum_ij[i] = 0;
+			}
+
+			if (sum_i.size() == 0) 
+			{
+				sum_i.resize(size);
+				for (int i=0; i<size; i++) sum_i[i] = 0;
+			}
+
+			double retval = 0;
+
+			counter++;
+
+			for (int i=0; i<size; i++)
+			{
+				sum_i[i] += statespace[i][0];
+
+				for (int j=0; j<size; j++)
+				{
+					sum_ij[i*size+j] += statespace[i][0]*statespace[j][0];
+				}
+			}
+
+
+			for (int i=0; i<size; i++)
+			{
+				for (int j=0; j<size; j++)
+				{
+					retval += pow(sum_ij[i*size+j] - sum_i[i]*sum_i[j] ,2);
+				}
+			}
+
+			return 0.5 * retval / double(size) / double(counter) / double(counter);
+		}
+
+		SpinGlassSusceptibility() : name("chiSG") {}
+};
+
+
+
 // Scalar overlap
 class ScalarOverlap
 {
@@ -123,7 +181,8 @@ class EdwardsAndersonIsing
 		// instantiate and choose observables
 		EdwardsAndersonOrderParameter      obs_qEA;
 		ScalarOverlap					obs_q;
-		auto getobs()	{return std::make_tuple(obs_qEA, obs_q);}
+		SpinGlassSusceptibility			obs_chiSG;
+		auto getobs()	{return std::make_tuple(obs_qEA, obs_q, obs_chiSG);}
 
 
 		// initialize state space
