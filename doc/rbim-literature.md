@@ -1,11 +1,10 @@
-
 ### 3D Ising Spin Glass
 
 * Absence of an Almeida-Thouless Line in Three-Dimensional Spin Glasses (G)
 * Universality in three-dimensional Ising spin glasses: A Monte Carlo study (G/+-J)
 * Critical behavior of three-dimensional Ising spin glass models (+-J)
 * Critical parameters of the three-dimensional Ising spin glass (+-J)
-
+* [Nice collection/review of ground state and other reference values](https://www.researchgate.net/publication/236807812_An_Investigation_of_the_Two-Dimensional_Ising_Spin_Glass_Using_Information_Theoretic_Measures)
 ### Other models
 
 * Phase transition in the three dimensional Heisenberg spin glass: Finite-size scaling analysis
