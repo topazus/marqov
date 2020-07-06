@@ -1,14 +1,23 @@
 [General]
 
-Hamiltonian = Bimodal-Ising-EdwardsAnderson-3D
+Hamiltonian = Ising-3D
 
 [Ising]
 
-L   = 8
-rep = 1
+L   = 8,12,16,24,32
+rep = 5
 dim = 2
 
 beta = 0.430, 0.433, 0.436, 0.439, 0.442, 0.445, 0.448, 0.451, 0.454
+J = -1.0
+
+[Ising-3D]
+
+L   = 8,10,12,14,16,20
+rep = 5
+dim = 3
+
+beta = 0.210, 0.213, 0.216, 0.219, 0.222, 0.225, 0.228, 0.231
 J = -1.0
 
 
@@ -26,13 +35,21 @@ J = -1.0
 
 [Bimodal-Ising-EdwardsAnderson-3D]
 
-L   = 6,8,10,12,16,20,24
+L   = 4,6,8,10
 rep = 30
 dim = 3
 
-beta = 0.4, 0.6, 0.8, 1.0, 1.2, 1.5, 2.0, 3.0, 5.0
+beta = 0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0, 3.0
 J = -1.0
 
+[Gaussian-Ising-EdwardsAnderson-4D]
+
+L   = 3,4,5,6
+rep = 30
+dim = 4
+
+beta = 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.66, 0.70
+J = -1.0
 
 
 [IsingCC]
