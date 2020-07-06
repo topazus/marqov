@@ -40,6 +40,8 @@ class ConstantCoordinationLattice
 		PointCloud cloud;
 	
 	public:
+		int counter = 0; // only for test, remove me later
+
 		int npoints, len, dim;
 		std::vector<std::vector<int>> nbrs;
 		ConstantCoordinationLattice(const int len, const int dim) : cloud(len*len, len, dim), npoints(pow(len,dim)), len(len), dim(dim)
@@ -73,6 +75,7 @@ class RegularHypercubic
 
 	public:
 		int len, dim, npoints;
+
 
 		RegularHypercubic(int len, int dim) : len(len), dim(dim), npoints(pow(len,dim)), lattice(len,dim) {};
 
@@ -207,50 +210,46 @@ class ErdosRenyi : public DisorderType
 // ----------------- Random Bond Disorder --------------------
 
 
-template <typename dtype=double>
 class GaussianPDF
 {
 	private:
-		std::random_device rd{};
-		std::mt19937 gen{rd()};
-		std::normal_distribution<dtype> d;
+		std::mt19937 gen;
+		std::normal_distribution<double> d;
 
 	public:
-		GaussianPDF() : d(std::normal_distribution<>{0,1}) {} 
-		GaussianPDF(double mu, double sigma) : d(std::normal_distribution<dtype>{mu,sigma}) {} 
+		GaussianPDF() : gen(std::random_device{}()), d(std::normal_distribution<>{0,1}) {} 
+		GaussianPDF(double mu, double sigma) : gen(std::random_device{}()), d(std::normal_distribution<double>{mu,sigma}) {} 
 
-		dtype draw() {return(d(gen));}
+		double draw() {return(d(gen));}
 };
 
-template <typename dtype=int>
 class BimodalPDF
 {
 	private:
-		std::random_device rd{};
-		std::mt19937 gen{rd()};
-		std::discrete_distribution<dtype> d;
+		std::mt19937 gen;
+		std::discrete_distribution<int> d;
 	public:
-		BimodalPDF() : d(std::discrete_distribution<dtype>{1,0,1}) {}
-		BimodalPDF(double weight) : d(std::discrete_distribution<>{weight,0,1-weight}) {}
+		BimodalPDF() : gen(std::random_device{}()), d(std::discrete_distribution<int>{1,0,1}) {}
+		BimodalPDF(double weight) : gen(std::random_device{}()), d(std::discrete_distribution<int>{weight,0,1-weight}) {}
 
-		dtype draw() {return(d(gen)-1);}
+		int draw() {return(d(gen)-1);}
 };
 
 
 template <class PDFType>
-class RegularRandomBond:  public DisorderType
+class RegularRandomBond :  public DisorderType
 {
 	private:
 		RegularLattice lattice;
-		RegularSquare cloud; // only for 2D for now!!!
 		PDFType PDF;
 	
 	public:
-		int len, dim;
+		int len, dim, npoints;
+
 		using bond_type = decltype(PDF.draw());
 		std::vector<std::vector<bond_type>> bnds;
 		
-		RegularRandomBond(int dim, int len) : dim(dim), len(len), lattice(len,dim), cloud(len)
+		RegularRandomBond(int len, int dim) : dim(dim), len(len), lattice(len,dim), npoints(pow(len,dim))
 		{
 			// construct bonds
 			bnds.resize(lattice.size());
@@ -282,12 +281,12 @@ class RegularRandomBond:  public DisorderType
 		}
 
 		// override getnbrs
-		std::vector<int> getnbrs(const int alpha, const int i)
+		std::vector<int> getnbrs(const int alpha, const int i) const
 		{
 			return lattice.getnbrs(alpha, i);
 		}
 
-		// override getbnds
+		// implement getbnds
 		std::vector<bond_type> getbnds(const int alpha, const int i)
 		{
 			return bnds[i];
@@ -296,10 +295,10 @@ class RegularRandomBond:  public DisorderType
 		// implement getcrds
 		std::vector<double> getcrds(const int i)
 		{
-			return cloud.getcrds(i);
+			return lattice.getcrds(i);
 		}
 
-		std::size_t size() const {return pow(len,dim);}
+		std::size_t size() const {return npoints;}
 
 };
 

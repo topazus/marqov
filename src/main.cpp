@@ -14,12 +14,12 @@ using std::flush;
 using std::ofstream;
 
 #include "rndwrapper.h"
+#include "helpers.h"
 #include "geom/regular_lattice.h"
 #include "geom/grid.h"
 #include "geom/neighbourclass.h"
 #include "geom/io.h"
 #include "vectorhelpers.h"
-#include "helpers.h"
 #include "cartprod.h"
 #include "registry.h"
 #include "systemtools.h"
@@ -188,8 +188,8 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
         	MARQOVConfig mp(outpath);
         	mp.setnsweeps(5);
 		mp.setncluster(15);
-		mp.setwarmupsteps(500);
-		mp.setgameloopsteps(1500);
+		mp.setwarmupsteps(300);
+		mp.setgameloopsteps(900);
 
 		makeDir(mp.outpath);
 
@@ -287,7 +287,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	// ----------------- select simulation ------------------
 
-	if (ham == "Ising")
+	if (startswith(ham, "Ising"))
 	{
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
@@ -361,9 +361,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, extfield);
 		RegularLatticeLoop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
 	}
-	/*
-	*/
-	else if (ham == "BimodalIsingEdwardsAndersonSpinGlass")
+	else if (startswith(ham, "Bimodal-Ising-EdwardsAnderson"))
 	{
 		const auto ham        = registry.Get<std::string>("mc", "General", "Hamiltonian" );
 		const auto dim 	  = registry.Get<int>("mc", ham, "dim" );
@@ -372,8 +370,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
-		auto beta = registry.Get<std::vector<double> >("mc", "IsingCC", "beta");
-		auto J    = registry.Get<std::vector<double> >("mc", "IsingCC", "J");
+		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
 
 		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
@@ -390,10 +388,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	
 			// Monte Carlo parameters
 	        	MARQOVConfig mp(outpath);
-	        	mp.setnsweeps(5);
+	        	mp.setnsweeps(15);
 			mp.setncluster(0);
-			mp.setwarmupsteps(500);
-			mp.setgameloopsteps(1500);
+			mp.setwarmupsteps(300);
+			mp.setgameloopsteps(300);
 
 			// lattice parameters
 			auto lp = std::make_tuple(L,dim);
@@ -403,11 +401,50 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			auto rparams = replicator(params, nreplicas[j]);
 
 			// perform simulations
+		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<BimodalPDF>>(rparams, defaultfilter_triple);
+		}
+	}
+	else if (startswith(ham, "Gaussian-Ising-EdwardsAnderson"))
+	{
+		const auto ham        = registry.Get<std::string>("mc", "General", "Hamiltonian" );
+		const auto dim 	  = registry.Get<int>("mc", ham, "dim" );
+		      auto nreplicas  = registry.Get<std::vector<int>>("mc", ham, "rep" );
+		const auto nL  	  = registry.Get<std::vector<int>>("mc", ham, "L" );
 
-			// does not compile...: // FIXME
-//		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<BimodalPDF<int>> >(rparams, defaultfilter_triple);
-			// whereas this does ... why? 
-		 	Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
+		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+
+		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
+
+		auto hp = cart_prod(beta, J);
+		write_logfile(registry, beta);
+
+	
+		// lattice size loop
+		for (std::size_t j=0; j<nL.size(); j++)
+		{
+			// prepare output
+			int L = nL[j];
+			cout << endl << "L = " << L << endl << endl;
+			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+			makeDir(outpath);
+	
+			// Monte Carlo parameters
+	        	MARQOVConfig mp(outpath);
+	        	mp.setnsweeps(15);
+			mp.setncluster(0);
+			mp.setwarmupsteps(500);
+			mp.setgameloopsteps(500);
+
+			// lattice parameters
+			auto lp = std::make_tuple(L,dim);
+
+			// form parameter triple and replicate
+			auto params  = finalize_parameter_triple(lp, mp, hp);
+			auto rparams = replicator(params, nreplicas[j]);
+
+			// perform simulations
+		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<GaussianPDF>>(rparams, defaultfilter_triple);
 		}
 	}
 	else if (ham == "IsingCC")
@@ -453,7 +490,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		 	Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
 		}
 	}
-	/*
     else if (ham == "IrregularIsing1")
     {
 		//
@@ -487,7 +523,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		// perform simulations
 		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
 	}
-	*/
 }
 
 
@@ -498,6 +533,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 int main()
 {
+
 	// read config files
 	RegistryDB registry("../src/config");
 

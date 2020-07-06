@@ -4,6 +4,9 @@
 class RegularLattice
 {
 public:
+
+	int counter = 0;
+
 //    friend class NArray_Iterator;
     typedef std::vector<int> value_type;
 
@@ -21,35 +24,17 @@ public:
 
     value_type getnbrs(int a, int i) const {return this->operator[](i);}
 
-    std::vector<double> getcrds(int i) const 
+    std::vector<double> getcrds(int k) const 
     {
-
-    		// Todo: 
-		// - test me!
-		// - closed formula for the n-d case?
-		// - length of retval is known at compile time -> probably not use vectors
-
-
-    		std::vector<double> retval(dim);
-
 		// transform one-dimensional index to n-d coordinates
+    		std::vector<int> indices = IndexOf(k, dim, length);
+		std::vector<double> retval(dim,0);
 
-		if (dim == 2)
-		{
-			retval[0] = i % length;
-			retval[1] = i / length; // integer division
-		}
-		else if (dim == 3)
-		{
-			int j = i % (length*length);
-
-			retval[0] = i / (length*length);
-			retval[1] = j / length;;
-			retval[2] = j % length;
-		}
-		else
-		{
-			std::cout << "error! not implemented!" << std::endl;
+		// transform to double and normalize to unit hypercube
+		for (int i=0; i<retval.size(); i++) 
+		{ 
+			retval[i] = double(indices[i])/length; 
+			retval[i] += 0.5/length;
 		}
 
     		return retval;
