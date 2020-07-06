@@ -72,7 +72,7 @@ class IsingMagFTComp
 			for (int i=0; i<N; i++)
 			{
 				double x = grid.getcrds(i)[dir];
-				magFTcomp += double(statespace[i][0]) * std::exp(2.0*M_PI*x*jj / double(L));
+				magFTcomp += double(statespace[i][0]) * std::exp(2.0*M_PI*x*jj);
 			}
 
 			return std::pow(std::abs(magFTcomp/double(N)),2);
