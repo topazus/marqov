@@ -433,7 +433,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	        	MARQOVConfig mp(outpath);
 	        	mp.setnsweeps(50);
 			mp.setncluster(0);
-			mp.setwarmupsteps(50);
+			mp.setwarmupsteps(200);
 			mp.setgameloopsteps(100);
 
 			// lattice parameters

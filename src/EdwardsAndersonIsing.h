@@ -46,7 +46,7 @@ class EdwardsAndersonOrderParameter
 };
 
 
-
+/*
 // spin glass susceptibility
 class SpinGlassSusceptibility
 {
@@ -112,10 +112,13 @@ class SpinGlassSusceptibility
 
 		SpinGlassSusceptibility() : name("chiSG") {}
 };
+*/
 
 
-class SpinGlassSusceptibilityKmin
+class Susceptibility
 {
+	private:
+		double kx;
 	public:
 		int counter = 0;
 		std::string name;
@@ -175,9 +178,10 @@ class SpinGlassSusceptibilityKmin
 
 					auto diff = xi[0] - xj[0];
 
-					if (fabs(diff)>0.5) diff = 1.0 - fabs(diff);
+					if (fabs(diff)>0.5) diff = 1.0 - fabs(diff); // account for PBC
 
-					std::complex<double> phase = std::exp(2.0*M_PI*fabs(diff)*jj);
+					std::complex<double> phase = std::exp(kx*diff*jj);
+//					std::complex<double> phase = std::exp(2.0*M_PI*fabs(diff)*jj);
 
 					/*
 					auto indi = IndexOf(i, grid.dim, grid.len);
@@ -197,10 +201,16 @@ class SpinGlassSusceptibilityKmin
 				}
 			}
 
-			return norml*std::abs(retval); // or real part? or what ...?
+			return norml * std::abs(retval); // or real part? or what ...?
+
+			// open questions:
+			// - should the distance vector account for PBC?
+			// - correct normalization
+			// - order of averages correct?
+			// - what to return? absolute value, real part, ...?
 		}
 
-		SpinGlassSusceptibilityKmin() : name("chiSGkmin") {}
+		Susceptibility(double kx, std::string name) : kx(kx), name(name) {}
 };
 
 // Scalar overlap
@@ -268,7 +278,7 @@ class EdwardsAndersonIsing
 		static constexpr uint Nbeta = 0;
 		static constexpr uint Ngamma = 0;
 		
-		EdwardsAndersonIsing(double J) : J(J)
+		EdwardsAndersonIsing(double J) : J(J), obs_chi(0, "chi") , obs_chiKmin(2.0*M_PI, "chiKmin")
 		{
 			interactions[0] = new EdwardsAndersonIsing_interaction<StateVector>(J); 
 		}
@@ -281,9 +291,10 @@ class EdwardsAndersonIsing
 		// instantiate and choose observables
 		EdwardsAndersonOrderParameter      obs_qEA;
 		ScalarOverlap					obs_q;
-		SpinGlassSusceptibility			obs_chiSG;
-		SpinGlassSusceptibilityKmin			obs_chiSGkmin;
-		auto getobs()	{return std::make_tuple(obs_qEA, obs_q, obs_chiSG, obs_chiSGkmin);}
+		Susceptibility					obs_chi;
+		Susceptibility					obs_chiKmin;
+//		auto getobs()	{return std::make_tuple(obs_qEA, obs_q, obs_chi);}
+		auto getobs()	{return std::make_tuple(obs_qEA, obs_chi, obs_chiKmin);}
 
 
 		// initialize state space
