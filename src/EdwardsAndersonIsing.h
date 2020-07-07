@@ -175,15 +175,25 @@ class SpinGlassSusceptibilityKmin
 
 					auto diff = xi[0] - xj[0];
 
-					if (fabs(diff>0.5)) diff = 1.0 - fabs(diff);
+					if (fabs(diff)>0.5) diff = 1.0 - fabs(diff);
 
-					std::complex<double> phase = std::exp(2.0*M_PI*diff*jj);
+					std::complex<double> phase = std::exp(2.0*M_PI*fabs(diff)*jj);
 
-//					if (i==j) phase = std::complex<double>{1,0};
-					cout << i << "  " << j << "  " << std::fixed << std::setprecision(1) <<  phase << endl;
+					/*
+					auto indi = IndexOf(i, grid.dim, grid.len);
+					auto indj = IndexOf(j, grid.dim, grid.len);
 
-					retval += pow(sum_ij[i][j],2);
-					retval *= phase;
+					cout << i;
+					for (int k=0; k<indi.size(); k++) cout << indi[k] << "  ";
+					cout << endl;
+					cout << j;
+					for (int k=0; k<indj.size(); k++) cout << indj[k] << "  ";
+					cout << endl;
+
+					cout << std::fixed << std::setprecision(0) <<  phase << endl << endl;
+					*/
+
+					retval += pow(sum_ij[i][j],2) * phase;
 				}
 			}
 

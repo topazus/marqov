@@ -431,10 +431,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	
 			// Monte Carlo parameters
 	        	MARQOVConfig mp(outpath);
-	        	mp.setnsweeps(10);
+	        	mp.setnsweeps(50);
 			mp.setncluster(0);
-			mp.setwarmupsteps(200);
-			mp.setgameloopsteps(300);
+			mp.setwarmupsteps(50);
+			mp.setgameloopsteps(100);
 
 			// lattice parameters
 			auto lp = std::make_tuple(L,dim);
