@@ -53,19 +53,28 @@ class SpinGlassSusceptibility
 	public:
 		int counter = 0;
 		std::string name;
-		std::vector<int> sum_i, sum_ij;
+		std::vector<int> sum_i;
+		std::vector<std::vector<int>> sum_ij;
 
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
 			const int size = grid.size();
+			std::complex<double> jj(0,1); 
 
 			const double norml = 1. /  double(size) / double(size) / double(counter) / double(counter);
 
 			if (sum_ij.size() == 0) 
 			{
-				sum_ij.resize(size*size);
-				for (int i=0; i<size*size; i++) sum_ij[i] = 0;
+				sum_ij.resize(size);
+				for (int i=0; i<size; i++)
+				{
+					sum_ij[i].resize(size);
+					for (int j=0; j<size; j++)
+					{
+						sum_ij[i][j] = 0;
+					}
+				}
 			}
 
 			if (sum_i.size() == 0) 
@@ -84,7 +93,7 @@ class SpinGlassSusceptibility
 
 				for (int j=0; j<size; j++)
 				{
-					sum_ij[i*size+j] += statespace[i][0]*statespace[j][0];
+					sum_ij[i][j]+= statespace[i][0]*statespace[j][0];
 				}
 			}
 
@@ -93,8 +102,8 @@ class SpinGlassSusceptibility
 			{
 				for (int j=0; j<size; j++)
 				{
-					retval += pow(sum_ij[i*size+j] - sum_i[i]*sum_i[j] ,2);
-//					retval += pow(sum_ij[i*size+j],2);
+//					retval += pow(sum_ij[i*size+j] - sum_i[i]*sum_i[j] ,2);
+					retval += pow(sum_ij[i][j],2);
 				}
 			}
 
@@ -110,19 +119,28 @@ class SpinGlassSusceptibilityKmin
 	public:
 		int counter = 0;
 		std::string name;
-		std::vector<int> sum_i, sum_ij;
+		std::vector<int> sum_i;
+		std::vector<std::vector<int>> sum_ij;
 
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
 			const int size = grid.size();
+			std::complex<double> jj(0,1); 
 
 			const double norml = 1. /  double(size) / double(size) / double(counter) / double(counter);
 
 			if (sum_ij.size() == 0) 
 			{
-				sum_ij.resize(size*size);
-				for (int i=0; i<size*size; i++) sum_ij[i] = 0;
+				sum_ij.resize(size);
+				for (int i=0; i<size; i++)
+				{
+					sum_ij[i].resize(size);
+					for (int j=0; j<size; j++)
+					{
+						sum_ij[i][j] = 0;
+					}
+				}
 			}
 
 			if (sum_i.size() == 0) 
@@ -131,7 +149,7 @@ class SpinGlassSusceptibilityKmin
 				for (int i=0; i<size; i++) sum_i[i] = 0;
 			}
 
-			double retval = 0;
+			std::complex<double> retval = 0;
 
 			counter++;
 
@@ -141,7 +159,7 @@ class SpinGlassSusceptibilityKmin
 
 				for (int j=0; j<size; j++)
 				{
-					sum_ij[i*size+j] += statespace[i][0]*statespace[j][0];
+					sum_ij[i][j] += statespace[i][0]*statespace[j][0];
 				}
 			}
 
@@ -150,17 +168,26 @@ class SpinGlassSusceptibilityKmin
 			{
 				for (int j=0; j<size; j++)
 				{
-//					retval += pow(sum_ij[i*size+j] - sum_i[i]*sum_i[j] ,2);
-const int dir = 0;
-					double xi = grid.getcrds(i)[dir];
-					cout << xi << endl;
-//					double xj = grid.getcrds(j)[dir];
-//					double dx = 
-//					retval += pow(sum_ij[i*size+j],2) * std::exp(2.0*M_PI*x*jj / double(L));
+					const int dir = 0;
+
+					const std::vector<double> xi = {grid.getcrds(i)[dir]};
+					const std::vector<double> xj = {grid.getcrds(j)[dir]};
+
+					auto diff = xi[0] - xj[0];
+
+					if (fabs(diff>0.5)) diff = 1.0 - fabs(diff);
+
+					std::complex<double> phase = std::exp(2.0*M_PI*diff*jj);
+
+//					if (i==j) phase = std::complex<double>{1,0};
+					cout << i << "  " << j << "  " << std::fixed << std::setprecision(1) <<  phase << endl;
+
+					retval += pow(sum_ij[i][j],2);
+					retval *= phase;
 				}
 			}
 
-			return norml*retval;
+			return norml*std::abs(retval); // or real part? or what ...?
 		}
 
 		SpinGlassSusceptibilityKmin() : name("chiSGkmin") {}
