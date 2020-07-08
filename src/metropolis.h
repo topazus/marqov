@@ -34,7 +34,7 @@ struct has_bonds<Lattice, type_sink_t< decltype( std::declval<Lattice>().getbnds
 template <class Lattice, class NbrType>
 auto callbonds_helper(const Lattice& grid, int a, int i, int j, NbrType nbr, std::true_type)
 {
-    auto cpl = grid.getbnds(a,i);
+    auto cpl = grid.getbnds(a,i)[j];
     return mult(cpl, nbr);
 }
 

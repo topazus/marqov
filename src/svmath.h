@@ -55,6 +55,13 @@ inline StateVector mult(const int& a, const StateVector& b)
 	return retval;
 }
 
+template <class StateVector>
+inline StateVector mult(const double& a, const StateVector& b)
+{
+	StateVector retval(b);
+	for(int i = 0; i < std::tuple_size<StateVector>::value; ++i) retval[i] *= a;
+	return retval;
+}
 
 
 
