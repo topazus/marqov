@@ -401,14 +401,14 @@ class Marqov : public RefType<Grid>
 	// use carefully, might generate a lot of terminal output
     	void gameloop_liveview(int nframes = 100, int nsweepsbetweenframe = 5)
 	{
-		const int ncluster = 0;
-		const int nsweeps = 1;
+		visualize_state_2d();
+
 		for (int i = 0; i < nframes; ++i)
 		{
 
 			for (int j=0; j<nsweepsbetweenframe; j++) elementaryMCstep();
 				
-			unsigned int microsec = 30000; 
+			unsigned int microsec = 50000; 
 			usleep(microsec);
 			system("tput reset");
 			
@@ -421,14 +421,14 @@ class Marqov : public RefType<Grid>
 	void visualize_state_2d(int dim=2, double threshold=0.3)
 	{
 		std::cout << "_";
-		for(int i = 0; i < this->grid.length; ++i) std::cout << " _";
+		for(int i = 0; i < this->grid.len; ++i) std::cout << " _";
 		std::cout <<"\n";
-		for(int i = 0; i < this->grid.length; ++i)
+		for(int i = 0; i < this->grid.len; ++i)
 		{
 			std::cout << "|";
-			for(int j = 0; j < this->grid.length; ++j)
+			for(int j = 0; j < this->grid.len; ++j)
 			{
-				int curridx = this->grid.length*i+j;
+				int curridx = this->grid.len*i+j;
 				double current = statespace[curridx][dim];
 
 				if (current > threshold) std::cout << "O ";
@@ -439,7 +439,7 @@ class Marqov : public RefType<Grid>
 			std::cout << "|\n";
 		}
 		std::cout << "‾";
-		for(int i = 0; i < this->grid.length; ++i) std::cout << " ‾";
+		for(int i = 0; i < this->grid.len; ++i) std::cout << " ‾";
 		std::cout <<"\n\n";
 	}
 
