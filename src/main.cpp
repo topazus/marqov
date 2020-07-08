@@ -156,10 +156,10 @@ void Loop(const std::vector<Parameters>& params, Callable filter)
 	{
 		auto& marqov = sims[i];
 		marqov.init();
+//		marqov.gameloop_liveview();
 //		marqov.debugloop(100,0,1);
-//		marqov.wrmploop();
-//		marqov.gameloop();
-		marqov.gameloop_liveview();
+		marqov.wrmploop();
+		marqov.gameloop();
 	}
 }
 
@@ -434,8 +434,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	        	MARQOVConfig mp(outpath);
 	        	mp.setnsweeps(50);
 			mp.setncluster(0);
-			mp.setwarmupsteps(200);
-			mp.setgameloopsteps(100);
+			mp.setwarmupsteps(100);
+			mp.setgameloopsteps(1000);
 
 			// lattice parameters
 			auto lp = std::make_tuple(L,dim);

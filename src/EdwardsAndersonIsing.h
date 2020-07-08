@@ -45,6 +45,111 @@ class EdwardsAndersonOrderParameter
 		EdwardsAndersonOrderParameter() : name("qEA") {}
 };
 
+class LinkOverlap
+{
+	public:
+		int counter = 0;
+		std::string name;
+		std::vector<std::vector<int>> sum_ij;
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			const int size = grid.size();
+
+			if (sum_ij.size() == 0) 
+			{
+				sum_ij.resize(size);
+				for (int i=0; i<size; i++)
+				{
+					auto bnds = grid.getbnds(0,i);
+					auto nbnds = bnds.size();
+					sum_ij[i].resize(nbnds);
+
+					for (int j=0; j<nbnds; j++) sum_ij[i][j] = 0;
+				}
+			}
+			int nbondstot = 0;
+
+			for (int i=0; i<size; i++)
+			{
+				auto bnds = grid.getbnds(0,i);
+				auto nbnds = bnds.size();
+				nbondstot += nbnds;
+				for (int j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
+			}
+
+			const double norml = 1. / double(counter) / double(nbondstot);
+
+			counter++;
+
+			double retval = 0;
+
+			for (int i=0; i<size; i++)
+			{
+				auto bnds = grid.getbnds(0,i);
+				auto nbnds = bnds.size();
+				for (int j=0; j<nbnds; j++) retval += pow(sum_ij[i][j],2);
+			}
+			return norml * retval;
+		}
+
+		LinkOverlap() : name("ql") {}
+};
+
+
+class InternalEnergy
+{
+	public:
+		int counter = 0;
+		std::string name;
+		std::vector<std::vector<int>> sum_ij;
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			const int size = grid.size();
+
+			if (sum_ij.size() == 0) 
+			{
+				sum_ij.resize(size);
+				for (int i=0; i<size; i++)
+				{
+					auto bnds = grid.getbnds(0,i);
+					auto nbnds = bnds.size();
+					sum_ij[i].resize(nbnds);
+
+					for (int j=0; j<nbnds; j++) sum_ij[i][j] = 0;
+				}
+			}
+
+			for (int i=0; i<size; i++)
+			{
+				auto bnds = grid.getbnds(0,i);
+				auto nbnds = bnds.size();
+				for (int j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
+			}
+
+			const double norml = 1. / double(counter) / double(size);
+
+			counter++;
+
+			double retval = 0;
+
+			for (int i=0; i<size; i++)
+			{
+				auto bnds = grid.getbnds(0,i);
+				auto nbnds = bnds.size();
+				for (int j=0; j<nbnds; j++) retval += sum_ij[i][j] * bnds[j];
+			}
+			return - norml * retval;
+		}
+
+		InternalEnergy() : name("U") {}
+};
+		
+
+
 
 class Susceptibility
 {
@@ -102,7 +207,7 @@ class Susceptibility
 			{
 				for (int j=0; j<size; j++)
 				{
-					const int dir = 0;
+					const int dir = 0; // we consider only the first spatial component
 
 					const std::vector<double> xi = {grid.getcrds(i)[dir]};
 					const std::vector<double> xj = {grid.getcrds(j)[dir]};
@@ -112,32 +217,17 @@ class Susceptibility
 					if (fabs(diff)>0.5) diff = 1.0 - fabs(diff); // account for PBC
 
 					std::complex<double> phase = std::exp(kx*diff*jj);
-//					std::complex<double> phase = std::exp(2.0*M_PI*fabs(diff)*jj);
-
-					/*
-					auto indi = IndexOf(i, grid.dim, grid.len);
-					auto indj = IndexOf(j, grid.dim, grid.len);
-
-					cout << i;
-					for (int k=0; k<indi.size(); k++) cout << indi[k] << "  ";
-					cout << endl;
-					cout << j;
-					for (int k=0; k<indj.size(); k++) cout << indj[k] << "  ";
-					cout << endl;
-
-					cout << std::fixed << std::setprecision(0) <<  phase << endl << endl;
-					*/
 
 					retval += pow(sum_ij[i][j],2) * phase;
 				}
 			}
 
-			return norml * std::abs(retval); // or real part? or what ...?
+			return norml * std::abs(retval);
 
 			// open questions:
-			// - should the distance vector account for PBC?
+			// - should the distance vector account for PBC? -> most likely yes
 			// - correct normalization
-			// - order of averages correct?
+			// - order of averages correct? ->
 			// - what to return? absolute value, real part, ...?
 		}
 
@@ -224,8 +314,9 @@ class EdwardsAndersonIsing
 		ScalarOverlap					obs_q;
 		Susceptibility					obs_chi;
 		Susceptibility					obs_chiKmin;
-//		auto getobs()	{return std::make_tuple(obs_qEA, obs_q, obs_chi);}
-		auto getobs()	{return std::make_tuple(obs_qEA, obs_chi, obs_chiKmin);}
+		InternalEnergy					obs_U;
+		LinkOverlap					obs_ql;
+		auto getobs()	{return std::make_tuple(obs_qEA, obs_chi, obs_chiKmin, obs_U, obs_ql);}
 
 
 		// initialize state space

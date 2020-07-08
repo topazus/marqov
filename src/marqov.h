@@ -408,7 +408,7 @@ class Marqov : public RefType<Grid>
 
 			for (int j=0; j<nsweepsbetweenframe; j++) elementaryMCstep();
 				
-			unsigned int microsec = 30000; 
+			unsigned int microsec = 20000; 
 			usleep(microsec);
 			system("tput reset");
 			
