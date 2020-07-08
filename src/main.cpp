@@ -157,8 +157,9 @@ void Loop(const std::vector<Parameters>& params, Callable filter)
 		auto& marqov = sims[i];
 		marqov.init();
 //		marqov.debugloop(100,0,1);
-		marqov.wrmploop();
-		marqov.gameloop();
+//		marqov.wrmploop();
+//		marqov.gameloop();
+		marqov.gameloop_liveview();
 	}
 }
 

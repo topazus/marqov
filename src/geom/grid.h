@@ -287,7 +287,7 @@ class RegularRandomBond :  public DisorderType
 		}
 
 		// implement getbnds
-		std::vector<bond_type> getbnds(const int alpha, const int i)
+		std::vector<bond_type> getbnds(const int alpha, const int i) const
 		{
 			return bnds[i];
 		}

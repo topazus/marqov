@@ -6,8 +6,72 @@
 #include "rngcache.h"
 
 //A helper to decide in the Metropolis code whether a lattice provides the getbond function
-template<class L, class=void> struct has_bonds : std::false_type {};
-template<class Lattice> struct has_bonds<Lattice, type_sink_t< decltype( std::declval<Lattice>().getbnds(std::declval<int>(), std::declval<int>(), std::declval<int>()) ) > > : std::true_type {};
+template<class L, class=void> 
+struct has_bonds : std::false_type {};
+
+template<class Lattice> 
+struct has_bonds<Lattice, type_sink_t< decltype( std::declval<Lattice>().getbnds(std::declval<int>(), std::declval<int>()) ) > > : std::true_type {};
+
+
+
+// what are the input parameters:
+// a: bond family (not yet implemented)
+// i: site to be looked at
+// j: j-th neighbour of i (encodes the site to which the bond goes)
+
+
+// there are three possibilities
+
+//    nbr  |   cpl                      return type
+// -----------------                 ----------------
+//  scalar   scalar                     -> scalar
+//  vector   vector  (same length!)	-> vector
+//  vector   scalar 				-> vector
+
+// note also that "nbr" is always a "statvector" (std::array), whereas "cpl" can be anything (typically though: int, double, std::vector)
+
+
+template <class Lattice, class NbrType>
+auto callbonds_helper(const Lattice& grid, int a, int i, int j, NbrType nbr, std::true_type)
+{
+    auto cpl = grid.getbnds(a,i);
+    return mult(cpl, nbr);
+}
+
+template <class Lattice, class NbrType>
+auto callbonds_helper(const Lattice& grid, int a, int i, int j, NbrType nbr, std::false_type)
+{
+    return nbr;
+}
+
+template <class Lattice, class NbrType>
+auto callbonds(const Lattice& grid, int a, int i, int j, NbrType nbr)
+{
+    return callbonds_helper(grid, a, i, j, nbr, typename has_bonds<Lattice>::type());
+}
+
+template<class A, class B>
+struct Promote_Array
+{
+    //Get Element types
+    typedef decltype(dot(std::declval<A>(), std::declval<A>())) AElemType;
+    typedef decltype(dot(std::declval<B>(), std::declval<B>())) BElemType;
+    // get result type of addition
+    typedef typename std::common_type<AElemType, BElemType>::type CommonType;
+    // return A if the common type is A, else B
+    typedef typename std::conditional<std::is_same<AElemType, CommonType>::value, A, B>::type CommonArray;
+};
+
+/*
+old:
+
+//A helper to decide in the Metropolis code whether a lattice provides the getbond function
+template<class L, class=void> 
+struct has_bonds : std::false_type {};
+
+template<class Lattice> 
+struct has_bonds<Lattice, type_sink_t< decltype( std::declval<Lattice>().getbnds(std::declval<int>(), std::declval<int>(), std::declval<int>()) ) > > : std::true_type {};
+
 
 template <class Lattice, class NbrType>
 auto callbonds_helper(const Lattice& grid, int a, int rsite, int i, NbrType nbr, std::true_type)
@@ -19,6 +83,7 @@ auto callbonds_helper(const Lattice& grid, int a, int rsite, int i, NbrType nbr,
 template <class Lattice, class NbrType>
 auto callbonds_helper(const Lattice& grid, int a, int rsite, int i, NbrType nbr, std::false_type)
 {
+	cout << i << endl;
     return nbr;
 }
 
@@ -39,7 +104,7 @@ struct Promote_Array
     // return A if the common type is A, else B
     typedef typename std::conditional<std::is_same<AElemType, CommonType>::value, A, B>::type CommonArray;
 };
-
+*/
 
 
 
