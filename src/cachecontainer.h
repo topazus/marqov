@@ -43,6 +43,7 @@ class H5Mapper<double>
 {
     public:
         static constexpr double fillval = 0;
+        static constexpr int bytecount = sizeof(double);
         static constexpr int rank = 1;
         static auto H5Type(){return H5::PredType::NATIVE_DOUBLE;}
 };
@@ -52,6 +53,7 @@ class H5Mapper<int>
 {
     public:
         static constexpr int fillval = 0;
+        static constexpr int bytecount = sizeof(int);
         static constexpr int rank = 1;
         static auto H5Type(){return H5::PredType::NATIVE_INT;}
 };
@@ -62,6 +64,7 @@ class H5Mapper
     public:
         static constexpr int fillval = H5Mapper<typename Tp::value_type>::fillval;
         static constexpr int rank = std::tuple_size<Tp>::value;
+        static constexpr int bytecount = rank*H5Mapper<typename Tp::value_type>::bytecount;
         static auto H5Type(){return H5Mapper<typename Tp::value_type>::H5Type();}
 };
 
@@ -102,7 +105,7 @@ public:
             H5::DSetCreatPropList cparms;
             auto fv = H5Mapper<T>::fillval;
 
-            hsize_t chunk_dims[1] = {4096*1024/sizeof(T)};//4MB chunking
+            hsize_t chunk_dims[1] = {4096*1024/H5Mapper<T>::bytecount};//4MB chunking
             cparms.setChunk( rank, chunk_dims );
             cparms.setDeflate(9);//Best (1-9) compression
             cparms.setFillValue(  H5Mapper<T>::H5Type(), &fv);
