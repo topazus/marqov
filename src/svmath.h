@@ -24,6 +24,10 @@ StateVector operator - (StateVector lhs,  StateVector rhs)
     return res;
 }
 
+
+// mult is a component-wise multiplication which is used e.g. in the
+// Metropolis algorithm 
+
 inline double mult(const double& a, const double& b)
 {
     return a*b;
@@ -42,6 +46,24 @@ inline StateVector mult(const VecType& a, const StateVector& b)
     retval[i] *= a[i];
     return retval;
 }
+
+template <class StateVector>
+inline StateVector mult(const int& a, const StateVector& b)
+{
+	StateVector retval(b);
+	for(int i = 0; i < std::tuple_size<StateVector>::value; ++i) retval[i] *= a;
+	return retval;
+}
+
+template <class StateVector>
+inline StateVector mult(const double& a, const StateVector& b)
+{
+	StateVector retval(b);
+	for(int i = 0; i < std::tuple_size<StateVector>::value; ++i) retval[i] *= a;
+	return retval;
+}
+
+
 
 
 inline double dot(const double& a, const double& b)
