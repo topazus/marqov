@@ -226,8 +226,8 @@ class Susceptibility
 
 			// open questions:
 			// - should the distance vector account for PBC? -> most likely yes
-			// - correct normalization
-			// - order of averages correct? ->
+			// - correct normalization -> almost ;)
+			// - order of averages correct? -> think so
 			// - what to return? absolute value, real part, ...?
 		}
 
