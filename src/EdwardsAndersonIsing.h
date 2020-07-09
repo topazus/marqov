@@ -45,7 +45,7 @@ class EdwardsAndersonOrderParameter
 		EdwardsAndersonOrderParameter() : name("qEA") {}
 };
 
-class LinkOverlap
+class LinkOverlap /// not working so far!!!!
 {
 	public:
 		int counter = 0;
@@ -79,9 +79,9 @@ class LinkOverlap
 				for (int j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
 			}
 
+			counter++;
 			const double norml = 1. / double(counter) / double(nbondstot);
 
-			counter++;
 
 			double retval = 0;
 
@@ -98,7 +98,7 @@ class LinkOverlap
 };
 
 
-class InternalEnergy
+class InternalEnergy /// not working so far!!!!
 {
 	public:
 		int counter = 0;
