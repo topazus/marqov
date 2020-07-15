@@ -21,9 +21,9 @@ namespace MARQOV
 {
 	struct MARQOVConfig
 	{
-		//
-		// The standard constructor. It requires an outpath, the rest of the positional parameters are optional.
-		//
+		/**
+		* The standard constructor. It requires an outpath, the rest of the positional parameters are optional.
+		*/
 		
 		MARQOVConfig(	std::string op, 
 					int i = 0, 
@@ -78,6 +78,9 @@ namespace MARQOV
 		MARQOVConfig& setgameloopsteps(int g) {gameloopsteps = g; return *this;}
 		MARQOVConfig& setncluster(int nc) {ncluster = nc; return *this;}
 		MARQOVConfig& setnsweeps(int ns) {nsweeps = ns; return *this;}
+		void dumpparamstoHDF5(H5::Group& mcg) const
+        {
+        };
 	};
     
 	template<class> 
@@ -171,10 +174,10 @@ class Marqov : public RefType<Grid>
 		                std::make_tuple(std::declval<CacheContainer<typename ObsRetType<typename std::tuple_element<N, Tup>::type>::RetType>>())
 		    )) RetType;
 		    
-		    static auto getargtuple(H5::H5File& h5file, Tup& t){
+		    static auto getargtuple(H5::Group& h5loc, Tup& t){
 		        return std::tuple_cat( 
-		        ObsCacheTupleIter<N-1, Tup>::getargtuple(h5file, t),
-		        std::make_tuple(CacheContainerArgs(h5file, std::get<N>(t).name)));}
+		        ObsCacheTupleIter<N-1, Tup>::getargtuple(h5loc, t),
+		        std::make_tuple(CacheContainerArgs(h5loc, std::get<N>(t).name)));}
 		};
 		
 		template <typename Tup>
@@ -184,7 +187,7 @@ class Marqov : public RefType<Grid>
 		    typename ObsRetType<typename std::tuple_element<0, Tup>::type>::RetType
 		    > > RetType;
 		    
-		    static auto getargtuple(H5::H5File& h5file, Tup& t){return std::make_tuple(CacheContainerArgs(h5file, std::get<0>(t).name));}
+		    static auto getargtuple(H5::Group& h5loc, Tup& t){return std::make_tuple(CacheContainerArgs(h5loc, std::get<0>(t).name));}
 		};
 		
 		template <typename Tup>
@@ -192,8 +195,8 @@ class Marqov : public RefType<Grid>
 		{
 		    typedef typename ObsCacheTupleIter<std::tuple_size<Tup>::value-1, Tup>::RetType
 		    RetType;
-		    static auto getargtuple(H5::H5File& h5file, Tup&& t){
-		        return ObsCacheTupleIter<std::tuple_size<Tup>::value - 1, Tup>::getargtuple(h5file, t);
+		    static auto getargtuple(H5::Group& h5loc, Tup&& t){
+		        return ObsCacheTupleIter<std::tuple_size<Tup>::value - 1, Tup>::getargtuple(h5loc, t);
 		    }
 		};
 
@@ -214,8 +217,9 @@ class Marqov : public RefType<Grid>
 		RefType<Grid>(std::forward<Grid>(lattice)),
 		ham(std::forward<HArgs>(args) ... ),
 		mcfg(mc),
-		dump(mc.outpath+mc.outname+".h5", H5F_ACC_TRUNC ),
-		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs())),
+		step(0),
+		dump(setupHDF5Container(mc.outpath+mc.outname)),
+		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
         obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()),
 		beta(mybeta),
@@ -237,8 +241,9 @@ class Marqov : public RefType<Grid>
 		RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
-		dump(mc.outpath+mc.outname+".h5", H5F_ACC_TRUNC ),
-		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(dump, ham.getobs())),
+		step(0),
+		dump(setupHDF5Container(mc)),
+		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
 		obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()), 
 		beta(mybeta),
@@ -247,6 +252,38 @@ class Marqov : public RefType<Grid>
 		statespace = new typename Hamiltonian::StateVector[this->grid.size()];
 	}
 	
+	/** This function sets up the layout of the HDF5 Container.
+     * @param mc. A MARQOVConfig object that we will dump to the respective path
+     * @return An object for the HDF5 File
+     */
+    H5::H5File setupHDF5Container(const MARQOVConfig& mc)
+    {
+        //FIXME: proper discovery wether file is present for restarts. This is the new simulation branch
+        H5::H5File retval(mc.outpath+mc.outname + ".h5", H5F_ACC_TRUNC);
+        createstep(retval, step, mc);
+        return retval;//hopefully the refcounting of HDF5 works....
+    }
+    
+    /** This creates a single step in the HDF5 File.
+     * @param file the HDF5 file where to create the step
+     * @param s the number of the step
+     * @param mc
+     */
+    void createstep(H5::H5File& file, int s, const MARQOVConfig& mc)
+    {
+        std::string stepname = "step" + std::to_string(s);
+        H5::Group step(file.createGroup(stepname));
+          H5::Group environment(step.createGroup("environment"));
+          H5::Group config(step.createGroup("config"));
+            H5::Group marqovconfig(config.createGroup("marqovconfig"));
+            mc.dumpparamstoHDF5(marqovconfig);
+            
+            H5::Group latticeconfig(config.createGroup("lattice"));
+            H5::Group hamconfig(config.createGroup("hamiltonian"));
+        
+          stategroup = H5::Group(step.createGroup("state"));
+          obsgroup = H5::Group(step.createGroup("observables"));
+    }
 
 	// default state space initializer
 	void init_hot()
@@ -448,6 +485,7 @@ class Marqov : public RefType<Grid>
 	private:
 
 		inline int metropolisstep(int rsite);
+		int step; ///< the current step of the simulation. Used for HDF5 paths.
 
 		template <typename callable1, typename callable2>
 		inline int metropolisstep(int rsite, callable1 filter_ref, callable2 filter_copy, int comp);
@@ -460,7 +498,9 @@ class Marqov : public RefType<Grid>
 		MARQOVConfig mcfg;
 		typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
 		
-		H5::H5File dump;///< The handle for the HDF5 file. must be before the obscaches
+		H5::H5File dump; ///< The handle for the HDF5 file. must be before the obscaches
+		H5::Group obsgroup; ///< The HDF5 Group of all our observables
+		H5::Group stategroup; ///< The HDF5 Group where to dump the statespace
 		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;//The HDF5 caches for each observable
         ObsTs obs; //the actual observables
 

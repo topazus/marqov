@@ -74,9 +74,9 @@ class H5Mapper
 */
 struct CacheContainerArgs
 {
-    CacheContainerArgs(H5::H5File& file, const std::string& n, std::size_t cs=4194304) :
+    CacheContainerArgs(H5::Group& file, const std::string& n, std::size_t cs=4194304) :
     hfile(file), obsname(n), cachesize(cs) {}
-    H5::H5File& hfile;
+    H5::Group& hfile;
     const std::string& obsname;
     std::size_t cachesize;
 };
@@ -94,9 +94,9 @@ public:
     *   @param name the name of the data set in HDF5
     *   @param cs the memory size in Bytes to use for caching. Will be rounded to integers of datatypes
     */
-    CacheContainer(H5::H5File& hfile, const std::string& name, std::size_t cachesize=4194304) : cachepos(0)
+    CacheContainer(H5::Group& hfile, const std::string& name, std::size_t cachesize=4194304) : cachepos(0)
     {
-        cachemaxelems = cachesize/sizeof(T);
+            cachemaxelems = cachesize/sizeof(T);
             constexpr int rank = H5Mapper<T>::rank;
             hsize_t fdims[rank] = {0}; // dim sizes of ds (on disk)
             hsize_t maxdims[rank] = {H5S_UNLIMITED};
