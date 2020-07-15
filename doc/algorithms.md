@@ -93,3 +93,7 @@ Understand high-temperature expansion (HTE) and (associated) diagrammatic loop c
 
 * [High-temperature series expansion for spin glasses. I. Derivation of the series](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.36.546)
 * [High-temperature series expansion for spin glasses. II. Analysis of the series](https://journals.aps.org/prb/abstract/10.1103/PhysRevB.36.559)
+
+# HMC
+Hamiltonian/Hybrid Monte Carlo
+ - For the SO(3) Heisenberg model EOMs are known that work directly on the [phase space of spins](https://arxiv.org/pdf/1402.4114.pdf) Hence no need for auxiliary momenta.
