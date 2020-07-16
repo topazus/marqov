@@ -10,9 +10,11 @@
 #include <utility>
 #include <tuple>
 #include <random>
+#include <chrono>
 #include <unistd.h> // provides usleep
 #include <stdexcept>
 #include <random>
+#include <ctime>
 #include "cachecontainer.h"
 #include "svmath.h"
 #include "rngcache.h"
@@ -309,6 +311,19 @@ class Marqov : public RefType<Grid>
          H5::DataSet dset(h5loc.createDataSet("hostname", strdatatype, dspace));
          dset.write(hn.c_str(), strdatatype);
      }
+         std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+         std::time_t start_time = std::chrono::system_clock::to_time_t(now);
+         char timestamp[100];
+         struct tm buf;
+         buf = *(std::localtime(&start_time));
+         std::strftime(timestamp, sizeof(timestamp), "%A %Y-%m-%d %H:%M:%S", &buf);
+         std::string ts(timestamp);
+
+H5::StrType strdatatype(H5::PredType::C_S1, ts.size());
+         H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
+         H5::DataSet dset(h5loc.createDataSet("startingdate", strdatatype, dspace));
+         dset.write(ts.c_str(), strdatatype);
+
     }
     /** This creates a single step in the HDF5 File.
      * @param file the HDF5 file where to create the step
