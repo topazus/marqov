@@ -20,7 +20,7 @@
 namespace MARQOV
 {
 template <typename T>
-	void dumpscalar(H5::Group& h5loc, const T& s, std::string name)
+	void dumpscalartoH5(H5::Group& h5loc, const T& s, std::string name)
 {
 H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
 H5::DataSet dset(h5loc.createDataSet(name.c_str(), H5Mapper<T>::H5Type(), dspace));
@@ -85,18 +85,18 @@ dset.write(&s, H5Mapper<T>::H5Type());
 		MARQOVConfig& setgameloopsteps(int g) {gameloopsteps = g; return *this;}
 		MARQOVConfig& setncluster(int nc) {ncluster = nc; return *this;}
 		MARQOVConfig& setnsweeps(int ns) {nsweeps = ns; return *this;}
-		void dumpparamstoHDF5(H5::Group& mcg) const
+		void dumpparamstoH5(H5::Group& mcg) const
         {
             mcg.setComment("Here we store all parameters that are in the MARQOVconfig object. They are mostly method related numbers and strings");
-            dumpscalar(mcg, id, "id");
-            dumpscalar(mcg, repid, "repid");
-            dumpscalar(mcg, seed, "seed");
-            dumpscalar(mcg, gli, "gli");
-            dumpscalar(mcg, nsteps, "nsteps");
-            dumpscalar(mcg, warmupsteps, "warmupsteps");
-            dumpscalar(mcg, gameloopsteps, "gameloopsteps");
-            dumpscalar(mcg, ncluster, "ncluster");
-            dumpscalar(mcg, nsweeps, "nsweeps");
+            dumpscalartoH5(mcg, id, "id");
+            dumpscalartoH5(mcg, repid, "repid");
+            dumpscalartoH5(mcg, seed, "seed");
+            dumpscalartoH5(mcg, gli, "gli");
+            dumpscalartoH5(mcg, nsteps, "nsteps");
+            dumpscalartoH5(mcg, warmupsteps, "warmupsteps");
+            dumpscalartoH5(mcg, gameloopsteps, "gameloopsteps");
+            dumpscalartoH5(mcg, ncluster, "ncluster");
+            dumpscalartoH5(mcg, nsweeps, "nsweeps");
         };
 	};
     
@@ -235,13 +235,13 @@ class Marqov : public RefType<Grid>
 		ham(std::forward<HArgs>(args) ... ),
 		mcfg(mc),
 		step(0),
+		beta(mybeta),
 		dump(setupHDF5Container(mc)),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
         obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()),
-		beta(mybeta),
 		metro(rngcache)
 	{
 		statespace = new typename Hamiltonian::StateVector[lattice.size()];
@@ -261,13 +261,13 @@ class Marqov : public RefType<Grid>
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
 		step(0),
+		beta(mybeta),
 		dump(setupHDF5Container(mc)),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
 		obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()), 
-		beta(mybeta),
 		metro(rngcache)
 	{
 		statespace = new typename Hamiltonian::StateVector[this->grid.size()];
@@ -284,7 +284,32 @@ class Marqov : public RefType<Grid>
         createstep(retval, step, mc);
         return retval;//hopefully the refcounting of HDF5 works....
     }
-    
+
+    void dumphamparamstoH5(H5::Group& h5loc)
+    {
+     h5loc.setComment("These parameters are peculiar to the considered Hamiltonian.");
+            dumpscalartoH5(h5loc, beta, "beta");
+    }
+    void dumplatparamstoH5(H5::Group& h5loc)
+    {
+      h5loc.setComment("These parameters are peculiar to the lattice at hand");
+    return;
+    }
+    void dumpenvtoH5(H5::Group& h5loc)
+    {
+     h5loc.setComment("Here we have various parameters of the host system.");
+     //Acquire hostname
+     char hostname[HOST_NAME_MAX];
+     int err = gethostname(hostname, HOST_NAME_MAX);
+     if (err == 0) // We were able to retrieve a hostname, hence we dump it
+     {
+         std::string hn(hostname);
+         H5::StrType strdatatype(H5::PredType::C_S1, hn.size());
+         H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
+         H5::DataSet dset(h5loc.createDataSet("hostname", strdatatype, dspace));
+         dset.write(hn.c_str(), strdatatype);
+     }
+    }
     /** This creates a single step in the HDF5 File.
      * @param file the HDF5 file where to create the step
      * @param s the number of the step
@@ -294,13 +319,20 @@ class Marqov : public RefType<Grid>
     {
         std::string stepname = "step" + std::to_string(s);
         H5::Group step(file.createGroup(stepname));
+        step.setComment("A single step encapsulates the initial config, the observable time series and the final state.");
           H5::Group environment(step.createGroup("environment"));
+          dumpenvtoH5(environment);
+
           H5::Group config(step.createGroup("config"));
+            config.setComment("Here we have all configuration related parameters that are required to start a simulation.");
             H5::Group marqovconfig(config.createGroup("marqovconfig"));
-            mc.dumpparamstoHDF5(marqovconfig);
+            mc.dumpparamstoH5(marqovconfig);
 
             H5::Group latticeconfig(config.createGroup("lattice"));
+            dumplatparamstoH5(latticeconfig);
             H5::Group hamconfig(config.createGroup("hamiltonian"));
+            dumphamparamstoH5(hamconfig);
+
 
           H5::Group s1(step.createGroup("state"));
           H5::Group s2(step.createGroup("observables"));
@@ -547,7 +579,7 @@ class Marqov : public RefType<Grid>
 		Hamiltonian ham;
 		MARQOVConfig mcfg;
 		typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
-		
+		double beta; ///< The inverse temperature
 		H5::H5File dump; ///< The handle for the HDF5 file. must be before the obscaches
 		H5::Group obsgroup; ///< The HDF5 Group of all our observables
 		H5::Group stategroup; ///< The HDF5 Group where to dump the statespace
@@ -556,7 +588,7 @@ class Marqov : public RefType<Grid>
 
 		typedef std::ranlux48_base RNGType;
 		RNGCache<RNGType> rngcache;///< The caching RNG
-		double beta;
+
 
 		//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
 		typename Hamiltonian::template MetroInitializer<RNGCache<RNGType> > metro;//C++11
