@@ -19,6 +19,13 @@
 
 namespace MARQOV
 {
+template <typename T>
+	void dumpscalar(H5::Group& h5loc, const T& s, std::string name)
+{
+H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
+H5::DataSet dset(h5loc.createDataSet(name.c_str(), H5Mapper<T>::H5Type(), dspace));
+dset.write(&s, H5Mapper<T>::H5Type());
+}
 	struct MARQOVConfig
 	{
 		/**
@@ -80,6 +87,16 @@ namespace MARQOV
 		MARQOVConfig& setnsweeps(int ns) {nsweeps = ns; return *this;}
 		void dumpparamstoHDF5(H5::Group& mcg) const
         {
+            mcg.setComment("Here we store all parameters that are in the MARQOVconfig object. They are mostly method related numbers and strings");
+            dumpscalar(mcg, id, "id");
+            dumpscalar(mcg, repid, "repid");
+            dumpscalar(mcg, seed, "seed");
+            dumpscalar(mcg, gli, "gli");
+            dumpscalar(mcg, nsteps, "nsteps");
+            dumpscalar(mcg, warmupsteps, "warmupsteps");
+            dumpscalar(mcg, gameloopsteps, "gameloopsteps");
+            dumpscalar(mcg, ncluster, "ncluster");
+            dumpscalar(mcg, nsweeps, "nsweeps");
         };
 	};
     
