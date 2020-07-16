@@ -218,7 +218,9 @@ class Marqov : public RefType<Grid>
 		ham(std::forward<HArgs>(args) ... ),
 		mcfg(mc),
 		step(0),
-		dump(setupHDF5Container(mc.outpath+mc.outname)),
+		dump(setupHDF5Container(mc)),
+		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
+		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
         obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()),
@@ -243,6 +245,8 @@ class Marqov : public RefType<Grid>
 		mcfg(mc),
 		step(0),
 		dump(setupHDF5Container(mc)),
+		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
+		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
 		obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()), 
@@ -281,8 +285,11 @@ class Marqov : public RefType<Grid>
             H5::Group latticeconfig(config.createGroup("lattice"));
             H5::Group hamconfig(config.createGroup("hamiltonian"));
         
-          stategroup = H5::Group(step.createGroup("state"));
-          obsgroup = H5::Group(step.createGroup("observables"));
+//            H5::Group* stateptr = new(&stategroup) H5::Group(step.createGroup("state"));
+             H5::Group* obsptr = new(&obsgroup) H5::Group(step.createGroup("observables"));
+
+          H5::Group s1(step.createGroup("state"));
+//          H5::Group s2(step.createGroup("observables"));
     }
 
 	// default state space initializer
@@ -314,10 +321,38 @@ class Marqov : public RefType<Grid>
 		return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian, Grid, RNGCache<RNGType>, Ts... >::type(), this->statespace, this->grid, this->ham, std::forward<Ts>(ts)...);
 	}
 
+	/** A helper function to dump the entire statespace
+     */
+	void dumpstatespace()
+    {
+        //We interpret the statespace as a time-series of lattice points points
+        constexpr int rank = H5Mapper<StateVector>::rank;
+        hsize_t fdims[rank] = {static_cast<hsize_t>(this->grid.len)};
+        hsize_t maxdims[rank] = {H5S_UNLIMITED};
+
+        H5::DataSpace mspace1(rank, fdims, maxdims);
+        H5::DSetCreatPropList cparms;
+        auto fv = H5Mapper<StateVector>::fillval;
+
+        hsize_t chunk_dims[1] = {4096*1024/H5Mapper<StateVector>::bytecount};//4MB chunking
+        cparms.setChunk( rank, chunk_dims );
+        cparms.setDeflate(9);//Best (1-9) compression
+        cparms.setFillValue(  H5Mapper<StateVector>::H5Type(), &fv);
+        H5::DataSet dataset = stategroup.createDataSet("hamiltonianstatespace", H5Mapper<StateVector>::H5Type(), mspace1, cparms);
+        
+        
+        auto filespace = dataset.getSpace();
+        hsize_t start[rank] = {0};
+        hsize_t count[rank] = {static_cast<hsize_t>(this->grid.len)};
+        filespace.selectHyperslab(H5S_SELECT_SET, count, start);
+        dataset.write(statespace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
+    }
 	// Destructor
 	~Marqov() 
 	{
-		delete [] statespace; dump.close();
+//        dumpstatespace();
+		delete [] statespace;
+        dump.close();
 	}
 
 	//FIXME: Fix assignment and copying...
