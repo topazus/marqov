@@ -281,15 +281,12 @@ class Marqov : public RefType<Grid>
           H5::Group config(step.createGroup("config"));
             H5::Group marqovconfig(config.createGroup("marqovconfig"));
             mc.dumpparamstoHDF5(marqovconfig);
-            
+
             H5::Group latticeconfig(config.createGroup("lattice"));
             H5::Group hamconfig(config.createGroup("hamiltonian"));
-        
-//            H5::Group* stateptr = new(&stategroup) H5::Group(step.createGroup("state"));
-             H5::Group* obsptr = new(&obsgroup) H5::Group(step.createGroup("observables"));
 
           H5::Group s1(step.createGroup("state"));
-//          H5::Group s2(step.createGroup("observables"));
+          H5::Group s2(step.createGroup("observables"));
     }
 
 	// default state space initializer
