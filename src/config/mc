@@ -1,11 +1,11 @@
 [General]
 
-Hamiltonian = Gaussian-Ising-EdwardsAnderson-3D
+Hamiltonian = Ising
 
 [Ising]
 
 L   = 8,12,16,24,32
-rep = 5
+rep = 15
 dim = 2
 
 beta = 0.430, 0.433, 0.436, 0.439, 0.442, 0.445, 0.448, 0.451, 0.454
