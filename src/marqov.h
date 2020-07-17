@@ -244,10 +244,9 @@ class Marqov : public RefType<Grid>
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
         obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()),
-		metro(rngcache)
-	{
-		statespace = new typename Hamiltonian::StateVector[lattice.size()];
-	}
+		metro(rngcache),
+		statespace(setupstatespace(lattice.size()))
+	{}
 		
 		
 	/** ----- Alternate constructor -----
@@ -270,11 +269,37 @@ class Marqov : public RefType<Grid>
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
 		obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()), 
-		metro(rngcache)
-	{
-		statespace = new typename Hamiltonian::StateVector[this->grid.size()];
-	}
-	
+		metro(rngcache),
+                statespace(setupstatespace(this->grid.size()))
+	{}
+
+auto setupstatespace(int size)
+{
+auto retval = new typename Hamiltonian::StateVector[size];
+if (step > 0)
+{
+ auto stateds = stategroup.openDataSet("hamiltonianstatespace");
+ auto dataspace = stateds.getSpace();
+ //read the data... For now we just hope that everything matches...
+int rank = dataspace.getSimpleExtentNdims();
+      hsize_t dims_out[rank];
+      int ndims = dataspace.getSimpleExtentDims( dims_out, NULL);
+
+
+        hsize_t fdims[rank] = {static_cast<hsize_t>(size)};
+        hsize_t maxdims[rank] = {H5S_UNLIMITED};
+
+        H5::DataSpace mspace1(rank, fdims, maxdims);
+
+
+
+        hsize_t start[rank] = {0};
+        hsize_t count[rank] = {static_cast<hsize_t>(size)};
+        dataspace.selectHyperslab(H5S_SELECT_SET, count, start);
+        stateds.read(statespace, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
+}
+return retval;
+}
 
 /* Helper function for HDF5
  * Operator function to find the last step
