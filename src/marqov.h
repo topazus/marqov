@@ -236,7 +236,7 @@ class Marqov : public RefType<Grid>
 		RefType<Grid>(std::forward<Grid>(lattice)),
 		ham(std::forward<HArgs>(args) ... ),
 		mcfg(mc),
-		step(0),
+		step(-1),
 		beta(mybeta),
 		dump(setupHDF5Container(mc)),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
@@ -275,14 +275,39 @@ class Marqov : public RefType<Grid>
 		statespace = new typename Hamiltonian::StateVector[this->grid.size()];
 	}
 	
+
+/* Helper function for HDF5
+ * Operator function to find the last step
+ */
+static herr_t
+file_info(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
+{
+    std::string gname(name);
+    if (gname.substr(0, 4) == "step")
+    {
+    std::string rem(gname.substr(4));
+    int c = std::stoi(rem);
+     *static_cast<int*>(step) = std::max(*static_cast<int*>(step), c);
+    }
+    return 0;
+}
+
 	/** This function sets up the layout of the HDF5 Container.
      * @param mc. A MARQOVConfig object that we will dump to the respective path
      * @return An object for the HDF5 File
      */
     H5::H5File setupHDF5Container(const MARQOVConfig& mc)
     {
-        //FIXME: proper discovery wether file is present for restarts. This is the new simulation branch
-        H5::H5File retval(mc.outpath+mc.outname + ".h5", H5F_ACC_TRUNC);
+        std::string filepath = mc.outpath+mc.outname + ".h5";
+        auto flag = H5F_ACC_TRUNC;
+        if (std::ifstream(filepath).good() && H5::H5File::isHdf5(filepath)) flag = H5F_ACC_RDWR;
+        H5::H5File retval(filepath, flag);
+        if (flag == H5F_ACC_RDWR) // abuse flag
+{
+        // We have to iterate through the root group and find the last step.
+        H5Literate(retval.getId(), H5_INDEX_NAME, H5_ITER_NATIVE, NULL, file_info, &step);
+}
+        step = step + 1; // If there is no file we start at 0, else we increment.
         createstep(retval, step, mc);
         return retval;//hopefully the refcounting of HDF5 works....
     }
@@ -294,7 +319,7 @@ class Marqov : public RefType<Grid>
     }
     void dumplatparamstoH5(H5::Group& h5loc)
     {
-      h5loc.setComment("These parameters are peculiar to the lattice at hand");
+      h5loc.setComment("These parameters are peculiar to the lattice at hand.");
     return;
     }
     void dumpenvtoH5(H5::Group& h5loc)
@@ -319,7 +344,7 @@ class Marqov : public RefType<Grid>
          std::strftime(timestamp, sizeof(timestamp), "%A %Y-%m-%d %H:%M:%S", &buf);
          std::string ts(timestamp);
 
-H5::StrType strdatatype(H5::PredType::C_S1, ts.size());
+         H5::StrType strdatatype(H5::PredType::C_S1, ts.size());
          H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
          H5::DataSet dset(h5loc.createDataSet("startingdate", strdatatype, dspace));
          dset.write(ts.c_str(), strdatatype);
