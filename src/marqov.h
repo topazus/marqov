@@ -232,13 +232,13 @@ class Marqov : public RefType<Grid>
 	*/
 	
 	template <class ...HArgs>
-	Marqov(Grid& lattice, MARQOVConfig mc, double mybeta, HArgs&& ... args) : 
+	Marqov(Grid& lattice, MARQOVConfig mc, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<Grid>(lattice)),
-		ham(std::forward<HArgs>(args) ... ),
+		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
 		step(-1),
 		beta(mybeta),
-		dump(setupHDF5Container(mc)),
+		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
@@ -263,7 +263,7 @@ class Marqov : public RefType<Grid>
 		mcfg(mc),
 		step(0),
 		beta(mybeta),
-		dump(setupHDF5Container(mc)),
+		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
@@ -321,7 +321,8 @@ file_info(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
      * @param mc. A MARQOVConfig object that we will dump to the respective path
      * @return An object for the HDF5 File
      */
-    H5::H5File setupHDF5Container(const MARQOVConfig& mc)
+    template <class ...HArgs>
+    H5::H5File setupHDF5Container(const MARQOVConfig& mc, HArgs&& ...hargs)
     {
         std::string filepath = mc.outpath+mc.outname + ".h5";
         auto flag = H5F_ACC_TRUNC;
@@ -333,14 +334,18 @@ file_info(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
         H5Literate(retval.getId(), H5_INDEX_NAME, H5_ITER_NATIVE, NULL, file_info, &step);
 }
         step = step + 1; // If there is no file we start at 0, else we increment.
-        createstep(retval, step, mc);
+        createstep(retval, step, mc, std::forward<HArgs>(hargs)... );
         return retval;//hopefully the refcounting of HDF5 works....
     }
 
-    void dumphamparamstoH5(H5::Group& h5loc)
+    template <class ...HArgs>
+    void dumphamparamstoH5(H5::Group& h5loc, HArgs&&... hargs)
     {
      h5loc.setComment("These parameters are peculiar to the considered Hamiltonian.");
             dumpscalartoH5(h5loc, beta, "beta");
+//Let's dump the unknown number of unknown parameters of the Hamiltonian....
+      int paramnr = 0;
+      (void) std::initializer_list<int>{((void) dumpscalartoH5(h5loc, hargs, "param" + std::to_string(paramnr++)), 0)... };
     }
     void dumplatparamstoH5(H5::Group& h5loc)
     {
@@ -380,7 +385,8 @@ file_info(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
      * @param s the number of the step
      * @param mc
      */
-    void createstep(H5::H5File& file, int s, const MARQOVConfig& mc)
+    template <class... HArgs>
+    void createstep(H5::H5File& file, int s, const MARQOVConfig& mc, HArgs&& ...hargs)
     {
         std::string stepname = "step" + std::to_string(s);
         H5::Group step(file.createGroup(stepname));
@@ -396,7 +402,7 @@ file_info(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
             H5::Group latticeconfig(config.createGroup("lattice"));
             dumplatparamstoH5(latticeconfig);
             H5::Group hamconfig(config.createGroup("hamiltonian"));
-            dumphamparamstoH5(hamconfig);
+            dumphamparamstoH5(hamconfig, std::forward<HArgs>(hargs)...);
 
 
           H5::Group s1(step.createGroup("state"));
