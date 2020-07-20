@@ -88,6 +88,7 @@ class Heisenberg
 
 		double J;
 		constexpr static int SymD = 3;
+		const std::string name;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
 		
@@ -106,7 +107,7 @@ class Heisenberg
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Heisenberg(double J) : J(J) {interactions[0] = new Heisenberg_interaction<StateVector>(J);}
+		Heisenberg(double J) : J(J), name("Heisenberg") {interactions[0] = new Heisenberg_interaction<StateVector>(J);}
 		
 
 		// instantiate and choose observables

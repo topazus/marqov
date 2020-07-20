@@ -114,6 +114,7 @@ class Phi4
 		double beta, lambda, mass;
 
 		constexpr static int SymD = 3;
+		const std::string name;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
 
@@ -132,7 +133,7 @@ class Phi4
 		OnSite<StateVector, FPType>* onsite[Nbeta]; //Todo: External fields not yet supported
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Phi4(double beta, double lambda, double mass) : beta(beta), lambda(lambda), mass(mass)
+		Phi4(double beta, double lambda, double mass) : beta(beta), lambda(lambda), mass(mass), name("Phi4")
 		{
 			interactions[0] = new Phi4_interaction<StateVector>();
 			onsite[0]       = new Phi4_onsitesquare<StateVector>(mass, beta);

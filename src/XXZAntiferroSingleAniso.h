@@ -236,13 +236,14 @@ class XXZAntiferroSingleAniso
 		static constexpr uint Nalpha = 1;
 		static constexpr uint Nbeta  = 2;
 		static constexpr uint Ngamma = 0;
+		const std::string name;
 
 		// instantiate interaction terms (requires pointers) 
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		XXZAntiferroSingleAniso(double myH, double myDelta, double myD) : Delta(myDelta), H(myH), D(myD)	
+		XXZAntiferroSingleAniso(double myH, double myDelta, double myD) : Delta(myDelta), H(myH), D(myD), name("XXZAntiferroSingleAniso")
 		{
 			interactions[0] = new XXZAntiferroSingleAniso_interaction<StateVector>(Delta); 
 			onsite[0]       = new XXZAntiferroSingleAniso_extfield<StateVector>(H);

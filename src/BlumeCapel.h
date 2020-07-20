@@ -105,6 +105,7 @@ class BlumeCapel
 	public:
 		double J, D;
 		constexpr static int SymD = 1;
+		const std::string name;
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = BlumeCapel_Initializer<StateVector, RNG>;
@@ -118,7 +119,7 @@ class BlumeCapel
 		OnSite<StateVector, double>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 	
-		BlumeCapel(double J, double D) : J(J), D(D)
+		BlumeCapel(double J, double D) : J(J), D(D), name("BlumeCapel")
 		{	
 			interactions[0] = new BlumeCapel_interaction<StateVector>(J); 
 			onsite[0]       = new BlumeCapel_onsite<StateVector>(D);		

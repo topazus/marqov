@@ -358,14 +358,18 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
     template <class ...HArgs>
     void dumphamparamstoH5(H5::Group& h5loc, HArgs&&... hargs)
     {
+        H5::StrType strdatatype(H5::PredType::C_S1, ham.name.size());
+         H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
+         H5::DataSet dset(h5loc.createDataSet("Model", strdatatype, dspace));
+         dset.setComment("This is the Model. This should correspond to a class name");
+         dset.write(ham.name.c_str(), strdatatype);
+         
         h5loc.setComment("These parameters are peculiar to the considered Hamiltonian.");
         dumpscalartoH5(h5loc, beta, "beta");
         //Let's dump the unknown number of unknown parameters of the Hamiltonian....
         int paramnr = 0;
         (void) std::initializer_list<int>{((void) dumpscalartoH5(h5loc, hargs,
-//            "param" + std::to_string(paramnr++)
             createparamname(typename MARQOV::detail::has_paramname<Hamiltonian>::type(), paramnr++)
-            
         ), 0)... };
     }
     void dumplatparamstoH5(H5::Group& h5loc)

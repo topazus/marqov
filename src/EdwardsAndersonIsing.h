@@ -291,6 +291,7 @@ class EdwardsAndersonIsing
 	public:
 		double J;
 		constexpr static int SymD = 1;
+		const std::string name;
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = EdwardsAndersonIsing_Initializer<StateVector, RNG>;
@@ -299,7 +300,7 @@ class EdwardsAndersonIsing
 		static constexpr uint Nbeta = 0;
 		static constexpr uint Ngamma = 0;
 		
-		EdwardsAndersonIsing(double J) : J(J), obs_chi(0, "chi") , obs_chiKmin(2.0*M_PI, "chiKmin")
+		EdwardsAndersonIsing(double J) : J(J), name("EdwardsAndersonIsing"), obs_chi(0, "chi") , obs_chiKmin(2.0*M_PI, "chiKmin")
 		{
 			interactions[0] = new EdwardsAndersonIsing_interaction<StateVector>(J); 
 		}
