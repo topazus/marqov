@@ -249,6 +249,18 @@ class XXZAntiferroSingleAniso
 			onsite[1]       = new XXZAntiferroSingleAniso_onsiteaniso<StateVector>(D);
 		}
 		
+		std::string paramname(int i) {//A helper function to have nice names for the I/O
+            std::string retval;
+            switch(i)
+            {
+                case (0): retval = "H"; break;
+                case (1): retval = "Delta"; break;
+                case (2): retval = "D"; break;
+                default : break;
+            }
+            return retval;
+        }
+		
 		// instantiate and choose observables
 		XXZAntiferroSingleAnisoStaggeredMagZ  obs_mstagz;
 		XXZAntiferroSingleAnisoStaggeredMagXY obs_mstagxy;

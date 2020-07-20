@@ -147,6 +147,14 @@ namespace MARQOV
 		template<class StateSpace, class H, class L, class RNG, class... Ts>
 		struct has_init<StateSpace, H, L, RNG,
 		type_sink_t< decltype( std::declval<H>().template initstatespace<StateSpace, L, RNG, Ts...>(std::declval<StateSpace&>(), std::declval<L&>(), std::declval<RNG&>(), std::declval<Ts>()... ) ) >, Ts... > : std::true_type {};
+        
+        //A helper to decide whether a Hamiltonian provides the paramname function
+        template<class H, class = void> struct has_paramname : std::false_type {};
+        
+        template<class H>
+		struct has_paramname<H,
+		type_sink_t<decltype( std::declval<H>().paramname(std::declval<int>()) )> > : std::true_type {};
+        
 	};
     
     
@@ -305,7 +313,7 @@ auto setupstatespace(int size)
  * Operator function to find the last step
  */
 static herr_t
-file_info(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
+findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 {
     std::string gname(name);
     if (gname.substr(0, 4) == "step")
@@ -330,11 +338,21 @@ file_info(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
         H5::H5File retval(filepath, flag);
         if (flag == H5F_ACC_RDWR) // abuse flag
         {// We have to iterate through the root group and find the last step.
-            H5Literate(retval.getId(), H5_INDEX_NAME, H5_ITER_NATIVE, NULL, file_info, &step);
+            H5Literate(retval.getId(), H5_INDEX_NAME, H5_ITER_NATIVE, NULL, findstep, &step);
         }
         step = step + 1; // If there is no file we start at 0, else we increment.
         createstep(retval, step, mc, std::forward<HArgs>(hargs)... );
         return retval;//hopefully the refcounting of HDF5 works....
+    }
+    
+    std::string createparamname(std::false_type, int c)
+    {
+        return "param" + std::to_string(c);
+    }
+    
+    std::string createparamname(std::true_type, int c)
+    {
+        return ham.paramname(c);
     }
 
     template <class ...HArgs>
@@ -344,7 +362,11 @@ file_info(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
         dumpscalartoH5(h5loc, beta, "beta");
         //Let's dump the unknown number of unknown parameters of the Hamiltonian....
         int paramnr = 0;
-        (void) std::initializer_list<int>{((void) dumpscalartoH5(h5loc, hargs, "param" + std::to_string(paramnr++)), 0)... };
+        (void) std::initializer_list<int>{((void) dumpscalartoH5(h5loc, hargs,
+//            "param" + std::to_string(paramnr++)
+            createparamname(typename MARQOV::detail::has_paramname<Hamiltonian>::type(), paramnr++)
+            
+        ), 0)... };
     }
     void dumplatparamstoH5(H5::Group& h5loc)
     {
