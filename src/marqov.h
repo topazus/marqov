@@ -280,6 +280,7 @@ auto setupstatespace(int size)
     auto retval = new typename Hamiltonian::StateVector[size];
     if (step > 0)
     {
+        std::cout<<"previous data found! Continuing simulation at step "<<step<<std::endl;
         auto stateds = stategroup.openDataSet("hamiltonianstatespace");
         auto dataspace = stateds.getSpace();
         //read the data... For now we just hope that everything matches...
@@ -439,34 +440,37 @@ file_info(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 	/** A helper function to dump the entire statespace
      */
 	void dumpstatespace()
-    {
+    {        
         //We interpret the statespace as a time-series of lattice points points
         constexpr int rank = H5Mapper<StateVector>::rank;
-        hsize_t fdims[rank] = {static_cast<hsize_t>(this->grid.size())};
-        hsize_t maxdims[rank] = {H5S_UNLIMITED};
+        constexpr auto len = std::tuple_size<StateVector>::value;
+        std::array<hsize_t, 1> fdims, maxdims, chunk_dims;
+        fdims.fill(static_cast<hsize_t>(this->grid.size()));
+        maxdims.fill(H5S_UNLIMITED);
 
-        H5::DataSpace mspace1(rank, fdims, maxdims);
+        H5::DataSpace mspace1(rank, fdims.data(), maxdims.data());
         H5::DSetCreatPropList cparms;
         auto fv = H5Mapper<StateVector>::fillval;
-
-        hsize_t chunk_dims[1] = {4096*1024/H5Mapper<StateVector>::bytecount};//4MB chunking
-        cparms.setChunk( rank, chunk_dims );
+        chunk_dims.fill(4096*1024/H5Mapper<StateVector>::bytecount);//4MB chunking
+        
+        cparms.setChunk( rank, chunk_dims.data() );
         cparms.setDeflate(9);//Best (1-9) compression
         cparms.setShuffle();
-        cparms.setFillValue(  H5Mapper<StateVector>::H5Type(), &fv);
+        cparms.setFillValue(H5Mapper<StateVector>::H5Type(), &fv);
         H5::DataSet dataset = stategroup.createDataSet("hamiltonianstatespace", H5Mapper<StateVector>::H5Type(), mspace1, cparms);
         
         
         auto filespace = dataset.getSpace();
-        hsize_t start[rank] = {0};
-        hsize_t count[rank] = {static_cast<hsize_t>(this->grid.size())};
-        filespace.selectHyperslab(H5S_SELECT_SET, count, start);
+        hsize_t start[rank] = {0};//This works for initialization
+        std::array<hsize_t, rank> count;
+        count.fill(static_cast<hsize_t>(this->grid.size()));
+        filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
         dataset.write(statespace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
     }
 	// Destructor
 	~Marqov() 
 	{
-          //dumpstatespace();
+          dumpstatespace();
 		  delete [] statespace;
           dump.close();
 	}
