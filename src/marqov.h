@@ -21,13 +21,15 @@
 
 namespace MARQOV
 {
-template <typename T>
-	void dumpscalartoH5(H5::Group& h5loc, const T& s, std::string name)
-{
-H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
-H5::DataSet dset(h5loc.createDataSet(name.c_str(), H5Mapper<T>::H5Type(), dspace));
-dset.write(&s, H5Mapper<T>::H5Type());
-}
+    template <typename T>
+    void dumpscalartoH5(H5::Group& h5loc, const T& s, std::string name)
+    {
+
+        H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
+        H5::DataSet dset(h5loc.createDataSet(name.c_str(), H5Mapper<T>::H5Type(), dspace));
+        dset.write(&s, H5Mapper<T>::H5Type());
+    }
+
 	struct MARQOVConfig
 	{
 		/**
@@ -275,30 +277,27 @@ class Marqov : public RefType<Grid>
 
 auto setupstatespace(int size)
 {
-auto retval = new typename Hamiltonian::StateVector[size];
-if (step > 0)
-{
- auto stateds = stategroup.openDataSet("hamiltonianstatespace");
- auto dataspace = stateds.getSpace();
- //read the data... For now we just hope that everything matches...
-int rank = dataspace.getSimpleExtentNdims();
-      hsize_t dims_out[rank];
-      int ndims = dataspace.getSimpleExtentDims( dims_out, NULL);
-
+    auto retval = new typename Hamiltonian::StateVector[size];
+    if (step > 0)
+    {
+        auto stateds = stategroup.openDataSet("hamiltonianstatespace");
+        auto dataspace = stateds.getSpace();
+        //read the data... For now we just hope that everything matches...
+        int rank = dataspace.getSimpleExtentNdims();
+        hsize_t dims_out[rank];
+        int ndims = dataspace.getSimpleExtentDims( dims_out, NULL);
 
         hsize_t fdims[rank] = {static_cast<hsize_t>(size)};
         hsize_t maxdims[rank] = {H5S_UNLIMITED};
 
         H5::DataSpace mspace1(rank, fdims, maxdims);
 
-
-
         hsize_t start[rank] = {0};
         hsize_t count[rank] = {static_cast<hsize_t>(size)};
         dataspace.selectHyperslab(H5S_SELECT_SET, count, start);
         stateds.read(statespace, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
-}
-return retval;
+    }
+    return retval;
 }
 
 /* Helper function for HDF5
@@ -329,10 +328,9 @@ file_info(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
         if (std::ifstream(filepath).good() && H5::H5File::isHdf5(filepath)) flag = H5F_ACC_RDWR;
         H5::H5File retval(filepath, flag);
         if (flag == H5F_ACC_RDWR) // abuse flag
-{
-        // We have to iterate through the root group and find the last step.
-        H5Literate(retval.getId(), H5_INDEX_NAME, H5_ITER_NATIVE, NULL, file_info, &step);
-}
+        {// We have to iterate through the root group and find the last step.
+            H5Literate(retval.getId(), H5_INDEX_NAME, H5_ITER_NATIVE, NULL, file_info, &step);
+        }
         step = step + 1; // If there is no file we start at 0, else we increment.
         createstep(retval, step, mc, std::forward<HArgs>(hargs)... );
         return retval;//hopefully the refcounting of HDF5 works....
@@ -341,16 +339,16 @@ file_info(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
     template <class ...HArgs>
     void dumphamparamstoH5(H5::Group& h5loc, HArgs&&... hargs)
     {
-     h5loc.setComment("These parameters are peculiar to the considered Hamiltonian.");
-            dumpscalartoH5(h5loc, beta, "beta");
-//Let's dump the unknown number of unknown parameters of the Hamiltonian....
-      int paramnr = 0;
-      (void) std::initializer_list<int>{((void) dumpscalartoH5(h5loc, hargs, "param" + std::to_string(paramnr++)), 0)... };
+        h5loc.setComment("These parameters are peculiar to the considered Hamiltonian.");
+        dumpscalartoH5(h5loc, beta, "beta");
+        //Let's dump the unknown number of unknown parameters of the Hamiltonian....
+        int paramnr = 0;
+//        (void) std::initializer_list<int>{((void) dumpscalartoH5(h5loc, hargs, "param" + std::to_string(paramnr++)), 0)... };
     }
     void dumplatparamstoH5(H5::Group& h5loc)
     {
-      h5loc.setComment("These parameters are peculiar to the lattice at hand.");
-    return;
+        h5loc.setComment("These parameters are peculiar to the lattice at hand.");
+        return;
     }
     void dumpenvtoH5(H5::Group& h5loc)
     {
