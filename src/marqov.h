@@ -343,7 +343,7 @@ file_info(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
         dumpscalartoH5(h5loc, beta, "beta");
         //Let's dump the unknown number of unknown parameters of the Hamiltonian....
         int paramnr = 0;
-//        (void) std::initializer_list<int>{((void) dumpscalartoH5(h5loc, hargs, "param" + std::to_string(paramnr++)), 0)... };
+        (void) std::initializer_list<int>{((void) dumpscalartoH5(h5loc, hargs, "param" + std::to_string(paramnr++)), 0)... };
     }
     void dumplatparamstoH5(H5::Group& h5loc)
     {
@@ -466,8 +466,8 @@ file_info(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 	// Destructor
 	~Marqov() 
 	{
-          dumpstatespace();
-		delete [] statespace;
+          //dumpstatespace();
+		  delete [] statespace;
           dump.close();
 	}
 
