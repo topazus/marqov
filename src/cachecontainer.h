@@ -38,6 +38,8 @@ SOFTWARE.
 template <typename T>
 class H5Mapper;
 
+/** First we have the POD Type H5 Types
+ */
 template <>
 class H5Mapper<double>
 {
@@ -58,14 +60,19 @@ class H5Mapper<int>
         static auto H5Type(){return H5::PredType::NATIVE_INT;}
 };
 
+/** This maps a 1D vector/array like structure to a custom HDF5 datatype.
+ */
 template <typename Tp>
 class H5Mapper
 {
     public:
-        static constexpr int fillval = H5Mapper<typename Tp::value_type>::fillval;
-        static constexpr int rank = std::tuple_size<Tp>::value;
-        static constexpr int bytecount = rank*H5Mapper<typename Tp::value_type>::bytecount;
-        static auto H5Type(){return H5Mapper<typename Tp::value_type>::H5Type();}
+        static constexpr auto fillval = H5Mapper<typename Tp::value_type>::fillval;
+        static constexpr int rank = 1;
+        static constexpr int bytecount = std::tuple_size<Tp>::value*H5Mapper<typename Tp::value_type>::bytecount;
+        static auto H5Type(){
+            hsize_t dims[1] = {std::tuple_size<Tp>::value};
+            return H5::ArrayType(H5Mapper<typename Tp::value_type>::H5Type(), rank, dims);
+        }
 };
 
 /** A helper structure to encapsulate the arguments of a single CacheContainer.
@@ -98,15 +105,16 @@ public:
     {
             cachemaxelems = cachesize/sizeof(T);
             constexpr int rank = H5Mapper<T>::rank;
-            hsize_t fdims[rank] = {0}; // dim sizes of ds (on disk)
-            hsize_t maxdims[rank] = {H5S_UNLIMITED};
+            std::array<hsize_t, rank> maxdims, chunk_dims;
+            hsize_t fdims[rank] = {0};
+            maxdims.fill(H5S_UNLIMITED);
 
-            H5::DataSpace mspace1(rank, fdims, maxdims);
+            H5::DataSpace mspace1(rank, fdims, maxdims.data());
             H5::DSetCreatPropList cparms;
             auto fv = H5Mapper<T>::fillval;
-
-            hsize_t chunk_dims[1] = {4096*1024/H5Mapper<T>::bytecount};//4MB chunking
-            cparms.setChunk( rank, chunk_dims );
+            
+            chunk_dims.fill(4096*1024/H5Mapper<T>::bytecount);//4MB chunking
+            cparms.setChunk( rank, chunk_dims.data() );
             cparms.setDeflate(9);//Best (1-9) compression
             cparms.setFillValue(  H5Mapper<T>::H5Type(), &fv);
             dataset = hfile.createDataSet(name, H5Mapper<T>::H5Type(), mspace1, cparms);
@@ -146,14 +154,16 @@ private:
         void writecache ()
         {
             constexpr int rank = H5Mapper<T>::rank;
-            hsize_t dims[rank] = {cachepos};
-            H5::DataSpace mspace(rank, dims, NULL);
-            hsize_t start[rank] = {dssize};
+            std::array<hsize_t, rank> dims, start, count;
+            dims.fill(cachepos);
+            H5::DataSpace mspace(rank, dims.data(), NULL);
+            start.fill(dssize);
+
             dssize += cachepos;
             dataset.extend(&dssize);
             auto filespace = dataset.getSpace();
-            hsize_t count[rank] = {cachepos};
-            filespace.selectHyperslab(H5S_SELECT_SET, count, start);
+            count.fill(cachepos);
+            filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data());
             dataset.write(cont.data(), H5Mapper<T>::H5Type(), mspace, filespace);
         }
     H5::DataSet dataset; ///< The HDF5 dataset
