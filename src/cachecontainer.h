@@ -35,44 +35,53 @@ SOFTWARE.
 
 /*some predefined HDF5 helpers --------------------------------*/
 
-template <typename T>
-class H5Mapper;
-
 /** First we have the POD Type H5 Types
  */
-template <>
-class H5Mapper<double>
-{
-    public:
-        static constexpr double fillval = 0;
-        static constexpr int bytecount = sizeof(double);
-        static constexpr int rank = 1;
-        static auto H5Type(){return H5::PredType::NATIVE_DOUBLE;}
+template <class T>
+struct H5MapperBase;
+
+template <> struct H5MapperBase<double> {
+    static auto H5Type(){return H5::PredType::NATIVE_DOUBLE;}
 };
 
-template <>
-class H5Mapper<int>
-{
-    public:
-        static constexpr int fillval = 0;
-        static constexpr int bytecount = sizeof(int);
-        static constexpr int rank = 1;
-        static auto H5Type(){return H5::PredType::NATIVE_INT;}
+template <> struct H5MapperBase<float> {
+    static auto H5Type(){return H5::PredType::NATIVE_FLOAT;}
+};
+
+template <> struct H5MapperBase<int16_t> {
+    static auto H5Type(){return H5::PredType::NATIVE_INT16;}
+};
+
+template <> struct H5MapperBase<int32_t> {
+    static auto H5Type(){return H5::PredType::NATIVE_INT32;}
+};
+
+template <> struct H5MapperBase<int64_t> {
+    static auto H5Type(){return H5::PredType::NATIVE_INT64;}
 };
 
 /** This maps a 1D vector/array like structure to a custom HDF5 datatype.
  */
-template <typename Tp>
+template <typename T, class Enable = void>
 class H5Mapper
 {
     public:
-        static constexpr auto fillval = H5Mapper<typename Tp::value_type>::fillval;
+        static constexpr auto fillval = H5Mapper<typename T::value_type>::fillval;
         static constexpr int rank = 1;
-        static constexpr int bytecount = std::tuple_size<Tp>::value*H5Mapper<typename Tp::value_type>::bytecount;
+        static constexpr int bytecount = std::tuple_size<T>::value*H5Mapper<typename T::value_type>::bytecount;
         static auto H5Type(){
-            hsize_t dims[1] = {std::tuple_size<Tp>::value};
-            return H5::ArrayType(H5Mapper<typename Tp::value_type>::H5Type(), rank, dims);
+            hsize_t dims[1] = {std::tuple_size<T>::value};
+            return H5::ArrayType(H5Mapper<typename T::value_type>::H5Type(), rank, dims);
         }
+};
+
+template <typename T>
+class H5Mapper<T, typename std::enable_if<std::is_scalar<T>::value>::type> : public H5MapperBase<T>
+{
+    public:
+        static constexpr T fillval = 0;
+        static constexpr int bytecount = sizeof(T);
+        static constexpr int rank = 1;
 };
 
 /** A helper structure to encapsulate the arguments of a single CacheContainer.
