@@ -26,6 +26,7 @@ SOFTWARE.
 */
 
 #include <cstdlib>
+#include <sstream>
 #include <stdexcept>
 
 template <class RNG>
@@ -69,20 +70,31 @@ public:
     {
         return min + integer()*(max-min)/RNG::max();
     }
-    /** In the future this should enable dumping of the internal state...
-     */
-    void dump()
-    {//FIXME!!
-    }
     /** The maximum integer that we support
      */
     static constexpr auto max() {return RNG::max();}
-private:
+    /** Fill the cache. Can also be used to flush the cache,
+     * i.e reset the cache after initally setting the state of the RNG.
+     */
     void fillcache() noexcept
     {
         for(int i = 0; i < nelems; ++i)
             data[i] = rng(); //We follow the C++11 convention that operator() advances the state of the RNG
     }
+    /** Dump the internal state of the RNG in a manner that it can be fully constructed from it.
+     * @return a vector of 64bit Integers that contain the state.
+     */
+    std::vector<int64_t> dumpstate()
+    {
+        typedef typename RNG::result_type IntType;
+        std::stringstream rngstate;
+        rngstate<<rng;//peculiar to the C++11 RNGs
+        std::vector<int64_t> retval;
+        int64_t t;
+        while (rngstate>>t) retval.push_back(t);
+        return retval;
+    }
+private:
     static constexpr int pagesize = 4096;
     static constexpr int nrpages = 2;
     typedef decltype(std::declval<RNG>().operator()()) result_type;
