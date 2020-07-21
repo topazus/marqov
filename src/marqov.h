@@ -334,6 +334,7 @@ auto setupstatespace(int size)
         dataspace.selectHyperslab(H5S_SELECT_SET, dims_out, start);
         stateds.read(rngstate.data(), H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
         }
+        rngcache.setstate(rngstate);
     }
     else
     {

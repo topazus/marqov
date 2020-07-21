@@ -94,6 +94,16 @@ public:
         while (rngstate>>t) retval.push_back(t);
         return retval;
     }
+    void setstate(std::vector<int64_t>& vec)
+    {
+        std::string rngstring;
+        for(int i = 0; i < vec.size(); ++i)
+        {
+           rngstring+=std::to_string(vec[i])+" ";
+        }
+        std::istringstream ss(rngstring);
+        ss>>rng;
+    }
 private:
     static constexpr int pagesize = 4096;
     static constexpr int nrpages = 2;
