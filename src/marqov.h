@@ -289,6 +289,8 @@ auto setupstatespace(int size)
     if (step > 0)
     {
         std::cout<<"previous data found! Continuing simulation at step "<<step<<std::endl;
+        //read in the state space
+        {
         auto stateds = stategroup.openDataSet("hamiltonianstatespace");
         auto dataspace = stateds.getSpace();
         //read the data... For now we just hope that everything matches...
@@ -305,6 +307,37 @@ auto setupstatespace(int size)
         hsize_t count[rank] = {static_cast<hsize_t>(size)};
         dataspace.selectHyperslab(H5S_SELECT_SET, count, start);
         stateds.read(statespace, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
+        }
+        
+        //FIXME read in the state of the RNG
+        std::vector<int64_t> rngstate;
+        {
+        auto stateds = stategroup.openDataSet("rngstate");
+        auto dataspace = stateds.getSpace();
+        //read the data... For now we just hope that everything matches...
+        int rank = dataspace.getSimpleExtentNdims();
+        hsize_t dims_out[rank];
+        int ndims = dataspace.getSimpleExtentDims( dims_out, NULL);
+        
+        rngstate.resize(dims_out[0]);
+        
+        hsize_t maxdims[rank];
+        for(int i = 0; i < rank; ++i)
+        {
+           maxdims[i] = H5S_UNLIMITED;
+        }
+
+        H5::DataSpace mspace1(rank, dims_out, maxdims);
+
+        hsize_t start[rank] = {0};
+//        hsize_t count[rank] = {static_cast<hsize_t>(size)};
+        dataspace.selectHyperslab(H5S_SELECT_SET, dims_out, start);
+        stateds.read(rngstate.data(), H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
+        }
+    }
+    else
+    {
+        //FIXME: initial seed!!
     }
     return retval;
 }
@@ -462,7 +495,34 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 	{
 		return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian, Grid, RNGCache<RNGType>, Ts... >::type(), this->statespace, this->grid, this->ham, std::forward<Ts>(ts)...);
 	}
+	
+	void dumprng()
+    {
+        //FIXME: We currently lack a proper way of writing out the *type* of the RNG.
+        auto rngstate = rngcache.dumpstate();
+        //We interpret the rng state space as a time series of 64bit integers
+        constexpr int rank = 1;
+        auto len = rngstate.size();
+        std::array<hsize_t, 1> fdims, maxdims;
+        fdims.fill(static_cast<hsize_t>(len));
+        maxdims.fill(len);
 
+        H5::DataSpace mspace1(rank, fdims.data(), maxdims.data());
+        H5::DSetCreatPropList cparms;
+        auto fv = H5Mapper<int64_t>::fillval;
+        
+        //no compression
+        
+        cparms.setFillValue(H5Mapper<int64_t>::H5Type(), &fv);
+        H5::DataSet dataset = stategroup.createDataSet("rngstate", H5Mapper<int64_t>::H5Type(), mspace1, cparms);
+        
+        auto filespace = dataset.getSpace();
+        hsize_t start[rank] = {0};//This works for initialization
+        std::array<hsize_t, rank> count;
+        count.fill(static_cast<hsize_t>(len));
+        filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
+        dataset.write(rngstate.data(), H5Mapper<int64_t>::H5Type(), mspace1, filespace);
+    }
 	/** A helper function to dump the entire statespace
      */
 	void dumpstatespace()
@@ -496,9 +556,10 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 	// Destructor
 	~Marqov() 
 	{
-          dumpstatespace();
-		  delete [] statespace;
-          dump.close();
+        dumprng();
+        dumpstatespace();
+        delete [] statespace;
+        dump.close();
 	}
 
 	//FIXME: Fix assignment and copying...
