@@ -15,16 +15,223 @@
 class EdwardsAndersonOrderParameter
 {
 	public:
+		int counter = 0;
 		std::string name;
+		std::vector<int> local_sum;
+
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			//
-			//
-			//
-			//
+			const int size = grid.size();
+
+			if (local_sum.size() == 0) 
+			{
+				local_sum.resize(size);
+				for (int i=0; i<size; i++) { local_sum[i] = 0; }
+			}
+
+			double retval = 0;
+
+			counter++;
+			for (int i=0; i<size; i++)
+			{
+				local_sum[i] += statespace[i][0];
+				retval += pow(local_sum[i],2);
+			}
+
+			return retval / double(size) / double(counter) / double(counter);
 		}
+
 		EdwardsAndersonOrderParameter() : name("qEA") {}
+};
+
+class LinkOverlap /// not working so far!!!!
+{
+	public:
+		int counter = 0;
+		std::string name;
+		std::vector<std::vector<int>> sum_ij;
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			const int size = grid.size();
+
+			if (sum_ij.size() == 0) 
+			{
+				sum_ij.resize(size);
+				for (int i=0; i<size; i++)
+				{
+					auto bnds = grid.getbnds(0,i);
+					auto nbnds = bnds.size();
+					sum_ij[i].resize(nbnds);
+
+					for (int j=0; j<nbnds; j++) sum_ij[i][j] = 0;
+				}
+			}
+			int nbondstot = 0;
+
+			for (int i=0; i<size; i++)
+			{
+				auto bnds = grid.getbnds(0,i);
+				auto nbnds = bnds.size();
+				nbondstot += nbnds;
+				for (int j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
+			}
+
+			counter++;
+			const double norml = 1. / double(counter) / double(nbondstot);
+
+
+			double retval = 0;
+
+			for (int i=0; i<size; i++)
+			{
+				auto bnds = grid.getbnds(0,i);
+				auto nbnds = bnds.size();
+				for (int j=0; j<nbnds; j++) retval += pow(sum_ij[i][j],2);
+			}
+			return norml * retval;
+		}
+
+		LinkOverlap() : name("ql") {}
+};
+
+
+class InternalEnergy /// not working so far!!!!
+{
+	public:
+		int counter = 0;
+		std::string name;
+		std::vector<std::vector<int>> sum_ij;
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			const int size = grid.size();
+
+			if (sum_ij.size() == 0) 
+			{
+				sum_ij.resize(size);
+				for (int i=0; i<size; i++)
+				{
+					auto bnds = grid.getbnds(0,i);
+					auto nbnds = bnds.size();
+					sum_ij[i].resize(nbnds);
+
+					for (int j=0; j<nbnds; j++) sum_ij[i][j] = 0;
+				}
+			}
+
+			for (int i=0; i<size; i++)
+			{
+				auto bnds = grid.getbnds(0,i);
+				auto nbnds = bnds.size();
+				for (int j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
+			}
+
+			const double norml = 1. / double(counter) / double(size);
+
+			counter++;
+
+			double retval = 0;
+
+			for (int i=0; i<size; i++)
+			{
+				auto bnds = grid.getbnds(0,i);
+				auto nbnds = bnds.size();
+				for (int j=0; j<nbnds; j++) retval += sum_ij[i][j] * bnds[j];
+			}
+			return - norml * retval;
+		}
+
+		InternalEnergy() : name("U") {}
+};
+		
+
+
+
+class Susceptibility
+{
+	private:
+		double kx;
+	public:
+		int counter = 0;
+		std::string name;
+		std::vector<int> sum_i;
+		std::vector<std::vector<int>> sum_ij;
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			const int size = grid.size();
+			std::complex<double> jj(0,1); 
+
+			const double norml = 1. /  double(size) / double(size) / double(counter) / double(counter);
+
+			if (sum_ij.size() == 0) 
+			{
+				sum_ij.resize(size);
+				for (int i=0; i<size; i++)
+				{
+					sum_ij[i].resize(size);
+					for (int j=0; j<size; j++)
+					{
+						sum_ij[i][j] = 0;
+					}
+				}
+			}
+
+			if (sum_i.size() == 0) 
+			{
+				sum_i.resize(size);
+				for (int i=0; i<size; i++) sum_i[i] = 0;
+			}
+
+			std::complex<double> retval = 0;
+
+			counter++;
+
+			for (int i=0; i<size; i++)
+			{
+				sum_i[i] += statespace[i][0];
+
+				for (int j=0; j<size; j++)
+				{
+					sum_ij[i][j] += statespace[i][0]*statespace[j][0];
+				}
+			}
+
+
+			for (int i=0; i<size; i++)
+			{
+				for (int j=0; j<size; j++)
+				{
+					const int dir = 0; // we consider only the first spatial component
+
+					const std::vector<double> xi = {grid.getcrds(i)[dir]};
+					const std::vector<double> xj = {grid.getcrds(j)[dir]};
+
+					auto diff = xi[0] - xj[0];
+
+					if (fabs(diff)>0.5) diff = 1.0 - fabs(diff); // account for PBC
+
+					std::complex<double> phase = std::exp(kx*diff*jj);
+
+					retval += pow(sum_ij[i][j],2) * phase;
+				}
+			}
+
+			return norml * std::abs(retval);
+
+			// open questions:
+			// - should the distance vector account for PBC? -> most likely yes
+			// - correct normalization -> almost ;)
+			// - order of averages correct? -> think so
+			// - what to return? absolute value, real part, ...?
+		}
+
+		Susceptibility(double kx, std::string name) : kx(kx), name(name) {}
 };
 
 // Scalar overlap
@@ -39,6 +246,7 @@ class ScalarOverlap
 			//
 			//
 			//
+			return 0;
 		}
 		ScalarOverlap() : name("q") {}
 };
@@ -83,6 +291,7 @@ class EdwardsAndersonIsing
 	public:
 		double J;
 		constexpr static int SymD = 1;
+		const std::string name;
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = EdwardsAndersonIsing_Initializer<StateVector, RNG>;
@@ -91,7 +300,7 @@ class EdwardsAndersonIsing
 		static constexpr uint Nbeta = 0;
 		static constexpr uint Ngamma = 0;
 		
-		EdwardsAndersonIsing(double J) : J(J)
+		EdwardsAndersonIsing(double J) : J(J), name("EdwardsAndersonIsing"), obs_chi(0, "chi") , obs_chiKmin(2.0*M_PI, "chiKmin")
 		{
 			interactions[0] = new EdwardsAndersonIsing_interaction<StateVector>(J); 
 		}
@@ -104,7 +313,11 @@ class EdwardsAndersonIsing
 		// instantiate and choose observables
 		EdwardsAndersonOrderParameter      obs_qEA;
 		ScalarOverlap					obs_q;
-		auto getobs()	{return std::make_tuple(obs_qEA, obs_q);}
+		Susceptibility					obs_chi;
+		Susceptibility					obs_chiKmin;
+		InternalEnergy					obs_U;
+		LinkOverlap					obs_ql;
+		auto getobs()	{return std::make_tuple(obs_qEA, obs_chi, obs_chiKmin, obs_U, obs_ql);}
 
 
 		// initialize state space
@@ -176,6 +389,10 @@ namespace MARQOV {
 					auto idx = nbrs[i];
 					auto nbr = ham.interactions[a]->get(statespace[idx]);
 					averagevector = averagevector + MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
+
+//					auto temp = MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
+//					cout << temp[0] << endl; 
+
 				}
 				interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
 			}

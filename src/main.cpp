@@ -14,12 +14,12 @@ using std::flush;
 using std::ofstream;
 
 #include "rndwrapper.h"
+#include "helpers.h"
 #include "geom/regular_lattice.h"
 #include "geom/grid.h"
 #include "geom/neighbourclass.h"
 #include "geom/io.h"
 #include "vectorhelpers.h"
-#include "helpers.h"
 #include "cartprod.h"
 #include "registry.h"
 #include "systemtools.h"
@@ -157,6 +157,7 @@ void Loop(const std::vector<Parameters>& params, Callable filter)
 	{
 		auto& marqov = sims[i];
 		marqov.init();
+//		marqov.gameloop_liveview();
 //		marqov.debugloop(100,0,1);
 		marqov.wrmploop();
 		marqov.gameloop();
@@ -189,8 +190,8 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
         	MARQOVConfig mp(outpath);
         	mp.setnsweeps(5);
 		mp.setncluster(15);
-		mp.setwarmupsteps(500);
-		mp.setgameloopsteps(1500);
+		mp.setwarmupsteps(300);
+		mp.setgameloopsteps(900);
 
 		makeDir(mp.outpath);
 
@@ -288,7 +289,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	// ----------------- select simulation ------------------
 
-	if (ham == "Ising")
+	if (startswith(ham, "Ising"))
 	{
 		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
@@ -454,7 +455,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 // 		 	Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
 // 		}
 // 	}
-	/*
     else if (ham == "IrregularIsing1")
     {
 		//
@@ -488,7 +488,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		// perform simulations
 		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
 	}
-	*/
 }
 
 
@@ -499,6 +498,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 int main()
 {
+
 	// read config files
 	RegistryDB registry("../src/config");
 

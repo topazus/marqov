@@ -26,7 +26,54 @@ SOFTWARE.
 */
 
 #include <cstdlib>
+#include <sstream>
 #include <stdexcept>
+#include <random>
+
+template <typename T>
+struct RNGName;
+
+template <>
+struct RNGName<std::ranlux48_base>
+{
+    std::string name;
+    RNGName() : name("ranlux48_base") {}
+};
+
+template <>
+struct RNGName<std::ranlux24_base>
+{
+    std::string name;
+    RNGName() : name("ranlux24_base") {}
+};
+
+template <>
+struct RNGName<std::mt19937_64>
+{
+    std::string name;
+    RNGName() : name("mt19937_64") {}
+};
+
+template <>
+struct RNGName<std::mt19937>
+{
+    std::string name;
+    RNGName() : name("mt19937") {}
+};
+
+template <>
+struct RNGName<std::minstd_rand>
+{
+    std::string name;
+    RNGName() : name("minstd_rand") {}
+};
+
+template <>
+struct RNGName<std::minstd_rand0>
+{
+    std::string name;
+    RNGName() : name("minstd_rand0") {}
+};
 
 template <class RNG>
 class RNGCache
@@ -46,6 +93,14 @@ public:
     ~RNGCache()
     {
         free(data);
+    }
+    /** Get a random uniform Integer from [0, range]
+     * @param range
+     * @return a random integer
+     */
+    inline auto integer(int range) noexcept
+    {
+        return integer()%range;
     }
     /** Get a random uniform Integer from [0, max()]
      * @return a random integer
@@ -69,20 +124,41 @@ public:
     {
         return min + integer()*(max-min)/RNG::max();
     }
-    /** In the future this should enable dumping of the internal state...
-     */
-    void dump()
-    {//FIXME!!
-    }
     /** The maximum integer that we support
      */
     static constexpr auto max() {return RNG::max();}
-private:
+    /** Fill the cache. Can also be used to flush the cache,
+     * i.e reset the cache after initally setting the state of the RNG.
+     */
     void fillcache() noexcept
     {
         for(int i = 0; i < nelems; ++i)
             data[i] = rng(); //We follow the C++11 convention that operator() advances the state of the RNG
     }
+    /** Dump the internal state of the RNG in a manner that it can be fully constructed from it.
+     * @return a vector of 64bit Integers that contain the state.
+     */
+    std::vector<int64_t> dumpstate()
+    {
+        typedef typename RNG::result_type IntType;
+        std::stringstream rngstate;
+        rngstate<<rng;//peculiar to the C++11 RNGs
+        std::vector<int64_t> retval;
+        int64_t t;
+        while (rngstate>>t) retval.push_back(t);
+        return retval;
+    }
+    void setstate(std::vector<int64_t>& vec)
+    {
+        std::string rngstring;
+        for(int i = 0; i < vec.size(); ++i)
+        {
+           rngstring+=std::to_string(vec[i])+" ";
+        }
+        std::istringstream ss(rngstring);
+        ss>>rng;
+    }
+private:
     static constexpr int pagesize = 4096;
     static constexpr int nrpages = 2;
     typedef decltype(std::declval<RNG>().operator()()) result_type;

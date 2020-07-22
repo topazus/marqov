@@ -195,13 +195,14 @@ class XXZAntiferro
 		static constexpr uint Nalpha = 1;
 		static constexpr uint Nbeta  = 1;
 		static constexpr uint Ngamma = 0;
+		const std::string name;
 
 		// requires pointers
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		XXZAntiferro(double myDelta, double myH) : Delta(myDelta), H(myH)
+		XXZAntiferro(double myDelta, double myH) : Delta(myDelta), H(myH), name("XXZAntiferro")
 		{
 			interactions[0] = new XXZAntiferro_interaction<StateVector>(Delta); 
 			onsite[0]       = new XXZAntiferro_extfield<StateVector>(H);

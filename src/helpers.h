@@ -82,4 +82,25 @@ std::vector<double> create_range(double rangestart, double rangefinal, int steps
 	return range;
 }
 
+
+
+// Transforming a one-dimensional, “flattened” index into the N-dimensional vector index of an N-dimensional array
+
+// from: stackoverflow.com/questions/18932339/transforming-a-one-dimensional-flattened-index-into-the-n-dimensional-vector
+// explicit formulas for 2D and 3D: stackoverflow.com/questions/18932339/transforming-a-one-dimensional-flattened-index-into-the-n-dimensional-vector
+
+std::vector<int> IndexOf(int k, int nDim, int nBin)
+{
+	std::vector<int> indices;
+
+	for (int i=0; i<nDim; i++)
+	{
+		double index = std::fmod( double(k)/pow(nBin,i), nBin);
+		indices.push_back(int(index));
+		k -= index * pow(nBin,i);
+	}
+
+	return indices;
+}
+
 #endif
