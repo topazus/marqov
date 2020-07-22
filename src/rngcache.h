@@ -48,6 +48,14 @@ public:
     {
         free(data);
     }
+    /** Get a random uniform Integer from [0, range]
+     * @param range
+     * @return a random integer
+     */
+    inline auto integer(int range) noexcept
+    {
+        return integer()%range;
+    }
     /** Get a random uniform Integer from [0, max()]
      * @return a random integer
      */
