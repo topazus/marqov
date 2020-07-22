@@ -98,8 +98,26 @@ public:
      * @param range
      * @return a random integer
      */
-    inline auto integer(int range) noexcept
-    {
+    inline uint64_t integer(uint64_t range) noexcept
+    {//From here: https://github.com/imneme/bounded-rands/blob/master/bounded64.cpp
+        uint64_t x = integer();
+        __uint128_t m = __uint128_t(x) * __uint128_t(range);
+        uint64_t l = uint64_t(m);
+        if (l < range) {
+            uint64_t t = -range;
+            if (t >= range) {
+                t -= range;
+                if (t >= range) 
+                    t %= range;
+            }
+            while (l < t) {
+                x = integer();
+                m = __uint128_t(x) * __uint128_t(range);
+                l = uint64_t(m);
+            }
+        }
+        return m >> 64;
+        
         return integer()%range;
     }
     /** Get a random uniform Integer from [0, max()]
