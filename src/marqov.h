@@ -294,17 +294,18 @@ auto setupstatespace(int size)
         auto dataspace = stateds.getSpace();
         //read the data... For now we just hope that everything matches...
         int rank = dataspace.getSimpleExtentNdims();
-        hsize_t dims_out[rank];
+        hsize_t dims_out[rank], fdims[rank], maxdims[rank], start[rank];
         int ndims = dataspace.getSimpleExtentDims( dims_out, NULL);
-
-        hsize_t fdims[rank] = {static_cast<hsize_t>(size)};
-        hsize_t maxdims[rank] = {H5S_UNLIMITED};
+        
+        for(int i = 0; i < rank; ++i)
+        {
+            fdims[i] = static_cast<hsize_t>(size);
+            maxdims[i] = H5S_UNLIMITED;
+            start[i] = 0;
+        }
 
         H5::DataSpace mspace1(rank, fdims, maxdims);
-
-        hsize_t start[rank] = {0};
-        hsize_t count[rank] = {static_cast<hsize_t>(size)};
-        dataspace.selectHyperslab(H5S_SELECT_SET, count, start);
+        dataspace.selectHyperslab(H5S_SELECT_SET, fdims, start);//We have no separate count array since fdims contains identical information
         stateds.read(statespace, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
         }
         
@@ -325,15 +326,14 @@ auto setupstatespace(int size)
             int ndims = dataspace.getSimpleExtentDims( dims_out, NULL);
             
             rngstate.resize(dims_out[0]);
-            hsize_t maxdims[rank];
+            hsize_t maxdims[rank], start[rank];
             for(int i = 0; i < rank; ++i)
             {
                 maxdims[i] = H5S_UNLIMITED;
+                start[i] = 0;
             }
             
             H5::DataSpace mspace1(rank, dims_out, maxdims);
-            
-            hsize_t start[rank] = {0};
             
             dataspace.selectHyperslab(H5S_SELECT_SET, dims_out, start);
             stateds.read(rngstate.data(), H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
