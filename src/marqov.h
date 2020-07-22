@@ -409,6 +409,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
     void dumplatparamstoH5(H5::Group& h5loc)
     {
         h5loc.setComment("These parameters are peculiar to the lattice at hand.");
+        dumpscalartoH5(h5loc, this->grid.size(), "size");
         return;
     }
     void dumpenvtoH5(H5::Group& h5loc)
