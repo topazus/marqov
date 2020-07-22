@@ -13,7 +13,7 @@ double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep()
 	double avgclustersize = 0;
 	for (int j=0; j < mcfg.ncluster; j++)
 	{
-		const int rsite = rngcache.integer()%this->grid.size();
+		const int rsite = rngcache.integer(this->grid.size());
 
 		// Heisenberg; random direction
 		const auto rdir = rnddir<RNGCache<RNGType>, typename StateVector::value_type, SymD>(rngcache);
@@ -28,7 +28,7 @@ double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep()
 		// loop sites
 		for(decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
 		{
-			const int rsite = rngcache.integer()%this->grid.size();
+			const int rsite = rngcache.integer(this->grid.size());
 			metropolisstep(rsite);
 		}
 	}

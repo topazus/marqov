@@ -236,18 +236,31 @@ class XXZAntiferroSingleAniso
 		static constexpr uint Nalpha = 1;
 		static constexpr uint Nbeta  = 2;
 		static constexpr uint Ngamma = 0;
+		const std::string name;
 
 		// instantiate interaction terms (requires pointers) 
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		XXZAntiferroSingleAniso(double myH, double myDelta, double myD) : Delta(myDelta), H(myH), D(myD)	
+		XXZAntiferroSingleAniso(double myH, double myDelta, double myD) : Delta(myDelta), H(myH), D(myD), name("XXZAntiferroSingleAniso")
 		{
 			interactions[0] = new XXZAntiferroSingleAniso_interaction<StateVector>(Delta); 
 			onsite[0]       = new XXZAntiferroSingleAniso_extfield<StateVector>(H);
 			onsite[1]       = new XXZAntiferroSingleAniso_onsiteaniso<StateVector>(D);
 		}
+		
+		std::string paramname(int i) {//A helper function to have nice names for the I/O
+            std::string retval;
+            switch(i)
+            {
+                case (0): retval = "H"; break;
+                case (1): retval = "Delta"; break;
+                case (2): retval = "D"; break;
+                default : break;
+            }
+            return retval;
+        }
 		
 		// instantiate and choose observables
 		XXZAntiferroSingleAnisoStaggeredMagZ  obs_mstagz;

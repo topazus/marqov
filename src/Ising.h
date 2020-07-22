@@ -121,6 +121,7 @@ class Ising
 	public:
 		double J;
 		constexpr static int SymD = 1;
+		const std::string name;
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
@@ -129,7 +130,7 @@ class Ising
 		static constexpr uint Nbeta = 0;
 		static constexpr uint Ngamma = 0;
 		
-		Ising(double J) : J(J), obs_e(*this), obs_fx(0), obs_fy(1)  
+		Ising(double J) : J(J), name("Ising"), obs_e(*this), obs_fx(0), obs_fy(1)  
 		{
 			interactions[0] = new Ising_interaction<StateVector>(J); 
 		}

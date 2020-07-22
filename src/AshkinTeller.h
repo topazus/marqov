@@ -59,12 +59,13 @@ class AshkinTeller
 	public:
 		double J, K;
 		constexpr static int SymD = 3;
+		const std::string name;
 		typedef std::array<SpinType, SymD> StateVector;
 		typedef AshkinTeller<int> myHamiltonian;
 		template <typename RNG>
 		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
 
-		AshkinTeller(double J, double K) : J(J), K(K) {}
+		AshkinTeller(double J, double K) : J(J), K(K), name("AshkinTeller") {}
 		
 	
 		// instantiate and choose observables
