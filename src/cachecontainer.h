@@ -60,6 +60,10 @@ template <> struct H5MapperBase<int64_t> {
     static auto H5Type(){return H5::PredType::NATIVE_INT64;}
 };
 
+template <> struct H5MapperBase<long unsigned int> {
+    static auto H5Type(){return H5::PredType::NATIVE_ULONG;}
+};
+
 /** This maps a 1D vector/array like structure to a custom HDF5 datatype.
  */
 template <typename T, class Enable = void>
