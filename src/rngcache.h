@@ -28,6 +28,52 @@ SOFTWARE.
 #include <cstdlib>
 #include <sstream>
 #include <stdexcept>
+#include <random>
+
+template <typename T>
+struct RNGName;
+
+template <>
+struct RNGName<std::ranlux48_base>
+{
+    std::string name;
+    RNGName() : name("ranlux48_base") {}
+};
+
+template <>
+struct RNGName<std::ranlux24_base>
+{
+    std::string name;
+    RNGName() : name("ranlux24_base") {}
+};
+
+template <>
+struct RNGName<std::mt19937_64>
+{
+    std::string name;
+    RNGName() : name("mt19937_64") {}
+};
+
+template <>
+struct RNGName<std::mt19937>
+{
+    std::string name;
+    RNGName() : name("mt19937") {}
+};
+
+template <>
+struct RNGName<std::minstd_rand>
+{
+    std::string name;
+    RNGName() : name("minstd_rand") {}
+};
+
+template <>
+struct RNGName<std::minstd_rand0>
+{
+    std::string name;
+    RNGName() : name("minstd_rand0") {}
+};
 
 template <class RNG>
 class RNGCache

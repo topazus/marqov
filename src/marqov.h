@@ -9,7 +9,6 @@
 #include <type_traits>
 #include <utility>
 #include <tuple>
-#include <random>
 #include <chrono>
 #include <unistd.h> // provides usleep
 #include <stdexcept>
@@ -309,30 +308,35 @@ auto setupstatespace(int size)
         stateds.read(statespace, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
         }
         
-        //FIXME read in the state of the RNG
+        //compare the used RNGs
+        {
+            auto stateds = stategroup.openDataSet("RNG");
+            auto dataspace = stateds.getSpace();
+            //FIXME: proper reading of strings...
+        }
+        
         std::vector<int64_t> rngstate;
         {
-        auto stateds = stategroup.openDataSet("rngstate");
-        auto dataspace = stateds.getSpace();
-        //read the data... For now we just hope that everything matches...
-        int rank = dataspace.getSimpleExtentNdims();
-        hsize_t dims_out[rank];
-        int ndims = dataspace.getSimpleExtentDims( dims_out, NULL);
-        
-        rngstate.resize(dims_out[0]);
-        
-        hsize_t maxdims[rank];
-        for(int i = 0; i < rank; ++i)
-        {
-           maxdims[i] = H5S_UNLIMITED;
-        }
-
-        H5::DataSpace mspace1(rank, dims_out, maxdims);
-
-        hsize_t start[rank] = {0};
-//        hsize_t count[rank] = {static_cast<hsize_t>(size)};
-        dataspace.selectHyperslab(H5S_SELECT_SET, dims_out, start);
-        stateds.read(rngstate.data(), H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
+            auto stateds = stategroup.openDataSet("rngstate");
+            auto dataspace = stateds.getSpace();
+            //read the data... For now we just hope that everything matches...
+            int rank = dataspace.getSimpleExtentNdims();
+            hsize_t dims_out[rank];
+            int ndims = dataspace.getSimpleExtentDims( dims_out, NULL);
+            
+            rngstate.resize(dims_out[0]);
+            hsize_t maxdims[rank];
+            for(int i = 0; i < rank; ++i)
+            {
+                maxdims[i] = H5S_UNLIMITED;
+            }
+            
+            H5::DataSpace mspace1(rank, dims_out, maxdims);
+            
+            hsize_t start[rank] = {0};
+            
+            dataspace.selectHyperslab(H5S_SELECT_SET, dims_out, start);
+            stateds.read(rngstate.data(), H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
         }
         rngcache.setstate(rngstate);
     }
@@ -392,7 +396,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
     template <class ...HArgs>
     void dumphamparamstoH5(H5::Group& h5loc, HArgs&&... hargs)
     {
-        H5::StrType strdatatype(H5::PredType::C_S1, ham.name.size());
+         H5::StrType strdatatype(H5::PredType::C_S1, ham.name.size());
          H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
          H5::DataSet dset(h5loc.createDataSet("Model", strdatatype, dspace));
          dset.setComment("This is the Model. This should correspond to a class name");
@@ -500,7 +504,11 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 	
 	void dumprng()
     {
-        //FIXME: We currently lack a proper way of writing out the *type* of the RNG.
+        H5::StrType strdatatype(H5::PredType::C_S1, RNGName<RNGType>().name.size());
+        H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
+        H5::DataSet dset(stategroup.createDataSet("RNG", strdatatype, dspace));
+        dset.write(RNGName<RNGType>().name.c_str(), strdatatype);
+        
         auto rngstate = rngcache.dumpstate();
         //We interpret the rng state space as a time series of 64bit integers
         constexpr int rank = 1;
