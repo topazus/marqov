@@ -442,7 +442,8 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
         dumpscalartoH5(h5loc, std::string("startingdate"), std::string(timestamp));
         
         dumpscalartoH5(h5loc, std::string("Code"), std::string("MARQOV"));
-        dumpscalartoH5(h5loc, std::string("E-Mail"), std::string("marqov@physik.uni-wuerzburg.de"));        
+        dumpscalartoH5(h5loc, std::string("Website"), std::string("marqov.physik.uni-wuerzburg.de"));
+        dumpscalartoH5(h5loc, std::string("E-Mail"), std::string("marqov@physik.uni-wuerzburg.de"));
     }
     
     /** This creates a single step in the HDF5 File.
