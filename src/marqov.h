@@ -9,33 +9,17 @@
 #include <type_traits>
 #include <utility>
 #include <tuple>
-#include <chrono>
-#include <unistd.h> // provides usleep
 #include <stdexcept>
 #include <random>
 #include <ctime>
+#include <chrono>
+#include <thread>
 #include "cachecontainer.h"
 #include "svmath.h"
 #include "rngcache.h"
 
 namespace MARQOV
 {
-    template <typename T>
-    inline void dumpscalartoH5(H5::Group& h5loc, std::string key, const T& s)
-    {
-
-        H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
-        H5::DataSet dset(h5loc.createDataSet(key.c_str(), H5Mapper<T>::H5Type(), dspace));
-        dset.write(&s, H5Mapper<T>::H5Type());
-    }
-    inline void dumpscalartoH5(H5::Group& h5loc, std::string key, std::string value)
-    {
-        H5::StrType strdatatype(H5::PredType::C_S1, value.size());
-        H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
-        H5::DataSet dset(h5loc.createDataSet(key.c_str(), strdatatype, dspace));
-        dset.write(value.c_str(), strdatatype);
-    }
-
 	struct MARQOVConfig
 	{
 		/**
@@ -109,6 +93,12 @@ namespace MARQOV
             dumpscalartoH5(mcg, "nsweeps", nsweeps);
         };
 	};
+    
+    /** This function gathers information about the environment and dumps it into 
+    * the specified HDF5 Group.
+    * @param h5loc the HDF5 group where we generate all the information.
+    */
+    void dumpEnvironmenttoHDF5Group(H5::Group& h5loc);
     
 	template<class> 
 	struct type_sink { typedef void type; }; // consumes a type, and makes it `void`
@@ -417,39 +407,30 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
             createparamname(typename MARQOV::detail::has_paramname<Hamiltonian>::type(), paramnr++)
             , hargs), 0)... };
     }
+    /** This function writes out the parameters of the lattice.
+     * UNIMPLEMENTED
+     * @param h5loc The group where to dump the information.
+     */
     void dumplatparamstoH5(H5::Group& h5loc)
     {
         h5loc.setComment("These parameters are peculiar to the lattice at hand.");
         dumpscalartoH5(h5loc, "size", this->grid.size());
         return;
     }
+    /** This function tries to dump as much useful information about the environment into 
+     *  the container as possible.
+     * @param h5loc The group where to dump the information.
+     */
     void dumpenvtoH5(H5::Group& h5loc)
     {
-        h5loc.setComment("Here we have various parameters of the host system.");
-        //Acquire hostname
-        char hostname[HOST_NAME_MAX];
-        int err = gethostname(hostname, HOST_NAME_MAX);
-        if (err == 0) // We were able to retrieve a hostname, hence we dump it
-        {
-            dumpscalartoH5(h5loc, std::string("hostname"), std::string(hostname));
-        }
-        std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-        std::time_t start_time = std::chrono::system_clock::to_time_t(now);
-        char timestamp[100];
-        struct tm buf;
-        buf = *(std::localtime(&start_time));
-        std::strftime(timestamp, sizeof(timestamp), "%A %Y-%m-%d %H:%M:%S", &buf);
-        dumpscalartoH5(h5loc, std::string("startingdate"), std::string(timestamp));
-        
-        dumpscalartoH5(h5loc, std::string("Code"), std::string("MARQOV"));
-        dumpscalartoH5(h5loc, std::string("Website"), std::string("marqov.physik.uni-wuerzburg.de"));
-        dumpscalartoH5(h5loc, std::string("E-Mail"), std::string("marqov@physik.uni-wuerzburg.de"));
+        dumpEnvironmenttoHDF5Group(h5loc);
     }
     
     /** This creates a single step in the HDF5 File.
      * @param file the HDF5 file where to create the step
      * @param s the number of the step
-     * @param mc
+     * @param mc the parameters of MARQOV
+     * @param hargs the argument tuple of the Hamiltonian
      */
     template <class... HArgs>
     void createstep(H5::H5File& file, int s, const MARQOVConfig& mc, HArgs&& ...hargs)
@@ -699,8 +680,9 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 
 			for (int j=0; j<nsweepsbetweenframe; j++) elementaryMCstep();
 				
-			unsigned int microsec = 20000; 
-			usleep(microsec);
+			unsigned int microsec = 20000;
+            std::this_thread::sleep_for(std::chrono::microseconds(microsec));
+//			usleep(microsec);
 			system("tput reset");
 			
 			visualize_state_2d();

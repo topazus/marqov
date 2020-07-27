@@ -88,6 +88,23 @@ class H5Mapper<T, typename std::enable_if<std::is_scalar<T>::value>::type> : pub
         static constexpr int rank = 1;
 };
 
+//Helper to dump a single key-value pair into its own scalar data space
+template <typename T>
+inline void dumpscalartoH5(H5::Group& h5loc, std::string key, const T& s)
+{
+    
+    H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
+    H5::DataSet dset(h5loc.createDataSet(key.c_str(), H5Mapper<T>::H5Type(), dspace));
+    dset.write(&s, H5Mapper<T>::H5Type());
+}
+inline void dumpscalartoH5(H5::Group& h5loc, std::string key, std::string value)
+{
+    H5::StrType strdatatype(H5::PredType::C_S1, value.size());
+    H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
+    H5::DataSet dset(h5loc.createDataSet(key.c_str(), strdatatype, dspace));
+    dset.write(value.c_str(), strdatatype);
+}
+
 /** A helper structure to encapsulate the arguments of a single CacheContainer.
 *  The rationale was that it was ambiguous to use tuples of tuples. tuple_cat()
 *  would flatten all tuples.
