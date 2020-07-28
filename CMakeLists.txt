@@ -13,6 +13,8 @@ execute_process(
         COMMAND git rev-parse --abbrev-ref HEAD
         OUTPUT_VARIABLE GIT_BRANCH)
 string(STRIP "${GIT_BRANCH}" GIT_BRANCH)
+else()
+set(GIT_BRANCH, "N/A")
 endif()
 
 if(CMAKE_VERSION VERSION_LESS "3.10.0")
