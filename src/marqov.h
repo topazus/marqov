@@ -435,6 +435,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
     template <class... HArgs>
     void createstep(H5::H5File& file, int s, const MARQOVConfig& mc, HArgs&& ...hargs)
     {
+        file.setComment("A caclculation is made up by a series of steps. Each step can use as input the previous step.");
         std::string stepname = "step" + std::to_string(s);
         H5::Group step(file.createGroup(stepname));
         step.setComment("A single step encapsulates the initial config, the observable time series and the final state.");
