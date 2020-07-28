@@ -9,26 +9,17 @@
 #include <type_traits>
 #include <utility>
 #include <tuple>
-#include <chrono>
-#include <unistd.h> // provides usleep
 #include <stdexcept>
 #include <random>
 #include <ctime>
+#include <chrono>
+#include <thread>
 #include "cachecontainer.h"
 #include "svmath.h"
 #include "rngcache.h"
 
 namespace MARQOV
 {
-    template <typename T>
-    void dumpscalartoH5(H5::Group& h5loc, const T& s, std::string name)
-    {
-
-        H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
-        H5::DataSet dset(h5loc.createDataSet(name.c_str(), H5Mapper<T>::H5Type(), dspace));
-        dset.write(&s, H5Mapper<T>::H5Type());
-    }
-
 	struct MARQOVConfig
 	{
 		/**
@@ -69,10 +60,10 @@ namespace MARQOV
 		// MC variables
 		int id;
 		int repid;
-		int seed; ///< Doing this correctly opens a whole can of worms.... At one point we need to dump the state of the RNG for restart.
+		int seed; ///< Doing this correctly opens a whole can of worms... We now dump the RNG state
 		int gli; ///< The unknown gameloop integer
-		int nsteps;
-		int warmupsteps;
+		int nsteps; ///< The number of elementary Monte Carlo steps
+		int warmupsteps; ///< The number of steps to do for warmups
 		int gameloopsteps;
 		int ncluster;
 		int nsweeps;
@@ -91,17 +82,23 @@ namespace MARQOV
 		void dumpparamstoH5(H5::Group& mcg) const
         {
             mcg.setComment("Here we store all parameters that are in the MARQOVconfig object. They are mostly method related numbers and strings");
-            dumpscalartoH5(mcg, id, "id");
-            dumpscalartoH5(mcg, repid, "repid");
-            dumpscalartoH5(mcg, seed, "seed");
-            dumpscalartoH5(mcg, gli, "gli");
-            dumpscalartoH5(mcg, nsteps, "nsteps");
-            dumpscalartoH5(mcg, warmupsteps, "warmupsteps");
-            dumpscalartoH5(mcg, gameloopsteps, "gameloopsteps");
-            dumpscalartoH5(mcg, ncluster, "ncluster");
-            dumpscalartoH5(mcg, nsweeps, "nsweeps");
+            dumpscalartoH5(mcg, "id", id);
+            dumpscalartoH5(mcg, "repid", repid);
+            dumpscalartoH5(mcg, "seed", seed);
+            dumpscalartoH5(mcg, "gli", gli);
+            dumpscalartoH5(mcg, "nsteps", nsteps);
+            dumpscalartoH5(mcg, "warmupsteps", warmupsteps);
+            dumpscalartoH5(mcg, "gameloopsteps", gameloopsteps);
+            dumpscalartoH5(mcg, "ncluster", ncluster);
+            dumpscalartoH5(mcg, "nsweeps", nsweeps);
         };
 	};
+    
+    /** This function gathers information about the environment and dumps it into 
+    * the specified HDF5 Group.
+    * @param h5loc the HDF5 group where we generate all the information.
+    */
+    void dumpEnvironmenttoHDF5Group(H5::Group& h5loc);
     
 	template<class> 
 	struct type_sink { typedef void type; }; // consumes a type, and makes it `void`
@@ -403,55 +400,42 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
          dset.write(ham.name.c_str(), strdatatype);
          
         h5loc.setComment("These parameters are peculiar to the considered Hamiltonian.");
-        dumpscalartoH5(h5loc, beta, "beta");
+        dumpscalartoH5(h5loc, "beta", beta);
         //Let's dump the unknown number of unknown parameters of the Hamiltonian....
         int paramnr = 0;
-        (void) std::initializer_list<int>{((void) dumpscalartoH5(h5loc, hargs,
+        (void) std::initializer_list<int>{((void) dumpscalartoH5(h5loc,
             createparamname(typename MARQOV::detail::has_paramname<Hamiltonian>::type(), paramnr++)
-        ), 0)... };
+            , hargs), 0)... };
     }
+    /** This function writes out the parameters of the lattice.
+     * UNIMPLEMENTED
+     * @param h5loc The group where to dump the information.
+     */
     void dumplatparamstoH5(H5::Group& h5loc)
     {
         h5loc.setComment("These parameters are peculiar to the lattice at hand.");
-        dumpscalartoH5(h5loc, this->grid.size(), "size");
+        dumpscalartoH5(h5loc, "size", this->grid.size());
         return;
     }
+    /** This function tries to dump as much useful information about the environment into 
+     *  the container as possible.
+     * @param h5loc The group where to dump the information.
+     */
     void dumpenvtoH5(H5::Group& h5loc)
     {
-     h5loc.setComment("Here we have various parameters of the host system.");
-     //Acquire hostname
-     char hostname[HOST_NAME_MAX];
-     int err = gethostname(hostname, HOST_NAME_MAX);
-     if (err == 0) // We were able to retrieve a hostname, hence we dump it
-     {
-         std::string hn(hostname);
-         H5::StrType strdatatype(H5::PredType::C_S1, hn.size());
-         H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
-         H5::DataSet dset(h5loc.createDataSet("hostname", strdatatype, dspace));
-         dset.write(hn.c_str(), strdatatype);
-     }
-         std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-         std::time_t start_time = std::chrono::system_clock::to_time_t(now);
-         char timestamp[100];
-         struct tm buf;
-         buf = *(std::localtime(&start_time));
-         std::strftime(timestamp, sizeof(timestamp), "%A %Y-%m-%d %H:%M:%S", &buf);
-         std::string ts(timestamp);
-
-         H5::StrType strdatatype(H5::PredType::C_S1, ts.size());
-         H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
-         H5::DataSet dset(h5loc.createDataSet("startingdate", strdatatype, dspace));
-         dset.write(ts.c_str(), strdatatype);
-
+        dumpEnvironmenttoHDF5Group(h5loc);
     }
+    
     /** This creates a single step in the HDF5 File.
      * @param file the HDF5 file where to create the step
      * @param s the number of the step
-     * @param mc
+     * @param mc the parameters of MARQOV
+     * @param hargs the argument tuple of the Hamiltonian
      */
     template <class... HArgs>
     void createstep(H5::H5File& file, int s, const MARQOVConfig& mc, HArgs&& ...hargs)
     {
+        file.setComment("A caclculation is made up by a series of steps. Each step can use as input the previous step.");
         std::string stepname = "step" + std::to_string(s);
         H5::Group step(file.createGroup(stepname));
         step.setComment("A single step encapsulates the initial config, the observable time series and the final state.");
@@ -697,8 +681,9 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 
 			for (int j=0; j<nsweepsbetweenframe; j++) elementaryMCstep();
 				
-			unsigned int microsec = 20000; 
-			usleep(microsec);
+			unsigned int microsec = 20000;
+            std::this_thread::sleep_for(std::chrono::microseconds(microsec));
+//			usleep(microsec);
 			system("tput reset");
 			
 			visualize_state_2d();
