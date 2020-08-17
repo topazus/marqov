@@ -111,10 +111,11 @@ inline void dumpscalartoH5(H5::Group& h5loc, std::string key, std::string value)
 */
 struct CacheContainerArgs
 {
-    CacheContainerArgs(H5::Group& file, const std::string& n, std::size_t cs=4194304) :
-    hfile(file), obsname(n), cachesize(cs) {}
+    CacheContainerArgs(H5::Group& file, const std::string& n, std::string d = "", std::size_t cs=4194304) :
+    hfile(file), obsname(n), desc(d), cachesize(cs) {}
     H5::Group& hfile;
     const std::string& obsname;
+    const std::string desc;
     std::size_t cachesize;
 };
 
@@ -131,7 +132,7 @@ public:
     *   @param name the name of the data set in HDF5
     *   @param cs the memory size in Bytes to use for caching. Will be rounded to integers of datatypes
     */
-    CacheContainer(H5::Group& hfile, const std::string& name, std::size_t cachesize=4194304) : cachepos(0)
+    CacheContainer(H5::Group& hfile, const std::string& name, std::string desc = "", std::size_t cachesize=4194304) : cachepos(0)
     {
             cachemaxelems = cachesize/sizeof(T);
             constexpr int rank = H5Mapper<T>::rank;
@@ -154,7 +155,7 @@ public:
     /** A helper constructor that forwards to the main constructor
     * @param args the Argument helper structure
     */
-    CacheContainer(CacheContainerArgs args) : CacheContainer<T, Cont>(args.hfile, args.obsname, args.cachesize) {}
+    CacheContainer(CacheContainerArgs args) : CacheContainer<T, Cont>(args.hfile, args.obsname, args.desc, args.cachesize) {}
     /* Destructor that takes care of flushing the cache.
     */
     ~CacheContainer()
