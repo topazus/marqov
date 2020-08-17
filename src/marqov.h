@@ -138,7 +138,7 @@ namespace MARQOV
 				L grid;
 		};
 		        
-		//A helper to decide whether a Hamiltonian provides a init function
+		//A helper to decide whether a Hamiltonian provides an init function
 		template<class StateSpace, class H, class L, class R, class=void, class... Ts> struct has_init : std::false_type {};
 		template<class StateSpace, class H, class L, class RNG, class... Ts>
 		struct has_init<StateSpace, H, L, RNG,
@@ -150,7 +150,9 @@ namespace MARQOV
         template<class H>
 		struct has_paramname<H,
 		type_sink_t<decltype( std::declval<H>().paramname(std::declval<int>()) )> > : std::true_type {};
-        
+     
+        template <int i, class Tup>
+        auto createCArgTuple(H5::Group& h5loc, Tup& t) {return std::make_tuple(CacheContainerArgs(h5loc, std::get<i>(t).name));}
 	};
     
     
@@ -167,9 +169,6 @@ namespace MARQOV
 		return _call(f, obj, t, std::make_index_sequence<size>{});
 	}
 
-
-
-
 // --------------------------- MARQOV CLASS -------------------------------
 
 template <class Grid, class Hamiltonian, template<class> class RefType = detail::Ref >
@@ -185,12 +184,13 @@ class Marqov : public RefType<Grid>
 		template <typename T>
 		struct ObsRetType
 		{
-			// this determines the value that we will pass to the vector from the return type of the measure function of the observable...
+			// This determines the value that we will pass to the vector from the return type of the measure function of the observable...
 			typedef decltype(
 				std::declval<T>().template measure<StateSpace, Grid>(
 					std::declval<StateSpace>(), std::declval<Grid>() )) RetType;
 		};
 
+        /*The following three class templates help to generate from a tuple of Observables the tuple of ObscacheContainers.*/
 		template <int N, typename Tup>
 		struct ObsCacheTupleIter
 		{
@@ -201,8 +201,8 @@ class Marqov : public RefType<Grid>
 		    
 		    static auto getargtuple(H5::Group& h5loc, Tup& t){
 		        return std::tuple_cat( 
-		        ObsCacheTupleIter<N-1, Tup>::getargtuple(h5loc, t),
-		        std::make_tuple(CacheContainerArgs(h5loc, std::get<N>(t).name)));}
+		        ObsCacheTupleIter<N-1, Tup>::getargtuple(h5loc, t)
+                , detail::createCArgTuple<N>(h5loc, t));}
 		};
 		
 		template <typename Tup>
@@ -212,7 +212,7 @@ class Marqov : public RefType<Grid>
 		    typename ObsRetType<typename std::tuple_element<0, Tup>::type>::RetType
 		    > > RetType;
 		    
-		    static auto getargtuple(H5::Group& h5loc, Tup& t){return std::make_tuple(CacheContainerArgs(h5loc, std::get<0>(t).name));}
+		    static auto getargtuple(H5::Group& h5loc, Tup& t){return detail::createCArgTuple<0>(h5loc, t);}
 		};
 		
 		template <typename Tup>
@@ -284,7 +284,7 @@ auto setupstatespace(int size)
     auto retval = new typename Hamiltonian::StateVector[size];
     if (step > 0)
     {
-        std::cout<<"previous data found! Continuing simulation at step "<<step<<std::endl;
+        std::cout<<"Previous data found! Continuing simulation at step "<<step<<std::endl;
         //read in the state space
         {
         auto stateds = stategroup.openDataSet("hamiltonianstatespace");
