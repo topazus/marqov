@@ -56,14 +56,38 @@ class Phi4_Initializer
 		// generate new statevector
 		StateVector newsv(const StateVector& osv) 
 		{
-            double amp = 0.5;
-            double r = rng.real(-1.0, 1.0);
-            double oldlen = std::sqrt(dot(osv, osv));
-            double newlen = oldlen + amp*r;
-            auto newdir = rnddir<RNG, double, SymD>(rng);
-            for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
-                newdir[i] *= newlen;
-			return newdir;
+
+			/* Francesco version (component-wise)
+			const int comp =	rng.integer(3);
+			double amp = 0.5;
+			double r = rng.real(-1.0, 1.0);
+			double oldval = osv[comp];
+			double newval = oldval + amp*r;
+			
+			auto nsv = osv;
+			nsv[comp] = newval;
+			return nsv;
+			*/
+
+
+
+			double amp = 0.5;
+			auto newdir = rnddir<RNG, double, SymD>(rng);
+			auto nsv = osv + mult(amp,newdir);
+			return nsv;
+
+
+		  	/* old (and wrong)
+
+            	double amp = 0.05;
+            	double r = rng.real(-1.0, 1.0);
+            	double oldlen = std::sqrt(dot(osv, osv));
+            	double newlen = oldlen + amp*r;
+            	auto newdir = rnddir<RNG, double, SymD>(rng);
+            	for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
+            	    newdir[i] *= newlen;
+		  	   return newdir;
+		  	*/
 		};
 
 	private:
