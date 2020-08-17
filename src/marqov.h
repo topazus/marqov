@@ -159,7 +159,13 @@ namespace MARQOV
 		type_sink_t<decltype( std::declval<O>().desc )> > : std::true_type {};
      
         template <int i, class Tup>
-        auto createCArgTuple(H5::Group& h5loc, Tup& t) {return std::make_tuple(CacheContainerArgs(h5loc, std::get<i>(t).name));}
+        auto createCArgTuple_impl(H5::Group& h5loc, Tup& t, std::true_type) {return std::make_tuple(CacheContainerArgs(h5loc, std::get<i>(t).name, std::get<i>(t).desc));}
+        
+        template <int i, class Tup>
+        auto createCArgTuple_impl(H5::Group& h5loc, Tup& t, std::false_type) {return std::make_tuple(CacheContainerArgs(h5loc, std::get<i>(t).name));}
+        
+        template <int i, class Tup>
+        auto createCArgTuple(H5::Group& h5loc, Tup& t) {return detail::createCArgTuple_impl<i>(h5loc, t, typename obs_has_desc<typename std::tuple_element<i, Tup>::type>::type() );}
 	};
     
     
