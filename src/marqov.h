@@ -150,6 +150,13 @@ namespace MARQOV
         template<class H>
 		struct has_paramname<H,
 		type_sink_t<decltype( std::declval<H>().paramname(std::declval<int>()) )> > : std::true_type {};
+        
+        //A helper to decide whether an observable provides a description
+        template<class O, class = void> struct obs_has_desc : std::false_type {};
+        
+        template<class O>
+		struct obs_has_desc<O,
+		type_sink_t<decltype( std::declval<O>().desc )> > : std::true_type {};
      
         template <int i, class Tup>
         auto createCArgTuple(H5::Group& h5loc, Tup& t) {return std::make_tuple(CacheContainerArgs(h5loc, std::get<i>(t).name));}
