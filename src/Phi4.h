@@ -39,6 +39,51 @@ class Phi4Mag
 };
 
 
+
+// I am not sure this is calculated correctly!
+class Phi4MagFTComp
+{
+	public:
+		int dir;
+		std::string name;
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			constexpr static int SymD = 3;     // improve me
+
+			const int N = grid.size();
+			const int L = grid.len;
+
+			std::vector<std::complex<double>> magFTcomp(SymD,0);
+			std::complex<double> jj(0,1);
+
+			for (int i=0; i<N; i++)
+			{
+				double x = grid.getcrds(i)[dir];
+
+				for (int j=0; j<SymD; j++)
+				{
+					magFTcomp[j] += double(statespace[i][j]) * std::exp(2.0*M_PI*x*jj);
+				}
+			}
+
+			std::complex<double> retval = 0;
+			for (int j=0; j<SymD; j++)
+			{
+				retval += magFTcomp[j]*magFTcomp[j]; 
+			}
+
+			return std::pow(std::abs(retval/double(N)),2);
+
+		}
+
+	Phi4MagFTComp(int dir=0) : dir(dir), name("x"+std::to_string(dir)) {}
+};
+
+
+
+
 // ----------------------------------------------------------------------
 
 
