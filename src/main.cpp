@@ -188,9 +188,9 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 
         	MARQOVConfig mp(outpath);
         	mp.setnsweeps(5);
-		mp.setncluster(15);
-		mp.setwarmupsteps(300);
-		mp.setgameloopsteps(900);
+		mp.setncluster(L);
+		mp.setwarmupsteps(100);
+		mp.setgameloopsteps(300);
 
 		makeDir(mp.outpath);
 

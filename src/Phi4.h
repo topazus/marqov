@@ -8,7 +8,7 @@
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-class Phi4Mag
+class Phi4Mag // normalized
 {
      public:
           std::string name;
@@ -39,8 +39,6 @@ class Phi4Mag
 };
 
 
-
-// I am not sure this is calculated correctly!
 class Phi4MagFTComp
 {
 	public:
@@ -61,6 +59,7 @@ class Phi4MagFTComp
 			for (int i=0; i<N; i++)
 			{
 				double x = grid.getcrds(i)[dir];
+//				double x = 0;  // debug
 
 				for (int j=0; j<SymD; j++)
 				{
@@ -68,13 +67,20 @@ class Phi4MagFTComp
 				}
 			}
 
-			std::complex<double> retval = 0;
+			// normalize (per spin)
 			for (int j=0; j<SymD; j++)
 			{
-				retval += magFTcomp[j]*magFTcomp[j]; 
+				magFTcomp[j] /= double(N); 
 			}
 
-			return std::pow(std::abs(retval/double(N)),2);
+			// dot product of complex vector
+			double retval = 0;
+			for (int j=0; j<SymD; j++)
+			{
+				retval += std::real(magFTcomp[j]*std::conj(magFTcomp[j])); 
+			}
+
+			return retval;
 
 		}
 
@@ -202,7 +208,7 @@ class Phi4
 		OnSite<StateVector, FPType>* onsite[Nbeta]; //Todo: External fields not yet supported
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Phi4(double beta, double lambda, double mass) : beta(beta), lambda(lambda), mass(mass), name("Phi4")
+		Phi4(double beta, double lambda, double mass) : beta(beta), lambda(lambda), mass(mass), name("Phi4"), obs_fx(0), obs_fy(1), obs_fz(2)
 		{
 			interactions[0] = new Phi4_interaction<StateVector>();
 			onsite[0]       = new Phi4_onsitesquare<StateVector>(mass, beta);
@@ -210,7 +216,10 @@ class Phi4
 		}
 
 		Phi4Mag obs_m;
-		auto getobs() { return std::make_tuple(obs_m);}
+		Phi4MagFTComp obs_fx;
+		Phi4MagFTComp obs_fy;
+		Phi4MagFTComp obs_fz;
+		auto getobs() { return std::make_tuple(obs_m, obs_fx, obs_fy, obs_fz);}
 
 
 		// --- Wolff ---
