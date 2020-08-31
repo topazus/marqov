@@ -15,7 +15,7 @@
 class IsingMag
 {
 	public:
-		std::string name;
+		std::string name, desc;
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
@@ -30,7 +30,7 @@ class IsingMag
 
 			return std::abs(mag)/double(N);
 		}
-		IsingMag() : name("m") {}
+		IsingMag() : name("m"), desc("The Magnetization of the Ising Modell") {}
 };
 
 template <class Hamiltonian>
