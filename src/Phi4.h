@@ -39,6 +39,51 @@ class Phi4Mag
 };
 
 
+
+// I am not sure this is calculated correctly!
+class Phi4MagFTComp
+{
+	public:
+		int dir;
+		std::string name;
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			constexpr static int SymD = 3;     // improve me
+
+			const int N = grid.size();
+			const int L = grid.len;
+
+			std::vector<std::complex<double>> magFTcomp(SymD,0);
+			std::complex<double> jj(0,1);
+
+			for (int i=0; i<N; i++)
+			{
+				double x = grid.getcrds(i)[dir];
+
+				for (int j=0; j<SymD; j++)
+				{
+					magFTcomp[j] += double(statespace[i][j]) * std::exp(2.0*M_PI*x*jj);
+				}
+			}
+
+			std::complex<double> retval = 0;
+			for (int j=0; j<SymD; j++)
+			{
+				retval += magFTcomp[j]*magFTcomp[j]; 
+			}
+
+			return std::pow(std::abs(retval/double(N)),2);
+
+		}
+
+	Phi4MagFTComp(int dir=0) : dir(dir), name("x"+std::to_string(dir)) {}
+};
+
+
+
+
 // ----------------------------------------------------------------------
 
 
@@ -56,14 +101,38 @@ class Phi4_Initializer
 		// generate new statevector
 		StateVector newsv(const StateVector& osv) 
 		{
-            double amp = 0.5;
-            double r = rng.real(-1.0, 1.0);
-            double oldlen = std::sqrt(dot(osv, osv));
-            double newlen = oldlen + amp*r;
-            auto newdir = rnddir<RNG, double, SymD>(rng);
-            for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
-                newdir[i] *= newlen;
-			return newdir;
+
+			/* Francesco version (component-wise)
+			const int comp =	rng.integer(3);
+			double amp = 0.5;
+			double r = rng.real(-1.0, 1.0);
+			double oldval = osv[comp];
+			double newval = oldval + amp*r;
+			
+			auto nsv = osv;
+			nsv[comp] = newval;
+			return nsv;
+			*/
+
+
+
+			double amp = 0.5;
+			auto newdir = rnddir<RNG, double, SymD>(rng);
+			auto nsv = osv + mult(amp,newdir);
+			return nsv;
+
+
+		  	/* old (and wrong)
+
+            	double amp = 0.05;
+            	double r = rng.real(-1.0, 1.0);
+            	double oldlen = std::sqrt(dot(osv, osv));
+            	double newlen = oldlen + amp*r;
+            	auto newdir = rnddir<RNG, double, SymD>(rng);
+            	for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
+            	    newdir[i] *= newlen;
+		  	   return newdir;
+		  	*/
 		};
 
 	private:
