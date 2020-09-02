@@ -16,6 +16,7 @@ using std::ofstream;
 #include "rndwrapper.h"
 #include "helpers.h"
 #include "geom/regular_lattice.h"
+#include "geom/ssh_lattice.h"
 #include "geom/grid.h"
 #include "geom/neighbourclass.h"
 #include "geom/io.h"
@@ -36,6 +37,7 @@ using std::ofstream;
 #include "XXZAntiferroSingleAniso.h"
 #include "AshkinTeller.h"
 #include "EdwardsAndersonIsing.h"
+#include "Ssh.h"
 
 using namespace MARQOV;
 
@@ -187,10 +189,10 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
         	MARQOVConfig mp(outpath);
-        	mp.setnsweeps(5);
-		mp.setncluster(L);
-		mp.setwarmupsteps(100);
-		mp.setgameloopsteps(300);
+        	mp.setnsweeps(2);
+		mp.setncluster(int(L/2));
+		mp.setwarmupsteps(300);
+		mp.setgameloopsteps(600);
 
 		makeDir(mp.outpath);
 
@@ -448,6 +450,56 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<GaussianPDF>>(rparams, defaultfilter_triple);
 		}
 	}
+	else if (ham == "SSH")
+	{
+
+		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+		auto m    = registry.Get<std::vector<double> >("mc", ham, "m");
+		auto k    = registry.Get<std::vector<double> >("mc", ham, "k");
+		auto dtau    = registry.Get<std::vector<double> >("mc", ham, "dtau");
+
+		auto hp = cart_prod(beta, m, k, dtau);
+
+		const auto name      = registry.Get<std::string>("mc", "General", "Hamiltonian" );
+		      auto nreplicas = registry.Get<std::vector<int>>("mc", name, "rep" );
+		const auto nL  	 = registry.Get<std::vector<int>>("mc", name, "L" );
+		const auto dim 	 = registry.Get<int>("mc", name, "dim" );
+	
+		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+	
+		// lattice size loop
+		for (std::size_t j=0; j<nL.size(); j++)
+		{
+			// prepare
+			int L = nL[j];
+			cout << endl << "L = " << L << endl << endl;
+	
+			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+	
+	        	MARQOVConfig mp(outpath);
+	        	mp.setnsweeps(5);
+			mp.setncluster(0);
+			mp.setwarmupsteps(1000);
+			mp.setgameloopsteps(10000);
+	
+			makeDir(mp.outpath);
+	
+			auto params = finalize_parameter_pair(mp, hp);
+			auto rparams = replicator_pair(params, nreplicas[j]);
+	
+			// lattice
+			SSHLattice latt(L, dim);
+	
+			// set up and execute
+	 		auto f = [&defaultfilter, &latt, &outbasedir, L](auto p){return defaultfilter(latt, p);}; //partially apply filter
+	 		Loop<SSH<double>, SSHLattice>(rparams, f);
+		}
+//		write_logfile(registry, beta);
+	}
+
+
+
+
 	else if (ham == "IsingCC")
 	{
 		const auto ham        = registry.Get<std::string>("mc", "General", "Hamiltonian" );

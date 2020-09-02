@@ -1,10 +1,27 @@
 [General]
 
-Hamiltonian = Phi4
+Hamiltonian = SSH
+
+
+[SSH]
+
+L = 20
+Ltau = 10
+dim = 2
+
+rep = 1
+
+beta = 1.0
+m = 1
+k = 1
+dtau = 0.1
+
+
+
 
 [Phi4]
 
-L   = 4,6,8,12,16,24,32,48
+L   = 4,6,8,12,16,24,32,48,64
 rep = 50
 dim = 3
 
