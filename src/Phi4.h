@@ -77,7 +77,8 @@ class Phi4MagFTComp
 			double retval = 0;
 			for (int j=0; j<SymD; j++)
 			{
-				retval += std::real(magFTcomp[j]*std::conj(magFTcomp[j])); 
+//				retval += std::real(magFTcomp[j]*std::conj(magFTcomp[j])); 
+				retval += std::norm(magFTcomp[j]);
 			}
 
 			return retval;
