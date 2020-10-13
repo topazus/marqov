@@ -56,6 +56,24 @@ public:
 
     		return retval;
 	}
+	value_type getbnds(int a, int i) const {
+        value_type retval;
+        switch(a) 
+        {
+            case 0:
+                retval = {1,1};
+                break;
+            case 1:
+                retval.reserve(this->length*this->length);
+                for(int j = 0; j < i; ++j)
+                retval.push_back(1.0/j);
+                for(int j = i+1; j < this->length*this->length; ++j)
+                retval.push_back(1.0/j);
+                break;
+        }
+        return retval;
+    }
+	
 
     std::size_t size() const {return numberatoms;}
     int length;
