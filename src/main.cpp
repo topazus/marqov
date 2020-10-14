@@ -293,7 +293,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		std::string str_repid = std::to_string(mp.repid);
 		std::string str_k     = "k"+std::to_string(std::get<2>(hp));
 		std::string str_dtau  = "dtau"+std::to_string(std::get<3>(hp));
-		mp.outname = str_k+"_"+str_dtau+"_"+str_repid;
+		mp.outname = mp.outname+"_"+str_k+"_"+str_dtau+"_"+str_repid;
 		return std::tuple_cat(std::forward_as_tuple(latt), p);
 	};
 
@@ -473,9 +473,11 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		const auto name      = registry.Get<std::string>("mc", "General", "Hamiltonian" );
 		      auto nreplicas = registry.Get<std::vector<int>>("mc", name, "rep" );
-		const auto nL  	 = registry.Get<std::vector<int>>("mc", name, "L" );
+		const auto nL 	 = registry.Get<std::vector<int>>("mc", name, "L" );
+		const auto nLtime  	 = registry.Get<std::vector<int>>("mc", name, "Ltime" );
 		const auto dim 	 = registry.Get<int>("mc", name, "dim" );
 	
+		// set up replicas
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 	
 		// lattice size loop
@@ -483,7 +485,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		{
 			// prepare
 			int L = nL[j];
-			cout << endl << "L = " << L << endl << endl;
+			int Ltime  = nLtime[j];
+			cout << endl << "L_space = " << L << "\t" << "L_time = " << Ltime << endl << endl;
 	
 			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 	
@@ -492,6 +495,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			mp.setncluster(0);
 			mp.setwarmupsteps(1000);
 			mp.setgameloopsteps(1000);
+
+			mp.outname = "Ltime"+std::to_string(Ltime);
 	
 			makeDir(mp.outpath);
 	
@@ -499,13 +504,12 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			auto rparams = replicator_pair(params, nreplicas[j]);
 	
 			// lattice
-			SSHLattice latt(L, dim);
+			SSHLattice latt(L, Ltime, dim);
 	
 			// set up and execute
 	 		auto f = [&sshfilter, &latt, &outbasedir, L](auto p){return sshfilter(latt, p);}; //partially apply filter
 	 		Loop<SSH<double>, SSHLattice>(rparams, f);
 		}
-//		write_logfile(registry, beta);
 	}
 
 

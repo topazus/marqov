@@ -5,8 +5,8 @@ Hamiltonian = SSH
 
 [SSH]
 
-L = 250
-Ltau = 10
+L = 25
+Ltime = 77
 dim = 2
 
 rep = 1
