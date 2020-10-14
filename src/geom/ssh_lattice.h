@@ -42,8 +42,13 @@ public:
 
 		value_type operator[](int i) const
 		{
+			int j = i / length;
 
-			return std::vector<int> {(i-1+length)%length, (i+1)%length};
+			int offset = j * length;
+
+
+
+			return std::vector<int> {(i-1+length)%length+offset, (i+1)%length+offset};
 
 		}
 

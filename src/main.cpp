@@ -285,6 +285,17 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	};
 
 
+	auto sshfilter = [](auto& latt, auto p)
+	{
+		auto& mp = p.first;		// Monte Carlo params
+		auto& hp = p.second;	// Hamiltonian params
+		
+		std::string str_repid = std::to_string(mp.repid);
+		std::string str_k     = "k"+std::to_string(std::get<2>(hp));
+		std::string str_dtau  = "dtau"+std::to_string(std::get<3>(hp));
+		mp.outname = str_k+"_"+str_dtau+"_"+str_repid;
+		return std::tuple_cat(std::forward_as_tuple(latt), p);
+	};
 
 
 
@@ -480,7 +491,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	        	mp.setnsweeps(5);
 			mp.setncluster(0);
 			mp.setwarmupsteps(1000);
-			mp.setgameloopsteps(10000);
+			mp.setgameloopsteps(1000);
 	
 			makeDir(mp.outpath);
 	
@@ -491,7 +502,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			SSHLattice latt(L, dim);
 	
 			// set up and execute
-	 		auto f = [&defaultfilter, &latt, &outbasedir, L](auto p){return defaultfilter(latt, p);}; //partially apply filter
+	 		auto f = [&sshfilter, &latt, &outbasedir, L](auto p){return sshfilter(latt, p);}; //partially apply filter
 	 		Loop<SSH<double>, SSHLattice>(rparams, f);
 		}
 //		write_logfile(registry, beta);
