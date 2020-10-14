@@ -27,6 +27,7 @@ using std::ofstream;
 #include "replicate.h"
 #include "marqov.h"
 #include "svmath.h"
+#include "filters.h"
 
 // Hamiltonians
 #include "Heisenberg.h"
@@ -239,66 +240,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	auto ham = selectsim_startup(registry);
 
-
-	// -------------------- filters --------------------
-
-	// filter to determine output file path and name
-	// the filter _must_ set the outname
-
-	auto defaultfilter = [](auto& latt, auto p)
-	{
-		auto& mp = p.first;		// Monte Carlo params
-		auto& hp = p.second;	// Hamiltonian params
-		
-		std::string str_repid = std::to_string(mp.repid);
-		std::string str_beta  = "beta"+std::to_string(std::get<0>(hp));
-		mp.outname = str_beta+"_"+str_repid;
-		return std::tuple_cat(std::forward_as_tuple(latt), p);
-	};
-
-	auto defaultfilter_triple = [](auto p)
-	{
-       	auto& lp = p.first;
-       	auto& mp = p.second;
-       	auto& hp = p.third;
-
- 		auto str_repid = std::to_string(mp.repid);
-		auto str_beta  = "beta"+std::to_string(std::get<0>(hp));
-		auto str_L     = std::to_string(std::get<0>(lp));
-
-		mp.outname = str_beta+"_"+str_repid;
-
-		return p;
-	};
-
-	auto xxzfilter = [](auto& latt, auto p)
-	{	
-		auto& mp = p.first;		// Monte Carlo params
-		auto& hp = p.second;	// Hamiltonian params
-	
-		std::string str_repid = std::to_string(mp.repid);
-		std::string str_beta  = "beta"+std::to_string(std::get<0>(hp));
-		std::string str_extf  = "extf"+std::to_string(std::get<1>(hp));
-		mp.outname = str_beta+"_"+str_extf+"_"+str_repid;
-
-		return std::tuple_cat(std::forward_as_tuple(latt), p);
-	};
-
-
-	auto sshfilter = [](auto& latt, auto p)
-	{
-		auto& mp = p.first;		// Monte Carlo params
-		auto& hp = p.second;	// Hamiltonian params
-		
-		std::string str_repid = std::to_string(mp.repid);
-		std::string str_k     = "k"+std::to_string(std::get<2>(hp));
-		std::string str_dtau  = "dtau"+std::to_string(std::get<3>(hp));
-		mp.outname = mp.outname+"_"+str_k+"_"+str_dtau+"_"+str_repid;
-		return std::tuple_cat(std::forward_as_tuple(latt), p);
-	};
-
-
-
 	// ----------------- select simulation ------------------
 
 	if (startswith(ham, "Ising"))
@@ -464,51 +405,60 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	else if (ham == "SSH")
 	{
 
-		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
-		auto m    = registry.Get<std::vector<double> >("mc", ham, "m");
-		auto k    = registry.Get<std::vector<double> >("mc", ham, "k");
-		auto dtau    = registry.Get<std::vector<double> >("mc", ham, "dtau");
-
-		auto hp = cart_prod(beta, m, k, dtau);
+		auto beta   = registry.Get<std::vector<double> >("mc", ham, "betaMC");
+		auto betaQM = registry.Get<double>("mc", ham, "betaQM");
+		auto m      = registry.Get<std::vector<double> >("mc", ham, "m");
+		auto k      = registry.Get<std::vector<double> >("mc", ham, "k");
 
 		const auto name      = registry.Get<std::string>("mc", "General", "Hamiltonian" );
 		      auto nreplicas = registry.Get<std::vector<int>>("mc", name, "rep" );
-		const auto nL 	 = registry.Get<std::vector<int>>("mc", name, "L" );
+		const auto nL 	      = registry.Get<std::vector<int>>("mc", name, "L" );
 		const auto nLtime  	 = registry.Get<std::vector<int>>("mc", name, "Ltime" );
 		const auto dim 	 = registry.Get<int>("mc", name, "dim" );
-	
+
+
+
 		// set up replicas
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 	
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
 		{
-			// prepare
-			int L = nL[j];
-			int Ltime  = nLtime[j];
-			cout << endl << "L_space = " << L << "\t" << "L_time = " << Ltime << endl << endl;
+			for (std::size_t jj=0; jj<nLtime.size(); jj++)
+			{
+				// prepare
+				int L = nL[j];
+				int Ltime  = nLtime[jj];
+				cout << endl << "L_space = " << L << "\t" << "L_time = " << Ltime << endl << endl;
 	
-			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+				std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 	
-	        	MARQOVConfig mp(outpath);
-	        	mp.setnsweeps(5);
-			mp.setncluster(0);
-			mp.setwarmupsteps(1000);
-			mp.setgameloopsteps(1000);
+	     	   	MARQOVConfig mp(outpath);
+	     	   	mp.setnsweeps(5);
+				mp.setncluster(0);
+				mp.setwarmupsteps(1000);
+				mp.setgameloopsteps(1000);
 
-			mp.outname = "Ltime"+std::to_string(Ltime);
+				mp.outname = "Ltime"+std::to_string(Ltime);
 	
-			makeDir(mp.outpath);
+				makeDir(mp.outpath);
+
 	
-			auto params = finalize_parameter_pair(mp, hp);
-			auto rparams = replicator_pair(params, nreplicas[j]);
+				// compute delta tau
+				std::vector<double> dtau = {betaQM/double(Ltime)};
+
+				// set up parameters
+				auto hp = cart_prod(beta, m, k, dtau);
+				auto params = finalize_parameter_pair(mp, hp);
+				auto rparams = replicator_pair(params, nreplicas[j]);
 	
-			// lattice
-			SSHLattice latt(L, Ltime, dim);
+				// lattice
+				SSHLattice latt(L, Ltime, dim);
 	
-			// set up and execute
-	 		auto f = [&sshfilter, &latt, &outbasedir, L](auto p){return sshfilter(latt, p);}; //partially apply filter
-	 		Loop<SSH<double>, SSHLattice>(rparams, f);
+				// set up and execute
+	 			auto f = [&sshfilter, &latt, &outbasedir, L](auto p){return sshfilter(latt, p);}; //partially apply filter
+	 			Loop<SSH<double>, SSHLattice>(rparams, f);
+			}
 		}
 	}
 

@@ -122,7 +122,7 @@ class SSH
 		using MetroInitializer = SSH_Initializer<StateVector, RNG>;
 
 		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta = 1;
+		static constexpr uint Nbeta = 0;
 		static constexpr uint Ngamma = 0;
 		
 		SSH(double m, double k, double dtau) : m(m), k(k), dtau(dtau), name("SSH")
