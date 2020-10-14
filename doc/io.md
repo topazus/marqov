@@ -14,8 +14,9 @@ The Layout of our HDF5 containers is like this
   - step3
   - ...
 
-Hence the root is a series of step. Each step consists of an simulation, hence the Config, the Observables, and a State-Dump.
-the Config has Marqovconfig + LatticeConfig + HamiltonianConfig. the Observables are a series of observable time series. the State-Part is a state-dump that would be consumed if it serves as input for the next step.
+Hence the root is a series of steps. Each step consists of a simulation, hence the Config, the Observables, and a State-Dump.
+The Config has Marqovconfig + LatticeConfig + HamiltonianConfig.
+The Observables are a series of observable time series. the State-Part is a state-dump that would be consumed if it serves as input for the next step.
 
 ### Environment
 Information about the environment of the host system.
@@ -24,20 +25,20 @@ Information about the environment of the host system.
 - Time
 
 ### Config
-Everything that is required for the simulation and is not deemed to be some part of statespace
+Everything that is required for the simulation and is not deemed to be some part of statespace.
 
 #### Marqovconfig
-All parameters from the MarqovConfig Object
+All parameters from the MarqovConfig Object.
 
 #### Lattice
-Information about the lattice
+Information about the lattice.
 
 #### Hamiltonian
 The parameters of the Hamiltonian. Using a paramnames function in the Hamiltonian the keys can optionally be specified by the user.
-Else generic names, param<i>, are used
+Else generic names in the form of *param<i>*, are used
 
 ### Observables
-Here the time series of the observables follow. Every Observables has its own time series.
+Here the time series of the observables follow. Every Observable has its own time series.
 
 ### State
 The final state space of the system. This consititutes the Monte Carlo state space as well as the state of the used RNG.
