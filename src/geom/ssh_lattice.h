@@ -20,12 +20,16 @@ class SSHLattice
 		value_type getnbrs(int a, int i) const 
 		{
 			value_type retval;
-			const int j = i / lentime;
-			const int offset = j * lentime;
+
+			const int k = i / len;
+			const int r = k*len;
+			const int offset = i % len;
+
 			switch(a) 
 			{
 				case 0:
-					retval = {(i-1+lentime)%lentime+offset, (i+1)%lentime+offset};
+//					retval = {(i-1+lentime)%lentime+offset, (i+1)%lentime+offset};
+					retval = {((k-1+lentime)%lentime)*len+offset, ((k+1)%lentime)*len+offset};
 					break;
 				case 1:
 					retval.reserve(this->nsites);
