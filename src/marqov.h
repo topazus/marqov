@@ -754,8 +754,8 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;//The HDF5 caches for each observable
         ObsTs obs; //the actual observables
 
-		typedef std::ranlux48_base RNGType;
-//		typedef std::mt19937_64 RNGType;
+//		typedef std::ranlux48_base RNGType;
+		typedef std::mt19937_64 RNGType;
 		RNGCache<RNGType> rngcache;///< The caching RNG
 
 

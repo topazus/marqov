@@ -6,16 +6,16 @@ Hamiltonian = SSH
 [SSH]
 
 L = 50
-Ltime = 10, 20, 50, 100
+Ltime = 100
 dim = 2
 
 rep = 1
 
 betaMC = 1.0
-betaQM = 10.0
+betaQM = 20.0
 
 m = 1
-k = 1
+k = 0.0001, 0.001, 0.01, 0.1, 1, 10, 100
 
 
 
