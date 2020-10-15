@@ -456,7 +456,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 				SSHLattice latt(L, Ltime, dim);
 	
 				// set up and execute
-	 			auto f = [&sshfilter, &latt, &outbasedir, L](auto p){return sshfilter(latt, p);}; //partially apply filter
+	 			auto f = [&latt, &outbasedir, L](auto p){return sshfilter(latt, p);}; //partially apply filter
 	 			Loop<SSH<double>, SSHLattice>(rparams, f);
 			}
 		}
@@ -536,7 +536,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto params = finalize_parameter_pair(mp, hp);
 
 		// partially apply filter
-		auto f = [&defaultfilter, &ccl](auto p){return defaultfilter(ccl, p);};
+		auto f = [&ccl](auto p){return defaultfilter(ccl, p);};
 
 		// perform simulations
 		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
