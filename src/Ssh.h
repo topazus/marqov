@@ -61,7 +61,6 @@ class SSH_interaction : public Interaction<StateVector>
 public:
 	SSH_interaction(double m, double dtau)
 	{
-//		this->J = m*dtau/4;
 		this->J = -m/dtau;
 	}
 	StateVector get (const StateVector& phi) {return phi;};
@@ -76,8 +75,7 @@ class SSH_onsite : public OnSite<StateVector, double>
 	public:
 		SSH_onsite(double m, double k, double dtau)
 		{
-			this->h = m/dtau + k/2;
-//			this->h = m*dtau/4 + k/2;
+			this->h = m/dtau + k*dtau/2;
 		}
 		double get (const StateVector& phi) {return dot(phi,phi);}; 
 };
