@@ -28,12 +28,30 @@ class SSHMag
 			{
 				 mag += statespace[i][0];
 				}
-			return std::abs(mag)/double(N);
-			}
-			SSHMag() : name("m"), desc("The Magnetization of the SSH Modell") {}
+			return mag/double(N);
+		}
+		SSHMag() : name("m"), desc("The Magnetization of the SSH Modell") {}
 };
 
 
+class SSHMagSq
+{
+	public:
+		std::string name, desc;
+		template <class StateSpace, class Grid> 
+		double measure(const StateSpace& statespace, const Grid& grid) 
+		{
+			const int N = grid.size();
+			double mag = 0.0;
+
+			for (int i=0; i<N; i++) 
+			{
+				 mag += pow(statespace[i][0],2);
+				}
+			return mag/double(N);
+			}
+			SSHMagSq() : name("msq"), desc("...") {}
+};
 
 template <class StateVector>
 class SSH_interaction : public Interaction<StateVector> 
@@ -41,7 +59,7 @@ class SSH_interaction : public Interaction<StateVector>
 public:
 	SSH_interaction(double m, double dtau)
 	{
-		this->J = m*dtau/4;
+		this->J = -m/dtau;
 	}
 	StateVector get (const StateVector& phi) {return phi;};
 };
@@ -55,7 +73,7 @@ class SSH_onsite : public OnSite<StateVector, double>
 	public:
 		SSH_onsite(double m, double k, double dtau)
 		{
-			this->h = m*dtau/4 + k/2;
+			this->h = m/dtau + k*dtau/2;
 		}
 		double get (const StateVector& phi) {return dot(phi,phi);}; 
 };
@@ -106,16 +124,18 @@ class SSH
 		SSH(double m, double k, double dtau) : m(m), k(k), dtau(dtau), name("SSH")
 		{
 			interactions[0] = new SSH_interaction<StateVector>(m, dtau); 
+			onsite[0] = new SSH_onsite<StateVector>(m, k, dtau);
 		}
 		
 		// instantiate interaction terms (requires pointers)
 		Interaction<StateVector>* interactions[Nalpha];
-		OnSite<StateVector, int>* onsite[Nbeta];
+		OnSite<StateVector, double>* onsite[Nbeta];
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 	
 		// instantiate and choose observables
 		SSHMag       obs_m;
-		auto getobs()	{return std::make_tuple(obs_m);}
+		SSHMagSq       obs_msq;
+		auto getobs()	{return std::make_tuple(obs_m, obs_msq);}
 
 
 		// initialize state space
@@ -152,7 +172,7 @@ class SSH
 
 
 
-
+/*
 
 namespace MARQOV {
 
@@ -191,8 +211,23 @@ namespace MARQOV {
 				interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
 			}
 
+			cout << "test" << endl;
+			 // onsite energy part
+			 double onsiteenergydiff = 0;
+			 for (typename std::remove_cv<decltype(ham.Nbeta)>::type b=0; b<ham.Nbeta; ++b)
+			 {
+			 	// compute the difference
+				auto diff = ham.onsite[b]->get(svnew) - ham.onsite[b]->get(svold);
+				// multiply the constant
+				onsiteenergydiff += dot(ham.onsite[b]->h, diff);
+			}
+
+
+
+
+
 	    		// sum up energy differences
-	    		double dE 	= interactionenergydiff;
+	    		double dE 	= interactionenergydiff + onsiteenergydiff;
 	
 	    		 // improve me: what about models with discrete statevectors where the acceptance probability should be
 	    		 // looked up in tables? -> specialized Metropolis routine for this case??
@@ -219,7 +254,6 @@ namespace MARQOV {
 		template <class DirType, class RNG, class StateSpace>
 		static inline int move(const SSH<double>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite, const DirType&)
 		{
-		/*
 			typedef typename SSH<int>::StateVector StateVector;
 			// prepare stack
 			std::vector<int> cstack(grid.size(), 0);
@@ -268,11 +302,12 @@ namespace MARQOV {
 			}
 	
 		return clustersize;
-		*/
 
 		return 0;
 	    }
 	};
 
 }
+
+*/
 #endif

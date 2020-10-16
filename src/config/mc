@@ -5,16 +5,18 @@ Hamiltonian = SSH
 
 [SSH]
 
-L = 20
-Ltau = 10
+L = 50
+Ltime = 50,70,100,150,200,300,500,700,1000,1500,2000,3000
+
 dim = 2
 
 rep = 1
 
-beta = 1.0
+betaMC = 1.0
+betaQM = 10
+
 m = 1
-k = 1
-dtau = 0.1
+k = 100
 
 
 
