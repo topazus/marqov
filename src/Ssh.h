@@ -29,9 +29,8 @@ class SSHMag
 				 mag += statespace[i][0];
 				}
 			return mag/double(N);
-//			return std::abs(mag)/double(N);
-			}
-			SSHMag() : name("m"), desc("The Magnetization of the SSH Modell") {}
+		}
+		SSHMag() : name("m"), desc("The Magnetization of the SSH Modell") {}
 };
 
 
@@ -50,7 +49,6 @@ class SSHMagSq
 				 mag += pow(statespace[i][0],2);
 				}
 			return mag/double(N);
-//			return std::abs(mag)/double(N);
 			}
 			SSHMagSq() : name("msq"), desc("...") {}
 };

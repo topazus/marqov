@@ -437,7 +437,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	     	   	mp.setnsweeps(5);
 				mp.setncluster(0);
 				mp.setwarmupsteps(1000);
-				mp.setgameloopsteps(1000);
+				mp.setgameloopsteps(5000);
 
 				mp.outname = "Ltime"+std::to_string(Ltime);
 	
