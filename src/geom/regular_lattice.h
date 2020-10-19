@@ -22,9 +22,6 @@ public:
     }
 
 
-//    int identify(int i) {return 0;};
-//    std::vector<int> termselector(int sublattice){return {0};}
-
     value_type getnbrs(int a, int i) const {return this->operator[](i);}
 
     std::vector<double> getcrds(int k) const 

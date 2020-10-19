@@ -39,6 +39,7 @@ using std::ofstream;
 #include "AshkinTeller.h"
 #include "EdwardsAndersonIsing.h"
 #include "Ssh.h"
+#include "BlumeCapelBipartite.h"
 
 using namespace MARQOV;
 
@@ -464,6 +465,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	}
 
 
+	*/
 
 
 	else if (ham == "IsingCC")
@@ -542,7 +544,50 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		// perform simulations
 		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
 	}
-	*/
+    else if (ham == "BlumeCapelBipartite")
+    {
+		auto beta = registry.Get<std::vector<double> >("mc", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc", ham, "J");
+		auto DA   = registry.Get<std::vector<double> >("mc", ham, "DA");
+		auto DB   = registry.Get<std::vector<double> >("mc", ham, "DB");
+		auto parameters = cart_prod(beta, J, DA, DB);
+
+		const auto name      = registry.Get<std::string>("mc", "General", "Hamiltonian" );
+		      auto nreplicas = registry.Get<std::vector<int>>("mc", name, "rep" );
+		const auto nL 	      = registry.Get<std::vector<int>>("mc", name, "L" );
+		const auto dim 	 = registry.Get<int>("mc", name, "dim" );
+
+		// set up replicas
+		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+	
+		// lattice size loop
+		for (std::size_t j=0; j<nL.size(); j++)
+		{
+			// prepare
+			int L = nL[j];
+	
+			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+	
+	     	MARQOVConfig mp(outpath);
+        		mp.setnsweeps(2);
+			mp.setncluster(int(L/2));
+			mp.setwarmupsteps(300);
+			mp.setgameloopsteps(600);
+
+			makeDir(mp.outpath);
+
+			// set up parameters
+			auto params = finalize_parameter_pair(mp, parameters);
+			auto rparams = replicator_pair(params, nreplicas[j]);
+
+			// lattice
+			SimpleBipartite latt(L, dim);
+	
+			// set up and execute
+	 		auto f = [&latt, &outbasedir, L](auto p){return defaultfilter(latt, p);}; //partially apply filter
+	 		Loop<BlumeCapelBipartite<int>, SimpleBipartite>(rparams, f);
+		}
+	}
 }
 
 

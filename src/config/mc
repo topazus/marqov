@@ -1,6 +1,6 @@
 [General]
 
-Hamiltonian = Phi4
+Hamiltonian = BlumeCapelBipartite
 
 
 [SSH]
@@ -18,7 +18,15 @@ betaQM = 10
 m = 1
 k = 100
 
+[BlumeCapelBipartite]
 
+beta = 0.66, 0.67, 0.68, 0.69, 0.70, 0.71, 0.72, 0.73, 0.74, 0.75
+J = -1.0
+DA = 1.0
+DB = 1.0
+dim = 2
+rep = 1
+L = 8,12,16,24,32,48,64
 
 
 [Phi4]
