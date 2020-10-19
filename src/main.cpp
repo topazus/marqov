@@ -402,6 +402,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<GaussianPDF>>(rparams, defaultfilter_triple);
 		}
 	}
+	/*
 	else if (ham == "SSH")
 	{
 
@@ -541,6 +542,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		// perform simulations
 		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
 	}
+	*/
 }
 
 

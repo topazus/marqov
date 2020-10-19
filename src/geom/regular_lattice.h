@@ -7,7 +7,6 @@ public:
 
 	int counter = 0;
 
-//    friend class NArray_Iterator;
     typedef std::vector<int> value_type;
 
     RegularLattice() {}
@@ -21,6 +20,10 @@ public:
             numberatoms *= length;
         }
     }
+
+
+//    int identify(int i) {return 0;};
+//    std::vector<int> termselector(int sublattice){return {0};}
 
     value_type getnbrs(int a, int i) const {return this->operator[](i);}
 

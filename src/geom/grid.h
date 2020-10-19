@@ -79,6 +79,9 @@ class RegularHypercubic
 
 		RegularHypercubic(int len, int dim) : len(len), dim(dim), npoints(pow(len,dim)), lattice(len,dim) {};
 
+		int identify(int i) {return 0;};
+		std::vector<int> termselector(int sublattice){return {0};}
+
 
 		// override getnbrs
 		std::vector<int> getnbrs(const int alpha, const int i) const
@@ -94,7 +97,6 @@ class RegularHypercubic
 
 		std::size_t size() const {return npoints;}
 };
-
 
 
 

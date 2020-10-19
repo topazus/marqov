@@ -154,15 +154,28 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
 		interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
 	}
 
+
+	const int sublattice = grid.identify(rsite);
+	const std::vector<int> terms = grid.termselector(sublattice);
+
+
     // onsite energy part
     double onsiteenergydiff = 0;
-    for (typename std::remove_cv<decltype(ham.Nbeta)>::type b=0; b<ham.Nbeta; ++b)
+    for (typename std::remove_cv<decltype(ham.Nbeta)>::type b=0; b<terms.size(); ++b)
     {
+
+    		const int tidx = terms[b]; 
+
        // compute the difference
-       auto diff = ham.onsite[b]->get(svnew) - ham.onsite[b]->get(svold);
+       auto diff = ham.onsite[tidx]->get(svnew) - ham.onsite[tidx]->get(svold);
        // multiply the constant
-       onsiteenergydiff += dot(ham.onsite[b]->h, diff);
+       onsiteenergydiff += dot(ham.onsite[tidx]->h, diff);
     }
+
+
+
+
+
     // multi-site energy
     double multisiteenergyold = 0;
     double multisiteenergynew = 0;
