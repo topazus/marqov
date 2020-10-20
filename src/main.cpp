@@ -557,6 +557,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		const auto nL 	      = registry.Get<std::vector<int>>("mc", name, "L" );
 		const auto dim 	 = registry.Get<int>("mc", name, "dim" );
 
+		write_logfile(registry, beta);
+
 		// set up replicas
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 	
@@ -571,8 +573,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	     	MARQOVConfig mp(outpath);
         		mp.setnsweeps(2);
 			mp.setncluster(int(L/2));
-			mp.setwarmupsteps(300);
-			mp.setgameloopsteps(600);
+			mp.setwarmupsteps(500);
+			mp.setgameloopsteps(1600);
 
 			makeDir(mp.outpath);
 

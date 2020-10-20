@@ -131,7 +131,10 @@ class SimpleBipartite
 		}
 
 
-		inline std::vector<int> termselector(int sublattice){return {-1};}
+		inline std::vector<int> termselector(int sublattice)
+		{
+			return {sublattice};
+		}
 
 
 		// override getnbrs
