@@ -62,49 +62,24 @@ struct Promote_Array
     typedef typename std::conditional<std::is_same<AElemType, CommonType>::value, A, B>::type CommonArray;
 };
 
-/*
-old:
-
-//A helper to decide in the Metropolis code whether a lattice provides the getbond function
-template<class L, class=void> 
-struct has_bonds : std::false_type {};
-
-template<class Lattice> 
-struct has_bonds<Lattice, type_sink_t< decltype( std::declval<Lattice>().getbnds(std::declval<int>(), std::declval<int>(), std::declval<int>()) ) > > : std::true_type {};
 
 
-template <class Lattice, class NbrType>
-auto callbonds_helper(const Lattice& grid, int a, int rsite, int i, NbrType nbr, std::true_type)
-{
-    auto cpl = grid.getbnds(a, rsite, i);
-    return mult(cpl, nbr);
-}
 
-template <class Lattice, class NbrType>
-auto callbonds_helper(const Lattice& grid, int a, int rsite, int i, NbrType nbr, std::false_type)
-{
-	cout << i << endl;
-    return nbr;
-}
 
-template <class Lattice, class NbrType>
-auto callbonds(const Lattice& grid, int a, int rsite, int i, NbrType nbr)
-{
-    return callbonds_helper(grid, a, rsite, i, nbr, typename has_bonds<Lattice>::type());
-}
+template<class, class = void> 
+struct has_terms : std::false_type {};
 
-template<class A, class B>
-struct Promote_Array
-{
-    //Get Element types
-    typedef decltype(dot(std::declval<A>(), std::declval<A>())) AElemType;
-    typedef decltype(dot(std::declval<B>(), std::declval<B>())) BElemType;
-    // get result type of addition
-    typedef typename std::common_type<AElemType, BElemType>::type CommonType;
-    // return A if the common type is A, else B
-    typedef typename std::conditional<std::is_same<AElemType, CommonType>::value, A, B>::type CommonArray;
-};
-*/
+template<class Grid>
+struct has_terms<Grid, std::void_t<decltype(&Grid::termselector)>> : std::true_type {};
+
+std::vector<int> get_terms(int idx, std::false_type) {return {-1};}
+std::vector<int> get_terms(int idx, std::true_type) {return {1,2,3};}
+
+template <class Grid>
+std::vector<int> get_terms_helper(int idx) {	return get_terms(idx, has_terms<Grid>{}); }
+
+
+
 
 
 
@@ -156,9 +131,11 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
 
 
 	// onsite energy part
-	const int sublattice = grid.identify(rsite);
-	std::vector<int> terms = grid.termselector(sublattice);
-	if (terms[0] == -1) terms = arange(0, ham.Nbeta);
+//	const int sublattice = grid.identify(rsite);
+//	std::vector<int> terms = grid.termselector(sublattice);
+//	if (terms[0] == -1) terms = arange(0, ham.Nbeta);
+	const std::vector<int> terms = {0,1};
+
 
 	double onsiteenergydiff = 0;
 	for (typename std::remove_cv<decltype(ham.Nbeta)>::type b=0; b<terms.size(); ++b)

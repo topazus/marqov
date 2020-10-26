@@ -82,8 +82,8 @@ class RegularHypercubic
 		RegularHypercubic(int len, int dim) : len(len), dim(dim), npoints(pow(len,dim)), lattice(len,dim) {};
 
 
-		inline int identify(int i) {return 0;};
-		inline std::vector<int> termselector(int sublattice){return {-1};}
+//		inline int identify(int i) {return 0;};
+//		inline std::vector<int> termselector(int sublattice){return {-1};}
 
 
 		// override getnbrs

@@ -574,7 +574,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
         		mp.setnsweeps(2);
 			mp.setncluster(int(L/2));
 			mp.setwarmupsteps(500);
-			mp.setgameloopsteps(1600);
+			mp.setgameloopsteps(2500);
 
 			makeDir(mp.outpath);
 
@@ -584,6 +584,19 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 			// lattice
 			SimpleBipartite latt(L, dim);
+
+
+
+			// test area
+
+			auto terms = get_terms_helper<SimpleBipartite>(0);
+			cout << "---> " << terms[0] << endl << endl;
+
+			auto terms2 = get_terms_helper<RegularHypercubic>(0);
+			cout << "---> " << terms2[0] << endl << endl;
+
+
+
 	
 			// set up and execute
 	 		auto f = [&latt, &outbasedir, L](auto p){return defaultfilter(latt, p);}; //partially apply filter
