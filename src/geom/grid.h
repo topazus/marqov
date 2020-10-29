@@ -27,6 +27,8 @@ class DisorderType
 
 		std::size_t size() const {return npoints;}
 
+		inline int identify(int i) {return 0;};
+		inline std::vector<int> termselector(int sublattice){return {-1};}
 };
 
 
@@ -79,7 +81,6 @@ class RegularHypercubic
 
 		RegularHypercubic(int len, int dim) : len(len), dim(dim), npoints(pow(len,dim)), lattice(len,dim) {};
 
-
 		// override getnbrs
 		std::vector<int> getnbrs(const int alpha, const int i) const
 		{
@@ -96,7 +97,55 @@ class RegularHypercubic
 };
 
 
+// ----------------- Simple Bipartite --------------------
 
+class SimpleBipartite
+{
+	private:
+		RegularLattice lattice;
+
+	public:
+		int len, dim, npoints;
+
+
+		SimpleBipartite(int len, int dim) : len(len), dim(dim), npoints(pow(len,dim)), lattice(len,dim) 
+		{
+			if (len%2 != 0) cout << "ERROR: linear lattice size must be even!" << endl;
+		};
+
+
+		inline int identify(int i) // is this correct?
+		{
+			auto index = IndexOf(i, dim, len);
+			
+			int quersumme = 0;
+			for (int j=0; j<index.size(); j++) quersumme += index[j];
+
+			if (quersumme%2 == 0) return 0;
+			else return 1;
+		}
+
+
+		inline std::vector<int> termselector(int rsite)
+		{
+			return {this->identify(rsite)};
+		}
+
+
+		// override getnbrs
+		std::vector<int> getnbrs(const int alpha, const int i) const
+		{
+			return lattice.getnbrs(alpha, i);
+		}
+
+		// implement getcrds
+		std::vector<double> getcrds(const int i) const
+		{
+			return lattice.getcrds(i);
+		}
+
+		std::size_t size() const {return npoints;}
+};
 
 
 // ----------------- "Super Chaos" --------------------
