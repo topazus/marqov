@@ -37,35 +37,39 @@ private:
 public:
  void enqueuesim(Sim&& sim) ///< the entry point for the user. Currently it's undecided whether the sim is instantiated by the user or by the scheduler
  {
+     auto warmuploop = [&](int id)
+            {
+                std::cout<<"Warmuplooping on item"<<std::endl;
+                //work here
+                simvector[id].wrmploop();
+                //enqueue the next full work item into the workqueue immediately
+                workqueue.push_back(Simstate(id));
+            };
+     int idx = simvector.size();
      simvector.push_back(sim);//FIXME: Currently I don't know how a sim terminates...
+     taskqueue.enqueue([]{warmuploop(idx);});//Put some warmup into the taskqueue
  }
  void start()
  {
      auto master = [&] /*the master thread is a lambda function since by that it captures the variables of the Scheduler*/
      {
-            Simstate itm;
-            auto gameloop = [&]
+            auto gameloop = [&](Simstate mywork)
             {
                 std::cout<<"Gamelooping on item"<<std::endl;
                 // work
-                itm.npt = itm.npt + 1;
-                if (itm.npt < maxpt) // determine whether this itm needs more work
-                    workqueue.push_back(itm);
+                simvector[mywork.id].gameloop();
+                mywork.npt = mywork.npt + 1;
+                if (mywork.npt < maxpt) // determine whether this itm needs more work
+                    workqueue.push_back(mywork);
             };
-            auto warmuploop = [&]
-            {
-                std::cout<<"Warmuplooping on item"<<std::endl;
-                //work here
-                //enqueue the next full work item into the workqueue immediately
-//                workqueue.push_back(gameloop);
-            };
-            while(true)
+            Simstate itm;
+            while(!masterstop)
             {
                 std::cout<<"Master waiting for work"<<std::endl;
                 bool busy = false;
                 masterwork.wait([&]{
                  busy = workqueue.pop_front(itm);
-                 return busy;
+                 return busy || masterstop;
                 });
                 if(busy) //there really is sth. to do
                 {
@@ -74,8 +78,8 @@ public:
                         ptstep();
                     else
                     {
-                    std::cout<<"Putting a new item into the taskqueue"<<std::endl;
-                    taskqueue.enqueue(gameloop);
+                        std::cout<<"Putting a new item "<<itm.id<<" with"<<itm.npt <<" into the taskqueue"<<std::endl;
+                        taskqueue.enqueue([&]{gameloop(itm);});
                     }
                 }
             }
@@ -86,27 +90,30 @@ public:
  Scheduler(int maxptsteps) : taskqueue(std::thread::hardware_concurrency() + 1),/*a space for the master thread*/
  masterwork{},
  workqueue(masterwork),
- maxpt(maxptsteps)
+ maxpt(maxptsteps),
+ masterstop(false)
  {
      //create dummy data for the ptplan
      for (int i = 0; i < 2*maxpt; i += 2)
          ptplan.emplace_back(i%maxpt, (i+1)%maxpt);
 }
- ~Scheduler() {waitforall();}
+ ~Scheduler() {masterstop = true;}
 private:
     struct Simstate
     {
+        Simstate() : id(-1), npt(-100) {}
+        Simstate(int i) : id(i), npt(0) {}
         int id;
         int npt;
     };
-
 MARQOVQueue taskqueue; ///< this is the queue where threads pull their work from
 Semaphore masterwork; ///< the semaphore that triggers the master process
 ThreadSafeQueue<Simstate> workqueue; ///< this is the queue where threads put their finished work and the master does PT
 std::vector<Sim> simvector; ///< An array for the full state of the simulations
-std::vector<int> ptqueue; ///< here we collect who is waiting for its PT partner
+std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
 std::vector<std::pair<int, int> > ptplan;///< who exchanges with whom in each step
 int maxpt; ///< how many pt steps do we do
+bool masterstop;
 void ptstep() {}
 void calcprob();
 void exchange();
