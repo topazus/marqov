@@ -97,7 +97,7 @@ public:
         queue.pop_front();
         return true;
     }
-    /** Checks whether the queue is empty
+    /** Checks whether the queue is empty.
      * @return true if the queue is empty, else false
      */
     bool is_empty()
