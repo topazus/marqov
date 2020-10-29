@@ -81,11 +81,6 @@ class RegularHypercubic
 
 		RegularHypercubic(int len, int dim) : len(len), dim(dim), npoints(pow(len,dim)), lattice(len,dim) {};
 
-
-//		inline int identify(int i) {return 0;};
-//		inline std::vector<int> termselector(int sublattice){return {-1};}
-
-
 		// override getnbrs
 		std::vector<int> getnbrs(const int alpha, const int i) const
 		{
@@ -131,9 +126,9 @@ class SimpleBipartite
 		}
 
 
-		inline std::vector<int> termselector(int sublattice)
+		inline std::vector<int> termselector(int rsite)
 		{
-			return {sublattice};
+			return {this->identify(rsite)};
 		}
 
 

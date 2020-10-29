@@ -64,19 +64,23 @@ struct Promote_Array
 
 
 
-
+// A helper to check whether the lattice provides a termselector method
 
 template<class, class = void> 
 struct has_terms : std::false_type {};
 
 template<class Grid>
-struct has_terms<Grid, std::void_t<decltype(&Grid::termselector)>> : std::true_type {};
-
-std::vector<int> get_terms(int idx, std::false_type) {return {-1};}
-std::vector<int> get_terms(int idx, std::true_type) {return {1,2,3};}
+struct has_terms<Grid, detail::type_sink_t<decltype(&Grid::termselector)>> : std::true_type {};
+//struct has_terms<Grid, std::void_t<decltype(&Grid::termselector)>> : std::true_type {}; // C++17 feature
 
 template <class Grid>
-std::vector<int> get_terms_helper(int idx) {	return get_terms(idx, has_terms<Grid>{}); }
+std::vector<int> get_terms_helper(Grid& grid, int idx, std::false_type) {return {-1};}
+
+template <class Grid>
+std::vector<int> get_terms_helper(Grid& grid, int idx, std::true_type) {return grid.termselector(idx);}
+
+template <class Grid>
+std::vector<int> get_terms(Grid& grid, int idx) {	return get_terms_helper<Grid>(grid, idx, has_terms<Grid>{}); }
 
 
 
@@ -131,10 +135,8 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
 
 
 	// onsite energy part
-//	const int sublattice = grid.identify(rsite);
-//	std::vector<int> terms = grid.termselector(sublattice);
-//	if (terms[0] == -1) terms = arange(0, ham.Nbeta);
-	const std::vector<int> terms = {0,1};
+	auto terms = get_terms<Lattice>(grid, rsite);
+	if (terms[0] == -1) terms = arange(0, ham.Nbeta);
 
 
 	double onsiteenergydiff = 0;

@@ -588,12 +588,12 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 			// test area
+//			auto terms = get_terms<SimpleBipartite>(latt, 0);
+//			cout << "---> " << terms[0] << endl << endl;
 
-			auto terms = get_terms_helper<SimpleBipartite>(0);
-			cout << "---> " << terms[0] << endl << endl;
-
-			auto terms2 = get_terms_helper<RegularHypercubic>(0);
-			cout << "---> " << terms2[0] << endl << endl;
+//			RegularHypercubic latt2(L, dim);
+//			auto terms2 = get_terms<RegularHypercubic>(latt2, 0);
+//			cout << "---> " << terms2[0] << endl << endl;
 
 
 
