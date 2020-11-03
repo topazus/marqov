@@ -47,7 +47,7 @@ public:
             };
      int idx = simvector.size();
      simvector.push_back(sim);//FIXME: Currently I don't know how a sim terminates...
-     taskqueue.enqueue([]{warmuploop(idx);});//Put some warmup into the taskqueue
+     taskqueue.enqueue([idx, warmuploop]{warmuploop(idx);});//Put some warmup into the taskqueue
  }
  void start()
  {
