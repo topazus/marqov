@@ -29,7 +29,7 @@ using std::ofstream;
 #include "svmath.h"
 #include "filters.h"
 
-#include "marqovqueue.h"
+#include "marqovscheduler.h"
 // Hamiltonians
 #include "Heisenberg.h"
 #include "Ising.h"
@@ -153,7 +153,10 @@ template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void Loop(const std::vector<Parameters>& params, Callable filter)
 {
 	auto sims = createsims<Hamiltonian, Lattice>(params, filter);
-
+    
+    Scheduler<typename decltype(sims)::value_type> sched(5);
+    sched.start();
+    
 	// perform simulation
 	#pragma omp parallel for
 	for(std::size_t i = 0; i < sims.size(); ++i)
