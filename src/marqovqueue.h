@@ -89,7 +89,10 @@ public:
     {
         return stats.enqueued;
     }
-
+    uint tasks_assigned()
+    {
+        return stats.assigned;
+    }
 private:
     using auint = std::atomic<uint>;
     using toggle = std::atomic<bool>;
@@ -110,7 +113,8 @@ private:
     struct Stats// A helper structure for various statistics
     {
         auint enqueued;
-        Stats() : enqueued(0) {}
+        auint assigned;
+        Stats() : enqueued(0), assigned(0) {}
     } stats;
     
     struct Workers// A helper structure to bundle the bookkeeping of workers
@@ -166,9 +170,13 @@ private:
                     // We got something to do
                     if (busy)
                     {
+                        ++stats.assigned;
                         --stats.enqueued;
+                        
                         task();// execute the work item
                         busy.store(false);
+                        
+                        --stats.assigned;
                         
                         if(!stats.enqueued)
                         {
