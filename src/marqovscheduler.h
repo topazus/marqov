@@ -37,15 +37,19 @@ private:
 public:
  void enqueuesim(Sim& sim) ///< the entry point for the user. Currently it's undecided whether the sim is instantiated by the user or by the scheduler
  {
-     int idx = simvector.size()-1;
+     int idx = simvector.size();
      simvector.push_back(&sim);//FIXME: Currently I don't know how a sim terminates...
+     std::cout<<&sim<<" "<<simvector.back()<<" "<<&simvector<<std::endl;
      taskqueue.enqueue([&, idx]{
-         
-                std::cout<<"Warmuplooping on item "<<simvector.at(idx)<<std::endl;
+                std::cout<<"Warmuplooping on item "<<idx<<" "<<simvector.at(idx)<<" "<<simvector.size()<<std::endl;
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                for(int i = 0; i < simvector.size(); ++i)
+                    std::cout<<simvector[i]<<std::endl;
                 //work here
                 simvector[idx]->init();
                 simvector[idx]->wrmploop();
                 //enqueue the next full work item into the workqueue immediately
+                std::cout<<"pushing item into workquue"<<std::endl;
                 workqueue.push_back(Simstate(idx));         
     });//Put some warmup into the taskqueue
  }
@@ -53,6 +57,7 @@ public:
  {
      auto master = [&] /*the master thread is a lambda function since by that it captures the variables of the Scheduler*/
      {
+         std::cout<<"Starting up master"<<std::endl;
             auto gameloop = [&](Simstate mywork)
             {
                 std::cout<<"Gamelooping on item"<<std::endl;
@@ -79,7 +84,9 @@ public:
                     else
                     {
                         std::cout<<"Putting a new item "<<itm.id<<" with"<<itm.npt <<" into the taskqueue"<<std::endl;
-                        taskqueue.enqueue([&]{gameloop(itm);});
+                        taskqueue.enqueue(
+                            [itm, gameloop]{gameloop(itm);}
+                        );
                     }
                 }
             }
@@ -87,17 +94,16 @@ public:
      taskqueue.enqueue(master);
  }
  void waitforall() {}
- Scheduler(int maxptsteps) : taskqueue(/*std::thread::hardware_concurrency() + 1*/2),/*a space for the master thread*/
- masterwork{},
- workqueue(masterwork),
- maxpt(maxptsteps),
- masterstop(false)
+ Scheduler(int maxptsteps) : maxpt(maxptsteps), masterstop(false), masterwork{},
+  workqueue(masterwork),
+ taskqueue(/*std::thread::hardware_concurrency() + 1*/2)/*a space for the master thread*/
+ 
  {
      //create dummy data for the ptplan
      for (int i = 0; i < 2*maxpt; i += 2)
          ptplan.emplace_back(i%maxpt, (i+1)%maxpt);
 }
- ~Scheduler() {masterstop = true;}
+ ~Scheduler() {masterstop = true; std::cout<<"Deleting Scheduler"<<std::endl;}
 private:
     struct Simstate
     {
@@ -106,14 +112,15 @@ private:
         int id;
         int npt;
     };
-MARQOVQueue taskqueue; ///< this is the queue where threads pull their work from
+
+int maxpt; ///< how many pt steps do we do
+std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
+std::vector<std::pair<int, int> > ptplan;///< who exchanges with whom in each step
+bool masterstop;
 Semaphore masterwork; ///< the semaphore that triggers the master process
 ThreadSafeQueue<Simstate> workqueue; ///< this is the queue where threads put their finished work and the master does PT
 std::vector<Sim*> simvector; ///< An array for the full state of the simulations
-std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
-std::vector<std::pair<int, int> > ptplan;///< who exchanges with whom in each step
-int maxpt; ///< how many pt steps do we do
-bool masterstop;
+MARQOVQueue taskqueue; ///< this is the queue where threads pull their work from
 void ptstep() {}
 void calcprob();
 void exchange();
