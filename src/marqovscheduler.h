@@ -43,7 +43,6 @@ public:
      simvector.push_back(&sim);//FIXME: Currently I don't know how a sim terminates...
      simvectormutex.unlock();
      taskqueue.enqueue([&, idx]{
-                std::cout<<"Warmuplooping on item "<<idx<<" "<<simvector.at(idx)<<" "<<simvector.size()<<std::endl;
                 //work here
                 simvectormutex.lock();
                 auto mysim = simvector[idx];
@@ -52,7 +51,6 @@ public:
                 mysim->wrmploop();
                 //enqueue the next full work item into the workqueue immediately
                 workqueue.push_back(Simstate(idx));
-                std::cout<<"Finished Warmuplooping"<<std::endl;
     });//Put some warmup into the taskqueue
  }
  void start()
@@ -60,8 +58,8 @@ public:
     //create dummy data for the ptplan
      for (int i = 0; i < 2*maxpt; i += 2)
          ptplan.emplace_back(i%maxpt, (i+1)%maxpt);
-     auto master = [&] /*the master thread is a lambda function since by that it captures the variables of the Scheduler*/
-     {
+//      auto master = [&] /*the master thread is a lambda function since by that it captures the variables of the Scheduler*/
+//      {
          std::cout<<"Starting up master"<<std::endl;
             auto gameloop = [&](Simstate mywork)
             {
@@ -76,7 +74,7 @@ public:
                 }
                 else
                 {
-                    std::cout<<"no more work required"<<std::endl;
+                    std::cout<<"no more work required on "<<mywork.id<<std::endl;
                     masterwork.notify_all();//trigger those waiting for signals from the taskqueue. since we don't push_back anything they would not be notified.
                 }
             };
@@ -88,11 +86,11 @@ public:
                 bool busy = false;
                 masterwork.wait([&]{
                  busy = workqueue.pop_front(itm);
-                 return busy || masterstop;
+                 return busy || masterstop || nowork();
                 });
                 if(busy) //there really is sth. to do
                 {
-                    std::cout<<"dealing with work"<<std::endl;
+//                    std::cout<<"dealing with work"<<std::endl;
 //                     if(ptplan[itm.npt].first == itm.id || ptplan[itm.npt].second == itm.id) // check if this sim is selected for PT
 //                     {
 //                         std::cout<<"Parallel Tempering!"<<std::endl;
@@ -108,11 +106,17 @@ public:
                         );
    //                 }
                 }
+                else
+                {
+                    //test whether there is work lying around somewhere
+                    masterstop = nowork();
+                }
             }
             std::cout<<"Master stopped"<<std::endl;
-    };
-     taskqueue.enqueue(master);
+//     };
+//      taskqueue.enqueue(master);
  }
+ bool nowork() {return workqueue.is_empty() && taskqueue.tasks_assigned() == 0 && taskqueue.tasks_enqueued() == 0;}
  void waitforall() {}
  Scheduler(int maxptsteps) : maxpt(maxptsteps), masterstop(false), masterwork{},
   workqueue(masterwork),
