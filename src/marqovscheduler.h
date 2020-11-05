@@ -35,19 +35,19 @@ class Scheduler
 {
 private:
 public:
- void enqueuesim(Sim&& sim) ///< the entry point for the user. Currently it's undecided whether the sim is instantiated by the user or by the scheduler
+ void enqueuesim(Sim& sim) ///< the entry point for the user. Currently it's undecided whether the sim is instantiated by the user or by the scheduler
  {
-     auto warmuploop = [&](int id)
-            {
-                std::cout<<"Warmuplooping on item"<<std::endl;
+     int idx = simvector.size()-1;
+     simvector.push_back(&sim);//FIXME: Currently I don't know how a sim terminates...
+     taskqueue.enqueue([&, idx]{
+         
+                std::cout<<"Warmuplooping on item "<<simvector.at(idx)<<std::endl;
                 //work here
-                simvector[id].wrmploop();
+                simvector[idx]->init();
+                simvector[idx]->wrmploop();
                 //enqueue the next full work item into the workqueue immediately
-                workqueue.push_back(Simstate(id));
-            };
-     int idx = simvector.size();
-     simvector.push_back(sim);//FIXME: Currently I don't know how a sim terminates...
-     taskqueue.enqueue([idx, warmuploop]{warmuploop(idx);});//Put some warmup into the taskqueue
+                workqueue.push_back(Simstate(idx));         
+    });//Put some warmup into the taskqueue
  }
  void start()
  {
@@ -57,7 +57,7 @@ public:
             {
                 std::cout<<"Gamelooping on item"<<std::endl;
                 // work
-                simvector[mywork.id].gameloop();
+                simvector[mywork.id]->gameloop();
                 mywork.npt = mywork.npt + 1;
                 if (mywork.npt < maxpt) // determine whether this itm needs more work
                     workqueue.push_back(mywork);
@@ -87,7 +87,7 @@ public:
      taskqueue.enqueue(master);
  }
  void waitforall() {}
- Scheduler(int maxptsteps) : taskqueue(std::thread::hardware_concurrency() + 1),/*a space for the master thread*/
+ Scheduler(int maxptsteps) : taskqueue(/*std::thread::hardware_concurrency() + 1*/2),/*a space for the master thread*/
  masterwork{},
  workqueue(masterwork),
  maxpt(maxptsteps),
@@ -109,7 +109,7 @@ private:
 MARQOVQueue taskqueue; ///< this is the queue where threads pull their work from
 Semaphore masterwork; ///< the semaphore that triggers the master process
 ThreadSafeQueue<Simstate> workqueue; ///< this is the queue where threads put their finished work and the master does PT
-std::vector<Sim> simvector; ///< An array for the full state of the simulations
+std::vector<Sim*> simvector; ///< An array for the full state of the simulations
 std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
 std::vector<std::pair<int, int> > ptplan;///< who exchanges with whom in each step
 int maxpt; ///< how many pt steps do we do
