@@ -85,6 +85,11 @@ public:
         ++stats.enqueued;
         return future;
     }
+    uint tasks_enqueued()
+    {
+        return stats.enqueued;
+    }
+
 private:
     using auint = std::atomic<uint>;
     using toggle = std::atomic<bool>;
@@ -141,7 +146,7 @@ private:
                 Task task;//This will be the place holder of the actual work item
                 // let's do the set up of the book keeping structures
                 uint count(++workers.count);
-                std::cout<<"\tWorker "<< count<< " in thread "<< std::this_thread::get_id()<< " ready"<<std::endl;
+//                std::cout<<"\tWorker "<< count<< " in thread "<< std::this_thread::get_id()<< " ready"<<std::endl;
                 {
                     std::lock_guard<std::mutex> lk(workers.busy_mtx);
                     workers.busy.emplace(std::this_thread::get_id(), true);
@@ -155,7 +160,7 @@ private:
                     semaphores.work.wait([&]
                     {
                         busy.store(queue.pop_front(task));
-                        std::cout<<"Thread "<<std::this_thread::get_id()<<" waiting for work."<<std::endl;
+//                        std::cout<<"Thread "<<std::this_thread::get_id()<<" waiting for work."<<std::endl;
                         return (busy || flags.stop || flags.prune);
                     });
                     // We got something to do
@@ -179,7 +184,7 @@ private:
                 }
                 --workers.count;
                 flags.prune.store(workers.count > workers.target_count);
-                std::cout<<"\tWorker "<<count<<" in thread "<< std::this_thread::get_id()<<" exiting..."<<std::endl;
+//                std::cout<<"\tWorker "<<count<<" in thread "<< std::this_thread::get_id()<<" exiting..."<<std::endl;
             }).detach();
         return id.get();
     }
