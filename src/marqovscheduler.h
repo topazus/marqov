@@ -56,8 +56,10 @@ public:
  void start()
  {
     //create dummy data for the ptplan
-     for (int i = 0; i < 2*maxpt; i += 2)
-         ptplan.emplace_back(i%maxpt, (i+1)%maxpt);
+     for (int i = 0; i < maxpt; ++i)
+         ptplan.emplace_back(-1, -1);
+     
+     
 //      auto master = [&] /*the master thread is a lambda function since by that it captures the variables of the Scheduler*/
 //      {
          std::cout<<"Starting up master"<<std::endl;
@@ -79,7 +81,7 @@ public:
                 }
             };
             Simstate itm;
-            std::cout<<"Master 1 "<<masterstop<<std::endl;
+            
             while(!masterstop)
             {
                 std::cout<<"Master waiting for work"<<std::endl;
@@ -138,6 +140,15 @@ private:
         int id;
         int npt;
     };
+    uint findnextnpt(int idx, uint curnpt)
+    {
+        uint retval = curnpt+1;
+        while ((ptplan[retval].first != idx) && (ptplan[retval].second != idx) && (retval < maxpt))
+        {
+            ++retval;
+        }
+        return retval;
+    }
 
 int maxpt; ///< how many pt steps do we do
 std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
