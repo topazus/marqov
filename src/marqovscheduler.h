@@ -174,11 +174,23 @@ private:
         std::cout<<"Parallel Tempering!"<<std::endl;
         std::cout<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
         std::cout<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
-        //TODO: check if partner is in ptqueue.
-        // If yes, try pt-exchange, if not, add it to the queue
+        
+        int partner = ptplan[itm.npt].first;
+        if (partner == itm.id) partner = ptplan[itm.npt].second;//it must be the other
+        if (ispartnerdone(partner))
+        {//partner is at the same stage, hence we can PT exchange
+            calcprob();
+            exchange();
+            //put both sims back into the workqueue for more processing until their next PT step
+            
+        }
+        else
+        {//we have to wait for the PT partner
+            ptqueue.push_back(itm);
+        }
     }
-    void calcprob();
-    void exchange();
+    void calcprob() {}
+    void exchange() {}
 };
 
 #endif
