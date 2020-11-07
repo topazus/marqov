@@ -28,6 +28,7 @@ SOFTWARE.
 #include <vector>
 #include <string>
 #include <mutex>
+#include <algorithm>
 
 #include "marqovqueue.h"
 
@@ -57,7 +58,7 @@ public:
     {
         //create dummy data for the ptplan
         for (int i = 0; i < maxpt; ++i)
-            ptplan.emplace_back(-1, -1);
+            ptplan.emplace_back(i, 1);
         
         
         //      auto master = [&] /*the master thread is a lambda function since by that it captures the variables of the Scheduler*/
@@ -101,7 +102,7 @@ public:
             if(busy) //there really is sth. to do
             {
                 std::cout<<"dealing with work"<<std::endl;
-                if(ptplan[itm.npt].first == itm.id || ptplan[itm.npt].second == itm.id) // check if this sim is selected for PT
+                if(ptplan[itm.npt].first == itm.id || ptplan[itm.npt].second == itm.id) // check if this sim is selected for PT. This should usually be the case since we do as many steps as necessary
                 {
                     ptstep(itm);
                 }
@@ -112,68 +113,72 @@ public:
                     taskqueue.enqueue(
                         [itm, newnpt, gameloop]{gameloop(itm, newnpt);}
                     );
-                    //}
-                }
-                else
-                {
-                    //test whether there is work lying around somewhere
-                    masterstop = nowork();
                 }
             }
-            std::cout<<"Master stopped"<<std::endl;
-            //     };
-            //      taskqueue.enqueue(master);
-        }
-        bool nowork() {return workqueue.is_empty() && taskqueue.tasks_assigned() == 0 && taskqueue.tasks_enqueued() == 0;}
-        void waitforall() {}
-        Scheduler(int maxptsteps) : maxpt(maxptsteps), masterstop(false), masterwork{},
-        workqueue(masterwork),
-        taskqueue(/*std::thread::hardware_concurrency()*/1 + 1)/*a space for the master thread*/
-        {}
-        ~Scheduler() {
-            std::cout<<"Entering dtor of sched"<<std::endl;
-            masterwork.wait([&]{
-                std::cout<<"Dtor check: "<<taskqueue.tasks_enqueued()<<" "<<taskqueue.tasks_assigned()<<" "<<(workqueue.is_empty()?42:-42)<<std::endl;
-                return workqueue.is_empty() && (taskqueue.tasks_enqueued() == 0) && (taskqueue.tasks_assigned() < 2); //The master thread is also enqueued in the taskqueue, so we need to account for that
-            });
-            masterstop = true;
-            std::cout<<"Deleting Scheduler"<<std::endl;}
-    private:
-        struct Simstate
-        {
-            Simstate() : id(-1), npt(-100) {}
-            Simstate(int i) : id(i), npt(0) {}
-            int id;
-            int npt;
-        };
-        uint findnextnpt(int idx, uint curnpt)
-        {
-            uint retval = curnpt+1;
-            while ((ptplan[retval].first != idx) && (ptplan[retval].second != idx) && (retval < maxpt))
+            else
             {
-                ++retval;
+                //test whether there is work lying around somewhere
+                masterstop = nowork();
             }
-            return retval;
         }
-        
-        int maxpt; ///< how many pt steps do we do
-        std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
-        std::vector<std::pair<int, int> > ptplan;///< who exchanges with whom in each step
-        bool masterstop;
-        Semaphore masterwork; ///< the semaphore that triggers the master process
-        ThreadSafeQueue<Simstate> workqueue; ///< this is the queue where threads put their finished work and the master does PT
-        std::mutex simvectormutex; ///< A mutex t protect accesses to the simvectorwhich could be invalidated by the use of push_back
-        std::vector<Sim*> simvector; ///< An array for the full state of the simulations
-        MARQOVQueue taskqueue; ///< this is the queue where threads pull their work from
-        void ptstep(Simstate itm) {
-            std::cout<<"Parallel Tempering!"<<std::endl;
-            std::cout<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
-            std::cout<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
-            //TODO: check if partner is in ptqueue.
-            // If yes, try pt-exchange, if not, add it to the queue
-        }
-        void calcprob();
-        void exchange();
+        std::cout<<"Master stopped"<<std::endl;
+        //};
+        //      taskqueue.enqueue(master);
+    }
+    bool nowork() {return workqueue.is_empty() && taskqueue.tasks_assigned() == 0 && taskqueue.tasks_enqueued() == 0;}
+    void waitforall() {}
+    Scheduler(int maxptsteps) : maxpt(maxptsteps), masterstop(false), masterwork{},
+    workqueue(masterwork),
+    taskqueue(/*std::thread::hardware_concurrency()*/1 + 1)/*a space for the master thread*/
+    {}
+    ~Scheduler() {
+        std::cout<<"Entering dtor of sched"<<std::endl;
+        masterwork.wait([&]{
+            std::cout<<"Dtor check: "<<taskqueue.tasks_enqueued()<<" "<<taskqueue.tasks_assigned()<<" "<<(workqueue.is_empty()?42:-42)<<std::endl;
+            return workqueue.is_empty() && (taskqueue.tasks_enqueued() == 0) && (taskqueue.tasks_assigned() < 2); //The master thread is also enqueued in the taskqueue, so we need to account for that
+        });
+        masterstop = true;
+        std::cout<<"Deleting Scheduler"<<std::endl;}
+private:
+    struct Simstate
+    {
+        Simstate() : id(-1), npt(-100) {}
+        Simstate(int i) : id(i), npt(0) {}
+        int id;
+        int npt;
     };
+    uint findnextnpt(int idx, uint curnpt)
+    {
+        uint retval = curnpt+1;
+        while ((ptplan[retval].first != idx) && (ptplan[retval].second != idx) && (retval < maxpt))
+        {
+            ++retval;
+        }
+        return retval;
+    }
+    bool ispartnerdone(uint id)
+    {
+        return std::any_of(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == id;});
+    }
+    
+    int maxpt; ///< how many pt steps do we do
+    std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
+    std::vector<std::pair<int, int> > ptplan;///< who exchanges with whom in each step
+    bool masterstop;
+    Semaphore masterwork; ///< The semaphore that triggers the master process
+    ThreadSafeQueue<Simstate> workqueue; ///< this is the queue where threads put their finished work and the master does PT
+    std::mutex simvectormutex; ///< A mutex to protect accesses to the simvectorwhich could be invalidated by the use of push_back
+    std::vector<Sim*> simvector; ///< An array for the full state of the simulations
+    MARQOVQueue taskqueue; ///< this is the queue where threads pull their work from
+    void ptstep(Simstate itm) {
+        std::cout<<"Parallel Tempering!"<<std::endl;
+        std::cout<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
+        std::cout<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
+        //TODO: check if partner is in ptqueue.
+        // If yes, try pt-exchange, if not, add it to the queue
+    }
+    void calcprob();
+    void exchange();
+};
 
 #endif
