@@ -203,8 +203,8 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		// set up and execute
  		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
  		Loop<Hamiltonian, RegularHypercubic>(rparams, f);
-        std::cout<<"End in RegularLatticeLoop "<<std::endl;
-        exit(0);
+//        std::cout<<"End in RegularLatticeLoop "<<std::endl;
+//        exit(0);
 	}
 }
 
