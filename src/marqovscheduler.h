@@ -29,6 +29,7 @@ SOFTWARE.
 #include <string>
 #include <mutex>
 #include <algorithm>
+#include <chrono>
 
 #include "marqovqueue.h"
 
@@ -94,7 +95,7 @@ public:
         {
             std::cout<<"Master waiting for work"<<std::endl;
             bool busy = false;
-            masterwork.wait([&]{
+            masterwork.wait_for(std::chrono::seconds(1), [&]{
                 busy = workqueue.pop_front(itm);
                 std::cout<<busy<<" " << masterstop<< " " << nowork()<<std::endl;
                 return busy || masterstop || nowork();
@@ -182,6 +183,8 @@ private:
             calcprob();
             exchange();
             //put both sims back into the workqueue for more processing until their next PT step
+            workqueue.push_back(    );
+            workqueue.push_back(Simstate = {partner, itm.npt});
             
         }
         else
