@@ -52,6 +52,13 @@ struct Semaphore
         cv.wait(lk, _check);
     }
     
+    template <typename T>
+    void wait_for(T dt, std::function<bool()> _check)
+    {
+        std::unique_lock<std::mutex> lk(mtx);
+        cv.wait_for(lk, dt, _check);
+    }    
+    
     void notify_one()
     {
         cv.notify_one();
