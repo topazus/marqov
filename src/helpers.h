@@ -5,6 +5,18 @@
 #include "registry.h"
 
 
+std::vector<int> arange(int lower, int upper)
+{
+	std::vector<int> retval;
+	for (int i=lower; i<upper; i++)
+	{	
+		retval.push_back(i);
+	}
+	return retval;
+}
+
+
+
 template <class T1, class T2, class T3>
 class Triple
 {
