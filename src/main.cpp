@@ -155,19 +155,24 @@ void Loop(const std::vector<Parameters>& params, Callable filter)
 	auto sims = createsims<Hamiltonian, Lattice>(params, filter);
     
     Scheduler<typename decltype(sims)::value_type> sched(5);
-    sched.start();
     
-	// perform simulation
-	#pragma omp parallel for
-	for(std::size_t i = 0; i < sims.size(); ++i)
-	{
-		auto& marqov = sims[i];
-		marqov.init();
-//		marqov.gameloop_liveview();
-//		marqov.debugloop(100,0,1);
-		marqov.wrmploop();
-		marqov.gameloop();
-	}
+    for (int i = 0; i < sims.size(); ++i)
+    {
+        sched.enqueuesim(sims[i]);
+    }
+   sched.start();
+    
+// 	// perform simulation
+// 	#pragma omp parallel for
+// 	for(std::size_t i = 0; i < sims.size(); ++i)
+// 	{
+// 		auto& marqov = sims[i];
+// 		marqov.init();
+// //		marqov.gameloop_liveview();
+// //		marqov.debugloop(100,0,1);
+// 		marqov.wrmploop();
+// 		marqov.gameloop();
+// 	}
 }
 
 
@@ -210,6 +215,8 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		// set up and execute
  		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
  		Loop<Hamiltonian, RegularHypercubic>(rparams, f);
+        std::cout<<"End in RegularLatticeLoop "<<std::endl;
+        exit(0);
 	}
 }
 
