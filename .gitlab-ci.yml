@@ -38,10 +38,6 @@ marqov_Ubuntu_bionic:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack
     <<: *build_definition
 
-marqov_Ubuntu_xenial:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi:xenial-gfortran-lapack
-    <<: *build_definition
-
 marqov_Stretch:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gfortran-blas-lapack
     <<: *build_definition
