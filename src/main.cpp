@@ -154,25 +154,13 @@ void Loop(const std::vector<Parameters>& params, Callable filter)
 {
 	auto sims = createsims<Hamiltonian, Lattice>(params, filter);
     
-    Scheduler<typename decltype(sims)::value_type> sched(5);
+    Scheduler<typename decltype(sims)::value_type> sched(1);
     
     for (int i = 0; i < sims.size(); ++i)
     {
         sched.enqueuesim(sims[i]);
     }
    sched.start();
-    
-// 	// perform simulation
-// 	#pragma omp parallel for
-// 	for(std::size_t i = 0; i < sims.size(); ++i)
-// 	{
-// 		auto& marqov = sims[i];
-// 		marqov.init();
-// //		marqov.gameloop_liveview();
-// //		marqov.debugloop(100,0,1);
-// 		marqov.wrmploop();
-// 		marqov.gameloop();
-// 	}
 }
 
 
