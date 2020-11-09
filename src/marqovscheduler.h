@@ -55,99 +55,6 @@ public:
             workqueue.push_back(Simstate(idx));
         });//Put some warmup into the taskqueue
     }
-    void start()
-    {
-        //create dummy data for the ptplan
-        for (int i = 0; i < maxpt; ++i)
-            ptplan.emplace_back(i, 1);
-        
-        
-        //      auto master = [&] /*the master thread is a lambda function since by that it captures the variables of the Scheduler*/
-        //      {
-        std::cout<<"Starting up master"<<std::endl;
-        auto gameloop = [&](Simstate mywork, int npt)
-        {
-            // work
-            for(; mywork.npt < npt; ++mywork.npt)
-            {
-                std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
-                simvector[mywork.id]->gameloop();
-            }
-            if (mywork.npt < maxpt) // determine whether this itm needs more work
-            {
-                std::cout<<"putting item again into workloop"<<std::endl;
-                workqueue.push_back(mywork);
-            }
-            else
-            {
-                std::cout<<"no more work required on "<<mywork.id<<std::endl;
-                masterwork.notify_all();//trigger those waiting for signals from the taskqueue. since we don't push_back anything they would not be notified.
-                masterwork.notify_all();
-                masterwork.notify_all();
-                masterwork.notify_all();
-                masterwork.notify_all();
-                //FIXME: How many notifys are needed???
-            }
-        };
-        Simstate itm;
-        
-        while(!masterstop)
-        {
-            std::cout<<"Master waiting for work"<<std::endl;
-            bool busy = false;
-            masterwork.wait_for(std::chrono::seconds(1), [&]{
-                busy = workqueue.pop_front(itm);
-                std::cout<<busy<<" " << masterstop<< " " << nowork()<<std::endl;
-                return busy || masterstop || nowork();
-            });
-            if(busy) //there really is sth. to do
-            {
-                std::cout<<"dealing with work"<<std::endl;
-                if(ptplan[itm.npt].first == itm.id || ptplan[itm.npt].second == itm.id) // check if this sim is selected for PT. This should usually be the case since we do as many steps as necessary
-                {
-                    ptstep(itm);
-                }
-                else
-                {
-                    int newnpt = findnextnpt(itm.id, itm.npt);
-                    std::cout<<"Putting a new item "<<itm.id<<" with"<<itm.npt <<" for "<< newnpt<<" into the taskqueue"<< std::endl;
-                    taskqueue.enqueue(
-                        [itm, newnpt, gameloop]{gameloop(itm, newnpt);}
-                    );
-                }
-            }
-            else
-            {
-                //test whether there is work lying around somewhere
-                masterstop = nowork();
-            }
-        }
-        std::cout<<"Master stopped"<<std::endl;
-        //};
-        //      taskqueue.enqueue(master);
-    }
-    bool nowork() {return workqueue.is_empty() && taskqueue.tasks_assigned() == 0 && taskqueue.tasks_enqueued() == 0;}
-    void waitforall() {}
-    Scheduler(int maxptsteps) : maxpt(maxptsteps), masterstop(false), masterwork{},
-    workqueue(masterwork),
-    taskqueue(/*std::thread::hardware_concurrency()*/1 + 1)/*a space for the master thread*/
-    {}
-    ~Scheduler() {
-        std::cout<<"Entering dtor of sched"<<std::endl;
-        masterwork.wait([&]{
-            std::cout<<"Dtor check: "<<taskqueue.tasks_enqueued()<<" "<<taskqueue.tasks_assigned()<<" "<<(workqueue.is_empty()?42:-42)<<std::endl;
-            return workqueue.is_empty() && (taskqueue.tasks_enqueued() == 0) && (taskqueue.tasks_assigned() < 2); //The master thread is also enqueued in the taskqueue, so we need to account for that
-        });
-        masterstop = true;
-        std::cout<<"Deleting Scheduler"<<std::endl;}
-private:
-    struct Simstate
-    {
-        Simstate() : id(-1), npt(-100) {}
-        Simstate(int i) : id(i), npt(0) {}
-        int id;
-        int npt;
-    };
     uint findnextnpt(int idx, uint curnpt)
     {
         uint retval = curnpt+1;
@@ -157,9 +64,75 @@ private:
         }
         return retval;
     }
-    bool ispartnerdone(uint id)
+    
+    void start()
     {
-        return std::any_of(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == id;});
+        //create dummy data for the ptplan
+        for (int i = 0; i < maxpt; ++i)
+            ptplan.emplace_back(-1, -1 );
+        
+//         std::cout<<"Starting up master"<<std::endl;
+        Simstate itm;
+        
+        while(!masterstop)
+        {
+//             std::cout<<"Master waiting for work"<<std::endl;
+            bool busy = false;
+            //The following wait_for construct hides a bug that occurs if the last notify in the gameloop triggers the master, but the associated task is still running.
+            masterwork.wait_for(std::chrono::seconds(10), [&]{
+                busy = workqueue.pop_front(itm);
+                masterstop = nowork();
+                return busy || masterstop;
+            });
+            if(busy) //there really is sth. to do
+            {
+//                 std::cout<<"dealing with work"<<std::endl;
+                if(ptplan[itm.npt].first == itm.id || ptplan[itm.npt].second == itm.id) // check if this sim is selected for PT in this time step. This should usually be the case since we do as many steps as necessary
+                {
+                    ptstep(itm);
+                }
+                else
+                {//usually triggered at the beginning
+                    movesimtotaskqueue(itm);
+                }
+            }
+            else
+            {
+                //test whether there is work lying around somewhere
+                masterstop = nowork();
+            }
+        }
+//         std::cout<<"Master stopped"<<std::endl;
+        //};
+        //      taskqueue.enqueue(master);
+    }
+    bool nowork() {return workqueue.is_empty() && taskqueue.tasks_assigned() == 0 && taskqueue.tasks_enqueued() == 0;}
+    void waitforall() {}
+    Scheduler(int maxptsteps) : maxpt(maxptsteps), masterstop(false), masterwork{},
+    workqueue(masterwork),
+    taskqueue(std::thread::hardware_concurrency())
+    {}
+    ~Scheduler() {
+//         std::cout<<"Entering dtor of sched"<<std::endl;
+        masterwork.wait([&]{
+//             std::cout<<"Dtor check: "<<taskqueue.tasks_enqueued()<<" "<<taskqueue.tasks_assigned()<<" "<<(workqueue.is_empty()?42:-42)<<std::endl;
+            return workqueue.is_empty() && (taskqueue.tasks_enqueued() == 0) && (taskqueue.tasks_assigned() == 0);
+        });
+        masterstop = true;
+//         std::cout<<"Deleting Scheduler"<<std::endl;
+    }
+private:
+    struct Simstate
+    {
+        Simstate() : id(-1), npt(-100) {}
+        Simstate(int i) : id(i), npt(0) {}
+        Simstate(int i, int np) : id(i), npt(np) {}
+        int id;
+        int npt;
+    };
+    auto findpartner(uint id)
+    {
+        return std::find_if(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == id;});
     }
     
     int maxpt; ///< how many pt steps do we do
@@ -168,30 +141,62 @@ private:
     bool masterstop;
     Semaphore masterwork; ///< The semaphore that triggers the master process
     ThreadSafeQueue<Simstate> workqueue; ///< this is the queue where threads put their finished work and the master does PT
-    std::mutex simvectormutex; ///< A mutex to protect accesses to the simvectorwhich could be invalidated by the use of push_back
+    std::mutex simvectormutex; ///< A mutex to protect accesses to the simvector which could be invalidated by the use of push_back
     std::vector<Sim*> simvector; ///< An array for the full state of the simulations
     MARQOVQueue taskqueue; ///< this is the queue where threads pull their work from
     void ptstep(Simstate itm) {
-        std::cout<<"Parallel Tempering!"<<std::endl;
-        std::cout<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
-        std::cout<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
+//         std::cout<<"Parallel Tempering!"<<std::endl;
+//         std::cout<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
+//         std::cout<<"Expected pairing for this time step: "<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
         
         int partner = ptplan[itm.npt].first;
-        if (partner == itm.id) partner = ptplan[itm.npt].second;//it must be the other
-        if (ispartnerdone(partner))
-        {//partner is at the same stage, hence we can PT exchange
+        if (partner == itm.id) partner = ptplan[itm.npt].second;//it must be the other. no exchanges with myself
+        auto partnerinfo = findpartner(partner);
+        
+        if (partnerinfo != ptqueue.cend())
+        {// partner is at the same stage, hence we can PT exchange
+//             std::cout<<"Partner found in queue"<<std::endl;
+            ptqueue.erase(partnerinfo);
             calcprob();
             exchange();
-            //put both sims back into the workqueue for more processing until their next PT step
-            workqueue.push_back(    );
-            workqueue.push_back(Simstate = {partner, itm.npt});
-            
+            //put both sims back into the taskqueue for more processing until their next PT step
+            movesimtotaskqueue(itm);
+            movesimtotaskqueue(Simstate(partner, itm.npt));
         }
         else
         {//we have to wait for the PT partner
+//             std::cout<<"Partner not in queue"<<std::endl;
             ptqueue.push_back(itm);
         }
     }
+    void movesimtotaskqueue(Simstate itm)
+    {
+        auto gameloop = [&](Simstate mywork, int npt)//This defines the actual workitem that a task executes
+        {
+            // We loop until the next PT step
+            for(; mywork.npt < npt; ++mywork.npt)
+            {
+//                 std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
+                simvector[mywork.id]->gameloop();
+            }
+            if (mywork.npt < maxpt) // determine whether this itm needs more work
+            {
+//                 std::cout<<"putting item again into workloop"<<std::endl;
+                workqueue.push_back(mywork);
+            }
+            else
+            {
+//                 std::cout<<"no more work required on "<<mywork.id<<std::endl;
+                masterwork.notify_all();//trigger those waiting for signals from the taskqueue. since we don't push_back anything they would not be notified.
+            }
+        };
+        int newnpt = findnextnpt(itm.id, itm.npt);
+//         std::cout<<"Putting a new item "<<itm.id<<" with "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue"<< std::endl;
+        taskqueue.enqueue(
+            [itm, newnpt, gameloop]{gameloop(itm, newnpt);}
+                        );
+    }
+    //FIXME fill those functions for proper PT
     void calcprob() {}
     void exchange() {}
 };
