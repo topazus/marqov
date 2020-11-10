@@ -272,9 +272,10 @@ private:
             chunk_dims.fill(4096*1024/H5Mapper<T>::bytecount/t.size());//4MB chunking
             cparms.setChunk( rank, chunk_dims.data() );
             cparms.setDeflate(9);//Best (1-9) compression
-            cparms.setFillValue(H5Mapper<T>::H5Type(), &fv);
+            
             hsize_t dims[1] = {t.size()};
-            auto arrtype = H5::ArrayType(H5Mapper<T>::H5Type(), rank, dims);
+            arrtype = H5::ArrayType(H5Mapper<T>::H5Type(), rank, dims);
+            cparms.setFillValue(arrtype, &fv);
 
             dataset = hfile.createDataSet(name, arrtype, mspace1, cparms);
             if(!desc.empty())
@@ -298,10 +299,11 @@ private:
             auto filespace = dataset.getSpace();
             count.fill(cachepos);
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data());
-            dataset.write(cont.data(), H5Mapper<T>::H5Type(), mspace, filespace);
+            dataset.write(cont.data(), arrtype, mspace, filespace);
         }
     H5::Group& hfile;
     H5::DataSet dataset; ///< The HDF5 dataset
+    H5::ArrayType arrtype; ///< This is used to store the actual type that gets determined for this vector
     hsize_t dssize; //< the current dataset size
     std::size_t cachemaxelems; ///< How many elements can the cache hold
     std::size_t cachepos; ///< the current position of the cache
