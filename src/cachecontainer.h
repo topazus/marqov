@@ -226,7 +226,7 @@ public:
     /** A helper constructor that forwards to the main constructor
     * @param args the Argument helper structure
     */
-    CacheContainer(CacheContainerArgs args) : CacheContainer<T, Cont>(args.hfile, args.obsname, args.desc, args.cachesize) {}
+    CacheContainer(CacheContainerArgs args) : CacheContainer<std::vector<T>, Cont>(args.hfile, args.obsname, args.desc, args.cachesize) {}
     /* Destructor that takes care of flushing the cache.
     */
     ~CacheContainer()
