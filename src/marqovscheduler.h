@@ -133,6 +133,12 @@ private:
     std::mutex simvectormutex; ///< A mutex to protect accesses to the simvector which could be invalidated by the use of push_back
     std::vector<Sim*> simvector; ///< An array for the full state of the simulations
     MARQOVQueue taskqueue; ///< this is the queue where threads pull their work from
+    
+    /** This function is called that the current simulation is up for a parallel tempering (PT) step.
+     * If its partner is already waiting we do the parallel tempering, if not we got moved into 
+     * a queue and wait for a partner
+     * @param itm The Sim which is chosen for PT
+     */
     void ptstep(Simstate itm) {
 //         std::cout<<"Parallel Tempering!"<<std::endl;
 //         std::cout<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
@@ -158,6 +164,10 @@ private:
             ptqueue.push_back(itm);
         }
     }
+    /** This determines how many steps have to be done until the next PTstep
+     * and moves the simulation into the taskqueue where the gameloop is executed.
+     * @param itm The simulation that gets further worked on.
+     */
     void movesimtotaskqueue(Simstate itm)
     {
         auto gameloop = [&](Simstate mywork, int npt)//This defines the actual workitem that a task executes
@@ -185,6 +195,11 @@ private:
             [itm, newnpt, gameloop]{gameloop(itm, newnpt);}
                         );
     }
+    /** Determine the next PT step
+     * @param idx simulation id to check
+     * @param curnpt current PT time
+     * @return the next PT step where this simulation is selected for PT.
+     */
     uint findnextnpt(int idx, uint curnpt)
     {
         uint retval = curnpt+1;
@@ -194,6 +209,9 @@ private:
         }
         return retval;
     }
+    /** test whether there is work available.
+     * @return true if no task is working and no work is to be executed by a task and no sim is to moved to the taskqueue.
+     */
     bool nowork() {return workqueue.is_empty() && taskqueue.tasks_assigned() == 0 && taskqueue.tasks_enqueued() == 0;}
     //FIXME fill those functions for proper PT
     void calcprob() {}
