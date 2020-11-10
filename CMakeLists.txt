@@ -17,13 +17,6 @@ else()
 set(GIT_BRANCH, "N/A")
 endif()
 
-if(CMAKE_VERSION VERSION_LESS "3.10.0")
-find_package(MPI)
-else()
-find_package(MPI COMPONENTS CXX)
-
-endif()
-
 add_subdirectory(src)
 
 #add_subdirectory(testsuite)

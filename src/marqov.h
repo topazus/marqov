@@ -269,7 +269,7 @@ class Marqov : public RefType<Grid>
 		
 		
 	/** ----- Alternate constructor -----
-	* if you require Marqov to instantiate and embed the lattice for you
+	* If you require Marqov to instantiate and embed the lattice for you.
 	* @param outfile Where to create the output file
 	* @param mybeta the temperature that governs the Metropolis dynamics
 	* @param p A pair containing in the second Argument the lattice parameters and in the first the Hamiltonian parameters
@@ -474,7 +474,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 	void init_hot()
 	{
 		const int SymD = std::tuple_size<StateVector>::value;
-		for (decltype(this->grid.size()) i=0; i<this->grid.size(); ++i)
+		for (decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
 		{
 			statespace[i] = rnddir<RNGCache<RNGType>, typename StateVector::value_type, SymD>(rngcache);
 		}

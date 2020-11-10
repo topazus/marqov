@@ -1,0 +1,78 @@
+types:
+  - build
+  - test
+
+.BUILD_template: &build_definition
+  type: build
+  except:
+    changes:
+      - .gitignore
+      - CITATION
+      - README.md
+      - doc/*
+  script:
+    - apt-get update && apt-get install -y g++ cmake libhdf5-dev libopenmpi-dev
+    - cmake -E make_directory build
+    - cd build
+    - cmake ..
+    - make mpiMARQOV
+
+.TEST_template: &test_definition
+  type: test
+  except:
+    changes:
+      - .gitignore
+      - CITATION
+      - README.md
+      - doc/*
+
+  script:
+    - cmake -E make_directory build
+    - cd build
+    - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ..
+    - cmake --build . --target all --config Release
+    - ctest -O log.txt
+    - cat log.txt | grep "tests passed" | cut -d " " -f 1
+
+marqov_Ubuntu_bionic:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack
+    <<: *build_definition
+
+marqov_Stretch:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gfortran-blas-lapack
+    <<: *build_definition
+
+marqov_Buster:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gfortran-blas-lapack
+    <<: *build_definition
+
+marqov_Buster_clang:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-clang
+    type: build
+    except:
+      changes:
+        - .gitignore
+        - CITATION
+        - README.md
+    script:
+      - apt-get update && apt-get install -y libhdf5-dev
+      - cmake -E make_directory build
+      - cd build
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang++ ..
+      - make MARQOV VERBOSE=1
+
+marqov_create_doc:
+  image: aergus/latex
+  stage: build
+  only:
+    changes:
+      - doc/*.tex
+      - doc/*.bib
+      - doc/figures/*
+      - doc/files/*
+#  artifacts:
+#    paths:
+#      - doc/main.pdf
+  script:
+    - cd doc
+#    - latexmk -pdf main.tex

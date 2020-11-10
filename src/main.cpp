@@ -29,6 +29,7 @@ using std::ofstream;
 #include "svmath.h"
 #include "filters.h"
 
+#include "marqovscheduler.h"
 // Hamiltonians
 #include "Heisenberg.h"
 #include "Ising.h"
@@ -153,18 +154,14 @@ template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void Loop(const std::vector<Parameters>& params, Callable filter)
 {
 	auto sims = createsims<Hamiltonian, Lattice>(params, filter);
-
-	// perform simulation
-	#pragma omp parallel for
-	for(std::size_t i = 0; i < sims.size(); ++i)
-	{
-		auto& marqov = sims[i];
-		marqov.init();
-//		marqov.gameloop_liveview();
-//		marqov.debugloop(100,0,1);
-		marqov.wrmploop();
-		marqov.gameloop();
-	}
+    
+    Scheduler<typename decltype(sims)::value_type> sched(1);
+    
+    for (int i = 0; i < sims.size(); ++i)
+    {
+        sched.enqueuesim(sims[i]);
+    }
+   sched.start();
 }
 
 
@@ -207,6 +204,8 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		// set up and execute
  		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
  		Loop<Hamiltonian, RegularHypercubic>(rparams, f);
+//        std::cout<<"End in RegularLatticeLoop "<<std::endl;
+//        exit(0);
 	}
 }
 
@@ -463,11 +462,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			}
 		}
 	}
-
-
 	*/
-
-
 	else if (ham == "IsingCC")
 	{
 		const auto ham        = registry.Get<std::string>("mc", "General", "Hamiltonian" );
