@@ -11,6 +11,23 @@
 
 // ------------------------------ OBSERVABLES ---------------------------
 
+class IsingGenericVectorValuedObs
+{
+	public:
+		std::string name, desc;
+		template <class StateSpace, class Grid>
+		std::vector<double> measure(const StateSpace& statespace, const Grid& grid)
+		{
+			const int N = grid.size();
+			std::vector<double> retval;
+
+			for (int i=0; i<N; i++) retval.push_back(i);
+
+			return retval;
+		}
+		IsingGenericVectorValuedObs() : name("dummy"), desc("testing vector-valued observables ...") {}
+};
+
 // Magnetization
 class IsingMag
 {
@@ -145,7 +162,8 @@ class Ising
 		Energy<Ising> 	obs_e;
 		IsingMagFTComp obs_fx;
 		IsingMagFTComp obs_fy;
-		auto getobs()	{return std::make_tuple(obs_m, obs_e, obs_fx, obs_fy);}
+		IsingGenericVectorValuedObs dummy;
+		auto getobs()	{return std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy);}
 
 
 		// initialize state space
