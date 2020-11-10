@@ -54,17 +54,7 @@ public:
             //enqueue the next full work item into the workqueue immediately
             workqueue.push_back(Simstate(idx));
         });//Put some warmup into the taskqueue
-    }
-    uint findnextnpt(int idx, uint curnpt)
-    {
-        uint retval = curnpt+1;
-        while ((ptplan[retval].first != idx) && (ptplan[retval].second != idx) && (retval < maxpt))
-        {
-            ++retval;
-        }
-        return retval;
-    }
-    
+    }    
     void start()
     {
         //create dummy data for the ptplan
@@ -106,7 +96,6 @@ public:
         //};
         //      taskqueue.enqueue(master);
     }
-    bool nowork() {return workqueue.is_empty() && taskqueue.tasks_assigned() == 0 && taskqueue.tasks_enqueued() == 0;}
     void waitforall() {}
     Scheduler(int maxptsteps) : maxpt(maxptsteps), masterstop(false), masterwork{},
     workqueue(masterwork),
@@ -196,6 +185,16 @@ private:
             [itm, newnpt, gameloop]{gameloop(itm, newnpt);}
                         );
     }
+    uint findnextnpt(int idx, uint curnpt)
+    {
+        uint retval = curnpt+1;
+        while ((ptplan[retval].first != idx) && (ptplan[retval].second != idx) && (retval < maxpt))
+        {
+            ++retval;
+        }
+        return retval;
+    }
+    bool nowork() {return workqueue.is_empty() && taskqueue.tasks_assigned() == 0 && taskqueue.tasks_enqueued() == 0;}
     //FIXME fill those functions for proper PT
     void calcprob() {}
     void exchange() {}
