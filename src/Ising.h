@@ -21,7 +21,7 @@ class IsingGenericVectorValuedObs
 			const int N = grid.size();
 			std::vector<double> retval;
 
-			for (int i=0; i<N; i++) retval.push_back(i);
+			for (int i=0; i<5; i++) retval.push_back(0.1*i);
 
 			return retval;
 		}
