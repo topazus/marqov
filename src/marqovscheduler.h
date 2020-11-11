@@ -114,11 +114,13 @@ public:
     {}
     ~Scheduler() {
 //         std::cout<<"Entering dtor of sched"<<std::endl;
-        masterwork.wait([&]{
-//             std::cout<<"Dtor check: "<<taskqueue.tasks_enqueued()<<" "<<taskqueue.tasks_assigned()<<" "<<(workqueue.is_empty()?42:-42)<<std::endl;
-            return workqueue.is_empty() && (taskqueue.tasks_enqueued() == 0) && (taskqueue.tasks_assigned() == 0);
-        });
-        masterstop = true;
+        if (!nowork() && !masterstop)
+        {
+            masterwork.wait([&]{
+                return workqueue.is_empty() && (taskqueue.tasks_enqueued() == 0) && (taskqueue.tasks_assigned() == 0);
+            });
+        }
+            masterstop = true;
 //         std::cout<<"Deleting Scheduler"<<std::endl;
     }
 private:
