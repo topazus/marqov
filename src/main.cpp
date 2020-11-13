@@ -92,8 +92,7 @@ void fillsims(const std::vector<std::pair<MARQOV::MARQOVConfig, Args>>& args, st
 // ---------------------------------------
 
 
-template<class ... Ts>
-struct sims_helper {};
+template<class ... Ts> struct sims_helper {};
 
 template <class H,  class L, class HArgstuple, size_t... S>
 struct sims_helper<H, L, HArgstuple, std::index_sequence<S...> >
@@ -104,66 +103,45 @@ struct sims_helper<H, L, HArgstuple, std::index_sequence<S...> >
 							 )) MarqovType;
 };
 
-template <class H, class L, class HArgs, class LArgs>
-struct sims_helper<H, L, Triple<LArgs, MARQOVConfig, HArgs> >
+template <class ... Ts>
+struct sims_helper2 {};
+
+template <class Hamiltonian, class Lattice, class LArgs, class HArgs>
+struct sims_helper2<Hamiltonian, Lattice, Triple<LArgs, MARQOVConfig, HArgs> >
 {
-    typedef decltype(makeMarqov<H,L>(std::declval<MARQOVConfig>(),  
+    typedef decltype(makeMarqov<Hamiltonian, Lattice>(std::declval<MARQOVConfig>(),  
     							  std::declval<std::pair<LArgs, HArgs>& >()
 							  )) MarqovType;
 };
 
+template <class Hamiltonian, class Lattice, class HArgs>
+struct sims_helper2<Hamiltonian, Lattice, std::pair<MARQOVConfig, HArgs> >
+{
+    static constexpr std::size_t tsize = std::tuple_size<typename std::remove_reference<HArgs>::type>::value;
+    typedef std::make_index_sequence<tsize> HArgSequence;
+    typedef typename sims_helper<Hamiltonian, Lattice, HArgs, HArgSequence>::MarqovType MarqovType;
+};
 
 // ---------------------------------------
-
-
-/** The case where Marqov allocates a lattice
- */
-template <class H, class L, class LArgs, class HArgs, class Callable>
-auto createsims(const std::vector<Triple<LArgs, MARQOVConfig, HArgs> >& params, Callable c)
-{
-    typedef typename sims_helper<H, L, Triple<LArgs, MARQOVConfig, HArgs> >::MarqovType MarqovType;  
-    //create simulations
-    std::vector<MarqovType> sims;
-    sims.reserve(params.size());
-    fillsims(params, sims, c);
-    return sims;
-}
-
-/** The old case where the lattice is a reference passed in through the filter....
- * @param params parameters
- * @param c A filter
- */
-template <class H, class L, class Args, class Callable>
-auto createsims(const std::vector<std::pair<MARQOVConfig, Args>>& params, Callable c)
-{
-    std::size_t constexpr tsize = std::tuple_size<typename std::remove_reference<Args>::type>::value;
-    typedef typename sims_helper<H, L, Args, std::make_index_sequence<tsize> >::MarqovType MarqovType;
-
-    //create simulations
-    std::vector<MarqovType> sims;
-    sims.reserve(params.size());
-    fillsims(params, sims, c);
-    return sims;
-}
-
-
-// ---------------------------------------
-
 
 template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void Loop(const std::vector<Parameters>& params, Callable filter)
 {
-	auto sims = createsims<Hamiltonian, Lattice>(params, filter);
+    typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType;  
+
+    //create simulations
+    std::vector<MarqovType> sims;
+    sims.reserve(params.size());
+    fillsims(params, sims, filter);
     
     Scheduler<typename decltype(sims)::value_type> sched(1);
     
     for (int i = 0; i < sims.size(); ++i)
-    {
-        sched.enqueuesim(sims[i]);
-    }
-   sched.start();
+     {
+         sched.enqueuesim(sims[i]);
+     }
+    sched.start();
 }
-
 
 // ---------------------------------------
 
