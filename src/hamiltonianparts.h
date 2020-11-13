@@ -7,6 +7,7 @@ class Interaction
 	    double J;
 //	    virtual StateVector operator() (const StateVector& phi_i) = 0;
 	    virtual StateVector get(const StateVector& phi_i) = 0;
+        virtual ~Interaction() {};
 };
 
 template <class StateVector, typename CouplingType>
