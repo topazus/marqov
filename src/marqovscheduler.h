@@ -132,6 +132,11 @@ private:
         int id;
         int npt;
     };
+    struct GlobalMutexes
+    {
+        std::mutex hdf;//lock for the HDF5 I/O since the library for C++ is not thread-safe
+        std::mutex io; 
+    } mutexes;
     auto findpartner(uint id)
     {
         return std::find_if(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == id;});
