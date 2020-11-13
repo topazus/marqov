@@ -58,7 +58,7 @@ public:
     uint findnextnpt(int idx, uint curnpt)
     {
         uint retval = curnpt+1;
-        while ((ptplan[retval].first != idx) && (ptplan[retval].second != idx) && (retval < maxpt))
+        while ((retval < maxpt) && (ptplan[retval].first != idx) && (ptplan[retval].second != idx))
         {
             ++retval;
         }
