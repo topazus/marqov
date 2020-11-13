@@ -67,27 +67,7 @@ constexpr auto emplace_from_tuple(Cont&& cont, Tuple1&& t1, MARQOV::MARQOVConfig
 		std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
 }
 
-template <class Args1, class Args2, class T, class Callable>
-void fillsims(const std::vector<Triple<Args1, MARQOV::MARQOVConfig, Args2> >& args, std::vector<T>& sims, Callable c)
-{
-	for(auto p : args)
-	{
-		auto t1 = c(p);
-		emplace_from_tuple(sims, t1.first, std::forward<MARQOV::MARQOVConfig>(t1.second), t1.third);
-	}
-}
 
-template <class Args, class T, class Callable>
-void fillsims(const std::vector<std::pair<MARQOV::MARQOVConfig, Args>>& args, std::vector<T>& sims, Callable c)
-{
-	for(auto p : args)
-	{
-		auto t1 = c(p);
-		emplace_from_tuple(sims, 
-			std::forward<decltype(std::get<0>(t1))>(std::get<0>(t1)), 
-			std::forward<MARQOV::MARQOVConfig>(std::get<1>(t1)), std::get<2>(t1));
-	}
-}
 
 // ---------------------------------------
 
@@ -112,6 +92,11 @@ struct sims_helper2<Hamiltonian, Lattice, Triple<LArgs, MARQOVConfig, HArgs> >
     typedef decltype(makeMarqov<Hamiltonian, Lattice>(std::declval<MARQOVConfig>(),  
     							  std::declval<std::pair<LArgs, HArgs>& >()
 							  )) MarqovType;
+    template <typename T>
+    static void emplacer(std::vector<MarqovType>& sims, T&  t)
+    {
+        emplace_from_tuple(sims, t.first, std::forward<MARQOV::MARQOVConfig>(t.second), t.third);
+    }
 };
 
 template <class Hamiltonian, class Lattice, class HArgs>
@@ -120,9 +105,15 @@ struct sims_helper2<Hamiltonian, Lattice, std::pair<MARQOVConfig, HArgs> >
     static constexpr std::size_t tsize = std::tuple_size<typename std::remove_reference<HArgs>::type>::value;
     typedef std::make_index_sequence<tsize> HArgSequence;
     typedef typename sims_helper<Hamiltonian, Lattice, HArgs, HArgSequence>::MarqovType MarqovType;
-};
 
-// ---------------------------------------
+    template <typename T>
+    static void emplacer(std::vector<MarqovType>& sims, T& t)
+    {
+            emplace_from_tuple(sims, 
+			std::forward<decltype(std::get<0>(t))>(std::get<0>(t)), 
+			std::forward<MARQOV::MARQOVConfig>(std::get<1>(t)), std::get<2>(t));
+    }
+};
 
 template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void Loop(const std::vector<Parameters>& params, Callable filter)
@@ -132,9 +123,13 @@ void Loop(const std::vector<Parameters>& params, Callable filter)
     //create simulations
     std::vector<MarqovType> sims;
     sims.reserve(params.size());
-    fillsims(params, sims, filter);
+Scheduler<typename decltype(sims)::value_type> sched(1);
     
-    Scheduler<typename decltype(sims)::value_type> sched(1);
+  	for(auto p : params)
+	{
+		auto t = filter(p);
+		sims_helper2<Hamiltonian, Lattice, Parameters >::template emplacer(sims, t);
+	}
     
     for (int i = 0; i < sims.size(); ++i)
      {
