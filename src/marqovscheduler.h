@@ -54,7 +54,7 @@ public:
             //enqueue the next full work item into the workqueue immediately
             workqueue.push_back(Simstate(idx));
         });//Put some warmup into the taskqueue
-    }    
+    }
     void start()
     {
         //create dummy data for the ptplan
@@ -205,7 +205,7 @@ private:
     uint findnextnpt(int idx, uint curnpt)
     {
         uint retval = curnpt+1;
-        while ((ptplan[retval].first != idx) && (ptplan[retval].second != idx) && (retval < maxpt))
+        while ((retval < maxpt) && (ptplan[retval].first != idx) && (ptplan[retval].second != idx))
         {
             ++retval;
         }
