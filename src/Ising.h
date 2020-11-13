@@ -153,6 +153,7 @@ class Ising
 		{
 			interactions[0] = new Ising_interaction<StateVector>(J); 
 		}
+		~Ising() {delete interactions[0];}
 		
 		// instantiate interaction terms (requires pointers)
 		Interaction<StateVector>* interactions[Nalpha];
