@@ -29,16 +29,95 @@ SOFTWARE.
 #include <string>
 #include <mutex>
 #include <algorithm>
+#include <tuple>
 #include <chrono>
 
 #include "marqovqueue.h"
+#include "marqov.h"
+
+template <class Cont, class Tuple1, class Tuple2, std::size_t... I>
+constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple1&& t1, MARQOV::MARQOVConfig&& mc, Tuple2&& t2, std::index_sequence<I...> )
+{
+	return cont.emplace_back(
+		std::forward<Tuple1>(t1), 
+		std::forward<MARQOV::MARQOVConfig>(mc), 
+		std::get<I>(std::forward<Tuple2>(t2))...);
+}
+
+//c++17 make_from_tuple from cppreference adapted for emplace
+template <class Cont, class Tuple1, class Tuple2>
+constexpr auto emplace_from_tuple(Cont&& cont, Tuple1&& t1, MARQOV::MARQOVConfig&& mc, Tuple2&& t2 )
+{
+	return emplace_from_tuple_impl(
+		cont, 
+		std::forward<Tuple1>(t1), 
+		std::forward<MARQOV::MARQOVConfig>(mc), 
+		std::forward<Tuple2>(t2),
+		std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
+}
+
+template<class ... Ts> struct sims_helper {};
+
+template <class H,  class L, class HArgstuple, size_t... S>
+struct sims_helper<H, L, HArgstuple, std::index_sequence<S...> >
+{
+	typedef decltype(MARQOV::makeMarqov<H>(std::declval<L>(),
+	                       		 std::declval<MARQOV::MARQOVConfig>(),
+	                       		 std::declval<typename std::tuple_element<S, HArgstuple>::type>()...
+							 )) MarqovType;
+};
+
+template <class ... Ts>
+struct sims_helper2 {};
+
+template <class Hamiltonian, class Lattice, class LArgs, class HArgs>
+struct sims_helper2<Hamiltonian, Lattice, Triple<LArgs, MARQOV::MARQOVConfig, HArgs> >
+{
+    typedef decltype(MARQOV::makeMarqov<Hamiltonian, Lattice>(std::declval<MARQOV::MARQOVConfig>(),  
+    							  std::declval<std::pair<LArgs, HArgs>& >()
+							  )) MarqovType;
+    template <typename T>
+    static void emplacer(std::vector<MarqovType>& sims, T&  t)
+    {
+        emplace_from_tuple(sims, t.first, std::forward<MARQOV::MARQOVConfig>(t.second), t.third);
+    }
+};
+
+template <class Hamiltonian, class Lattice, class HArgs>
+struct sims_helper2<Hamiltonian, Lattice, std::pair<MARQOV::MARQOVConfig, HArgs> >
+{
+    static constexpr std::size_t tsize = std::tuple_size<typename std::remove_reference<HArgs>::type>::value;
+    typedef std::make_index_sequence<tsize> HArgSequence;
+    typedef typename sims_helper<Hamiltonian, Lattice, HArgs, HArgSequence>::MarqovType MarqovType;
+
+    template <typename T>
+    static void emplacer(std::vector<MarqovType>& sims, T& t)
+    {
+            emplace_from_tuple(sims, 
+			std::forward<decltype(std::get<0>(t))>(std::get<0>(t)), 
+			std::forward<MARQOV::MARQOVConfig>(std::get<1>(t)), std::get<2>(t));
+    }
+};
 
 template <class Sim>
 class Scheduler
 {
 private:
 public:
-    void enqueuesim(Sim& sim) ///< the entry point for the user. Currently it's undecided whether the sim is instantiated by the user or by the scheduler
+    /** This gives us the parameters of a simulation and we are responsible for setting everything up.
+     * It has a template parameter, but of course all used parameters have to resolve to the same underlying MarqovType.
+     */
+    template <typename ParamType, typename Callable>
+    void createSimfromParameter(ParamType& p, Callable filter)
+    {
+        auto t = filter(p);
+        sims_helper2<Hamiltonian, Lattice, Parameters >::template emplacer(sims, t);
+        auto curidx = sims.size()
+    }
+    std::vector<Sim> sims;
+    /** This registers an already allocated simulation with us.
+     */
+    void enqueuesim(Sim& sim)
     {
         int idx = simvector.size();
         simvectormutex.lock();
@@ -223,6 +302,15 @@ private:
     //FIXME fill those functions for proper PT
     void calcprob() {}
     void exchange() {}
+};
+
+/** A helper class to figure out the type of the scheduler
+ */
+template <class Hamiltonian, class Lattice, class Parameters>
+struct GetSchedulerType
+{
+    typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType;
+    typedef Scheduler<MarqovType> MarqovScheduler;
 };
 
 #endif

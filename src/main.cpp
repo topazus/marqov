@@ -25,7 +25,7 @@ using std::ofstream;
 #include "registry.h"
 #include "systemtools.h"
 #include "replicate.h"
-#include "marqov.h"
+//#include "marqov.h"
 #include "svmath.h"
 #include "filters.h"
 
@@ -44,96 +44,22 @@ using std::ofstream;
 
 using namespace MARQOV;
 
-
-
-//c++17 make_from_tuple from cppreference adapted for emplace
-template <class Cont, class Tuple1, class Tuple2, std::size_t... I>
-constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple1&& t1, MARQOV::MARQOVConfig&& mc, Tuple2&& t2, std::index_sequence<I...> )
-{
-	return cont.emplace_back(
-		std::forward<Tuple1>(t1), 
-		std::forward<MARQOV::MARQOVConfig>(mc), 
-		std::get<I>(std::forward<Tuple2>(t2))...);
-}
- 
-template <class Cont, class Tuple1, class Tuple2>
-constexpr auto emplace_from_tuple(Cont&& cont, Tuple1&& t1, MARQOV::MARQOVConfig&& mc, Tuple2&& t2 )
-{
-	return emplace_from_tuple_impl(
-		cont, 
-		std::forward<Tuple1>(t1), 
-		std::forward<MARQOV::MARQOVConfig>(mc), 
-		std::forward<Tuple2>(t2),
-		std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
-}
-
-
-
 // ---------------------------------------
-
-
-template<class ... Ts> struct sims_helper {};
-
-template <class H,  class L, class HArgstuple, size_t... S>
-struct sims_helper<H, L, HArgstuple, std::index_sequence<S...> >
-{
-	typedef decltype(makeMarqov<H>(std::declval<L>(),
-	                       		 std::declval<MARQOVConfig>(),
-	                       		 std::declval<typename std::tuple_element<S, HArgstuple>::type>()...
-							 )) MarqovType;
-};
-
-template <class ... Ts>
-struct sims_helper2 {};
-
-template <class Hamiltonian, class Lattice, class LArgs, class HArgs>
-struct sims_helper2<Hamiltonian, Lattice, Triple<LArgs, MARQOVConfig, HArgs> >
-{
-    typedef decltype(makeMarqov<Hamiltonian, Lattice>(std::declval<MARQOVConfig>(),  
-    							  std::declval<std::pair<LArgs, HArgs>& >()
-							  )) MarqovType;
-    template <typename T>
-    static void emplacer(std::vector<MarqovType>& sims, T&  t)
-    {
-        emplace_from_tuple(sims, t.first, std::forward<MARQOV::MARQOVConfig>(t.second), t.third);
-    }
-};
-
-template <class Hamiltonian, class Lattice, class HArgs>
-struct sims_helper2<Hamiltonian, Lattice, std::pair<MARQOVConfig, HArgs> >
-{
-    static constexpr std::size_t tsize = std::tuple_size<typename std::remove_reference<HArgs>::type>::value;
-    typedef std::make_index_sequence<tsize> HArgSequence;
-    typedef typename sims_helper<Hamiltonian, Lattice, HArgs, HArgSequence>::MarqovType MarqovType;
-
-    template <typename T>
-    static void emplacer(std::vector<MarqovType>& sims, T& t)
-    {
-            emplace_from_tuple(sims, 
-			std::forward<decltype(std::get<0>(t))>(std::get<0>(t)), 
-			std::forward<MARQOV::MARQOVConfig>(std::get<1>(t)), std::get<2>(t));
-    }
-};
 
 template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void Loop(const std::vector<Parameters>& params, Callable filter)
 {
-    typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType;  
+    typename GetSchedulerType<Hamiltonian, Lattice, Parameters >::MarqovScheduler sched(1);
 
     //create simulations
-    std::vector<MarqovType> sims;
+    std::vector<typename GetSchedulerType<Hamiltonian, Lattice, Parameters >::MarqovType> sims;
     sims.reserve(params.size());
-Scheduler<typename decltype(sims)::value_type> sched(1);
     
   	for(auto p : params)
 	{
 		auto t = filter(p);
 		sims_helper2<Hamiltonian, Lattice, Parameters >::template emplacer(sims, t);
-	}
-    
-    for (int i = 0; i < sims.size(); ++i)
-     {
-         sched.enqueuesim(sims[i]);
+         sched.enqueuesim(sims.back());
      }
     sched.start();
 }
