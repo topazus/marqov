@@ -57,9 +57,10 @@ void Loop(const std::vector<Parameters>& params, Callable filter)
     
   	for(auto p : params)
 	{
-		auto t = filter(p);
-		sims_helper2<Hamiltonian, Lattice, Parameters >::template emplacer(sims, t);
-         sched.enqueuesim(sims.back());
+       sched.createSimfromParameter(p, filter);
+// 		auto t = filter(p);
+// 		sims_helper2<Hamiltonian, Lattice, Parameters >::template emplacer(sims, t);
+//          sched.enqueuesim(sims.back());
      }
     sched.start();
 }

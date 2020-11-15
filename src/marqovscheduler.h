@@ -56,6 +56,24 @@ constexpr auto emplace_from_tuple(Cont&& cont, Tuple1&& t1, MARQOV::MARQOVConfig
 		std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
 }
 
+template <class T, class Tuple1, class Tuple2, std::size_t... I>
+constexpr T* ptr_from_tuple_impl(Tuple1&& t1, MARQOV::MARQOVConfig&& mc, Tuple2&& t2, std::index_sequence<I...> )
+{
+  return new T(std::forward<Tuple1>(t1),
+               std::forward<MARQOV::MARQOVConfig>(mc), 
+               std::get<I>(std::forward<Tuple2>(t2))...
+);
+}
+ 
+template <class T, class Tuple1, class Tuple2>
+constexpr T* ptr_from_tuple(Tuple1&& t1, MARQOV::MARQOVConfig&& mc, Tuple2&& t2)
+{
+    return ptr_from_tuple_impl<T>(std::forward<Tuple1>(t1),
+                                  std::forward<MARQOV::MARQOVConfig>(mc), 
+                                  std::forward<Tuple2>(t2),
+        std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
+}
+
 template<class ... Ts> struct sims_helper {};
 
 template <class H,  class L, class HArgstuple, size_t... S>
@@ -111,8 +129,9 @@ public:
     void createSimfromParameter(ParamType& p, Callable filter)
     {
         auto t = filter(p);
-        sims_helper2<Hamiltonian, Lattice, Parameters >::template emplacer(sims, t);
-        auto curidx = sims.size()
+        sims_helper2<typename Sim::HamiltonianType, typename Sim::Lattice, ParamType>::template emplacer(sims, t);
+        auto curidx = sims.size();// I think the index should be stable...
+        this->enqueuesim(sims.back());
     }
     std::vector<Sim> sims;
     /** This registers an already allocated simulation with us.
