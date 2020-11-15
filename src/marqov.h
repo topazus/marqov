@@ -188,6 +188,8 @@ template <class Grid, class Hamiltonian, template<class> class RefType = detail:
 class Marqov : public RefType<Grid>
 {
 	public:
+        typedef Hamiltonian HamiltonianType;
+        typedef Grid Lattice;
 		typedef typename Hamiltonian::StateVector StateVector;
 		typedef int redStateVector; // reduced StateVector (so far needed only for AT model, improve me!!!)
 		typedef StateVector* StateSpace;
