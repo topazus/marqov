@@ -121,8 +121,8 @@ namespace MARQOV
 		{
 			public:
 				template<class... Args>
-				Ref(L&& l, Args&& ... args) : grid(l) {}
-				L& grid;
+				Ref(const L&& l, Args&& ... args) : grid(l) {}
+				const L& grid;
 		};
 		
 		template <class L>
@@ -135,7 +135,7 @@ namespace MARQOV
 				template <class ...Args, size_t... S>
 				NonRef(std::tuple<Args...>&& args, std::index_sequence<S...>) : grid(std::get<S>(std::forward<std::tuple<Args...>>(args))... ) {}
 				
-				L grid;
+				const L grid;
 		};
 		        
 		//A helper to decide whether a Hamiltonian provides an init function
@@ -246,14 +246,14 @@ class Marqov : public RefType<Grid>
 	/** ----- The original constructor call -----
 	* First we have the parameters for the MARQOV class, then follows the arbitrary number of
 	* arguments for a particular Hamiltonian.
-	* @param lattice The instantiated lattice object
+	* @param lattice A reference to the instantiated lattice object. You are responsible for managing its lifetime.
 	* @param outfile Where to create the output file
 	* @param mybeta the temperature that governs the Metropolis dynamics
 	* @param args A template parameter pack for the Hamiltonian
 	*/
 	
 	template <class ...HArgs>
-	Marqov(Grid& lattice, MARQOVConfig mc, double mybeta, HArgs&& ... hargs) : 
+	Marqov(Grid&& lattice, MARQOVConfig mc, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<Grid>(lattice)),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
