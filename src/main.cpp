@@ -451,13 +451,15 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		// partially apply filter
 		auto f = [&ccl](auto p){return defaultfilter(ccl, p);};
 
-//        typedef decltype(f(std::declval<decltype(params[0])>())) PPType;
-//        typedef Ising<int> Hamiltonian;
-//        typedef ConstantCoordinationLattice<Poissonian> Lattice;
-//        typename GetSchedulerType<Hamiltonian, Lattice, PPType>::MarqovScheduler sched(1);
+        typedef typename decltype(params)::value_type PPType;
+        typedef Ising<int> Hamiltonian;
+        typedef ConstantCoordinationLattice<Poissonian> Lattice;
+        typename GetSchedulerType<Hamiltonian, Lattice, PPType>::MarqovScheduler sched(1);
 		// perform simulations
-		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
-//        sched.start();
+        for (auto p: params)
+            sched.createSimfromParameter(p, f);
+//		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
+        sched.start();
 	}
     else if (ham == "BlumeCapelBipartite")
     {
@@ -473,10 +475,21 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		const auto dim 	 = registry.Get<int>("mc", name, "dim" );
 
 		write_logfile(registry, beta);
-
+        
+        typedef decltype(finalize_parameter_pair(std::declval<MARQOV::MARQOVConfig>(), parameters)) PPType;
+        typename GetSchedulerType<BlumeCapelBipartite<int>, SimpleBipartite, typename PPType::value_type>::MarqovScheduler sched(1);
 		// set up replicas
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-	
+		
+		std::vector<SimpleBipartite> latts;
+        // lattice size loop
+        for (std::size_t j=0; j<nL.size(); j++)
+        {
+            // prepare. Extend lifetime of lattices.
+            int L = nL[j];
+            latts.emplace_back(L, dim);
+        }
+
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
 		{
@@ -496,12 +509,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			// set up parameters
 			auto params = finalize_parameter_pair(mp, parameters);
 			auto rparams = replicator_pair(params, nreplicas[j]);
-
-			// lattice
-			SimpleBipartite latt(L, dim);
-
-
-
 			// test area
 //			auto terms = get_terms<SimpleBipartite>(latt, 0);
 //			cout << "---> " << terms[0] << endl << endl;
@@ -511,12 +518,16 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 //			cout << "---> " << terms2[0] << endl << endl;
 
 
-
-	
+			// lattice
+//			SimpleBipartite latt(L, dim);
+            SimpleBipartite& latt = latts[j];
 			// set up and execute
 	 		auto f = [&latt, &outbasedir, L](auto p){return defaultfilter(latt, p);}; //partially apply filter
-	 		Loop<BlumeCapelBipartite<int>, SimpleBipartite>(rparams, f);
+            for(auto p : rparams)
+                sched.createSimfromParameter(p, f);
+//	 		Loop<BlumeCapelBipartite<int>, SimpleBipartite>(rparams, f);
 		}
+		sched.start();
 	}
 }
 
