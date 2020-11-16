@@ -68,17 +68,18 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 	const auto dim 	 = reg.Get<int>("mc", name, "dim" );
 
     typedef decltype(finalize_parameter_pair(std::declval<MARQOV::MARQOVConfig>(), hp)) PPType;
-    typename GetSchedulerType<Hamiltonian, RegularHypercubic, typename PPType::value_type>::MarqovScheduler sched(1);
+    
 	if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 	std::vector<RegularHypercubic> latts;
-	// lattice size loop
-	
     for (std::size_t j=0; j<nL.size(); j++)
 	{
 		// prepare. Extend lifetime of lattices.
 		int L = nL[j];
         latts.emplace_back(L, dim);
     }
+    
+    typename GetSchedulerType<Hamiltonian, RegularHypercubic, typename PPType::value_type>::MarqovScheduler sched(1);
+    
 	for (std::size_t j=0; j<nL.size(); j++)
 	{
 		// prepare
@@ -476,12 +477,12 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		write_logfile(registry, beta);
         
+		std::vector<SimpleBipartite> latts;
         typedef decltype(finalize_parameter_pair(std::declval<MARQOV::MARQOVConfig>(), parameters)) PPType;
         typename GetSchedulerType<BlumeCapelBipartite<int>, SimpleBipartite, typename PPType::value_type>::MarqovScheduler sched(1);
 		// set up replicas
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 		
-		std::vector<SimpleBipartite> latts;
         // lattice size loop
         for (std::size_t j=0; j<nL.size(); j++)
         {
