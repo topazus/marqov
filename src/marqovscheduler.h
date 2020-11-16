@@ -237,7 +237,7 @@ private:
     struct GlobalMutexes
     {
         std::mutex hdf;//lock for the HDF5 I/O since the library for C++ is not thread-safe
-        std::mutex io; 
+        std::mutex io;// lock for the rest?
     } mutexes;
     auto findpartner(uint id)
     {

@@ -229,7 +229,11 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
 
-	
+        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::MARQOVConfig>(), hp)) PPType;
+        typedef EdwardsAndersonIsing<int> Hamiltonian;
+        typedef RegularRandomBond<BimodalPDF> Lattice;
+        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
+
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
 		{
@@ -252,10 +256,12 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			// form parameter triple and replicate
 			auto params  = finalize_parameter_triple(lp, mp, hp);
 			auto rparams = replicator(params, nreplicas[j]);
-
 			// perform simulations
-		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<BimodalPDF>>(rparams, defaultfilter_triple);
+            for (auto p: rparams)
+                sched.createSimfromParameter(p, defaultfilter_triple);
+//		 	Loop<Hamiltonian, RegularRandomBond<BimodalPDF> >(rparams, defaultfilter_triple);
 		}
+		sched.start();
 	}
 	else if (startswith(ham, "Gaussian-Ising-EdwardsAnderson"))
 	{
@@ -271,7 +277,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
-
+        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::MARQOVConfig>(), hp)) PPType;
+        typedef EdwardsAndersonIsing<int> Hamiltonian;
+        typedef RegularRandomBond<GaussianPDF> Lattice;
+        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
 	
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
@@ -295,10 +304,12 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			// form parameter triple and replicate
 			auto params  = finalize_parameter_triple(lp, mp, hp);
 			auto rparams = replicator(params, nreplicas[j]);
-
+            for (auto p: rparams)
+                sched.createSimfromParameter(p, defaultfilter_triple);
 			// perform simulations
-		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<GaussianPDF>>(rparams, defaultfilter_triple);
+//		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<GaussianPDF>>(rparams, defaultfilter_triple);
 		}
+		sched.start();
 	}
 	/*
 	else if (ham == "SSH")
@@ -375,8 +386,12 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
+        
+        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::MARQOVConfig>(), hp)) PPType;
+        typedef Ising<int> Hamiltonian;
+        typedef ConstantCoordinationLattice<Poissonian> Lattice;
+        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
 
-	
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
 		{
@@ -400,9 +415,12 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			auto params  = finalize_parameter_triple(lp, mp, hp);
 			auto rparams = replicator(params, nreplicas[j]);
 
+            for (auto p: rparams)
+                sched.createSimfromParameter(p, defaultfilter_triple);
 			// perform simulations
-		 	Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
+		 	// Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
 		}
+		sched.start();
 	}
     else if (ham == "IrregularIsing1")
     {
@@ -412,7 +430,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		const int L = 32;
 		const int dim = 2;
-		ConstantCoordinationLattice<Poissonian> ccl(L,dim);
+		ConstantCoordinationLattice<Poissonian> ccl(L, dim);
 
 		// prepare output
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
@@ -430,12 +448,16 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		mp.setncluster(10);
 
 		auto params = finalize_parameter_pair(mp, hp);
-
 		// partially apply filter
 		auto f = [&ccl](auto p){return defaultfilter(ccl, p);};
 
+//        typedef decltype(f(std::declval<decltype(params[0])>())) PPType;
+//        typedef Ising<int> Hamiltonian;
+//        typedef ConstantCoordinationLattice<Poissonian> Lattice;
+//        typename GetSchedulerType<Hamiltonian, Lattice, PPType>::MarqovScheduler sched(1);
 		// perform simulations
 		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
+//        sched.start();
 	}
     else if (ham == "BlumeCapelBipartite")
     {
