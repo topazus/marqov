@@ -99,6 +99,12 @@ struct sims_helper2<Hamiltonian, Lattice, Triple<LArgs, MARQOV::MARQOVConfig, HA
     {
         emplace_from_tuple(sims, t.first, std::forward<MARQOV::MARQOVConfig>(t.second), t.third);
     }
+    
+    template <typename T>
+    static MarqovType* creator(T&  t)
+    {
+        return ptr_from_tuple<MarqovType>(t.first, std::forward<MARQOV::MARQOVConfig>(t.second), t.third);
+    }
 };
 
 template <class Hamiltonian, class Lattice, class HArgs>
@@ -115,6 +121,13 @@ struct sims_helper2<Hamiltonian, Lattice, std::pair<MARQOV::MARQOVConfig, HArgs>
 			std::forward<decltype(std::get<0>(t))>(std::get<0>(t)), 
 			std::forward<MARQOV::MARQOVConfig>(std::get<1>(t)), std::get<2>(t));
     }
+    
+    template <typename T>
+    static MarqovType* creator(T& t)
+    {
+            return ptr_from_tuple<MarqovType>(std::forward<decltype(std::get<0>(t))>(std::get<0>(t)), 
+			std::forward<MARQOV::MARQOVConfig>(std::get<1>(t)), std::get<2>(t));
+    }
 };
 
 template <class Sim>
@@ -129,9 +142,8 @@ public:
     void createSimfromParameter(ParamType& p, Callable filter)
     {
         auto t = filter(p);
-        sims_helper2<typename Sim::HamiltonianType, typename Sim::Lattice, ParamType>::template emplacer(sims, t);
-        auto curidx = sims.size();// I think the index should be stable...
-        this->enqueuesim(sims.back());
+        auto simptr = sims_helper2<typename Sim::HamiltonianType, typename Sim::Lattice, ParamType>::template creator(t);
+        this->enqueuesim(*simptr);
     }
     std::vector<Sim> sims;
     /** This registers an already allocated simulation with us.

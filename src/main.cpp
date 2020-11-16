@@ -50,18 +50,9 @@ template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void Loop(const std::vector<Parameters>& params, Callable filter)
 {
     typename GetSchedulerType<Hamiltonian, Lattice, Parameters >::MarqovScheduler sched(1);
-
-    //create simulations
-    std::vector<typename GetSchedulerType<Hamiltonian, Lattice, Parameters >::MarqovType> sims;
-    sims.reserve(params.size());
     
   	for(auto p : params)
-	{
        sched.createSimfromParameter(p, filter);
-// 		auto t = filter(p);
-// 		sims_helper2<Hamiltonian, Lattice, Parameters >::template emplacer(sims, t);
-//          sched.enqueuesim(sims.back());
-     }
     sched.start();
 }
 
