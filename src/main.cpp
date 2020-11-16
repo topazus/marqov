@@ -67,9 +67,18 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 	const auto nL  	 = reg.Get<std::vector<int>>("mc", name, "L" );
 	const auto dim 	 = reg.Get<int>("mc", name, "dim" );
 
+    typedef decltype(finalize_parameter_pair(std::declval<MARQOV::MARQOVConfig>(), hp)) PPType;
+    typename GetSchedulerType<Hamiltonian, RegularHypercubic, typename PPType::value_type>::MarqovScheduler sched(1);
 	if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-
+	std::vector<RegularHypercubic> latts;
 	// lattice size loop
+	
+    for (std::size_t j=0; j<nL.size(); j++)
+	{
+		// prepare. Extend lifetime of lattices.
+		int L = nL[j];
+        latts.emplace_back(L, dim);
+    }
 	for (std::size_t j=0; j<nL.size(); j++)
 	{
 		// prepare
@@ -88,16 +97,14 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 
 		auto params = finalize_parameter_pair(mp, hp);
 		auto rparams = replicator_pair(params, nreplicas[j]);
-
-		// lattice
-		RegularHypercubic latt(L, dim);
-
-		// set up and execute
+        
+		// set up and execute        
+        RegularHypercubic& latt = latts[j];
  		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
- 		Loop<Hamiltonian, RegularHypercubic>(rparams, f);
-//        std::cout<<"End in RegularLatticeLoop "<<std::endl;
-//        exit(0);
+        for(auto p : rparams)
+            sched.createSimfromParameter(p, f);
 	}
+    sched.start();
 }
 
 

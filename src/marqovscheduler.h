@@ -143,9 +143,10 @@ public:
     {
         auto t = filter(p);
         auto simptr = sims_helper2<typename Sim::HamiltonianType, typename Sim::Lattice, ParamType>::template creator(t);
+        oursims.push_back(simptr);
         this->enqueuesim(*simptr);
     }
-    std::vector<Sim> sims;
+    std::vector<Sim*> oursims;
     /** This registers an already allocated simulation with us.
      */
     void enqueuesim(Sim& sim)
@@ -219,7 +220,9 @@ public:
                 return workqueue.is_empty() && (taskqueue.tasks_enqueued() == 0) && (taskqueue.tasks_assigned() == 0);
             });
         }
-            masterstop = true;
+        masterstop = true;
+        for (auto sim : oursims)
+            delete sim;
 //         std::cout<<"Deleting Scheduler"<<std::endl;
     }
 private:
