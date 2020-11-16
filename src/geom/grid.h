@@ -342,7 +342,7 @@ class RegularRandomBond :  public DisorderType
 		}
 
 		// implement getcrds
-		std::vector<double> getcrds(const int i)
+		std::vector<double> getcrds(const int i) const
 		{
 			return lattice.getcrds(i);
 		}
