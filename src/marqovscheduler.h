@@ -36,40 +36,42 @@ SOFTWARE.
 #include "marqov.h"
 
 template <class Cont, class Tuple1, class Tuple2, std::size_t... I>
-constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple1&& t1, MARQOV::MARQOVConfig&& mc, Tuple2&& t2, std::index_sequence<I...> )
+constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple1&& t1, MARQOV::MARQOVConfig&& mc, std::mutex& mtx, Tuple2&& t2, std::index_sequence<I...> )
 {
 	return cont.emplace_back(
 		std::forward<Tuple1>(t1), 
-		std::forward<MARQOV::MARQOVConfig>(mc), 
+		std::forward<MARQOV::MARQOVConfig>(mc), mtx,
 		std::get<I>(std::forward<Tuple2>(t2))...);
 }
 
 //c++17 make_from_tuple from cppreference adapted for emplace
 template <class Cont, class Tuple1, class Tuple2>
-constexpr auto emplace_from_tuple(Cont&& cont, Tuple1&& t1, MARQOV::MARQOVConfig&& mc, Tuple2&& t2 )
+constexpr auto emplace_from_tuple(Cont&& cont, Tuple1&& t1, MARQOV::MARQOVConfig&& mc, std::mutex& mtx, Tuple2&& t2 )
 {
 	return emplace_from_tuple_impl(
 		cont, 
 		std::forward<Tuple1>(t1), 
-		std::forward<MARQOV::MARQOVConfig>(mc), 
+		std::forward<MARQOV::MARQOVConfig>(mc), mtx,
 		std::forward<Tuple2>(t2),
 		std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
 }
 
 template <class T, class Tuple1, class Tuple2, std::size_t... I>
-constexpr T* ptr_from_tuple_impl(Tuple1&& t1, MARQOV::MARQOVConfig&& mc, Tuple2&& t2, std::index_sequence<I...> )
+constexpr T* ptr_from_tuple_impl(Tuple1&& t1, MARQOV::MARQOVConfig&& mc, std::mutex& mtx, Tuple2&& t2, std::index_sequence<I...> )
 {
   return new T(std::forward<Tuple1>(t1),
                std::forward<MARQOV::MARQOVConfig>(mc), 
+               mtx,
                std::get<I>(std::forward<Tuple2>(t2))...
 );
 }
  
 template <class T, class Tuple1, class Tuple2>
-constexpr T* ptr_from_tuple(Tuple1&& t1, MARQOV::MARQOVConfig&& mc, Tuple2&& t2)
+constexpr T* ptr_from_tuple(Tuple1&& t1, MARQOV::MARQOVConfig&& mc, std::mutex& mtx, Tuple2&& t2)
 {
     return ptr_from_tuple_impl<T>(std::forward<Tuple1>(t1),
                                   std::forward<MARQOV::MARQOVConfig>(mc), 
+                                  mtx,
                                   std::forward<Tuple2>(t2),
         std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
 }
@@ -80,7 +82,7 @@ template <class H,  class L, class HArgstuple, size_t... S>
 struct sims_helper<H, L, HArgstuple, std::index_sequence<S...> >
 {
 	typedef decltype(MARQOV::makeMarqov<H>(std::declval<L>(),
-	                       		 std::declval<MARQOV::MARQOVConfig>(),
+	                       		 std::declval<MARQOV::MARQOVConfig>(), std::declval<std::mutex>(),
 	                       		 std::declval<typename std::tuple_element<S, HArgstuple>::type>()...
 							 )) MarqovType;
 };
@@ -91,19 +93,19 @@ struct sims_helper2 {};
 template <class Hamiltonian, class Lattice, class LArgs, class HArgs>
 struct sims_helper2<Hamiltonian, Lattice, Triple<LArgs, MARQOV::MARQOVConfig, HArgs> >
 {
-    typedef decltype(MARQOV::makeMarqov<Hamiltonian, Lattice>(std::declval<MARQOV::MARQOVConfig>(),  
+    typedef decltype(MARQOV::makeMarqov<Hamiltonian, Lattice>(std::declval<MARQOV::MARQOVConfig>(), std::declval<std::mutex>(),
     							  std::declval<std::pair<LArgs, HArgs>& >()
 							  )) MarqovType;
     template <typename T>
-    static void emplacer(std::vector<MarqovType>& sims, T&  t)
+    static void emplacer(std::vector<MarqovType>& sims, T&  t, std::mutex& mtx)
     {
-        emplace_from_tuple(sims, t.first, std::forward<MARQOV::MARQOVConfig>(t.second), t.third);
+        emplace_from_tuple(sims, t.first, std::forward<MARQOV::MARQOVConfig>(t.second), mtx, t.third);
     }
     
     template <typename T>
-    static MarqovType* creator(T&  t)
+    static MarqovType* creator(std::mutex& mtx, T&  t)
     {
-        return ptr_from_tuple<MarqovType>(t.first, std::forward<MARQOV::MARQOVConfig>(t.second), t.third);
+        return ptr_from_tuple<MarqovType>(t.first, std::forward<MARQOV::MARQOVConfig>(t.second), std::forward<decltype(mtx)>(mtx), t.third);
     }
 };
 
@@ -115,18 +117,18 @@ struct sims_helper2<Hamiltonian, Lattice, std::pair<MARQOV::MARQOVConfig, HArgs>
     typedef typename sims_helper<Hamiltonian, Lattice, HArgs, HArgSequence>::MarqovType MarqovType;
 
     template <typename T>
-    static void emplacer(std::vector<MarqovType>& sims, T& t)
+    static void emplacer(std::vector<MarqovType>& sims, T& t, std::mutex& mtx)
     {
             emplace_from_tuple(sims, 
 			std::forward<decltype(std::get<0>(t))>(std::get<0>(t)), 
-			std::forward<MARQOV::MARQOVConfig>(std::get<1>(t)), std::get<2>(t));
+			std::forward<MARQOV::MARQOVConfig>(std::get<1>(t)), mtx, std::get<2>(t));
     }
     
     template <typename T>
-    static MarqovType* creator(T& t)
+    static MarqovType* creator(std::mutex& mtx, T& t)
     {
             return ptr_from_tuple<MarqovType>(std::forward<decltype(std::get<0>(t))>(std::get<0>(t)), 
-			std::forward<MARQOV::MARQOVConfig>(std::get<1>(t)), std::get<2>(t));
+			std::forward<MARQOV::MARQOVConfig>(std::get<1>(t)), std::forward<decltype(mtx)>(mtx), std::get<2>(t));
     }
 };
 
@@ -137,23 +139,25 @@ private:
 public:
     /** This gives us the parameters of a simulation and we are responsible for setting everything up.
      * It has a template parameter, but of course all used parameters have to resolve to the same underlying MarqovType.
+     * @param p The full set of parameters that are relevant for your Problem
+     * @param filter A filter that can be applied before the actual creation of MARQOV
      */
     template <typename ParamType, typename Callable>
     void createSimfromParameter(ParamType& p, Callable filter)
     {
         auto t = filter(p);
-        auto simptr = sims_helper2<typename Sim::HamiltonianType, typename Sim::Lattice, ParamType>::template creator(t);
+        auto simptr = sims_helper2<typename Sim::HamiltonianType, typename Sim::Lattice, ParamType>::template creator(mutexes.hdf, t);
         oursims.push_back(simptr);
         this->enqueuesim(*simptr);
     }
-    std::vector<Sim*> oursims;
+    std::vector<Sim*> oursims; ///< Collects the sims that we have created and for which we feel repsonsible.
     /** This registers an already allocated simulation with us.
      */
     void enqueuesim(Sim& sim)
     {
         int idx = simvector.size();
         simvectormutex.lock();
-        simvector.push_back(&sim);//FIXME: Currently I don't know how a sim terminates...
+        simvector.push_back(&sim);//NOTE: We only take care about sims that go through addsims.
         simvectormutex.unlock();
         taskqueue.enqueue([&, idx]{
             //work here
