@@ -255,19 +255,19 @@ class Marqov : public RefType<Grid>
 	template <class ...HArgs>
 	Marqov(Grid&& lattice, MARQOVConfig mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<Grid>(lattice)),
+		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
-		step(-1),
-		beta(mybeta),
+		statespace(setupstatespace(lattice.size())),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
-		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
+		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
         obs(ham.getobs()),
+		step(-1),
 		rngcache(time(NULL)+std::random_device{}()),
-		metro(rngcache),
-		statespace(setupstatespace(lattice.size()))
+		metro(rngcache)
 	{hdf5lock.unlock();}
 		
 		
@@ -280,19 +280,19 @@ class Marqov : public RefType<Grid>
 	template <class ...HArgs, class ... LArgs>
 	Marqov(std::tuple<LArgs...>& largs, MARQOVConfig mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
+        beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
-		step(0),
-		beta(mybeta),
+        statespace(setupstatespace(this->grid.size())),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
-		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
+		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
 		obs(ham.getobs()),
+		step(0),
 		rngcache(time(NULL)+std::random_device{}()), 
-		metro(rngcache),
-                statespace(setupstatespace(this->grid.size()))
+		metro(rngcache)
 	{hdf5lock.unlock();}
 
 auto setupstatespace(int size)
@@ -567,10 +567,12 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 	~Marqov() 
 	{
         hdf5lock.lock();
+        std::cout<<"lock"<<std::endl;
         dumprng();
         dumpstatespace();
         delete [] statespace;
         dump.close();
+        std::cout<<"unlock ?"<<std::endl;
 	}
 
 	//FIXME: Fix assignment and copying...
@@ -610,7 +612,9 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
                        		 std::forward_as_tuple(s, grid) );
 		marqov_measure<N + 1, Ts...>(t, s, grid);
         hdf5lock.lock();
+        std::cout<<"lock"<<std::endl;
 		std::get<N>(obscache)<<retval;
+        std::cout<<"unlock"<<std::endl;
         hdf5lock.unlock();
 	}
 
@@ -739,9 +743,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 
 
 	private:
-
 		inline int metropolisstep(int rsite);
-		int step; ///< the current step of the simulation. Used for HDF5 paths.
 
 		template <typename callable1, typename callable2>
 		inline int metropolisstep(int rsite, callable1 filter_ref, callable2 filter_copy, int comp);
@@ -749,17 +751,18 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		template <typename DirType>
 		inline int wolffstep(int rsite, const DirType& rdir);
 
-        std::unique_lock<std::mutex> hdf5lock;
-		StateSpace statespace;
+		double beta; ///< The inverse temperature
 		Hamiltonian ham;
 		MARQOVConfig mcfg;
-		typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
-		double beta; ///< The inverse temperature
+		StateSpace statespace;
+        std::unique_lock<std::mutex> hdf5lock;
 		H5::H5File dump; ///< The handle for the HDF5 file. must be before the obscaches
 		H5::Group obsgroup; ///< The HDF5 Group of all our observables
 		H5::Group stategroup; ///< The HDF5 Group where to dump the statespace
+		typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
 		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;//The HDF5 caches for each observable
         ObsTs obs; //the actual observables
+		int step; ///< the current step of the simulation. Used for HDF5 paths.
 
 //		typedef std::ranlux48_base RNGType;
 		typedef std::mt19937_64 RNGType;
