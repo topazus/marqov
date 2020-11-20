@@ -258,6 +258,7 @@ class Marqov : public RefType<Grid>
 		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
+		step(-1),
 		statespace(setupstatespace(lattice.size())),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
@@ -265,7 +266,6 @@ class Marqov : public RefType<Grid>
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
         obs(ham.getobs()),
-		step(-1),
 		rngcache(time(NULL)+std::random_device{}()),
 		metro(rngcache)
 	{hdf5lock.unlock();}
@@ -283,6 +283,7 @@ class Marqov : public RefType<Grid>
         beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
+		step(0),
         statespace(setupstatespace(this->grid.size())),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
@@ -290,7 +291,6 @@ class Marqov : public RefType<Grid>
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
 		obs(ham.getobs()),
-		step(0),
 		rngcache(time(NULL)+std::random_device{}()), 
 		metro(rngcache)
 	{hdf5lock.unlock();}
@@ -533,7 +533,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
         filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
         dataset.write(rngstate.data(), H5Mapper<int64_t>::H5Type(), mspace1, filespace);
     }
-	/** A helper function to dump the entire statespace
+	/** A helper function to dump the entire statespace.
      */
 	void dumpstatespace()
     {
@@ -563,7 +563,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
         filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
         dataset.write(statespace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
     }
-	// Destructor
+	// Destructor. Uses the HDF5 Mutex to serialize the access to the HDF5 library and hence the output to the library.
 	~Marqov() 
 	{
         hdf5lock.lock();
@@ -612,9 +612,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
                        		 std::forward_as_tuple(s, grid) );
 		marqov_measure<N + 1, Ts...>(t, s, grid);
         hdf5lock.lock();
-        std::cout<<"lock"<<std::endl;
 		std::get<N>(obscache)<<retval;
-        std::cout<<"unlock"<<std::endl;
         hdf5lock.unlock();
 	}
 
@@ -754,6 +752,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		double beta; ///< The inverse temperature
 		Hamiltonian ham;
 		MARQOVConfig mcfg;
+		int step; ///< the current step of the simulation. Used for HDF5 paths.
 		StateSpace statespace;
         std::unique_lock<std::mutex> hdf5lock;
 		H5::H5File dump; ///< The handle for the HDF5 file. must be before the obscaches
@@ -762,7 +761,6 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
 		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;//The HDF5 caches for each observable
         ObsTs obs; //the actual observables
-		int step; ///< the current step of the simulation. Used for HDF5 paths.
 
 //		typedef std::ranlux48_base RNGType;
 		typedef std::mt19937_64 RNGType;
