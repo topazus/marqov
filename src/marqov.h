@@ -566,13 +566,12 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 	// Destructor. Uses the HDF5 Mutex to serialize the access to the HDF5 library and hence the output to the library.
 	~Marqov() 
 	{
+        //locking is necessary since the dump functions contain HDF5 calls.
         hdf5lock.lock();
-        std::cout<<"lock"<<std::endl;
         dumprng();
         dumpstatespace();
         delete [] statespace;
         dump.close();
-        std::cout<<"unlock ?"<<std::endl;
 	}
 
 	//FIXME: Fix assignment and copying...
