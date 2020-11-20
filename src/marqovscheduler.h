@@ -181,17 +181,19 @@ public:
         
         while(!masterstop)
         {
-//             std::cout<<"Master waiting for work"<<std::endl;
+             std::cout<<"Master waiting for work"<<std::endl;
             bool busy = false;
             //The following wait_for construct hides a bug that occurs if the last notify in the gameloop triggers the master, but the associated task is still running.
             masterwork.wait_for(std::chrono::seconds(10), [&]{
                 busy = workqueue.pop_front(itm);
-                masterstop = nowork();
+                if (!busy)
+                    masterstop = nowork();
+                std::cout<<"masterwotk.wait "<<std::boolalpha<<busy<<" "<<masterstop<<std::endl;
                 return busy || masterstop;
             });
             if(busy) //there really is sth. to do
             {
-//                 std::cout<<"dealing with work"<<std::endl;
+                 std::cout<<"dealing with work"<<std::endl;
                 if(ptplan[itm.npt].first == itm.id || ptplan[itm.npt].second == itm.id) // check if this sim is selected for PT in this time step. This should usually be the case since we do as many steps as necessary
                 {
                     ptstep(itm);
@@ -207,7 +209,7 @@ public:
                 masterstop = nowork();
             }
         }
-//         std::cout<<"Master stopped"<<std::endl;
+         std::cout<<"Master stopped"<<std::endl;
         //};
         //      taskqueue.enqueue(master);
     }
@@ -216,18 +218,28 @@ public:
     workqueue(masterwork),
     taskqueue(std::thread::hardware_concurrency())
     {}
+    /** test whether there is work available.
+     * @return true if no task is working and no work is to be executed by a task and no sim is to moved to the taskqueue.
+     */
+    bool nowork() {return workqueue.is_empty() && taskqueue.tasks_assigned() == 0 && taskqueue.tasks_enqueued() == 0;}
     ~Scheduler() {
-//         std::cout<<"Entering dtor of sched"<<std::endl;
-        if (!nowork() && !masterstop)
+            using namespace std::chrono_literals;
+        std::cout<<"Entering dtor of sched"<<std::endl;
+//        std::this_thread::sleep_for(1s);
+        std::cout<<(!nowork()?"true":"false")<<" "<<(masterstop?"true":"false")<<" "<<(taskqueue.tasks_enqueued() > 0?"true":"false")<<std::endl;
+        std::cout<<((!nowork() && !masterstop && (taskqueue.tasks_enqueued() > 0))?"true":"false")<<std::endl;
+        if (!nowork() && !masterstop && (taskqueue.tasks_enqueued() > 0) )
         {
+            std::cout<<"Waiting"<<std::endl;
             masterwork.wait([&]{
                 return workqueue.is_empty() && (taskqueue.tasks_enqueued() == 0) && (taskqueue.tasks_assigned() == 0);
             });
         }
+        std::cout<<"Done waiting"<<std::endl;
         masterstop = true;
         for (auto sim : oursims)
             delete sim;
-//         std::cout<<"Deleting Scheduler"<<std::endl;
+        std::cout<<"Deleting Scheduler"<<std::endl;
     }
 private:
     struct Simstate
@@ -333,10 +345,6 @@ private:
         }
         return retval;
     }
-    /** test whether there is work available.
-     * @return true if no task is working and no work is to be executed by a task and no sim is to moved to the taskqueue.
-     */
-    bool nowork() {return workqueue.is_empty() && taskqueue.tasks_assigned() == 0 && taskqueue.tasks_enqueued() == 0;}
     //FIXME fill those functions for proper PT
     void calcprob() {}
     void exchange() {}
