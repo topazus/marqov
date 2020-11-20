@@ -234,9 +234,10 @@ public:
     */
     ~CacheContainer()
     {
-        this->writecache();
+        if(!unused)
+            this->writecache();
     }
-    /** pushes data into the cache
+    /** Pushes data into the cache.
     * @param data the element that we write
     */
     void push(const std::vector<T>& data) {
