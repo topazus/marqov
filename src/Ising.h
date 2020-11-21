@@ -23,8 +23,6 @@ class IsingGenericVectorValuedObs
 
 			for (int i=0; i<5; i++) retval.push_back(42+0.1*i);
 
-			cout << retval[0] << "  " << retval[3] << endl;
-
 			return retval;
 		}
 		IsingGenericVectorValuedObs() : name("dummy"), desc("testing vector-valued observables ...") {}

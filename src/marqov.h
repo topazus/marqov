@@ -13,7 +13,7 @@
 #include <random>
 #include <ctime>
 #include <chrono>
-#include <thread>
+#include <mutex>
 #include "cachecontainer.h"
 #include "svmath.h"
 #include "rngcache.h"
@@ -56,7 +56,7 @@ namespace MARQOV
 		std::string outpath; // the outpath; full filename will be "outpath/outfile.h5"
 		std::string logpath; // the logpath. For lack of a better place it is currently stored here.
 		
-		
+
 		// MC variables
 		int id;
 		int repid;
@@ -121,8 +121,8 @@ namespace MARQOV
 		{
 			public:
 				template<class... Args>
-				Ref(L&& l, Args&& ... args) : grid(l) {}
-				L& grid;
+				Ref(const L&& l, Args&& ... args) : grid(l) {}
+				const L& grid;
 		};
 		
 		template <class L>
@@ -135,7 +135,7 @@ namespace MARQOV
 				template <class ...Args, size_t... S>
 				NonRef(std::tuple<Args...>&& args, std::index_sequence<S...>) : grid(std::get<S>(std::forward<std::tuple<Args...>>(args))... ) {}
 				
-				L grid;
+				const L grid;
 		};
 		        
 		//A helper to decide whether a Hamiltonian provides an init function
@@ -188,6 +188,8 @@ template <class Grid, class Hamiltonian, template<class> class RefType = detail:
 class Marqov : public RefType<Grid>
 {
 	public:
+        typedef Hamiltonian HamiltonianType;
+        typedef Grid Lattice;
 		typedef typename Hamiltonian::StateVector StateVector;
 		typedef int redStateVector; // reduced StateVector (so far needed only for AT model, improve me!!!)
 		typedef StateVector* StateSpace;
@@ -244,28 +246,29 @@ class Marqov : public RefType<Grid>
 	/** ----- The original constructor call -----
 	* First we have the parameters for the MARQOV class, then follows the arbitrary number of
 	* arguments for a particular Hamiltonian.
-	* @param lattice The instantiated lattice object
+	* @param lattice A reference to the instantiated lattice object. You are responsible for managing its lifetime.
 	* @param outfile Where to create the output file
 	* @param mybeta the temperature that governs the Metropolis dynamics
 	* @param args A template parameter pack for the Hamiltonian
 	*/
 	
 	template <class ...HArgs>
-	Marqov(Grid& lattice, MARQOVConfig mc, double mybeta, HArgs&& ... hargs) : 
+	Marqov(Grid&& lattice, MARQOVConfig mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<Grid>(lattice)),
+		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
 		step(-1),
-		beta(mybeta),
+		statespace(setupstatespace(lattice.size())),
+		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
-		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
+		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
         obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()),
-		metro(rngcache),
-		statespace(setupstatespace(lattice.size()))
-	{}
+		metro(rngcache)
+	{hdf5lock.unlock();}
 		
 		
 	/** ----- Alternate constructor -----
@@ -274,23 +277,23 @@ class Marqov : public RefType<Grid>
 	* @param mybeta the temperature that governs the Metropolis dynamics
 	* @param p A pair containing in the second Argument the lattice parameters and in the first the Hamiltonian parameters
 	*/
-
 	template <class ...HArgs, class ... LArgs>
-	Marqov(std::tuple<LArgs...>& largs, MARQOVConfig mc, double mybeta, HArgs&& ... hargs) : 
+	Marqov(std::tuple<LArgs...>& largs, MARQOVConfig mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
+        beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
 		step(0),
-		beta(mybeta),
+        statespace(setupstatespace(this->grid.size())),
+		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
-		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
+		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
 		obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()), 
-		metro(rngcache),
-                statespace(setupstatespace(this->grid.size()))
-	{}
+		metro(rngcache)
+	{hdf5lock.unlock();}
 
 auto setupstatespace(int size)
 {
@@ -530,7 +533,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
         filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
         dataset.write(rngstate.data(), H5Mapper<int64_t>::H5Type(), mspace1, filespace);
     }
-	/** A helper function to dump the entire statespace
+	/** A helper function to dump the entire statespace.
      */
 	void dumpstatespace()
     {
@@ -560,9 +563,11 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
         filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
         dataset.write(statespace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
     }
-	// Destructor
+	// Destructor. Uses the HDF5 Mutex to serialize the access to the HDF5 library and hence the output to the library.
 	~Marqov() 
 	{
+        //locking is necessary since the dump functions contain HDF5 calls.
+        hdf5lock.lock();
         dumprng();
         dumpstatespace();
         delete [] statespace;
@@ -605,7 +610,9 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 						 std::get<N>(t), 
                        		 std::forward_as_tuple(s, grid) );
 		marqov_measure<N + 1, Ts...>(t, s, grid);
+        hdf5lock.lock();
 		std::get<N>(obscache)<<retval;
+        hdf5lock.unlock();
 	}
 
 
@@ -613,7 +620,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 	// ------------------ update --------------------
 
 	double elementaryMCstep();
-	    
+
 	void gameloop()
 	{
 		double avgclustersize = 0;
@@ -733,9 +740,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 
 
 	private:
-
 		inline int metropolisstep(int rsite);
-		int step; ///< the current step of the simulation. Used for HDF5 paths.
 
 		template <typename callable1, typename callable2>
 		inline int metropolisstep(int rsite, callable1 filter_ref, callable2 filter_copy, int comp);
@@ -743,14 +748,16 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		template <typename DirType>
 		inline int wolffstep(int rsite, const DirType& rdir);
 
-		StateSpace statespace;
+		double beta; ///< The inverse temperature
 		Hamiltonian ham;
 		MARQOVConfig mcfg;
-		typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
-		double beta; ///< The inverse temperature
+		int step; ///< the current step of the simulation. Used for HDF5 paths.
+		StateSpace statespace;
+        std::unique_lock<std::mutex> hdf5lock;
 		H5::H5File dump; ///< The handle for the HDF5 file. must be before the obscaches
 		H5::Group obsgroup; ///< The HDF5 Group of all our observables
 		H5::Group stategroup; ///< The HDF5 Group where to dump the statespace
+		typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
 		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;//The HDF5 caches for each observable
         ObsTs obs; //the actual observables
 
@@ -767,32 +774,32 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 
 
 template <class H, class L, class... LArgs, class... HArgs, size_t... S>
-auto makeMarqov3(MARQOVConfig& mc, std::tuple<LArgs...>&& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
+auto makeMarqov3(MARQOVConfig& mc, std::mutex&& mtx, std::tuple<LArgs...>&& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
-    return Marqov<L, H, detail::NonRef>(largs, mc, 
+    return Marqov<L, H, detail::NonRef>(largs, mc, mtx,
                                         std::get<S>(std::forward<std::tuple<HArgs...>>(hargs))...);
 }
 
 template <class H, class L, class... LArgs, class... HArgs>
-auto makeMarqov(MARQOVConfig mc, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> >& p)
+auto makeMarqov(MARQOVConfig mc, std::mutex&& mtx, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> >& p)
 {
-    return makeMarqov3<H, L>(mc, std::forward<decltype(p.first)>(p.first), p.second,
+    return makeMarqov3<H, L>(mc, std::forward<std::mutex>(mtx), std::forward<decltype(p.first)>(p.first), p.second,
         std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
     );
 }
 
 template <class H, class L, class ...Args>
-auto makeMarqov2(std::true_type, L&& latt, MARQOVConfig&& mc, Args&& ... args)
+auto makeMarqov2(std::true_type, L&& latt, MARQOVConfig&& mc, std::mutex&& mtx, Args&& ... args)
 {
     //The first argument is a Lattice-like type -> from this we infer that 
     //We get a reference to sth. already allocated
-    return Marqov<L, H, detail::Ref>(latt, mc, args...);
+    return Marqov<L, H, detail::Ref>(latt, mc, mtx, args...);
 }
 
 template <class H, class L, class ...Args>
-auto makeMarqov(L&& latt, MARQOVConfig&& mc, Args&&... args)
+auto makeMarqov(L&& latt, MARQOVConfig&& mc, std::mutex&& mtx, Args&&... args)
 {
-    return makeMarqov2<H>(typename detail::is_Lattice<L>::type(), latt, std::forward<MARQOVConfig>(mc), args...);
+    return makeMarqov2<H>(typename detail::is_Lattice<L>::type(), latt, std::forward<MARQOVConfig>(mc), std::forward<std::mutex>(mtx), args...);
 }
 
 #include "emcs.h"

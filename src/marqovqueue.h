@@ -9,34 +9,6 @@
 #include <unordered_map>
 #include "marqovqueue_utils.h"
 
-// class MARQOVQueue
-// {
-// public:
-//     template <class Parameters, class Marqov>
-//     using SimState = std::pair<Parameters, Marqov>;
-// //    std::vector<SimState> sims;
-//     
-// //    auto enqueue(Parameters&)
-// //    {
-//         //creates the Marqov-class and creates the necessary simulations here.
-// //    }
-//     //workflow
-//     /*
-//      * - There exists a notion of a predefined number of PT steps, called n_pt
-//      * - track for each simulation how often the sim has been through the n_pt loop, since this will be done asynchrously
-//      * - We need to track wether a simulation is currently associated with a thread.
-//      * 
-//      * - Parameter sets get added to SimState
-//      * - do a marqov init, asynchronously
-//      * - loop over n_pt
-//      * - If (not associated with a thread and not selected for PT) then work it
-//      * - The loop that is currently in Loop()
-//      * - issue: tracking that a thread has finished -> should be doable in that part where we ask the queue for new work
-//      * - we could have a task queue for each sim...
-//      */
-//     
-// };
-
 class MARQOVQueue
 {
 public:
