@@ -20,13 +20,13 @@
 
 namespace MARQOV
 {
-	struct MARQOVConfig
+	struct Config
 	{
 		/**
 		* The standard constructor. It requires an outpath, the rest of the positional parameters are optional.
 		*/
 		
-		MARQOVConfig(	std::string op, 
+		Config(	std::string op, 
 					int i = 0, 
 					int ri = 0, 
 		  			int s = 0, 
@@ -45,10 +45,10 @@ namespace MARQOV
 		  					  	 ncluster(nc), 
 		  					  	 nsweeps(nsw) {}
 		
-		MARQOVConfig(const MARQOVConfig& rhs) = default; // < FIXME: Think about wether we can get rid of it.
-		MARQOVConfig& operator=(const MARQOVConfig& rhs) = delete;
-		MARQOVConfig(MARQOVConfig&& other) = default;
-		MARQOVConfig& operator=(MARQOVConfig&& other) = default;
+		Config(const Config& rhs) = default; // < FIXME: Think about wether we can get rid of it.
+		Config& operator=(const Config& rhs) = delete;
+		Config(Config&& other) = default;
+		Config& operator=(Config&& other) = default;
 		
 		
 		// Output
@@ -70,15 +70,15 @@ namespace MARQOV
 		
 		
 		/** A chain of setters to emulate the named parameter idiom.*/
-		MARQOVConfig& setid(int i) {id = i; return *this;}
-		MARQOVConfig& setrepid(int ri) {repid = ri; return *this;}
-		MARQOVConfig& setseed(int s) {seed = s; return *this;}
-		MARQOVConfig& setgli(int c) {gli = c; return *this;}
-		MARQOVConfig& setnsteps(int ns) {nsteps = ns; return *this;}
-		MARQOVConfig& setwarmupsteps(int w) {warmupsteps = w; return *this;}
-		MARQOVConfig& setgameloopsteps(int g) {gameloopsteps = g; return *this;}
-		MARQOVConfig& setncluster(int nc) {ncluster = nc; return *this;}
-		MARQOVConfig& setnsweeps(int ns) {nsweeps = ns; return *this;}
+		Config& setid(int i) {id = i; return *this;}
+		Config& setrepid(int ri) {repid = ri; return *this;}
+		Config& setseed(int s) {seed = s; return *this;}
+		Config& setgli(int c) {gli = c; return *this;}
+		Config& setnsteps(int ns) {nsteps = ns; return *this;}
+		Config& setwarmupsteps(int w) {warmupsteps = w; return *this;}
+		Config& setgameloopsteps(int g) {gameloopsteps = g; return *this;}
+		Config& setncluster(int nc) {ncluster = nc; return *this;}
+		Config& setnsweeps(int ns) {nsweeps = ns; return *this;}
 		void dumpparamstoH5(H5::Group& mcg) const
         {
             mcg.setComment("Here we store all parameters that are in the MARQOVconfig object. They are mostly method related numbers and strings");
@@ -253,7 +253,7 @@ class Marqov : public RefType<Grid>
 	*/
 	
 	template <class ...HArgs>
-	Marqov(Grid&& lattice, MARQOVConfig mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
+	Marqov(Grid&& lattice, Config mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<Grid>(lattice)),
 		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
@@ -278,7 +278,7 @@ class Marqov : public RefType<Grid>
 	* @param p A pair containing in the second Argument the lattice parameters and in the first the Hamiltonian parameters
 	*/
 	template <class ...HArgs, class ... LArgs>
-	Marqov(std::tuple<LArgs...>& largs, MARQOVConfig mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
+	Marqov(std::tuple<LArgs...>& largs, Config mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
         beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
@@ -377,11 +377,11 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 }
 
 	/** This function sets up the layout of the HDF5 Container.
-     * @param mc. A MARQOVConfig object that we will dump to the respective path
+     * @param mc. A MARQOV::Config object that we will dump to the respective path
      * @return An object for the HDF5 File
      */
     template <class ...HArgs>
-    H5::H5File setupHDF5Container(const MARQOVConfig& mc, HArgs&& ...hargs)
+    H5::H5File setupHDF5Container(const Config& mc, HArgs&& ...hargs)
     {
         std::string filepath = mc.outpath+mc.outname + ".h5";
         auto flag = H5F_ACC_TRUNC;
@@ -449,7 +449,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
      * @param hargs the argument tuple of the Hamiltonian
      */
     template <class... HArgs>
-    void createstep(H5::H5File& file, int s, const MARQOVConfig& mc, HArgs&& ...hargs)
+    void createstep(H5::H5File& file, int s, const Config& mc, HArgs&& ...hargs)
     {
         file.setComment("A caclculation is made up by a series of steps. Each step can use as input the previous step.");
         std::string stepname = "step" + std::to_string(s);
@@ -750,7 +750,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 
 		double beta; ///< The inverse temperature
 		Hamiltonian ham;
-		MARQOVConfig mcfg;
+		Config mcfg;
 		int step; ///< the current step of the simulation. Used for HDF5 paths.
 		StateSpace statespace;
         std::unique_lock<std::mutex> hdf5lock;
@@ -774,14 +774,14 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 
 
 template <class H, class L, class... LArgs, class... HArgs, size_t... S>
-auto makeMarqov3(MARQOVConfig& mc, std::mutex&& mtx, std::tuple<LArgs...>&& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
+auto makeMarqov3(Config& mc, std::mutex&& mtx, std::tuple<LArgs...>&& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
     return Marqov<L, H, detail::NonRef>(largs, mc, mtx,
                                         std::get<S>(std::forward<std::tuple<HArgs...>>(hargs))...);
 }
 
 template <class H, class L, class... LArgs, class... HArgs>
-auto makeMarqov(MARQOVConfig mc, std::mutex&& mtx, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> >& p)
+auto makeMarqov(Config mc, std::mutex&& mtx, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> >& p)
 {
     return makeMarqov3<H, L>(mc, std::forward<std::mutex>(mtx), std::forward<decltype(p.first)>(p.first), p.second,
         std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
@@ -789,7 +789,7 @@ auto makeMarqov(MARQOVConfig mc, std::mutex&& mtx, std::pair<std::tuple<LArgs...
 }
 
 template <class H, class L, class ...Args>
-auto makeMarqov2(std::true_type, L&& latt, MARQOVConfig&& mc, std::mutex&& mtx, Args&& ... args)
+auto makeMarqov2(std::true_type, L&& latt, Config&& mc, std::mutex&& mtx, Args&& ... args)
 {
     //The first argument is a Lattice-like type -> from this we infer that 
     //We get a reference to sth. already allocated
@@ -797,9 +797,9 @@ auto makeMarqov2(std::true_type, L&& latt, MARQOVConfig&& mc, std::mutex&& mtx, 
 }
 
 template <class H, class L, class ...Args>
-auto makeMarqov(L&& latt, MARQOVConfig&& mc, std::mutex&& mtx, Args&&... args)
+auto makeMarqov(L&& latt, Config&& mc, std::mutex&& mtx, Args&&... args)
 {
-    return makeMarqov2<H>(typename detail::is_Lattice<L>::type(), latt, std::forward<MARQOVConfig>(mc), std::forward<std::mutex>(mtx), args...);
+    return makeMarqov2<H>(typename detail::is_Lattice<L>::type(), latt, std::forward<Config>(mc), std::forward<std::mutex>(mtx), args...);
 }
 
 #include "emcs.h"

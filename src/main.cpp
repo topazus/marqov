@@ -67,7 +67,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 	const auto nL  	 = reg.Get<std::vector<int>>("mc", name, "L" );
 	const auto dim 	 = reg.Get<int>("mc", name, "dim" );
 
-    typedef decltype(finalize_parameter_pair(std::declval<MARQOV::MARQOVConfig>(), hp)) PPType;
+    typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType;
     
 	if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 	std::vector<RegularHypercubic> latts;
@@ -88,7 +88,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
-        	MARQOVConfig mp(outpath);
+        	MARQOV::Config mp(outpath);
         	mp.setnsweeps(2);
 		mp.setncluster(int(L/2));
 		mp.setwarmupsteps(300);
@@ -230,7 +230,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
 
-        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::MARQOVConfig>(), hp)) PPType;
+        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
         typedef EdwardsAndersonIsing<int> Hamiltonian;
         typedef RegularRandomBond<BimodalPDF> Lattice;
         typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
@@ -245,7 +245,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			makeDir(outpath);
 	
 			// Monte Carlo parameters
-	        	MARQOVConfig mp(outpath);
+	        	MARQOV::Config mp(outpath);
 	        	mp.setnsweeps(15);
 			mp.setncluster(0);
 			mp.setwarmupsteps(300);
@@ -278,7 +278,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
-        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::MARQOVConfig>(), hp)) PPType;
+        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
         typedef EdwardsAndersonIsing<int> Hamiltonian;
         typedef RegularRandomBond<GaussianPDF> Lattice;
         typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
@@ -293,7 +293,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			makeDir(outpath);
 	
 			// Monte Carlo parameters
-	        	MARQOVConfig mp(outpath);
+	        	MARQOV::Config mp(outpath);
 	        	mp.setnsweeps(50);
 			mp.setncluster(0);
 			mp.setwarmupsteps(100);
@@ -344,7 +344,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	
 				std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 	
-	     	   	MARQOVConfig mp(outpath);
+	     	   	MARQOV::Config mp(outpath);
 	     	   	mp.setnsweeps(5);
 				mp.setncluster(0);
 				mp.setwarmupsteps(1000);
@@ -388,7 +388,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
         
-        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::MARQOVConfig>(), hp)) PPType;
+        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
         typedef Ising<int> Hamiltonian;
         typedef ConstantCoordinationLattice<Poissonian> Lattice;
         typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
@@ -403,7 +403,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			makeDir(outpath);
 	
 			// Monte Carlo parameters
-	        	MARQOVConfig mp(outpath);
+	        	MARQOV::Config mp(outpath);
 	        	mp.setnsweeps(5);
 			mp.setncluster(15);
 			mp.setwarmupsteps(500);
@@ -443,7 +443,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto hp = cart_prod(beta, myj);
 
 		// Monte Carlo parameters
-		MARQOVConfig mp(outpath);
+		MARQOV::Config mp(outpath);
 		mp.setrepid(1);
 		mp.setnsweeps(L);
 		mp.setncluster(10);
@@ -478,7 +478,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
         
 		std::vector<SimpleBipartite> latts;
-        typedef decltype(finalize_parameter_pair(std::declval<MARQOV::MARQOVConfig>(), parameters)) PPType;
+        typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), parameters)) PPType;
         typename GetSchedulerType<BlumeCapelBipartite<int>, SimpleBipartite, typename PPType::value_type>::MarqovScheduler sched(1);
 		// set up replicas
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
@@ -499,7 +499,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	
 			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 	
-	     	MARQOVConfig mp(outpath);
+	     	MARQOV::Config mp(outpath);
         		mp.setnsweeps(2);
 			mp.setncluster(int(L/2));
 			mp.setwarmupsteps(500);
