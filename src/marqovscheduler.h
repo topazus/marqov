@@ -336,11 +336,11 @@ namespace MARQOV
         std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
         std::vector<std::pair<int, int> > ptplan;///< who exchanges with whom in each step
         bool masterstop;
-        Semaphore masterwork; ///< The semaphore that triggers the master process
-        ThreadSafeQueue<Simstate> workqueue; ///< this is the queue where threads put their finished work and the master does PT
+        ThreadPool::Semaphore masterwork; ///< The semaphore that triggers the master process
+        ThreadPool::ThreadSafeQueue<Simstate> workqueue; ///< this is the queue where threads put their finished work and the master does PT
         std::mutex simvectormutex; ///< A mutex to protect accesses to the simvector which could be invalidated by the use of push_back
         std::vector<Sim*> simvector; ///< An array for the full state of the simulations
-        MARQOVQueue taskqueue; ///< this is the queue where threads pull their work from
+        ThreadPool::Queue taskqueue; ///< this is the queue where threads pull their work from
         
         //FIXME fill those functions for proper PT
         void calcprob() {}
