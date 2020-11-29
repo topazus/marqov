@@ -1,7 +1,6 @@
 #include "cachecontainer.h"
 #include <chrono>
 #include <string>
-#include <unistd.h> // provides usleep
 
 //the following macro seems to be necessary for dumping string defines...
 #define XSTR(x) STR(x)
