@@ -83,7 +83,7 @@ int Wolff<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& gri
 
 template <class Grid, class Hamiltonian, template<class> class RefType>
 template <class DirType>
-inline int Marqov<Grid, Hamiltonian, RefType>::wolffstep(int rsite, const DirType& rdir)
+inline int Core<Grid, Hamiltonian, RefType>::wolffstep(int rsite, const DirType& rdir)
 {
     return Wolff<Hamiltonian, Grid>::move(this->ham, this->grid, this->statespace, this->rngcache, this->beta, rsite, rdir);
 }

@@ -5,7 +5,7 @@
 // Defines the Elementary Monte Carlo Step (EMCS)
 
 template <class Grid, class Hamiltonian, template<class> class RefType>
-double Marqov<Grid, Hamiltonian, RefType>::elementaryMCstep()
+double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 {
 	const int SymD = std::tuple_size<StateVector>::value;
 

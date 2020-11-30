@@ -25,7 +25,6 @@ using std::ofstream;
 #include "registry.h"
 #include "systemtools.h"
 #include "replicate.h"
-//#include "marqov.h"
 #include "svmath.h"
 #include "filters.h"
 

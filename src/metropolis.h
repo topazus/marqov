@@ -62,8 +62,6 @@ struct Promote_Array
     typedef typename std::conditional<std::is_same<AElemType, CommonType>::value, A, B>::type CommonArray;
 };
 
-
-
 // A helper to check whether the lattice provides a termselector method
 
 template<class, class = void> 
@@ -81,10 +79,6 @@ std::vector<int> get_terms_helper(Grid& grid, int idx, std::true_type) {return g
 
 template <class Grid>
 std::vector<int> get_terms(Grid& grid, int idx) {	return get_terms_helper<Grid>(grid, idx, has_terms<Grid>{}); }
-
-
-
-
 
 
 template <class Hamiltonian, class Lattice>
@@ -153,10 +147,6 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
 		onsiteenergydiff += dot(ham.onsite[tidx]->h, diff);
 	}
 
-
-
-
-
     // multi-site energy
     double multisiteenergyold = 0;
     double multisiteenergynew = 0;
@@ -191,7 +181,7 @@ int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice
 // Single Metropolis update step statevectors on a lattice
 // returns an integer which encodes whether the flip attempt was successful (1) or not (0)
 template <class Grid, class Hamiltonian, template<class> class RefType>
-inline int Marqov<Grid, Hamiltonian, RefType>::metropolisstep(int rsite)
+inline int Core<Grid, Hamiltonian, RefType>::metropolisstep(int rsite)
 {
     return Metropolis<Hamiltonian, Grid>::move(this->ham, this->grid, statespace, this->metro, this->rngcache, this->beta, rsite);
 }

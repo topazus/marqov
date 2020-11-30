@@ -33,7 +33,7 @@
 #include <chrono>
 
 #include "marqovqueue.h"
-#include "marqov.h"
+#include "core.h"
 
 namespace MARQOV
 {
@@ -84,7 +84,7 @@ namespace MARQOV
     template <class H,  class L, class HArgstuple, size_t... S>
     struct sims_helper<H, L, HArgstuple, std::index_sequence<S...> >
     {
-        typedef decltype(MARQOV::makeMarqov<H>(std::declval<L>(),
+        typedef decltype(MARQOV::makeCore<H>(std::declval<L>(),
                                                std::declval<MARQOV::Config>(), std::declval<std::mutex>(),
                                                std::declval<typename std::tuple_element<S, HArgstuple>::type>()...
         )) MarqovType;
@@ -96,7 +96,7 @@ namespace MARQOV
     template <class Hamiltonian, class Lattice, class LArgs, class HArgs>
     struct sims_helper2<Hamiltonian, Lattice, Triple<LArgs, MARQOV::Config, HArgs> >
     {
-        typedef decltype(MARQOV::makeMarqov<Hamiltonian, Lattice>(std::declval<MARQOV::Config>(), std::declval<std::mutex>(),
+        typedef decltype(MARQOV::makeCore<Hamiltonian, Lattice>(std::declval<MARQOV::Config>(), std::declval<std::mutex>(),
                                                                   std::declval<std::pair<LArgs, HArgs>& >()
         )) MarqovType;
         template <typename T>
