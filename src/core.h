@@ -802,6 +802,7 @@ auto makeCore(L&& latt, Config&& mc, std::mutex&& mtx, Args&&... args)
     return makeCore2<H>(typename detail::is_Lattice<L>::type(), latt, std::forward<Config>(mc), std::forward<std::mutex>(mtx), args...);
 }
 
-#include "emcs.h"
 }
+
+#include "emcs.h"
 #endif

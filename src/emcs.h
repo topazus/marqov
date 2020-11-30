@@ -4,6 +4,8 @@
 #include "wolff.h"
 // Defines the Elementary Monte Carlo Step (EMCS)
 
+namespace MARQOV
+{
 template <class Grid, class Hamiltonian, template<class> class RefType>
 double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 {
@@ -21,7 +23,6 @@ double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 		avgclustersize += wolffstep(rsite, rdir);
 	}
 
-
 	// Metropolis sweeps
 	for (int j=0; j<mcfg.nsweeps; j++)
 	{
@@ -35,4 +36,5 @@ double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 
 	return avgclustersize/mcfg.ncluster;
 }
+};
 #endif
