@@ -1,8 +1,5 @@
 #ifndef WOLFF_H
 #define WOLFF_H
-#include <vector>
-#include <type_traits>
-#include <cmath>
 // todo: what about the alpha-loop? currently alpha=0 hard-coded
 
 template <class Hamiltonian, class Lattice>

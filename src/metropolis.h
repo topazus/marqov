@@ -1,8 +1,5 @@
 #ifndef METROPOLIS_H
 #define METROPOLIS_H
-#include <vector>
-#include <type_traits>
-#include <cmath>
 #include "rngcache.h"
 
 //A helper to decide in the Metropolis code whether a lattice provides the getbond function
