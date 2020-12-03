@@ -28,7 +28,6 @@ class SSHLattice
 			switch(a) 
 			{
 				case 0:
-//					retval = {(i-1+lentime)%lentime+offset, (i+1)%lentime+offset};
 					retval = {((k-1+lentime)%lentime)*len+offset, ((k+1)%lentime)*len+offset};
 					break;
 				case 1:
@@ -41,24 +40,35 @@ class SSHLattice
 			}
 			return retval;
 		}
+
+
+
+
+
+//  3  oooooooo
+//  2  oooooooo
+//  1  oooooooo
+//  0  oooooooo
+//     01234556...
+
+
 		
-		/*
 		std::vector<double> getcrds(int k) const 
 		{
 		 	// transform one-dimensional index to n-d coordinates
-				std::vector<int> indices = IndexOf(k, dim, len);
+			std::vector<int> indices = IndexOfRect(k, dim, len, lentime);
 		 	std::vector<double> retval(dim,0);
+
+//			cout << k << "  " << indices[0] << "  " << indices[1] << endl;
 		
-		 	// transform to double and normalize to unit hypercube
 		 	for (int i=0; i<retval.size(); i++) 
 		 	{ 
-		 		retval[i] = double(indices[i])/len; 
-		 		retval[i] += 0.5/len;
+		 		retval[i] = double(indices[i]); ///len; 
+//		 		retval[i] += 0.5/len;
 		 	}
 		
-				return retval;
+			return retval;
 		 }
-		 */
 		
 		 value_type getbnds(int a, int i) const 
 		 {

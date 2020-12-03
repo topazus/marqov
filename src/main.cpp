@@ -314,67 +314,75 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		}
 		sched.start();
 	}
-	/*
-	else if (ham == "SSH")
-	{
+		/*
+	     else if (ham == "SSH")
+     {
 
-		auto beta   = registry.Get<std::vector<double> >("mc", ham, "betaMC");
-		auto betaQM = registry.Get<double>("mc", ham, "betaQM");
-		auto m      = registry.Get<std::vector<double> >("mc", ham, "m");
-		auto k      = registry.Get<std::vector<double> >("mc", ham, "k");
+          auto beta   = registry.Get<std::vector<double> >("mc", ham, "betaMC");
+          auto betaQM = registry.Get<std::vector<double> >("mc", ham, "betaQM");
+          auto m      = registry.Get<std::vector<double> >("mc", ham, "m");
+          auto k      = registry.Get<std::vector<double> >("mc", ham, "k");
+          auto g      = registry.Get<std::vector<double> >("mc", ham, "g");
 
-		const auto name      = registry.Get<std::string>("mc", "General", "Hamiltonian" );
-		      auto nreplicas = registry.Get<std::vector<int>>("mc", name, "rep" );
-		const auto nL 	      = registry.Get<std::vector<int>>("mc", name, "L" );
-		const auto nLtime  	 = registry.Get<std::vector<int>>("mc", name, "Ltime" );
-		const auto dim 	 = registry.Get<int>("mc", name, "dim" );
+          const auto name      = registry.Get<std::string>("mc", "General", "Hamiltonian" );
+                auto nreplicas = registry.Get<std::vector<int>>("mc", name, "rep" );
+          const auto nL        = registry.Get<std::vector<int>>("mc", name, "L" );
+          const auto nLtime    = registry.Get<std::vector<int>>("mc", name, "Ltime" );
+          const auto dim       = registry.Get<int>("mc", name, "dim" );
 
 
+		typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType; 
 
-		// set up replicas
-		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-	
-		// lattice size loop
+
+		std;;vector<SSHLattice> latts;
 		for (std::size_t j=0; j<nL.size(); j++)
 		{
-			for (std::size_t jj=0; jj<nLtime.size(); jj++)
-			{
-				// prepare
-				int L = nL[j];
-				int Ltime  = nLtime[jj];
-				cout << endl << "L_space = " << L << "\t" << "L_time = " << Ltime << endl << endl;
-	
-				std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-	
-	     	   	MARQOV::Config mp(outpath);
-	     	   	mp.setnsweeps(5);
-				mp.setncluster(0);
-				mp.setwarmupsteps(1000);
-				mp.setgameloopsteps(5000);
-
-				mp.outname = "Ltime"+std::to_string(Ltime);
-	
-				makeDir(mp.outpath);
-
-	
-				// compute delta tau
-				std::vector<double> dtau = {betaQM/double(Ltime)};
-
-				// set up parameters
-				auto hp = cart_prod(beta, m, k, dtau);
-				auto params = finalize_parameter_pair(mp, hp);
-				auto rparams = replicator_pair(params, nreplicas[j]);
-	
-				// lattice
-				SSHLattice latt(L, Ltime, dim);
-	
-				// set up and execute
-	 			auto f = [&latt, &outbasedir, L](auto p){return sshfilter(latt, p);}; //partially apply filter
-	 			Loop<SSH<double>, SSHLattice>(rparams, f);
-			}
+			int L = nL[j];
+			latts.emplace_back(L, Ltime, dim);
 		}
-	}
+
+
+
+		typename GetSchedulerType<Hamiltonian, RegularHypercubic, typename PPType::value_type>::MarqovScheduler sched(1);
+
+
+
+          for (std::size_t j=0; j<nL.size(); j++)
+		{
+               for (std::size_t jj=0; jj<nLtime.size(); jj++)
+               {
+                    // prepare
+                    int L = nL[j];
+                    int Ltime  = nLtime[jj];
+                    cout << endl << "L_space = " << L << "\t" << "L_time = " << Ltime << endl << endl;
+
+                    std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+
+                    MARQOVConfig mp(outpath);
+                    mp.setnsweeps(2);
+                    mp.setncluster(0);
+                    mp.setwarmupsteps(20);
+                    mp.setgameloopsteps(50);
+
+                    makeDir(mp.outpath);
+
+
+                    // set up parameters
+                    std::vector<int> Ltime_for_Hamiltonian = {Ltime}; // needed for calculating dtau
+                    auto hp = cart_prod(beta, m, k, g, betaQM, Ltime_for_Hamiltonian);
+                    auto params = finalize_parameter_pair(mp, hp);
+                    auto rparams = replicator_pair(params, nreplicas[j]);
+
+                    SSHLattice& latt = latts[j];
+                    auto f = [&latt, &outbasedir, L](auto p){return sshfilter(latt, p);}; //partially apply filter
+				for(auto p : rparams)
+					sched.createSimfromParameter(p, f);
+               }
+          }
+		sched.start();
+     }
 	*/
+
 	else if (ham == "IsingCC")
 	{
 		const auto ham        = registry.Get<std::string>("mc", "General", "Hamiltonian" );

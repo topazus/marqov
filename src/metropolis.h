@@ -145,23 +145,23 @@ namespace MARQOV
             // multiply the constant
             onsiteenergydiff += dot(ham.onsite[tidx]->h, diff);
         }
+
+
+	   // multi-site energy
+	   // HARDCODED ONLY FOR SSH MODEL!!!!!!!!!!!!!!!!
+	   
+	   double multisiteenergdiff = 0;
+	  
+	  auto nbrs = grid.getnbrs(1, rsite);
+	  auto diff = ham.multisite[0]->diff(rsite, svold, svnew, nbrs, statespace, grid); 
+	  multisiteenergdiff = dot(ham.multisite[0]->k, diff);
+
+	  double dE  = interactionenergydiff + onsiteenergydiff + multisiteenergdiff;
+
+
+
+
         
-        // multi-site energy
-        double multisiteenergyold = 0;
-        double multisiteenergynew = 0;
-        
-        for (typename std::remove_cv<decltype(ham.Ngamma)>::type g=0; g<ham.Ngamma; ++g)
-        {
-            multisiteenergynew += ham.multisite[g]->get(svnew, rsite, statespace);//FIXME: think about this...
-            multisiteenergyold += ham.multisite[g]->get(svold, rsite, statespace);
-            //forgot k_gamma
-        }
-        
-        // sum up energy differences
-        double dE 	= interactionenergydiff + onsiteenergydiff + (multisiteenergynew - multisiteenergyold);
-        
-        // improve me: what about models with discrete statevectors where the acceptance probability should be
-        // looked up in tables? -> specialized Metropolis routine for this case??
         
         int retval = 0;
         if ( dE <= 0 )
