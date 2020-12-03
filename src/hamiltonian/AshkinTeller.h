@@ -206,14 +206,15 @@ namespace MARQOV
 		// coupling of the embedded Ising model
 		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, AshkinTeller<int>& ham)
 		{
+			double retval = 0.0;
 			switch (color)
 			{
-				case 0: return ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
-				case 1: return ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
-				case 2: return ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
+				case 0: retval = ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
+				case 1: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
+				case 2: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
 				default: throw std::invalid_argument("invalid color!");
 			}
-			return 0;
+			return retval;
 		}
 	
 	
@@ -250,9 +251,6 @@ namespace MARQOV
 				// propose new configuration
 				ReducedStateVector rsvnew = metro_newconf(rsvold);
 				
-				// interaction part
-				double interactionenergydiff = 0;
-	
 				// set interaction family
 				const int a = 0;
 	
