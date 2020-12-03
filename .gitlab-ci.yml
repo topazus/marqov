@@ -42,27 +42,27 @@ types:
     - ctest -O log.txt
     - cat log.txt | grep "tests passed" | cut -d " " -f 1
 
-marqov_Ubuntu_bionic:
+MARQOV_Ubuntu_bionic:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack
     <<: *build_definition
 
-marqov_Stretch:
+MARQOV_Stretch:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gfortran-blas-lapack
     <<: *build_definition
 
-marqov_Buster:
+MARQOV_Buster:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gfortran-blas-lapack
     <<: *build_definition
 
-marqov_Ubuntu_bionic:
+mpiMARQOV_Ubuntu_bionic:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack
     <<: *buildMPI_definition
 
-marqov_Stretch:
+mpiMARQOV_Stretch:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gfortran-blas-lapack
     <<: *buildMPI_definition
 
-marqov_Buster:
+mpiMARQOV_Buster:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gfortran-blas-lapack
     <<: *buildMPI_definition
 
