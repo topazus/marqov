@@ -10,7 +10,7 @@ foreach(target ${MARQOVTARGETS})
 add_executable (${target} registry.cpp marqov.cpp main.cpp)
 target_include_directories(${target} PUBLIC ${HDF5_INCLUDE_DIRS})
 target_link_libraries(${target} ${HDF5_LIBRARIES} Threads::Threads)
-set_target_properties(${target} PROPERTIES CXX_STANDARD 11 CXX_STANDARD_REQUIRED YES)
+set_target_properties(${target} PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 # target_compile_features(${target} PUBLIC cxx_return_type_deduction)
 
 
