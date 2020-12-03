@@ -2,14 +2,17 @@ types:
   - build
   - test
 
-.BUILD_template: &build_definition
-  type: build
+.src_except_template: &src_except_definition
   except:
     changes:
       - .gitignore
       - CITATION
       - README.md
       - doc/*
+
+.BUILD_template: &build_definition
+  type: build
+  <<: *src_except_definition
   script:
     - apt-get update && apt-get install -y g++ cmake libhdf5-dev libopenmpi-dev
     - cmake -E make_directory build
@@ -19,13 +22,7 @@ types:
 
 .TEST_template: &test_definition
   type: test
-  except:
-    changes:
-      - .gitignore
-      - CITATION
-      - README.md
-      - doc/*
-
+  <<: *src_except_definition
   script:
     - cmake -E make_directory build
     - cd build
@@ -49,11 +46,7 @@ marqov_Buster:
 marqov_Buster_clang:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-clang
     type: build
-    except:
-      changes:
-        - .gitignore
-        - CITATION
-        - README.md
+    <<: *src_except_definition
     script:
       - apt-get update && apt-get install -y libhdf5-dev
       - cmake -E make_directory build
@@ -64,11 +57,7 @@ marqov_Buster_clang:
 marqov_Buster_pgi:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-pgi1910-cmake
     type: build
-    except:
-      changes:
-        - .gitignore
-        - CITATION
-        - README.md
+    <<: *src_except_definition
     script:
       - apt-get update && apt-get install -y libhdf5-dev
       - cmake -E make_directory build
