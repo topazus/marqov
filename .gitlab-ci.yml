@@ -61,7 +61,7 @@ marqov_Buster_clang:
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang++ ..
       - make MARQOV VERBOSE=1
 
-marqov_Buster_pgi
+marqov_Buster_pgi:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-pgi1910-cmake
     type: build
     except:
@@ -75,7 +75,7 @@ marqov_Buster_pgi
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="/opt/pgi/linux86-64/2019/bin/pgc++" ..
       - make MARQOV VERBOSE=1
-    
+
 marqov_create_doc:
   image: aergus/latex
   stage: build
