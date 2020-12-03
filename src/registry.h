@@ -167,13 +167,15 @@ public:
     /**
     This initializes the registry.
     @param arg the directory that contains all the files the registry should contain
+    @param suffix a suffix to select only certain files, e.g. : .ini
     */
-    int Init(const std::string& cfgDir);
+    int init(const std::string& cfgDir, const std::string pat = "");
     /**
     This is the constructor for the registry.
     @param arg the directory that contains all the files the registry should contain
+    @param suffix a suffix to select only certain files, e.g. : .ini
     */
-    RegistryDB(const std::string& arg);
+    RegistryDB(const std::string& arg, const std::string pat = "");
     RegistryDB()
     {}
     ~RegistryDB()
