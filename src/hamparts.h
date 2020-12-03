@@ -26,5 +26,18 @@ class MultiSite
 	    double k;
 //	    virtual double operator() (const StateVector& sv, int svpos, StateSpace s) = 0;
 	    virtual double get(const StateVector& sv, int svpos, StateSpace s) = 0;
+
+		template <class Lattice>
+          double diff (const int rsite,
+                         const StateVector& svold,
+                         const StateVector& svnew,
+                         std::vector<int>& nbrs,
+                         StateSpace& s,
+                         Lattice& grid)
+          {
+
+			return 0;
+}
+
 };
 #endif

@@ -115,4 +115,24 @@ std::vector<int> IndexOf(int k, int nDim, int nBin)
 	return indices;
 }
 
+// assuming the first nDim-1 dimensions have "nBinS" bins, whereas the 
+// last dimension has "nBinT" 
+std::vector<int> IndexOfRect(int k, int nDim, int nBinS, int nBinT)
+{
+     std::vector<int> indices;
+
+     for (int i=0; i<nDim-1; i++)
+     {
+          double index = std::fmod( double(k)/pow(nBinS,i), nBinS);
+          indices.push_back(int(index));
+          k -= index * pow(nBinS,i);
+     }
+
+     double index = std::fmod( double(k)/pow(nBinS,nDim-1), nBinT);
+     indices.push_back(int(index));
+
+     return indices;
+}
+
+
 #endif
