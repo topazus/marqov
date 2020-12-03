@@ -1,5 +1,6 @@
 types:
   - build
+  - buildMPI
   - test
 
 .src_except_template: &src_except_definition
@@ -12,6 +13,16 @@ types:
 
 .BUILD_template: &build_definition
   type: build
+  <<: *src_except_definition
+  script:
+    - apt-get update && apt-get install -y g++ cmake libhdf5-dev
+    - cmake -E make_directory build
+    - cd build
+    - cmake ..
+    - make MARQOV
+
+.BUILDMPI_template: &buildMPI_definition
+  type: buildMPI
   <<: *src_except_definition
   script:
     - apt-get update && apt-get install -y g++ cmake libhdf5-dev libopenmpi-dev
@@ -42,6 +53,18 @@ marqov_Stretch:
 marqov_Buster:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gfortran-blas-lapack
     <<: *build_definition
+
+marqov_Ubuntu_bionic:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack
+    <<: *buildMPI_definition
+
+marqov_Stretch:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gfortran-blas-lapack
+    <<: *buildMPI_definition
+
+marqov_Buster:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gfortran-blas-lapack
+    <<: *buildMPI_definition
 
 marqov_Buster_clang:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-clang
