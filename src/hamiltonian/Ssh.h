@@ -149,9 +149,24 @@ class SSH_multisite
 {
 	public:
 		double k, beta, dtau;
-
-		SSH_multisite(double g, double b, double d) : k(-0.5*g*g), beta(b), dtau(d) {
-        };
+        int L;
+        double* gdat;
+		SSH_multisite(double g, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL) {
+            int ntau = std::round(beta/dtau);
+            gdat = new double[ntau*L];
+            for(int j = 0; j < L; ++j)
+            {
+                double k = (j*2)*M_PI/double(L);
+                // 1D disperson relation
+            
+                const double mu = 0;
+                double eps = -2.0*std::cos(k)-mu;
+                for(int dt = 0; dt < ntau; ++dt)
+                {
+                    gdat[dt * L + j] = 0.5*std::exp((beta/2 - dt*dtau)*eps)/std::cosh(beta*eps/2);
+                }
+            }
+        }
 
 		// computes the difference already!
 		// can be simplified if "suscept" is symmetric
@@ -194,7 +209,7 @@ class SSH_multisite
 
 			return retval;
 		}
-		~SSH_multisite() {}
+		~SSH_multisite() {delete [] gdat;}
 
 	/**
 	The fermi function
@@ -223,26 +238,8 @@ class SSH_multisite
 		
 	
 	// Green's function for a regular hypercubic lattice in 1D (i.e. a chain)
-	double g1D(std::vector<double> c1, std::vector<double> c2, int sign1, int sign2, int L, double beta, double dtau)
+	double g1D(std::vector<double> c1, std::vector<double> c2, int sign1, int sign2)
 	{
-        static double* data = NULL;
-        int ntau = std::round(beta/dtau);
-        if(data == NULL)
-        {
-            data = new double[ntau*L];
-            for(int j = 0; j < L; ++j)
-            {
-                double k = (j*2)*M_PI/double(L);
-                // 1D disperson relation
-            
-                const double mu = 0;
-                double eps = -2.0*std::cos(k)-mu;
-                for(int dt = 0; dt < ntau; ++dt)
-                {
-                    data[dt * L + j] = 0.5*std::exp((beta/2 - dt*dtau)*eps)/std::cosh(beta*eps/2);
-                }
-            }
-        }
 		std::complex<double> retval = 0;
 		std::complex<double> jj(0,1);
 	
@@ -298,7 +295,7 @@ class SSH_multisite
 			// todo: use FFT
 //			retval += std::exp(-jj*k*(r1-r2))*fac;
 //			retval += std::exp(-jj*k*dist)*fac;
-            retval += expk.real()*data[dti*L + j];
+            retval += expk.real()*gdat[dti*L + j];
             expk *= dexpk;//loop-carried dependency. breaks vectorization.
 		}
 		auto retv = signum*retval.real()/double(L);
@@ -331,15 +328,15 @@ class SSH_multisite
 		{
 			if (e[0]==e[1] && e[1]==e[2] && e[2]==e[3])
 			{
-				retval = g1D(s[0], s[1], e[0], e[1], L, beta, dtau);
+				retval = g1D(s[0], s[1], e[0], e[1], L);
 			}
 		}
 
 		// Wick decomposition
 		else 
 		{
-			retval = g1D(s[0],s[1],e[0],e[1], L, beta,dtau)*g1D(s[2],s[3],e[2],e[3], L, beta,dtau) 
-				  - g1D(s[0],s[3],e[0],e[3], L, beta,dtau)*g1D(s[2],s[1],e[2],e[1], L, beta,dtau);
+			retval = g1D(s[0],s[1],e[0],e[1])*g1D(s[2],s[3],e[2],e[3]) 
+				  - g1D(s[0],s[3],e[0],e[3])*g1D(s[2],s[1],e[2],e[1]);
 		}
 
 		return retval;
@@ -459,7 +456,6 @@ class SSH
 		
 		SSH(double m, double k, double g, double bQ, int Ltime) : m(m), k(k), g(g), dtau(bQ/double(Ltime)), betaQM(bQ), name("SSH")
 		{
-            std::cout<<betaQM<<" "<<Ltime<<std::endl;
 			interactions[0] = new SSH_interaction<StateVector>(m, dtau); 
 			onsite[0] = new SSH_onsite<StateVector>(m, k, dtau);
 			multisite[0] = new SSH_multisite<StateVector*,StateVector>(g, betaQM, dtau);
