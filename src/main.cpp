@@ -314,7 +314,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		}
 		sched.start();
 	}
-		/*
 	     else if (ham == "SSH")
      {
 
@@ -331,10 +330,13 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
           const auto dim       = registry.Get<int>("mc", name, "dim" );
 
 
+          int Ltime = nLtime[0];
+          auto hp = cart_prod(beta, m, k, g, betaQM, nLtime);
+
 		typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType; 
 
 
-		std;;vector<SSHLattice> latts;
+		std::vector<SSHLattice> latts;
 		for (std::size_t j=0; j<nL.size(); j++)
 		{
 			int L = nL[j];
@@ -343,22 +345,22 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-		typename GetSchedulerType<Hamiltonian, RegularHypercubic, typename PPType::value_type>::MarqovScheduler sched(1);
+		typename GetSchedulerType<SSH<double>, SSHLattice, typename PPType::value_type>::MarqovScheduler sched(1);
+
+
+		// only one Ltime at the moment!!!
 
 
 
           for (std::size_t j=0; j<nL.size(); j++)
 		{
-               for (std::size_t jj=0; jj<nLtime.size(); jj++)
-               {
                     // prepare
                     int L = nL[j];
-                    int Ltime  = nLtime[jj];
                     cout << endl << "L_space = " << L << "\t" << "L_time = " << Ltime << endl << endl;
 
                     std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
-                    MARQOVConfig mp(outpath);
+                    MARQOV::Config mp(outpath);
                     mp.setnsweeps(2);
                     mp.setncluster(0);
                     mp.setwarmupsteps(20);
@@ -368,8 +370,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
                     // set up parameters
-                    std::vector<int> Ltime_for_Hamiltonian = {Ltime}; // needed for calculating dtau
-                    auto hp = cart_prod(beta, m, k, g, betaQM, Ltime_for_Hamiltonian);
                     auto params = finalize_parameter_pair(mp, hp);
                     auto rparams = replicator_pair(params, nreplicas[j]);
 
@@ -377,11 +377,9 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
                     auto f = [&latt, &outbasedir, L](auto p){return sshfilter(latt, p);}; //partially apply filter
 				for(auto p : rparams)
 					sched.createSimfromParameter(p, f);
-               }
           }
 		sched.start();
      }
-	*/
 
 	else if (ham == "IsingCC")
 	{

@@ -1,21 +1,22 @@
 [General]
 
-Hamiltonian = Ising
+Hamiltonian = SSH
 
 [SSH]
 
-L = 50
-Ltime = 50,70,100,150,200,300,500,700,1000,1500,2000,3000
+L = 14
+Ltime = 30
 
 dim = 2
 
-rep = 5
+rep = 1
 
 betaMC = 1.0
-betaQM = 10
+betaQM = 1.0
 
 m = 1
-k = 100
+k = 10
+g = 10
 
 [BlumeCapelBipartite]
 
