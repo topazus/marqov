@@ -151,8 +151,9 @@ class SSH_multisite
 		double k, beta, dtau;
         int L;
         double* gdat;
+	   int ntau;
 		SSH_multisite(double g, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL) {
-            int ntau = std::round(beta/dtau);
+            ntau = std::round(beta/dtau);
             gdat = new double[ntau*L];
             for(int j = 0; j < L; ++j)
             {
@@ -328,7 +329,7 @@ class SSH_multisite
 		{
 			if (e[0]==e[1] && e[1]==e[2] && e[2]==e[3])
 			{
-				retval = g1D(s[0], s[1], e[0], e[1], L);
+				retval = g1D(s[0], s[1], e[0], e[1]);
 			}
 		}
 
@@ -400,8 +401,8 @@ class SSH_multisite
 		< K(b1,t1) > < K(b2,t2 >
 
 		*/
-		const std::complex<double> K1 = g1D(w1,w1,i,j,L,beta,dtau)+g1D(w1,w1,j,i,L,beta,dtau);
-		const std::complex<double> K2 = g1D(w2,w2,i,j,L,beta,dtau)+g1D(w2,w2,j,i,L,beta,dtau);
+		const std::complex<double> K1 = g1D(w1,w1,i,j)+g1D(w1,w1,j,i);
+		const std::complex<double> K2 = g1D(w2,w2,i,j)+g1D(w2,w2,j,i);
 		retval -= K1*K2;
 
 		return std::real(retval);
@@ -443,7 +444,7 @@ template <typename SpinType = double>
 class SSH
 {
 	public:
-		double m, k, g, dtau, betaQM;
+		double m, k, g, dtau, betaQM, L;
 		constexpr static int SymD = 1;
 		const std::string name;
 		typedef std::array<SpinType, SymD> StateVector;
@@ -454,11 +455,11 @@ class SSH
 		static constexpr uint Nbeta = 1;
 		static constexpr uint Ngamma = 1;
 		
-		SSH(double m, double k, double g, double bQ, int Ltime) : m(m), k(k), g(g), dtau(bQ/double(Ltime)), betaQM(bQ), name("SSH")
+		SSH(double m, double k, double g, double bQ, int Ltime, int L) : m(m), k(k), g(g), dtau(bQ/double(Ltime)), L(L), betaQM(bQ), name("SSH")
 		{
 			interactions[0] = new SSH_interaction<StateVector>(m, dtau); 
 			onsite[0] = new SSH_onsite<StateVector>(m, k, dtau);
-			multisite[0] = new SSH_multisite<StateVector*,StateVector>(g, betaQM, dtau);
+			multisite[0] = new SSH_multisite<StateVector*,StateVector>(g, betaQM, dtau, L);
 		}
 		
 		// instantiate interaction terms (requires pointers)

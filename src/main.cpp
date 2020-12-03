@@ -331,7 +331,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
           int Ltime = nLtime[0];
-          auto hp = cart_prod(beta, m, k, g, betaQM, nLtime);
+          auto hp = cart_prod(beta, m, k, g, betaQM, nLtime, nL);
 
 		typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType; 
 
