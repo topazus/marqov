@@ -110,18 +110,18 @@ namespace MARQOV
 		// Wolff coupling
 		static inline double wolff_coupling(StateVector& sv1, StateVector& sv2, int color, AshkinTeller<int>& ham) 
 		{
-			if (sv1[color] == sv2[color]) return 0.0;
-			else
+			double retval = 0.0;
+			if (sv1[color] != sv2[color])
 			{
 				switch (color)
 				{
-					case 0: return ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
-					case 1: return ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
-					case 2: return ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
+					case 0: retval = ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
+					case 1: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
+					case 2: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
 					default: throw std::invalid_argument("invalid color!");
 				}
 			}
-			return 0;
+			return retval;
 		}
 	
 		// Wolff flip
