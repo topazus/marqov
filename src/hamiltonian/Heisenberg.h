@@ -4,8 +4,8 @@
 #include <cmath>
 #include <string>
 #include <functional>
-#include "vectorhelpers.h"
-#include "hamiltonianparts.h"
+#include "../vectorhelpers.h"
+#include "../hamparts.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------

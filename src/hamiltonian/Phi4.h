@@ -2,8 +2,8 @@
 #define PHI4_H
 #include <array>
 #include <cmath>
-#include "vectorhelpers.h"
-#include "hamiltonianparts.h"
+#include "../vectorhelpers.h"
+#include "../hamparts.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------

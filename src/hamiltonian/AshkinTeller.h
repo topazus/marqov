@@ -4,8 +4,8 @@
 #include <tuple>
 #include <string>
 #include <functional>
-#include "hamiltonianparts.h"
-#include "metropolis.h"
+#include "../hamparts.h"
+#include "../metropolis.h"
 
 // the 3-color Ashkin-Teller model
 
