@@ -239,7 +239,6 @@ bool constant_coordination_lattice(const PointCloud& cloud, std::vector<std::vec
 
 	// set up boxes for dynamical rewiring
 	const int nboxes1D_r = L / boxlen_r;
-	const int nboxes2D_r = nboxes1D_r*nboxes1D_r;
 	std::vector<std::vector<std::vector<int>>> boxes_r(nboxes1D_r, std::vector<std::vector<int>>(nboxes1D_r));
 
      if (L%(2*boxlen)   != 0) { throw std::invalid_argument("error! L needs to be a multiple of two times the box length!"); }
