@@ -539,7 +539,6 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
     {
         //We interpret the statespace as a time-series of lattice points
         constexpr int rank = H5Mapper<StateVector>::rank;
-        constexpr auto len = std::tuple_size<StateVector>::value;
         std::array<hsize_t, 1> fdims, maxdims, chunk_dims;
         fdims.fill(static_cast<hsize_t>(this->grid.size()));
         maxdims.fill(H5S_UNLIMITED);
