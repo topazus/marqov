@@ -6,6 +6,6 @@ find_package(HDF5 COMPONENTS CXX)
 
 add_executable(1-cachecontainer 1-cachecontainer.cpp)
 target_link_libraries(1-cachecontainer ${HDF5_LIBRARIES})
-target_include_directories(1-cachecontainer PUBLIC ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(1-cachecontainer PUBLIC ${CMAKE_SOURCE_DIR}/src ${HDF5_INCLUDE_DIRS})
 enable_testing()
 add_test(1-cachecontainer 1-cachecontainer)

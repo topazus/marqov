@@ -115,7 +115,7 @@ marqovtest_Buster_clang:
 
 marqovtest_Buster_pgi:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-pgi1910-cmake
-    stage: build
+    stage: test
     <<: *src_except_definition
     script:
       - apt-get update && apt-get install -y libhdf5-dev
