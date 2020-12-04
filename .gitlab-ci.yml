@@ -88,6 +88,44 @@ marqov_Buster_pgi:
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="/opt/pgi/linux86-64/2019/bin/pgc++" ..
       - make MARQOV VERBOSE=1
 
+MARQOVtest_Ubuntu_bionic:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack
+    <<: *test_definition
+
+MARQOVtest_Stretch:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gfortran-blas-lapack
+    <<: *test_definition
+
+MARQOVtest_Buster:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gfortran-blas-lapack
+    <<: *test_definition
+
+marqovtest_Buster_clang:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-clang
+    stage: test
+    <<: *src_except_definition
+    script:
+      - apt-get update && apt-get install -y libhdf5-dev
+      - cmake -E make_directory build
+      - cd build
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang++ ..
+      - cmake --build . --target all --config Release
+      - ctest -O log.txt
+      - cat log.txt | grep "tests passed" | cut -d " " -f 1
+
+marqovtest_Buster_pgi:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-pgi1910-cmake
+    stage: build
+    <<: *src_except_definition
+    script:
+      - apt-get update && apt-get install -y libhdf5-dev
+      - cmake -E make_directory build
+      - cd build
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="/opt/pgi/linux86-64/2019/bin/pgc++" ..
+      - cmake --build . --target all --config Release
+      - ctest -O log.txt
+      - cat log.txt | grep "tests passed" | cut -d " " -f 1
+
 marqov_create_doc:
   image: aergus/latex
   stage: build

@@ -19,5 +19,5 @@ endif()
 
 add_subdirectory(src)
 
-#add_subdirectory(testsuite)
-#enable_testing()
+add_subdirectory(testsuite)
+enable_testing()

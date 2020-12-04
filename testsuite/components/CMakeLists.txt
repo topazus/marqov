@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.0.0)
+Project(components.tests CXX)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(HDF5 COMPONENTS CXX)
+
+add_executable(1-cachecontainer 1-cachecontainer.cpp)
+target_link_libraries(1-cachecontainer ${HDF5_LIBRARIES})
+target_include_directories(1-cachecontainer PUBLIC ${CMAKE_SOURCE_DIR}/src)
+enable_testing()
+add_test(1-cachecontainer 1-cachecontainer)
