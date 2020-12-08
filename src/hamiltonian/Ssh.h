@@ -247,57 +247,44 @@ class SSH_multisite
 	
 		double step = 2*M_PI/double(L);
 	
-		// extract spatial and temporal coordinates
-		// improve me: if c1=c2, r1-r2=+1/-1
-
+		// spatial coordinates
 		const double r1 = fmod(c1[0] + sign1*0.5, L); // account for p.b.c
 		const double r2 = fmod(c2[0] + sign2*0.5, L);
-
-//		cout << r1 << "  " << r2 << endl;
-
 		double dist = r1-r2;
-		double sign = 1;
-		if (dist < 0) sign = -1;
-		if (fabs(dist) > 0.5*L) 
-		{
-			dist = L-fabs(dist);
-		}
-		dist = dist*sign;
+		if (dist < 0) dist = L + dist;
 
+		// temporal coordinates
 		const double t1 = c1[1];
-        int t1i = round(t1);
 		const double t2 = c2[1];
-        int t2i = round(t2);
-        int dti = t1i - t2i;
-
-
-//	   	if (dti > ntau) cout << dti << " +" << endl;
-
-		// account for anti-symmetric behaviour in delta tau
+		int t1i = round(t1);
+		int t2i = round(t2);
+		int dti = t1i - t2i;
 		double signum = 1;
 		if (dti < 0) 
 		{
-			signum = -1;
+			signum = -1; // anti-symmetric behaviour in delta tau
 			dti = ntau+dti;
 		}
-//	   	if (dti > ntau) cout << dti << " -" << endl;
+
+
+
+		// account for periodic boundaries of the lattice
+		// delete these two lines and you will have open boundaries
+		// (only in this function, the lattice might also be adjusted)
+		if (dti  > 0.5*ntau) dti = ntau - dti;
+		if (dist > 0.5*L)   dist = L - dist;
+
 
 		// compute Greens function in Fourier space
 		std::complex<double> dexpk = std::exp(-jj*dist);
-        std::complex<double> expk = 1.0;
+		std::complex<double> expk = 1.0;
 		for (int j = 0; j < L; ++j)
 		{
-            retval += expk.real()*gdat[dti*L + j];
-            expk *= dexpk;//loop-carried dependency. breaks vectorization.
+			retval += expk.real()*gdat[dti*L + j];
+			expk *= dexpk; //loop-carried dependency. breaks vectorization.
 		}
 		auto retv = signum*retval.real()/double(L);
 
-
-//		if (dti == 11) cout << t1 << "  " << t2 << endl;
-//		if (L==8 && dti>10)cout << dist << "   " << dti << "   " << retv << endl;
-
-//		if (retv != retv) cout << "retv: " << retv << "  L = " << L << "  " << r1 << "  " << r2 <<  endl;
-//		if (retv != retv && L==12) cout << "retv: " << retv << "  L = " << L << endl;
 
 		return retv;
 	}
