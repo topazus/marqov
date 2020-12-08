@@ -153,7 +153,8 @@ class SSH_multisite
         double* gdat;
 	   int ntau;
 		SSH_multisite(double g, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL) {
-            ntau = std::round(beta/dtau);
+            ntau = std::round(beta/dtau); // ntau should be nothing else than Ltime
+//		  cout << "ntau = " << ntau << endl;
             gdat = new double[ntau*L];
             for(int j = 0; j < L; ++j)
             {
@@ -259,7 +260,6 @@ class SSH_multisite
 		if (dist < 0) sign = -1;
 		if (fabs(dist) > 0.5*L) 
 		{
-//			cout << "distance too long" << endl;
 			dist = L-fabs(dist);
 		}
 		dist = dist*sign;
@@ -270,38 +270,34 @@ class SSH_multisite
         int t2i = round(t2);
         int dti = t1i - t2i;
 
+
+//	   	if (dti > ntau) cout << dti << " +" << endl;
+
 		// account for anti-symmetric behaviour in delta tau
 		double signum = 1;
 		if (dti < 0) 
 		{
 			signum = -1;
-			dti = ntau-dti;
+			dti = ntau+dti;
 		}
+//	   	if (dti > ntau) cout << dti << " -" << endl;
 
 		// compute Greens function in Fourier space
 		std::complex<double> dexpk = std::exp(-jj*dist);
         std::complex<double> expk = 1.0;
 		for (int j = 0; j < L; ++j)
 		{
-//             double k = (j*2)*M_PI/double(L);
-// 			// 1D disperson relation
-//             
-// 	            const double mu = 0;
-// 	            const double eps = -2.0*std::cos(k)-mu;
-// 	            const double fac = 0.5*std::exp((beta/2 - dti*dtau)*eps)/std::cosh(beta*eps/2);
-//                 std::cout<<fac<<" "<<data[dti*L + j]<<std::endl;
-//	            const double occ = fermi(beta*eps);
-
-			// direct Fourier summation (slow!)
-			// todo: use FFT
-//			retval += std::exp(-jj*k*(r1-r2))*fac;
-//			retval += std::exp(-jj*k*dist)*fac;
             retval += expk.real()*gdat[dti*L + j];
             expk *= dexpk;//loop-carried dependency. breaks vectorization.
 		}
 		auto retv = signum*retval.real()/double(L);
 
-		if (retv != retv) cout << "retv: " << retv << endl;
+
+//		if (dti == 11) cout << t1 << "  " << t2 << endl;
+//		if (L==8 && dti>10)cout << dist << "   " << dti << "   " << retv << endl;
+
+//		if (retv != retv) cout << "retv: " << retv << "  L = " << L << "  " << r1 << "  " << r2 <<  endl;
+//		if (retv != retv && L==12) cout << "retv: " << retv << "  L = " << L << endl;
 
 		return retv;
 	}
