@@ -37,6 +37,12 @@ class SSHLattice
 						retval.push_back(j);
 					break;
 			}
+
+//			cout << i << " ---   " << endl;
+//			for (int i=0; i<retval.size(); i++) cout << retval[i] << "\t";
+//			cout << endl;
+//			cout << endl;
+
 			return retval;
 		}
 

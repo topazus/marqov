@@ -330,53 +330,68 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
           const auto dim       = registry.Get<int>("mc", name, "dim" );
 
 
-          int Ltime = nLtime[0];
-          auto hp = cart_prod(beta, m, k, g, betaQM, nLtime, nL);
+		// we need "L" and "Ltime" as explicit parameters in the Hamiltonian
+		// which requires some gymnastics ...
+		std::vector<int> dummy = {0};
+          auto hp = cart_prod(beta, m, k, g, betaQM, dummy, dummy);
 
-		typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType; 
 
-
-		std::vector<SSHLattice> latts;
+		// prepare lattices
+		std::vector<std::vector<SSHLattice>> latts;
 		for (std::size_t j=0; j<nL.size(); j++)
 		{
-			int L = nL[j];
-			latts.emplace_back(L, Ltime, dim);
+			std::vector<SSHLattice> lat;
+
+          	for (std::size_t jj=0; jj<nLtime.size(); jj++)
+			{
+				const int L     = nL[j];
+				const int Ltime = nLtime[jj];
+
+
+				lat.emplace_back(L, Ltime, dim);
+			}
+			latts.emplace_back(lat);
 		}
 
 
 
+		typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType; 
 		typename GetSchedulerType<SSH<double>, SSHLattice, typename PPType::value_type>::MarqovScheduler sched(1);
-
-
-		// only one Ltime at the moment!!!
 
 
 
           for (std::size_t j=0; j<nL.size(); j++)
 		{
-                    // prepare
-                    int L = nL[j];
-                    cout << endl << "L_space = " << L << "\t" << "L_time = " << Ltime << endl << endl;
+          	for (std::size_t jj=0; jj<nLtime.size(); jj++)
+			{
 
-                    std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-
-                    MARQOV::Config mp(outpath);
-                    mp.setnsweeps(2);
-                    mp.setncluster(0);
-                    mp.setwarmupsteps(20);
-                    mp.setgameloopsteps(50);
-
-                    makeDir(mp.outpath);
+				const int L     = nL[j];
+				const int Ltime = nLtime[jj];
+          	     cout << endl << "L_space = " << L << "\t" << "L_time = " << Ltime << endl << endl;
 
 
-                    // set up parameters
-                    auto params = finalize_parameter_pair(mp, hp);
-                    auto rparams = replicator_pair(params, nreplicas[j]);
+				for (std::size_t i=0; i<hp.size(); i++) std::get<5>(hp[i]) = Ltime;
+				for (std::size_t i=0; i<hp.size(); i++) std::get<6>(hp[i]) = L;
 
-                    SSHLattice& latt = latts[j];
-                    auto f = [&latt, &outbasedir, L](auto p){return sshfilter(latt, p);}; //partially apply filter
-				for(auto p : rparams)
+          	     std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+
+          	     MARQOV::Config mp(outpath);
+          	     mp.setnsweeps(2);
+          	     mp.setncluster(0);
+          	     mp.setwarmupsteps(0);
+          	     mp.setgameloopsteps(100);
+
+          	     makeDir(mp.outpath);
+
+
+          	     // set up parameters
+          	     auto params = finalize_parameter_pair(mp, hp);
+
+          	     SSHLattice& latt = latts[j][jj];
+          	     auto f = [&latt, &outbasedir, L](auto p){return sshfilter(latt, p);}; //partially apply filter
+				for(auto p : params)
 					sched.createSimfromParameter(p, f);
+          	}
           }
 		sched.start();
      }
