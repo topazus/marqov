@@ -190,7 +190,7 @@ class SSH_multisite
 			const int center = floor(LL/2);
 			std::vector<double> suscs;
 
-			for (int i=0; i<LL; i++) suscs.push_back(suscept(grid, center, i, beta, dtau));
+			for (int i=0; i<LL; i++) suscs.push_back(suscept(grid, center, i, beta, 0));
 
 			ofstream os;
 			os.open("/home/schrauth/susc-"+std::to_string(beta)+".dat");
