@@ -12,7 +12,7 @@ dim = 2
 rep = 1
 
 betaMC = 1.0
-betaQM = 0, 0.1, 0.3, 1, 3, 10, 30, 100
+betaQM = 1.234
 
 m = 1
 k = 10

@@ -190,7 +190,7 @@ class SSH_multisite
 			const int center = floor(LL/2);
 			std::vector<double> suscs;
 
-			for (int i=0; i<LL; i++) suscs.push_back(suscept(grid, center, i, beta, 0));
+			for (int i=0; i<LL; i++) suscs.push_back(suscept(grid, center));
 
 			ofstream os;
 			os.open("/home/schrauth/susc-"+std::to_string(beta)+".dat");
@@ -210,7 +210,7 @@ class SSH_multisite
 			{
 
 				auto b1 = svnew-svold;
-				auto b2 = suscept(grid, rsite, nbrs[i], beta,dtau);
+				auto b2 = suscept(grid, rsite, nbrs[i]);
 				auto b3 = s[i];
 
 				auto a1 = dot(b1, mult(b2,b3));
@@ -219,8 +219,8 @@ class SSH_multisite
 				retval = retval + a1 + a2;
 			}
 
-			retval += dot(svnew, mult(suscept(grid, rsite, rsite, beta, dtau), svnew));
-			retval -= dot(svold, mult(suscept(grid, rsite, rsite, beta, dtau), svold));
+			retval += dot(svnew, mult(suscept(grid, rsite, rsite), svnew));
+			retval -= dot(svold, mult(suscept(grid, rsite, rsite), svold));
 
 			return retval;
 		}
@@ -314,7 +314,7 @@ class SSH_multisite
 */
 
 
-	std::complex<double> fourpointcorr(std::vector<std::vector<double>> s, std::vector<int> e, int L, double beta, double dtau)
+	std::complex<double> fourpointcorr(std::vector<std::vector<double>> s, std::vector<int> e)
 	{
 		std::complex<double> retval = 0;
 
@@ -342,8 +342,9 @@ class SSH_multisite
 
 
 	template <class Lattice>
-	double suscept(Lattice& grid, int idx1, int idx2, double beta, double dtau)
+	double suscept(Lattice& grid, int idx1, int idx2)
 	{
+
 		auto w1 = grid.getcrds(idx1);
 		auto w2 = grid.getcrds(idx2);
 		const int L = grid.len;
@@ -369,10 +370,10 @@ class SSH_multisite
 		*/
 
 		std::vector<std::vector<double>> sites = {w1,w1,w2,w2};
-		retval += fourpointcorr(sites, {i,j,i,j}, L, beta, dtau);
-		retval += fourpointcorr(sites, {i,j,j,i}, L, beta, dtau);
-		retval += fourpointcorr(sites, {j,i,i,j}, L, beta, dtau);
-		retval += fourpointcorr(sites, {j,i,j,i}, L, beta, dtau);
+		retval += fourpointcorr(sites, {i,j,i,j});
+		retval += fourpointcorr(sites, {i,j,j,i});
+		retval += fourpointcorr(sites, {j,i,i,j});
+		retval += fourpointcorr(sites, {j,i,j,i});
 
 		/*       < K(b1,t1) > < K(b2,t2 >    	*/
 		const std::complex<double> K1 = g1D(w1,w1,i,j)+g1D(w1,w1,j,i);
