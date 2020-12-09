@@ -26,11 +26,9 @@ double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 	// Metropolis sweeps
 	for (int j=0; j<mcfg.nsweeps; j++)
 	{
-//			cout << "DEBUG: Updates are set to sequential order! " << endl;
 		// loop sites
 		for(decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
 		{
-//			const int rsite = i;
 			const int rsite = rngcache.integer(this->grid.size());
 			metropolisstep(rsite);
 		}

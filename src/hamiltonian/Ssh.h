@@ -148,13 +148,12 @@ template <class StateSpace, class StateVector>
 class SSH_multisite
 {
 	public:
-		double k, beta, dtau;
+		double k, beta, dtau, g;
         int L;
         double* gdat;
 	   int ntau;
-		SSH_multisite(double g, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL) {
+		SSH_multisite(double g, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL), g(g){
             ntau = std::round(beta/dtau); // ntau should be nothing else than Ltime
-//		  cout << "ntau = " << ntau << endl;
             gdat = new double[ntau*L];
             for(int j = 0; j < L; ++j)
             {
@@ -181,6 +180,30 @@ class SSH_multisite
 					StateSpace& s,
 					Lattice& grid)
 		{
+
+
+
+			/*
+			// dump suscptibility to file
+			//---------------------------
+			const int LL = grid.len;
+			const int center = floor(LL/2);
+			std::vector<double> suscs;
+
+			for (int i=0; i<LL; i++) suscs.push_back(suscept(grid, center, i, beta, dtau));
+
+			ofstream os;
+			os.open("/home/schrauth/susc-"+std::to_string(beta)+".dat");
+			for (int i=0; i<LL; i++)	os << center-i << "\t" << suscs[i] << endl;
+			os.close();
+
+			//---------------------------
+			*/
+			
+
+
+
+
 			double retval = 0;
 
 			for (int i=0; i<nbrs.size(); i++)
@@ -190,20 +213,10 @@ class SSH_multisite
 				auto b2 = suscept(grid, rsite, nbrs[i], beta,dtau);
 				auto b3 = s[i];
 
-//				if (b1[0] != b1[0]) cout << "b1: " << b1[0] << endl;
-//				if (b2 != b2)       cout << "b2: " << b2    << endl;
-//				if (b3[0] != b3[0]) cout << "b3: " << b3[0] << endl;
-
 				auto a1 = dot(b1, mult(b2,b3));
 				auto a2 = dot(b3, mult(b2,b1));
 
-//				if (a1 != a1) cout << "a1: " << a1 << endl;
-//				if (a2 != a2) cout << "a2: " << a2 << endl;
-
 				retval = retval + a1 + a2;
-
-//				retval +=	dot((svnew-svold), mult(suscept(grid, rsite, nbrs[i], beta,dtau), s[i]));
-//				retval +=	dot(s[i], mult(suscept(grid, nbrs[i], rsite, beta,dtau), (svnew-svold)));
 			}
 
 			retval += dot(svnew, mult(suscept(grid, rsite, rsite, beta, dtau), svnew));
@@ -265,8 +278,6 @@ class SSH_multisite
 			signum = -1; // anti-symmetric behaviour in delta tau
 			dti = ntau+dti;
 		}
-
-
 
 		// account for periodic boundaries of the lattice
 		// delete these two lines and you will have open boundaries
@@ -335,9 +346,6 @@ class SSH_multisite
 	{
 		auto w1 = grid.getcrds(idx1);
 		auto w2 = grid.getcrds(idx2);
-
-//		cout << w1[0] << "  " << w2[0] << endl;
-
 		const int L = grid.len;
 	
 		// signs
@@ -361,29 +369,12 @@ class SSH_multisite
 		*/
 
 		std::vector<std::vector<double>> sites = {w1,w1,w2,w2};
-
 		retval += fourpointcorr(sites, {i,j,i,j}, L, beta, dtau);
 		retval += fourpointcorr(sites, {i,j,j,i}, L, beta, dtau);
 		retval += fourpointcorr(sites, {j,i,i,j}, L, beta, dtau);
 		retval += fourpointcorr(sites, {j,i,j,i}, L, beta, dtau);
 
-// 		debug things
-//		------------
-//		auto c1 = fourpointcorr(sites, {i,j,i,j}, L, beta, dtau);
-//		auto c2 = fourpointcorr(sites, {i,j,j,i}, L, beta, dtau);
-//		auto c3 = fourpointcorr(sites, {j,i,i,j}, L, beta, dtau);
-//		auto c4 = fourpointcorr(sites, {j,i,j,i}, L, beta, dtau);
-//		if (c1 != c1) cout << "c1: " << c1 << endl;
-//		if (c2 != c2) cout << "c2: " << c2 << endl;
-//		if (c3 != c3) cout << "c3: " << c3 << endl;
-//		if (c4 != c4) cout << "c4: " << c4 << endl;
-
-
-		/*
-
-		< K(b1,t1) > < K(b2,t2 >
-
-		*/
+		/*       < K(b1,t1) > < K(b2,t2 >    	*/
 		const std::complex<double> K1 = g1D(w1,w1,i,j)+g1D(w1,w1,j,i);
 		const std::complex<double> K2 = g1D(w2,w2,i,j)+g1D(w2,w2,j,i);
 		retval -= K1*K2;
