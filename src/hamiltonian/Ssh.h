@@ -144,30 +144,34 @@ class SSH_onsite : public OnSite<StateVector, double>
 
 
 
+// =========================== Multi-Site Class =================================
+
 template <class StateSpace, class StateVector>
 class SSH_multisite
 {
 	public:
 		double k, beta, dtau, g;
-        int L;
-        double* gdat;
-	   int ntau;
-		SSH_multisite(double g, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL), g(g){
-            ntau = std::round(beta/dtau); // ntau should be nothing else than Ltime
-            gdat = new double[ntau*L];
-            for(int j = 0; j < L; ++j)
-            {
-                double k = (j*2)*M_PI/double(L);
-                // 1D disperson relation
-            
-                const double mu = 0;
-                double eps = -2.0*std::cos(k)-mu;
-                for(int dt = 0; dt < ntau; ++dt)
-                {
-                    gdat[dt * L + j] = 0.5*std::exp((beta/2 - dt*dtau)*eps)/std::cosh(beta*eps/2);
-                }
-            }
-        }
+		int L;
+		double* gdat;
+		int ntau;
+		SSH_multisite(double g, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL), g(g)
+		{
+			ntau = std::round(beta/dtau); // ntau should be nothing else than Ltime
+			gdat = new double[ntau*L];
+
+			for(int j = 0; j < L; ++j)
+			{
+				double k = (j*2)*M_PI/double(L);
+				// 1D disperson relation
+				const double mu = 0;
+				double eps = -2.0*std::cos(k)-mu;
+				for(int dt = 0; dt < ntau; ++dt)
+				{
+					gdat[dt * L + j] = 0.5*std::exp((beta/2 - dt*dtau)*eps)/std::cosh(beta*eps/2);
+				}
+			}
+		}
+
 
 		// computes the difference already!
 		// can be simplified if "suscept" is symmetric
@@ -180,9 +184,6 @@ class SSH_multisite
 					StateSpace& s,
 					Lattice& grid)
 		{
-
-
-
 			/*
 			// dump suscptibility to file
 			//---------------------------
@@ -201,14 +202,9 @@ class SSH_multisite
 			*/
 			
 
-
-
-
 			double retval = 0;
-
 			for (int i=0; i<nbrs.size(); i++)
 			{
-
 				auto b1 = svnew-svold;
 				auto b2 = suscept(grid, rsite, nbrs[i]);
 				auto b3 = s[i];
@@ -224,81 +220,76 @@ class SSH_multisite
 
 			return retval;
 		}
+
 		~SSH_multisite() {delete [] gdat;}
 
-	/**
-	The fermi function
-	@return An occupation propability
-	*/
-	template <typename T>
-	inline T fermi(const T& e) throw()
-	{
-	    T xhalf = -e/T(2.0);
-	    T retval;
-	    if(xhalf > std::log(0.01*std::numeric_limits<T>::max()))
-	      retval = 1.0;
-	    else
-	      if(xhalf < std::log(10*std::numeric_limits<T>::min()))
-		retval = 0.0;//FIXME: not yet decided whether setting this to zero is better than setting it to epsilon
-		else
-		  retval = 0.5*std::exp(xhalf)/std::cosh(xhalf);
-	    return retval;
-	}
-
-	// The Fermi-Dirac function
-	double fermi_dirac(double x, double beta=1, double mu=0)
-	{
-		return 1.0 / (std::exp(beta*(x-mu)) + 1);
-	}
+		/**
+		The fermi function
+		@return An occupation propability
+		*/
+		template <typename T>
+		inline T fermi(const T& e) throw()
+		{
+		    T xhalf = -e/T(2.0);
+		    T retval;
+		    if(xhalf > std::log(0.01*std::numeric_limits<T>::max()))
+		      retval = 1.0;
+		    else
+		      if(xhalf < std::log(10*std::numeric_limits<T>::min()))
+			retval = 0.0;//FIXME: not yet decided whether setting this to zero is better than setting it to epsilon
+			else
+			  retval = 0.5*std::exp(xhalf)/std::cosh(xhalf);
+		    return retval;
+		}
+	
+	
+		// Green's function for a regular hypercubic lattice in 1D (i.e. a chain)
+		double g1D(std::vector<double> c1, std::vector<double> c2, int sign1, int sign2)
+		{
+			std::complex<double> retval = 0;
+			std::complex<double> jj(0,1);
 		
+			double step = 2*M_PI/double(L);
+		
+			// spatial coordinates
+			const double r1 = fmod(c1[0] + sign1*0.5, L); // account for p.b.c
+			const double r2 = fmod(c2[0] + sign2*0.5, L);
+			double dist = r1-r2;
+			if (dist < 0) dist = L + dist;
 	
-	// Green's function for a regular hypercubic lattice in 1D (i.e. a chain)
-	double g1D(std::vector<double> c1, std::vector<double> c2, int sign1, int sign2)
-	{
-		std::complex<double> retval = 0;
-		std::complex<double> jj(0,1);
+			// temporal coordinates
+			const double t1 = c1[1];
+			const double t2 = c2[1];
+			int t1i = round(t1);
+			int t2i = round(t2);
+			int dti = t1i - t2i;
+			double signum = 1;
+			if (dti < 0) 
+			{
+				signum = -1; // anti-symmetric behaviour in delta tau
+				dti = ntau+dti;
+			}
 	
-		double step = 2*M_PI/double(L);
+			// account for periodic boundaries of the lattice
+			// delete these two lines and you will have open boundaries
+			// (only in this function, the lattice might also be adjusted)
+			if (dti  > 0.5*ntau) dti = ntau - dti;
+			if (dist > 0.5*L)   dist = L - dist;
 	
-		// spatial coordinates
-		const double r1 = fmod(c1[0] + sign1*0.5, L); // account for p.b.c
-		const double r2 = fmod(c2[0] + sign2*0.5, L);
-		double dist = r1-r2;
-		if (dist < 0) dist = L + dist;
-
-		// temporal coordinates
-		const double t1 = c1[1];
-		const double t2 = c2[1];
-		int t1i = round(t1);
-		int t2i = round(t2);
-		int dti = t1i - t2i;
-		double signum = 1;
-		if (dti < 0) 
-		{
-			signum = -1; // anti-symmetric behaviour in delta tau
-			dti = ntau+dti;
+	
+			// compute Greens function in Fourier space
+			std::complex<double> dexpk = std::exp(-jj*dist);
+			std::complex<double> expk = 1.0;
+			for (int j = 0; j < L; ++j)
+			{
+				retval += expk.real()*gdat[dti*L + j];
+				expk *= dexpk; //loop-carried dependency. breaks vectorization.
+			}
+			auto retv = signum*retval.real()/double(L);
+	
+	
+			return retv;
 		}
-
-		// account for periodic boundaries of the lattice
-		// delete these two lines and you will have open boundaries
-		// (only in this function, the lattice might also be adjusted)
-		if (dti  > 0.5*ntau) dti = ntau - dti;
-		if (dist > 0.5*L)   dist = L - dist;
-
-
-		// compute Greens function in Fourier space
-		std::complex<double> dexpk = std::exp(-jj*dist);
-		std::complex<double> expk = 1.0;
-		for (int j = 0; j < L; ++j)
-		{
-			retval += expk.real()*gdat[dti*L + j];
-			expk *= dexpk; //loop-carried dependency. breaks vectorization.
-		}
-		auto retv = signum*retval.real()/double(L);
-
-
-		return retv;
-	}
 
 
 /*
