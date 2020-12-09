@@ -167,7 +167,7 @@ class SSH_multisite
 				double eps = -2.0*std::cos(k)-mu;
 				for(int dt = 0; dt < ntau; ++dt)
 				{
-					gdat[dt * L + j] = 0.5*std::exp((beta/2 - dt*dtau)*eps)/std::cosh(beta*eps/2);
+					gdat[dt * L + j] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
 				}
 			}
 		}
@@ -184,14 +184,19 @@ class SSH_multisite
 					StateSpace& s,
 					Lattice& grid)
 		{
-			/*
+//			/*
 			// dump suscptibility to file
 			//---------------------------
 			const int LL = grid.len;
 			const int center = floor(LL/2);
 			std::vector<double> suscs;
 
-			for (int i=0; i<LL; i++) suscs.push_back(suscept(grid, center));
+			// we evaluate one coloumn of the lattice (i.e. equal time)
+			for (int i=0; i<LL; i++)
+			{
+				auto res = suscept(grid, center, i);
+				suscs.push_back(res);
+			}
 
 			ofstream os;
 			os.open("/home/schrauth/susc-"+std::to_string(beta)+".dat");
@@ -199,8 +204,8 @@ class SSH_multisite
 			os.close();
 
 			//---------------------------
-			*/
-			
+//			*/
+
 
 			double retval = 0;
 			for (int i=0; i<nbrs.size(); i++)
@@ -252,16 +257,18 @@ class SSH_multisite
 			double step = 2*M_PI/double(L);
 		
 			// spatial coordinates
-			const double r1 = fmod(c1[0] + sign1*0.5, L); // account for p.b.c
-			const double r2 = fmod(c2[0] + sign2*0.5, L);
+			const double r1 = c1[0] + sign1*0.5; // account for p.b.c not relevant? (we only use relative distances...)
+			const double r2 = c2[0] + sign2*0.5;
+//			const double r1 = fmod(c1[0] + sign1*0.5, L); // account for p.b.c
+//			const double r2 = fmod(c2[0] + sign2*0.5, L);
 			double dist = r1-r2;
 			if (dist < 0) dist = L + dist;
 	
 			// temporal coordinates
 			const double t1 = c1[1];
 			const double t2 = c2[1];
-			int t1i = round(t1);
-			int t2i = round(t2);
+			int t1i = floor(t1);
+			int t2i = floor(t2);
 			int dti = t1i - t2i;
 			double signum = 1;
 			if (dti < 0) 
@@ -273,21 +280,20 @@ class SSH_multisite
 			// account for periodic boundaries of the lattice
 			// delete these two lines and you will have open boundaries
 			// (only in this function, the lattice might also be adjusted)
-			if (dti  > 0.5*ntau) dti = ntau - dti;
-			if (dist > 0.5*L)   dist = L - dist;
+//			if (dti  > 0.5*ntau) dti = ntau - dti;
+//			if (dist > 0.5*L)   dist = L - dist;
 	
 	
 			// compute Greens function in Fourier space
-			std::complex<double> dexpk = std::exp(-jj*dist);
+			std::complex<double> dexpk = std::exp(-2*M_PI/L*jj*dist);
 			std::complex<double> expk = 1.0;
 			for (int j = 0; j < L; ++j)
 			{
 				retval += expk.real()*gdat[dti*L + j];
-				expk *= dexpk; //loop-carried dependency. breaks vectorization.
+				expk   *= dexpk; //loop-carried dependency. breaks vectorization.
 			}
 			auto retv = signum*retval.real()/double(L);
-	
-	
+
 			return retv;
 		}
 

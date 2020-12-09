@@ -378,7 +378,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
           	     MARQOV::Config mp(outpath);
           	     mp.setnsweeps(2);
           	     mp.setncluster(0);
-          	     mp.setwarmupsteps(100);
+          	     mp.setwarmupsteps(0);
           	     mp.setgameloopsteps(100);
 
           	     makeDir(mp.outpath);
