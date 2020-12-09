@@ -311,7 +311,7 @@ class SSH_multisite
 */
 
 
-	std::complex<double> fourpointcorr(std::vector<std::vector<double>> s, std::vector<int> e)
+	std::complex<double> g4(std::vector<std::vector<double>> s, std::vector<int> e)
 	{
 		std::complex<double> retval = 0;
 
@@ -367,10 +367,10 @@ class SSH_multisite
 		*/
 
 		std::vector<std::vector<double>> sites = {w1,w1,w2,w2};
-		retval += fourpointcorr(sites, {i,j,i,j});
-		retval += fourpointcorr(sites, {i,j,j,i});
-		retval += fourpointcorr(sites, {j,i,i,j});
-		retval += fourpointcorr(sites, {j,i,j,i});
+		retval += g4(sites, {i,j,i,j});
+		retval += g4(sites, {i,j,j,i});
+		retval += g4(sites, {j,i,i,j});
+		retval += g4(sites, {j,i,j,i});
 
 		/*       < K(b1,t1) > < K(b2,t2 >    	*/
 		const std::complex<double> K1 = g1D(w1,w1,i,j)+g1D(w1,w1,j,i);
