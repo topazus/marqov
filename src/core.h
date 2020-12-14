@@ -622,19 +622,18 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 
 	void gameloop()
 	{
-		double avgclustersize = 0;
+		double acceptance = 0;
 		for (int k=0; k < this->mcfg.gli; k++)
 		{
-
 			if (this->mcfg.id == 0) std::cout << "." << std::flush;
 			for (int i=0; i < this->mcfg.gameloopsteps/10; ++i)
 			{
-				avgclustersize += elementaryMCstep();
+				acceptance += elementaryMCstep();
 				marqov_measure(obs, statespace, this->grid);
 			}
 		}
 
-		if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.gameloopsteps << std::endl;
+		if (this->mcfg.id == 0) std::cout << "|\n" << acceptance/this->mcfg.gameloopsteps << std::endl;
 	}
 	
 	void wrmploop()

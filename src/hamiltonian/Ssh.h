@@ -170,6 +170,25 @@ class SSH_multisite
 					gdat[dt * L + j] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
 				}
 			}
+
+
+
+			/*
+			auto c1 = std::vector<double>{0,0};
+			auto c2 = std::vector<double>{11,0};
+			auto c3 = std::vector<double>{7,0};
+			auto c4 = std::vector<double>{42,0};
+			std::vector<std::vector<double>> arg1;
+			arg1.push_back(c1);
+			arg1.push_back(c2);
+			arg1.push_back(c3);
+			arg1.push_back(c4);
+
+			std::vector<int> arg2 = {1,1,1,1};
+
+			cout << g4(arg1, arg2) << endl;
+			*/
+
 		}
 
 
@@ -184,7 +203,7 @@ class SSH_multisite
 					StateSpace& s,
 					Lattice& grid)
 		{
-//			/*
+			/*
 			// dump suscptibility to file
 			//---------------------------
 			const int LL = grid.len;
@@ -204,7 +223,12 @@ class SSH_multisite
 			os.close();
 
 			//---------------------------
-//			*/
+			*/
+			
+//			suscept(grid,1,1);
+//			exit(-1);
+
+
 
 
 			double retval = 0;
@@ -315,13 +339,14 @@ class SSH_multisite
 	{
 		std::complex<double> retval = 0;
 
+//		cout << endl;
+//		cout << s[0][0] << "  " << s[1][0] << "  " << s[2][0] << "  " << s[3][0] << endl;
+//		cout << e[0] << "  " << e[1] << "  " << e[2] << "  " << e[3] << endl;
+
 		// the square of the number operator of fermions is the number operator
-		if (s[0]==s[1] && s[1]==s[2] && s[2]==s[3])
+		if (s[0]==s[1] && s[1]==s[2] && s[2]==s[3] && e[0]==e[1] && e[1]==e[2] && e[2]==e[3])
 		{
-			if (e[0]==e[1] && e[1]==e[2] && e[2]==e[3])
-			{
-				retval = g1D(s[0], s[1], e[0], e[1]);
-			}
+			retval = g1D(s[0], s[1], e[0], e[1]);
 		}
 
 		// Wick decomposition
@@ -330,6 +355,9 @@ class SSH_multisite
 			retval = g1D(s[0],s[1],e[0],e[1])*g1D(s[2],s[3],e[2],e[3]) 
 				  - g1D(s[0],s[3],e[0],e[3])*g1D(s[2],s[1],e[2],e[1]);
 		}
+
+//		cout << g1D(s[0],s[1],e[0],e[1]) << "  " << g1D(s[2],s[3],e[2],e[3]) << "  " << 
+//		g1D(s[0],s[3],e[0],e[3]) << "  " << g1D(s[2],s[1],e[2],e[1]) << endl;
 
 		return retval;
 	}
@@ -367,15 +395,24 @@ class SSH_multisite
 		*/
 
 		std::vector<std::vector<double>> sites = {w1,w1,w2,w2};
-		retval += g4(sites, {i,j,i,j});
-		retval += g4(sites, {i,j,j,i});
-		retval += g4(sites, {j,i,i,j});
-		retval += g4(sites, {j,i,j,i});
+
+		const auto c1 = g4(sites, {i,j,i,j});
+		const auto c2 = g4(sites, {i,j,j,i});
+		const auto c3 = g4(sites, {j,i,i,j});
+		const auto c4 = g4(sites, {j,i,j,i});
+
+		retval = c1+c2+c3+c4;
+
+//		cout << c1 << "  " << c2 << "  " << c3 << "  " << c4 << endl;
+//		cout << endl <<std::real(retval) << endl;
 
 		/*       < K(b1,t1) > < K(b2,t2 >    	*/
 		const std::complex<double> K1 = g1D(w1,w1,i,j)+g1D(w1,w1,j,i);
 		const std::complex<double> K2 = g1D(w2,w2,i,j)+g1D(w2,w2,j,i);
 		retval -= K1*K2;
+
+//		cout << std::real(K1*K2) << endl;
+//		cout << std::real(retval) << endl << endl;
 
 		return std::real(retval);
 	}

@@ -23,6 +23,10 @@ double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 		avgclustersize += wolffstep(rsite, rdir);
 	}
 
+	
+	int metrocounter = 0;
+
+
 	// Metropolis sweeps
 	for (int j=0; j<mcfg.nsweeps; j++)
 	{
@@ -30,11 +34,11 @@ double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 		for(decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
 		{
 			const int rsite = rngcache.integer(this->grid.size());
-			metropolisstep(rsite);
+			metrocounter += metropolisstep(rsite);
 		}
 	}
 
-	return avgclustersize/mcfg.ncluster;
+	return metrocounter/double(mcfg.nsweeps)/this->grid.size();
 }
 };
 #endif

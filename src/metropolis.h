@@ -158,10 +158,6 @@ namespace MARQOV
 
 	  double dE  = interactionenergydiff + onsiteenergydiff + multisiteenergdiff;
 
-
-
-
-        
         
         int retval = 0;
         if ( dE <= 0 )

@@ -353,12 +353,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			latts.emplace_back(lat);
 		}
 
-
-
 		typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType; 
 		typename GetSchedulerType<SSH<double>, SSHLattice, typename PPType::value_type>::MarqovScheduler sched(1);
-
-
 
           for (std::size_t j=0; j<nL.size(); j++)
 		{
@@ -378,8 +374,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
           	     MARQOV::Config mp(outpath);
           	     mp.setnsweeps(2);
           	     mp.setncluster(0);
-          	     mp.setwarmupsteps(0);
-          	     mp.setgameloopsteps(100);
+          	     mp.setwarmupsteps(50);
+          	     mp.setgameloopsteps(50);
 
           	     makeDir(mp.outpath);
 
