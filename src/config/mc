@@ -4,8 +4,8 @@ Hamiltonian = SSH
 
 [SSH]
 
-L = 5
-Ltime = 10
+L = 20
+Ltime = 30
 
 dim = 2
 
@@ -16,7 +16,7 @@ betaQM = 1.0
 
 m = 1
 k = 10
-g = 0.0. 0.3, 1
+g = 0.0, 0.1, 0.3, 1, 3, 10
 
 [BlumeCapelBipartite]
 

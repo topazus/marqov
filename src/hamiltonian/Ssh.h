@@ -203,33 +203,6 @@ class SSH_multisite
 					StateSpace& s,
 					Lattice& grid)
 		{
-			/*
-			// dump suscptibility to file
-			//---------------------------
-			const int LL = grid.len;
-			const int center = floor(LL/2);
-			std::vector<double> suscs;
-
-			// we evaluate one coloumn of the lattice (i.e. equal time)
-			for (int i=0; i<LL; i++)
-			{
-				auto res = suscept(grid, center, i);
-				suscs.push_back(res);
-			}
-
-			ofstream os;
-			os.open("/home/schrauth/susc-"+std::to_string(beta)+".dat");
-			for (int i=0; i<LL; i++)	os << center-i << "\t" << suscs[i] << endl;
-			os.close();
-
-			//---------------------------
-			*/
-			
-//			suscept(grid,1,1);
-//			exit(-1);
-
-
-
 
 			double retval = 0;
 			for (int i=0; i<nbrs.size(); i++)
@@ -283,8 +256,6 @@ class SSH_multisite
 			// spatial coordinates
 			const double r1 = c1[0] + sign1*0.5; // account for p.b.c not relevant? (we only use relative distances...)
 			const double r2 = c2[0] + sign2*0.5;
-//			const double r1 = fmod(c1[0] + sign1*0.5, L); // account for p.b.c
-//			const double r2 = fmod(c2[0] + sign2*0.5, L);
 			double dist = r1-r2;
 			if (dist < 0) dist = L + dist;
 	
@@ -302,8 +273,7 @@ class SSH_multisite
 			}
 	
 			// account for periodic boundaries of the lattice
-			// delete these two lines and you will have open boundaries
-			// (only in this function, the lattice might also be adjusted)
+			// not needed, says Florian
 //			if (dti  > 0.5*ntau) dti = ntau - dti;
 //			if (dist > 0.5*L)   dist = L - dist;
 	
@@ -339,10 +309,6 @@ class SSH_multisite
 	{
 		std::complex<double> retval = 0;
 
-//		cout << endl;
-//		cout << s[0][0] << "  " << s[1][0] << "  " << s[2][0] << "  " << s[3][0] << endl;
-//		cout << e[0] << "  " << e[1] << "  " << e[2] << "  " << e[3] << endl;
-
 		// the square of the number operator of fermions is the number operator
 		if (s[0]==s[1] && s[1]==s[2] && s[2]==s[3] && e[0]==e[1] && e[1]==e[2] && e[2]==e[3])
 		{
@@ -355,9 +321,6 @@ class SSH_multisite
 			retval = g1D(s[0],s[1],e[0],e[1])*g1D(s[2],s[3],e[2],e[3]) 
 				  - g1D(s[0],s[3],e[0],e[3])*g1D(s[2],s[1],e[2],e[1]);
 		}
-
-//		cout << g1D(s[0],s[1],e[0],e[1]) << "  " << g1D(s[2],s[3],e[2],e[3]) << "  " << 
-//		g1D(s[0],s[3],e[0],e[3]) << "  " << g1D(s[2],s[1],e[2],e[1]) << endl;
 
 		return retval;
 	}
@@ -403,16 +366,10 @@ class SSH_multisite
 
 		retval = c1+c2+c3+c4;
 
-//		cout << c1 << "  " << c2 << "  " << c3 << "  " << c4 << endl;
-//		cout << endl <<std::real(retval) << endl;
-
 		/*       < K(b1,t1) > < K(b2,t2 >    	*/
 		const std::complex<double> K1 = g1D(w1,w1,i,j)+g1D(w1,w1,j,i);
 		const std::complex<double> K2 = g1D(w2,w2,i,j)+g1D(w2,w2,j,i);
 		retval -= K1*K2;
-
-//		cout << std::real(K1*K2) << endl;
-//		cout << std::real(retval) << endl << endl;
 
 		return std::real(retval);
 	}
@@ -438,7 +395,7 @@ class SSH_Initializer
 		StateVector newsv(const StateVector& svold) 
 		{
 			StateVector retval(svold); 
-			double amp = 0.2;
+			double amp = 0.7;
 			double diff = rng.real(-amp, amp);
 			retval[0] += diff;
 			return retval;
