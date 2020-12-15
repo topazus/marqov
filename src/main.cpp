@@ -372,9 +372,9 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
           	     std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
           	     MARQOV::Config mp(outpath);
-          	     mp.setnsweeps(2);
+          	     mp.setnsweeps(5);
           	     mp.setncluster(0);
-          	     mp.setwarmupsteps(50);
+          	     mp.setwarmupsteps(10);
           	     mp.setgameloopsteps(50);
 
           	     makeDir(mp.outpath);

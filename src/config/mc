@@ -4,7 +4,7 @@ Hamiltonian = SSH
 
 [SSH]
 
-L = 20
+L = 30
 Ltime = 30
 
 dim = 2

@@ -85,24 +85,25 @@ class SSHTwoPointCorrSpace
 		{
 			for (int j=0; j<Ls; j++)
 			{
+				const int idx1 = i*Ls+j;
+
 				for (int k=0; k<Ls; k++)
 				{
 					if (k==j) continue;
 
-					const int idx1 = i*Ls+j;
 					const int idx2 = i*Ls+k;
 
-				
 					const double x1 = statespace[idx1][0];
 					const double x2 = statespace[idx2][0];
-					
+
 					//// actual coordinates not necessary for 1D
 					// const auto c1 = grid.getcrds(idx1)[0];
 					// const auto c2 = grid.getcrds(idx2)[0];
 					// auto dist = c1-c2;
 					// if (fabs(dist) > 0.5) dist = 1.0 - fabs(dist);
 
-					const int diff = std::abs(j-k) % (Ls/2);
+					int diff = std::abs(j-k);
+					if (diff>Ls/2) diff -= Ls/2;
 
 					retval[diff] += norml*x1*x2;
 				}
@@ -110,6 +111,7 @@ class SSHTwoPointCorrSpace
 		}
 
 		return retval;
+
 	}
 					
 	
