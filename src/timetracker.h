@@ -59,15 +59,14 @@ class timetracker
 
 		void switch_clock(std::string target)
 		{
-
 			std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
 
 			auto clockidx = clockmap[active_clock];
 			auto& previous_clock = clocks[clockidx];
-			previous_clock.duration_msec += 1.0;
-//			previous_clock.duration_msec += std::chrono::duration_cast<msec>(now-previous_clock.starttime).count();
 
-			auto target_clock = clocks[clockmap[target]];
+			previous_clock.duration_msec += std::chrono::duration_cast<msec>(now-previous_clock.starttime).count();
+
+			auto& target_clock = clocks[clockmap[target]];
 			target_clock.starttime = now; 
 
 			active_clock = target;

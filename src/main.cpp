@@ -13,6 +13,7 @@ using std::endl;
 using std::flush;
 using std::ofstream;
 
+#include "timetracker.h"
 #include "rndwrapper.h"
 #include "helpers.h"
 #include "vectorhelpers.h"
@@ -23,7 +24,6 @@ using std::ofstream;
 #include "svmath.h"
 #include "filters.h"
 #include "marqovscheduler.h"
-#include "timetracker.h"
 
 // Geometry
 #include "geometry/regular_lattice.h"

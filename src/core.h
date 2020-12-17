@@ -633,11 +633,22 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		marqovtime.status();
 		marqovtime.run("test");
 
-		usleep(2334);
+		usleep(10000);
 
+		marqovtime.status();
 		marqovtime.switch_clock("local");
 
-		usleep(5636);
+		usleep(13000);
+
+		marqovtime.status();
+		marqovtime.switch_clock("test");
+
+		usleep(7000);
+
+		marqovtime.status();
+		marqovtime.switch_clock("cluster");
+
+		usleep(2000);
 
 		marqovtime.status();
 
