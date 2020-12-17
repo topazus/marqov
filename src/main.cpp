@@ -23,6 +23,7 @@ using std::ofstream;
 #include "svmath.h"
 #include "filters.h"
 #include "marqovscheduler.h"
+#include "timetracker.h"
 
 // Geometry
 #include "geometry/regular_lattice.h"

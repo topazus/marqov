@@ -17,6 +17,7 @@
 #include "cachecontainer.h"
 #include "svmath.h"
 #include "rngcache.h"
+#include "timetracker.h"
 
 namespace MARQOV
 {
@@ -193,6 +194,8 @@ class Core : public RefType<Grid>
 		typedef typename Hamiltonian::StateVector StateVector;
 		typedef int redStateVector; // reduced StateVector (so far needed only for AT model, improve me!!!)
 		typedef StateVector* StateSpace;
+
+		timetracker marqovtime;
 
 		// Local classes. We gain access to all Types of MARQOV::Core       
         
@@ -622,6 +625,22 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 
 	void gameloop()
 	{
+
+		marqovtime.add_clock("cluster");
+		marqovtime.add_clock("local");
+		marqovtime.add_clock("measurements");
+		marqovtime.add_clock("test");
+		marqovtime.status();
+		marqovtime.run("test");
+
+		usleep(2334);
+
+		marqovtime.switch_clock("local");
+
+		usleep(5636);
+
+		marqovtime.status();
+
 		double avgclustersize = 0;
 		for (int k=0; k < this->mcfg.gli; k++)
 		{
