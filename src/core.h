@@ -650,7 +650,17 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 
 		usleep(2000);
 
+		marqovtime.stop(); cout << endl << ">>>>> stop <<<<<" << endl;
+
+		usleep(10000);
 		marqovtime.status();
+
+		marqovtime.run("test");
+
+		usleep(10000);
+
+		marqovtime.status();
+
 
 		double avgclustersize = 0;
 		for (int k=0; k < this->mcfg.gli; k++)

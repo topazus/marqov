@@ -4,6 +4,7 @@
 #include <chrono>
 #include <utility>
 #include <unordered_map>
+#include <exception>
 #include <unistd.h> // provides usleep, only for testing purposes
 
 typedef std::chrono::milliseconds msec;
@@ -26,12 +27,16 @@ class timetracker
 {
 	public:
 
+		marqovclock wallclock = marqovclock("wallclock");
 		std::vector<marqovclock> clocks;
 		std::unordered_map<std::string, int> clockmap; // recreate the functionality of a Python dictionary
 
-		std::string active_clock;
+		std::string active_clock = "None"; // there can only be one active clock at a time
 
-		timetracker(){}
+		timetracker()
+		{
+			wallclock.starttime = std::chrono::system_clock::now();
+		}
 
 		void add_clock(std::string name)
 		{
@@ -40,22 +45,60 @@ class timetracker
 			clocks.push_back(marqovclock(name));
 		}
 
-		void status()
+		void status(bool verbose=true)
 		{
+			std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+
 			cout << endl;
+			double sum = 0;
 			for (auto& x: clocks) 
 			{
-				std::cout << x.name << ": " << x.duration_msec;
-				if (x.name == active_clock) cout << "\t (active)";
+
+				if (x.name != active_clock) // list all clocks
+				{
+					sum += x.duration_msec;
+					std::cout << x.name << ": " << x.duration_msec;
+				}
+				else
+				{
+					auto diff = std::chrono::duration_cast<msec>(now-x.starttime).count();
+					sum = sum + x.duration_msec + diff;
+					std::cout << x.name << ": " << x.duration_msec+diff << "\t (active)";
+				}
 				std::cout << endl;
+			}
+
+			
+			if (verbose) // print und wallclock
+			{
+				std::cout << "-----" << endl << "sum: " << sum << endl;
+				wallclock.duration_msec = std::chrono::duration_cast<msec>(now-wallclock.starttime).count();
+				std::cout << "wallclock: " << wallclock.duration_msec << endl;
 			}
 		}
 
+
 		void run(std::string name)
 		{
+			if (active_clock != "None") 
+			{
+				throw std::invalid_argument("There is already a clock running; This may result in unwanted behaviour; use the switch function...."); // todo: catch this exception
+			}
 			active_clock = name;
 			clocks[clockmap[active_clock]].starttime = std::chrono::system_clock::now();
 		}
+
+
+		// stop the active clock
+		void stop()
+		{
+			std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+			auto clockidx = clockmap[active_clock];
+			auto& previous_clock = clocks[clockidx];
+			previous_clock.duration_msec += std::chrono::duration_cast<msec>(now-previous_clock.starttime).count();
+			active_clock = "None";
+		}
+
 
 		void switch_clock(std::string target)
 		{
