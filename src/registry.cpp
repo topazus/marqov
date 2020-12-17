@@ -190,13 +190,13 @@ IsFile (const dirent *used)
     return 1;
 }
 
-RegistryDB::RegistryDB( const string& arg)
+RegistryDB::RegistryDB( const std::string& arg, const std::string pat)
 {
-    Init(arg);
+    init(arg);
     return;
 }
 
-int RegistryDB::Init( const string& cfgDir )
+int RegistryDB::init(const std::string& cfgDir, const std::string pat)
 {
     //The following Directory - Lister is taken directly from the glibc - Documentation
     dirent **eps = NULL;
@@ -205,11 +205,21 @@ int RegistryDB::Init( const string& cfgDir )
     //cout<<"Content of Configuration Directory  " << cfgDir<<" : "<<endl;
     if ( n > 0)
     {
-        configs = new string[n];
+        std::vector<std::string> matches;
+        matches.reserve(n);
         for (unsigned int cnt = 0 ; cnt < static_cast<unsigned int>(n) ; ++cnt )
         {
-            configs[cnt] = eps[cnt]->d_name;
+            std::string test(eps[cnt]->d_name);
+            if (pat.size() < test.size())
+            {
+                if (0 == test.compare(test.size() - pat.size(), pat.size(), pat))
+                    matches.push_back(test);
+            }
         }
+        n = matches.size();//We reset the value of to the naumber of actual matches
+        configs = new std::string[n];
+        for (int i = 0; i < n; ++i)
+            configs[i] = matches[i];
     }
     else
     {
@@ -228,7 +238,7 @@ int RegistryDB::Init( const string& cfgDir )
     }
     for ( unsigned int k = 0; k < static_cast<unsigned int>(n); ++k )
         Reg.insert( make_pair(configs[k] , cfile(configs[k] ) ) );
-    //FIXME
+
     int errcode = chdir("..");//Get Back to the previous Directory
     delete [] configs;
     for(unsigned int k = 0; k < static_cast<unsigned int>(n); ++k)
