@@ -7,17 +7,28 @@
 #include <exception>
 #include <unistd.h> // provides usleep, only for testing purposes
 
+typedef std::chrono::high_resolution_clock Time;
+
+typedef std::chrono::seconds sec;
 typedef std::chrono::milliseconds msec;
+typedef std::chrono::microseconds musec;
+
+
+typedef musec timeformat; // internal timeformat
+typedef msec printformat; // time format used for output
 
 class marqovclock
 {
 	public: 
 		std::string name;
 		std::chrono::system_clock::time_point starttime, inittime;
-		double duration_msec = 0;
+		decltype(std::chrono::duration_cast<timeformat>(Time::now()-Time::now())) dur = timeformat::zero();
 
-		marqovclock(std::string name) : name(name), inittime(std::chrono::system_clock::now())
-		{}
+
+
+		marqovclock(std::string name) : name(name), inittime(Time::now())
+		{
+		}
 
 };
 
@@ -35,7 +46,7 @@ class timetracker
 
 		timetracker()
 		{
-			wallclock.starttime = std::chrono::system_clock::now();
+			wallclock.starttime = Time::now();
 		}
 
 		void add_clock(std::string name)
@@ -47,23 +58,24 @@ class timetracker
 
 		void status(bool verbose=true)
 		{
-			std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+			auto now = Time::now();
 
-			cout << endl;
+			cout << endl << endl;
 			double sum = 0;
 			for (auto& x: clocks) 
 			{
+				auto dur_print = std::chrono::duration_cast<printformat>(x.dur).count();
+				sum = sum + dur_print;
 
 				if (x.name != active_clock) // list all clocks
 				{
-					sum += x.duration_msec;
-					std::cout << x.name << ": " << x.duration_msec;
+					std::cout << x.name << ": " << dur_print;
 				}
 				else
 				{
-					auto diff = std::chrono::duration_cast<msec>(now-x.starttime).count();
-					sum = sum + x.duration_msec + diff;
-					std::cout << x.name << ": " << x.duration_msec+diff << "\t (active)";
+					auto diff = std::chrono::duration_cast<printformat>(now-x.starttime).count();
+					sum = sum + diff;
+					std::cout << x.name << ": " << dur_print+diff << "\t (active)";
 				}
 				std::cout << endl;
 			}
@@ -71,10 +83,11 @@ class timetracker
 			
 			if (verbose) // print und wallclock
 			{
-				std::cout << "-----" << endl << "sum: " << sum << endl;
-				wallclock.duration_msec = std::chrono::duration_cast<msec>(now-wallclock.starttime).count();
-				std::cout << "wallclock: " << wallclock.duration_msec << endl;
+//				std::cout << "-----" << endl << "sum: " << sum << endl;
+//				wallclock.dur = std::chrono::duration_cast<timeformat>(now-wallclock.starttime);
+//				std::cout << "wallclock: " << wallclock.dur << endl;
 			}
+			cout << endl << endl;
 		}
 
 
@@ -85,29 +98,30 @@ class timetracker
 				throw std::invalid_argument("There is already a clock running; This may result in unwanted behaviour; use the switch function...."); // todo: catch this exception
 			}
 			active_clock = name;
-			clocks[clockmap[active_clock]].starttime = std::chrono::system_clock::now();
+			clocks[clockmap[active_clock]].starttime = Time::now();
 		}
 
 
 		// stop the active clock
 		void stop()
 		{
-			std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+			auto now = Time::now();
 			auto clockidx = clockmap[active_clock];
 			auto& previous_clock = clocks[clockidx];
-			previous_clock.duration_msec += std::chrono::duration_cast<msec>(now-previous_clock.starttime).count();
+			previous_clock.dur += std::chrono::duration_cast<timeformat>(now-previous_clock.starttime);
 			active_clock = "None";
 		}
 
 
 		void switch_clock(std::string target)
 		{
-			std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+			auto now = Time::now();
+
 
 			auto clockidx = clockmap[active_clock];
 			auto& previous_clock = clocks[clockidx];
 
-			previous_clock.duration_msec += std::chrono::duration_cast<msec>(now-previous_clock.starttime).count();
+			previous_clock.dur += std::chrono::duration_cast<timeformat>(now-previous_clock.starttime);
 
 			auto& target_clock = clocks[clockmap[target]];
 			target_clock.starttime = now; 

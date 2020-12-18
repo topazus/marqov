@@ -197,6 +197,7 @@ class Core : public RefType<Grid>
 
 		timetracker marqovtime;
 
+
 		// Local classes. We gain access to all Types of MARQOV::Core       
         
 		template <typename T>
@@ -626,42 +627,6 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 	void gameloop()
 	{
 
-		marqovtime.add_clock("cluster");
-		marqovtime.add_clock("local");
-		marqovtime.add_clock("measurements");
-		marqovtime.add_clock("test");
-		marqovtime.status();
-		marqovtime.run("test");
-
-		usleep(10000);
-
-		marqovtime.status();
-		marqovtime.switch_clock("local");
-
-		usleep(13000);
-
-		marqovtime.status();
-		marqovtime.switch_clock("test");
-
-		usleep(7000);
-
-		marqovtime.status();
-		marqovtime.switch_clock("cluster");
-
-		usleep(2000);
-
-		marqovtime.stop(); cout << endl << ">>>>> stop <<<<<" << endl;
-
-		usleep(10000);
-		marqovtime.status();
-
-		marqovtime.run("test");
-
-		usleep(10000);
-
-		marqovtime.status();
-
-
 		double avgclustersize = 0;
 		for (int k=0; k < this->mcfg.gli; k++)
 		{
@@ -670,15 +635,26 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 			for (int i=0; i < this->mcfg.gameloopsteps/10; ++i)
 			{
 				avgclustersize += elementaryMCstep();
+				 marqovtime.switch_clock("measurements");
 				marqov_measure(obs, statespace, this->grid);
 			}
 		}
+		marqovtime.stop();
 
+		marqovtime.status();
 		if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.gameloopsteps << std::endl;
 	}
 	
 	void wrmploop()
 	{
+		// todo: find a better place for clock initialization
+		marqovtime.add_clock("cluster");
+		marqovtime.add_clock("local");
+		marqovtime.add_clock("measurements");
+		marqovtime.add_clock("other");
+		marqovtime.status();
+		marqovtime.run("other");
+
 		if (this->mcfg.id == 0) std::cout << "|";
 		for (int k=0; k < this->mcfg.gli; k++)
 		{
