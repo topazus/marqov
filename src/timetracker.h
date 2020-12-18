@@ -8,27 +8,21 @@
 #include <unistd.h> // provides usleep, only for testing purposes
 
 typedef std::chrono::high_resolution_clock Time;
-
 typedef std::chrono::seconds sec;
 typedef std::chrono::milliseconds msec;
 typedef std::chrono::microseconds musec;
 
-
-typedef musec timeformat; // internal timeformat
+typedef musec timeformat; // internal time resolution
 typedef msec printformat; // time format used for output
 
 class marqovclock
 {
 	public: 
 		std::string name;
-		std::chrono::system_clock::time_point starttime, inittime;
-		decltype(std::chrono::duration_cast<timeformat>(Time::now()-Time::now())) dur = timeformat::zero();
-
-
-
-		marqovclock(std::string name) : name(name), inittime(Time::now())
-		{
-		}
+		std::chrono::system_clock::time_point starttime;
+		std::chrono::system_clock::time_point inittime;
+		decltype(std::chrono::duration_cast<timeformat>(Time::now()-Time::now())) dur = timeformat::zero(); 
+		marqovclock(std::string name) : name(name), inittime(Time::now()) {}
 
 };
 
@@ -38,10 +32,9 @@ class timetracker
 {
 	public:
 
-		marqovclock wallclock = marqovclock("wallclock");
-		std::vector<marqovclock> clocks;
+		marqovclock wallclock = marqovclock("wallclock"); // the reference 
+		std::vector<marqovclock> clocks;	// list of all clocks
 		std::unordered_map<std::string, int> clockmap; // recreate the functionality of a Python dictionary
-
 		std::string active_clock = "None"; // there can only be one active clock at a time
 
 		timetracker()
@@ -58,10 +51,10 @@ class timetracker
 
 		void status(bool verbose=true)
 		{
-			auto now = Time::now();
+			const auto now = Time::now();
+			double sum = 0;
 
 			cout << endl << endl;
-			double sum = 0;
 			for (auto& x: clocks) 
 			{
 				auto dur_print = std::chrono::duration_cast<printformat>(x.dur).count();
@@ -83,9 +76,10 @@ class timetracker
 			
 			if (verbose) // print und wallclock
 			{
-//				std::cout << "-----" << endl << "sum: " << sum << endl;
-//				wallclock.dur = std::chrono::duration_cast<timeformat>(now-wallclock.starttime);
-//				std::cout << "wallclock: " << wallclock.dur << endl;
+				std::cout << "-----" << endl << "sum: " << sum << endl;
+				wallclock.dur = std::chrono::duration_cast<timeformat>(now-wallclock.inittime);
+				auto dur_print = std::chrono::duration_cast<printformat>(wallclock.dur).count();
+				std::cout << "wallclock: " << dur_print << endl;
 			}
 			cout << endl << endl;
 		}
