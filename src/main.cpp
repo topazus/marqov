@@ -15,11 +15,6 @@ using std::ofstream;
 
 #include "rndwrapper.h"
 #include "helpers.h"
-#include "geom/regular_lattice.h"
-#include "geom/ssh_lattice.h"
-#include "geom/grid.h"
-#include "geom/neighbourclass.h"
-#include "geom/io.h"
 #include "vectorhelpers.h"
 #include "cartprod.h"
 #include "registry.h"
@@ -27,19 +22,27 @@ using std::ofstream;
 #include "replicate.h"
 #include "svmath.h"
 #include "filters.h"
-
 #include "marqovscheduler.h"
+
+// Geometry
+#include "geometry/regular_lattice.h"
+#include "geometry/ssh_lattice.h"
+#include "geometry/grid.h"
+#include "geometry/neighbourclass.h"
+#include "geometry/io.h"
+
+
 // Hamiltonians
-#include "Heisenberg.h"
-#include "Ising.h"
-#include "Phi4.h"
-#include "BlumeCapel.h"
-#include "XXZAntiferro.h"
-#include "XXZAntiferroSingleAniso.h"
-#include "AshkinTeller.h"
-#include "EdwardsAndersonIsing.h"
-#include "Ssh.h"
-#include "BlumeCapelBipartite.h"
+#include "hamiltonian/Heisenberg.h"
+#include "hamiltonian/Ising.h"
+#include "hamiltonian/Phi4.h"
+#include "hamiltonian/BlumeCapel.h"
+#include "hamiltonian/XXZAntiferro.h"
+#include "hamiltonian/XXZAntiferroSingleAniso.h"
+#include "hamiltonian/AshkinTeller.h"
+#include "hamiltonian/EdwardsAndersonIsing.h"
+#include "hamiltonian/Ssh.h"
+#include "hamiltonian/BlumeCapelBipartite.h"
 
 using namespace MARQOV;
 

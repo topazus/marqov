@@ -2,8 +2,8 @@
 #define PHI4_H
 #include <array>
 #include <cmath>
-#include "vectorhelpers.h"
-#include "hamiltonianparts.h"
+#include "../vectorhelpers.h"
+#include "../hamparts.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
@@ -51,7 +51,7 @@ class Phi4MagFTComp
 			constexpr static int SymD = 3;     // improve me
 
 			const int N = grid.size();
-			const int L = grid.len;
+//			const int L = grid.len;
 
 			std::vector<std::complex<double>> magFTcomp(SymD,0);
 			std::complex<double> jj(0,1);

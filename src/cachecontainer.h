@@ -43,27 +43,27 @@ template <class T>
 struct H5MapperBase;
 
 template <> struct H5MapperBase<double> {
-    static auto H5Type(){return H5::PredType::NATIVE_DOUBLE;}
+    static H5::PredType H5Type(){return H5::PredType::NATIVE_DOUBLE;}
 };
 
 template <> struct H5MapperBase<float> {
-    static auto H5Type(){return H5::PredType::NATIVE_FLOAT;}
+    static H5::PredType H5Type(){return H5::PredType::NATIVE_FLOAT;}
 };
 
 template <> struct H5MapperBase<int16_t> {
-    static auto H5Type(){return H5::PredType::NATIVE_INT16;}
+    static H5::PredType H5Type(){return H5::PredType::NATIVE_INT16;}
 };
 
 template <> struct H5MapperBase<int32_t> {
-    static auto H5Type(){return H5::PredType::NATIVE_INT32;}
+    static H5::PredType H5Type(){return H5::PredType::NATIVE_INT32;}
 };
 
 template <> struct H5MapperBase<int64_t> {
-    static auto H5Type(){return H5::PredType::NATIVE_INT64;}
+    static H5::PredType H5Type(){return H5::PredType::NATIVE_INT64;}
 };
 
 template <> struct H5MapperBase<long unsigned int> {
-    static auto H5Type(){return H5::PredType::NATIVE_ULONG;}
+    static H5::PredType H5Type(){return H5::PredType::NATIVE_ULONG;}
 };
 
 /** This maps a 1D vector/array like structure to a custom HDF5 datatype.
@@ -75,7 +75,7 @@ class H5Mapper
         static constexpr auto fillval = H5Mapper<typename T::value_type>::fillval;
         static constexpr int rank = 1;
         static constexpr int bytecount = std::tuple_size<T>::value*H5Mapper<typename T::value_type>::bytecount;
-        static auto H5Type(){
+        static H5::ArrayType H5Type(){
             hsize_t dims[1] = {std::tuple_size<T>::value};
             return H5::ArrayType(H5Mapper<typename T::value_type>::H5Type(), rank, dims);
         }

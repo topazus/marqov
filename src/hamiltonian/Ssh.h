@@ -5,8 +5,8 @@
 #include <string>
 #include <complex>
 #include <functional>
-#include "hamiltonianparts.h"
-#include "metropolis.h"
+#include "../hamparts.h"
+#include "../metropolis.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
