@@ -4,8 +4,8 @@
 #include <cmath>
 #include <string>
 #include <functional>
-#include "vectorhelpers.h"
-#include "hamiltonianparts.h"
+#include "../vectorhelpers.h"
+#include "../hamparts.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
@@ -108,6 +108,7 @@ class Heisenberg
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
 		Heisenberg(double J) : J(J), name("Heisenberg") {interactions[0] = new Heisenberg_interaction<StateVector>(J);}
+		~Heisenberg() {delete interactions[0];}
 		
 
 		// instantiate and choose observables

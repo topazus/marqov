@@ -4,7 +4,7 @@
 #include <tuple>
 #include <string>
 #include <functional>
-#include "hamiltonianparts.h"
+#include "../hamparts.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------

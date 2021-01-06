@@ -132,7 +132,7 @@ public:
         }
         return data[pos++];
     }
-    /** Get a random uniform float in the range (min, max)
+    /** Get a random uniform float in the range (min, max).
      *  If no arguments are specified this gives a double from [0,1)
      * @param max the maximum floating point number to return
      * @param min the minimum floating point number to return
@@ -140,7 +140,7 @@ public:
      */
     inline auto real(double max = 1.0, double min = 0.0) noexcept
     {
-        return min + integer()*(max-min)/RNG::max();
+        return min + (max-min)*(double(integer())/double(RNG::max()));
     }
     /** The maximum integer that we support
      */

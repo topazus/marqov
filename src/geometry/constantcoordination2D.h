@@ -108,7 +108,7 @@ bool force_fixed_neighbours_naive_box(const int K, std::vector< std::vector<int>
 	{
 		std::vector<int> local_copy = neighbours[box[i]];
 
-		std:sort(local_copy.begin(), local_copy.end());
+		std::sort(local_copy.begin(), local_copy.end());
 		auto it = std::unique(local_copy.begin(), local_copy.end());
 		duplicate = !(it == local_copy.end());
 		if (duplicate) break;
@@ -235,12 +235,10 @@ bool constant_coordination_lattice(const PointCloud& cloud, std::vector<std::vec
 
 	// set up boxes for initial connection
 	const int nboxes1D = L / boxlen;
-	const int nboxes2D = nboxes1D*nboxes1D;
 	std::vector<std::vector<std::vector<int>>> boxes(nboxes1D, std::vector<std::vector<int>>(nboxes1D));
 
 	// set up boxes for dynamical rewiring
 	const int nboxes1D_r = L / boxlen_r;
-	const int nboxes2D_r = nboxes1D_r*nboxes1D_r;
 	std::vector<std::vector<std::vector<int>>> boxes_r(nboxes1D_r, std::vector<std::vector<int>>(nboxes1D_r));
 
      if (L%(2*boxlen)   != 0) { throw std::invalid_argument("error! L needs to be a multiple of two times the box length!"); }

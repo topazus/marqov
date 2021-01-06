@@ -1,3 +1,0 @@
-[submodule "ext/ccl"]
-	path = ext/ccl
-	url = git@git.physik.uni-wuerzburg.de:schrauth/constant-coordination-lattice.git
