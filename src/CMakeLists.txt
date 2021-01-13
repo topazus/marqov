@@ -21,8 +21,11 @@ set_target_properties(${target} PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED
 set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DHAVE_CONFIG_H -DGIT_SHA1=\"${GIT_SHA1}\" -DGIT_BRANCH=\"${GIT_BRANCH}\"" )
 
 endforeach(target)
+
+
 find_package(MPI)
 if(MPI_CXX_FOUND)
+target_compile_options(mpiMARQOV PUBLIC -DMPIMARQOV)
 if(CMAKE_VERSION VERSION_LESS 3.10)
 target_include_directories(mpiMARQOV PUBLIC ${MPI_INCLUDE_PATH})
 target_link_libraries(mpiMARQOV ${MPI_C_LIBRARIES})
