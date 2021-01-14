@@ -35,6 +35,7 @@
 #include "marqovqueue.h"
 #include "core.h"
 #ifdef MPIMARQOV
+#include <type_traits>
 #include <mpi.h>
 #endif
 
@@ -220,7 +221,7 @@ namespace MARQOV
         void waitforall() {}
         CXX11Scheduler(int maxptsteps) : maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
-        taskqueue(std::thread::hardware_concurrency())
+        taskqueue(/*std::thread::hardware_concurrency()*/ 2)
         {}
         ~CXX11Scheduler() {
             if (!nowork() && !masterstop && (taskqueue.tasks_enqueued() > 0) )
@@ -359,46 +360,56 @@ namespace MARQOV
     public:
         /** This gives us the parameters of a simulation and we are responsible for setting everything up.
          * It has a template parameter, but of course all used parameters have to resolve to the same underlying MarqovType.
+         * FIXME: It is expected that all MPI ranks execute the same code until here!!! that makes it easier to have valid data on every node...
          * @param p The full set of parameters that are relevant for your Problem
          * @param filter A filter that can be applied before the actual creation of MARQOV
          */
         template <typename ParamType, typename Callable>
         void createSimfromParameter(ParamType& p, Callable filter)
         {
-//             auto t = filter(p);
-//             auto simptr = sims_helper2<typename Sim::HamiltonianType, typename Sim::Lattice, ParamType>::template creator(mutexes.hdf, t);
-//             oursims.push_back(simptr);
-//             this->enqueuesim(*simptr);
+            if (myrank == rrctr)
+                myScheduler.createSimfromParameter(p, filter);
+            if (myrank == MASTER)
+            {
+                rrctr = (rrctr + 1) % nr_nodes;
+            }
+            MPI_Bcast(&rrctr, 1, MPI_INT, MASTER, marqov_COMM);
         }
         void enqueuesim(Sim& sim)
         {
+            if (myrank == rrctr)
+                myScheduler.enqueuesim(sim);
+            if (myrank == MASTER)
+            {
+                rrctr = (rrctr + 1) % nr_nodes;
+            }
+            MPI_Bcast(&rrctr, 1, MPI_INT, MASTER, marqov_COMM);
         }
         void start()
         {
-            //to keep things simple we just start up MPI once we start the sim.
-            //init MPI
-            MPI_Init(NULL, NULL);
-            //Get the number of available nodes
-            MPI_Comm_size(MPI_COMM_WORLD, &nr_nodes);
-            //Get my MPI internal ID
-            MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-            if (myrank == MASTER)
-            {
-                nodesptr = new CXX11Scheduler<Sim>*[nr_nodes];
-                for (int i = 0; i < nr_nodes; ++i)
-                    nodesptr[i] = new CXX11Scheduler<Sim>(maxpt);
-            }
+            myScheduler.start();
         }
         void waitforall() {}
-        MPIScheduler(int maxptsteps) : maxpt(maxptsteps)
+        /** - We expect MPI to be initialized before hand. The user should feel that he is writing MPI code.
+         */
+        MPIScheduler(int maxptsteps) : rrctr(0), maxpt(maxptsteps), myScheduler(maxptsteps)
         {
+            int mpi_inited;
+            MPI_Initialized(&mpi_inited);
+            if (!mpi_inited)
+                throw("MPI not initialized!");
+            MPI_Comm_dup(MPI_COMM_WORLD, &marqov_COMM);
+            MPI_Comm_size(marqov_COMM, &nr_nodes);
+            MPI_Comm_rank(marqov_COMM, &myrank);
         }
         ~MPIScheduler() {
-            MPI_Finalize();
+//             MPI_Finalize();
         }
     private:
+        int rrctr;
+        MPI_Comm marqov_COMM;///< our own MPI communicator
         static constexpr int MASTER = 0;
-        CXX11Scheduler<Sim>** nodesptr;
+        CXX11Scheduler<Sim> myScheduler;//MPI starts the program parallely on every node(if properly executed), hence every node needs his CXX11scheduler
         int myrank;
         int nr_nodes;
         int maxpt; ///< how many pt steps do we do
