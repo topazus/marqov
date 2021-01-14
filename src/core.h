@@ -269,10 +269,20 @@ class Core : public RefType<Grid>
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
-        obs(ham.getobs()),
+		obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()),
 		metro(rngcache)
-	{hdf5lock.unlock();}
+		{
+			hdf5lock.unlock();
+
+			marqovtime.add_clock("cluster");
+			marqovtime.add_clock("local");
+			marqovtime.add_clock("measurements");
+			marqovtime.add_clock("other");
+			//marqovtime.status();
+			marqovtime.run("other");
+
+		}
 		
 		
 	/** ----- Alternate constructor -----
@@ -284,11 +294,11 @@ class Core : public RefType<Grid>
 	template <class ...HArgs, class ... LArgs>
 	Core(std::tuple<LArgs...>& largs, Config mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
-        beta(mybeta),
+		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
 		step(0),
-        statespace(setupstatespace(this->grid.size())),
+		statespace(setupstatespace(this->grid.size())),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
@@ -297,7 +307,17 @@ class Core : public RefType<Grid>
 		obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()), 
 		metro(rngcache)
-	{hdf5lock.unlock();}
+		{
+			hdf5lock.unlock();
+
+			marqovtime.add_clock("cluster");
+			marqovtime.add_clock("local");
+			marqovtime.add_clock("measurements");
+			marqovtime.add_clock("other");
+			//	marqovtime.status();
+			marqovtime.run("other");
+
+		}
 
 auto setupstatespace(int size)
 {
@@ -647,14 +667,6 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 	
 	void wrmploop()
 	{
-		// todo: find a better place for clock initialization
-		marqovtime.add_clock("cluster");
-		marqovtime.add_clock("local");
-		marqovtime.add_clock("measurements");
-		marqovtime.add_clock("other");
-		marqovtime.status();
-		marqovtime.run("other");
-
 		if (this->mcfg.id == 0) std::cout << "|";
 		for (int k=0; k < this->mcfg.gli; k++)
 		{
