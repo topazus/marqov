@@ -544,7 +544,12 @@ int main(int argc, char* argv[])
 {
 #ifdef MPIMARQOV
     int threadingsupport;
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &threadingsupport);
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &threadingsupport);//FIXME: maybe we get by with one level less.
+    if(threadingsupport < MPI_THREAD_SERIALIZED)
+    {
+        std::cout<<"couldn't initialize MPI! threading level not supported."<<std::endl;
+        return;
+    }
 #endif
 	// read config files
 	RegistryDB registry("../src/config");
