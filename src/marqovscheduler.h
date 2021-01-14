@@ -139,9 +139,8 @@ namespace MARQOV
     };
     
     template <class Sim>
-    class Scheduler
+    class CXX11Scheduler
     {
-    private:
     public:
         /** This gives us the parameters of a simulation and we are responsible for setting everything up.
          * It has a template parameter, but of course all used parameters have to resolve to the same underlying MarqovType.
@@ -163,7 +162,7 @@ namespace MARQOV
         {
             int idx = simvector.size();
             simvectormutex.lock();
-            simvector.push_back(&sim);//NOTE: We only take care about sims that go through addsims.
+            simvector.push_back(&sim);//NOTE: We only take care about sims that go through enqueuesim.
             simvectormutex.unlock();
             taskqueue.enqueue([&, idx]{
                 //work here
@@ -219,11 +218,11 @@ namespace MARQOV
             //      taskqueue.enqueue(master);
         }
         void waitforall() {}
-        Scheduler(int maxptsteps) : maxpt(maxptsteps), masterstop(false), masterwork{},
+        CXX11Scheduler(int maxptsteps) : maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
         taskqueue(std::thread::hardware_concurrency())
         {}
-        ~Scheduler() {
+        ~CXX11Scheduler() {
             if (!nowork() && !masterstop && (taskqueue.tasks_enqueued() > 0) )
             {
                 masterwork.wait([&]{
@@ -349,7 +348,66 @@ namespace MARQOV
         void calcprob() {}
         void exchange() {}
     };
-    
+
+#ifndef MPIMARQOV
+    template <class MarqovType>
+    using Scheduler = CXX11Scheduler<MarqovType>;
+#else
+    template <class Sim>
+    class MPIScheduler
+    {
+    public:
+        /** This gives us the parameters of a simulation and we are responsible for setting everything up.
+         * It has a template parameter, but of course all used parameters have to resolve to the same underlying MarqovType.
+         * @param p The full set of parameters that are relevant for your Problem
+         * @param filter A filter that can be applied before the actual creation of MARQOV
+         */
+        template <typename ParamType, typename Callable>
+        void createSimfromParameter(ParamType& p, Callable filter)
+        {
+//             auto t = filter(p);
+//             auto simptr = sims_helper2<typename Sim::HamiltonianType, typename Sim::Lattice, ParamType>::template creator(mutexes.hdf, t);
+//             oursims.push_back(simptr);
+//             this->enqueuesim(*simptr);
+        }
+        void enqueuesim(Sim& sim)
+        {
+        }
+        void start()
+        {
+            //to keep things simple we just start up MPI once we start the sim.
+            //init MPI
+            MPI_Init(NULL, NULL);
+            //Get the number of available nodes
+            MPI_Comm_size(MPI_COMM_WORLD, &nr_nodes);
+            //Get my MPI internal ID
+            MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+            if (myrank == MASTER)
+            {
+                nodesptr = new CXX11Scheduler<Sim>*[nr_nodes];
+                for (int i = 0; i < nr_nodes; ++i)
+                    nodesptr[i] = new CXX11Scheduler<Sim>(maxpt);
+            }
+        }
+        void waitforall() {}
+        MPIScheduler(int maxptsteps) : maxpt(maxptsteps)
+        {
+        }
+        ~MPIScheduler() {
+            MPI_Finalize();
+        }
+    private:
+        static constexpr int MASTER = 0;
+        CXX11Scheduler<Sim>** nodesptr;
+        int myrank;
+        int nr_nodes;
+        int maxpt; ///< how many pt steps do we do
+    };
+
+    template <class MarqovType>
+    using Scheduler = MPIScheduler<MarqovType>;
+#endif
+
     /** A helper class to figure out the type of the scheduler
      */
     template <class Hamiltonian, class Lattice, class Parameters>
@@ -358,6 +416,5 @@ namespace MARQOV
         typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType;
         typedef Scheduler<MarqovType> MarqovScheduler;
     };
-    
 };
 #endif
