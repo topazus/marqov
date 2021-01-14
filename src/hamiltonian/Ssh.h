@@ -66,7 +66,7 @@ class SSHTwoPointCorrSpace
 	public:
 	std::string name, desc;
 	template <class StateSpace, class Grid>
-	std::array<double, 32> measure(const StateSpace& statespace, const Grid& grid)
+	std::array<double, 64> measure(const StateSpace& statespace, const Grid& grid)
 //	std::vector<double> measure(const StateSpace& statespace, const Grid& grid) // not yet supported
 	{
 
@@ -78,8 +78,8 @@ class SSHTwoPointCorrSpace
 //		std::vector<double> retval;
 //		for (int i=0; i<10; i++) retval.push_back(0);
 
-		std::array<double,32> retval;
-		for (int i=0; i<32; i++) retval[i] = 0;
+		std::array<double,64> retval;
+		for (int i=0; i<64; i++) retval[i] = 0;
 
 		for (int i=0; i<Lt; i++)
 		{
@@ -89,7 +89,7 @@ class SSHTwoPointCorrSpace
 
 				for (int k=0; k<Ls; k++)
 				{
-					if (k==j) continue;
+//					if (k==j) continue;
 
 					const int idx2 = i*Ls+k;
 
@@ -448,7 +448,7 @@ class SSH
 		{
 			for (int i=0; i<grid.size(); i++)
 			{
-				if (rng.real() > 0.5) statespace[i][0] = 1;
+				if (rng.real() > 0.0) statespace[i][0] = 1;
 				else statespace[i][0] = -1;
 			}
 		}
