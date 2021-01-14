@@ -41,11 +41,11 @@ mass = 1.0
 
 [Ising]
 
-L   = 16
+L   = 48
 rep = 1
 dim = 2
 
-beta = 0.430
+beta = 0.44
 J = -1.0
 
 
