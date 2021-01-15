@@ -13,6 +13,7 @@ using std::endl;
 using std::flush;
 using std::ofstream;
 
+#include "timetracker.h"
 #include "rndwrapper.h"
 #include "helpers.h"
 #include "vectorhelpers.h"
@@ -91,10 +92,10 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
         	MARQOV::Config mp(outpath);
-        	mp.setnsweeps(2);
+        	mp.setnsweeps(10);
 		mp.setncluster(int(L/2));
-		mp.setwarmupsteps(300);
-		mp.setgameloopsteps(600);
+		mp.setwarmupsteps(500);
+		mp.setgameloopsteps(1000);
 
 		makeDir(mp.outpath);
 
