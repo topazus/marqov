@@ -35,7 +35,7 @@
 #include <sstream>
 
 /**
-The basic Exception thrown by the registry. It is derived from the STL logic_error exception
+The basic exception thrown by the registry. It is derived from the STL logic_error exception.
 */
 class Registry_Exception : public std::logic_error
 {
@@ -45,7 +45,7 @@ private:
 };
 
 /**
-The Exception when the desired key is not found
+The exception when the desired key is not found.
 */
 class Registry_Key_not_found_Exception : public Registry_Exception
 {
@@ -82,7 +82,7 @@ private:
 };
 
 /**
-this class contains the contents of a [BLOCK] structure in a config file.
+This class contains the contents of a [BLOCK] structure in a config file.
 */
 class Block
 {
@@ -101,7 +101,7 @@ public:
         return Keys;
     }
     /**
-    get access to the contents of a block
+    Get access to the contents of a block
     */
     std::string& operator[](const std::string& Bn)
     {
@@ -125,7 +125,7 @@ public:
 };
 
 /**
-this class contains the contents of a single config file
+This class contains the contents of a single config file.
 */
 class cfile
 {
@@ -151,13 +151,13 @@ public:
         return it->second;
     }
     /**
-    constructor that initializes this with the contents of a Config-File
+    Constructor that initializes this with the contents of a config-file.
     */
     cfile(std::string& file);
 };
 
 /**
-this holds together all the contents of the Configuration Directory and provides access via the Get() template
+This holds together all the contents of the configuration directory and provides access via the Get() template
 */
 class RegistryDB
 {
@@ -165,15 +165,17 @@ class RegistryDB
 private:
 public:
     /**
-    this initializes the registry
-    @param arg the Directory that contains all the files the registry should contain
+    This initializes the registry.
+    @param arg the directory that contains all the files the registry should contain
+    @param suffix a suffix to select only certain files, e.g. : .ini
     */
-    int Init(const std::string& cfgDir);
+    int init(const std::string& cfgDir, const std::string pat = "");
     /**
-    this is the constructor for the registry
-    @param arg the Directory that contains all the files the registry should contain
+    This is the constructor for the registry.
+    @param arg the directory that contains all the files the registry should contain
+    @param suffix a suffix to select only certain files, e.g. : .ini
     */
-    RegistryDB(const std::string& arg);
+    RegistryDB(const std::string& arg, const std::string pat = "");
     RegistryDB()
     {}
     ~RegistryDB()
@@ -183,7 +185,7 @@ public:
         return Reg[file][bloc];
     }
     /**
-    function to get a value from the registry. The template parameter determines to which type to convert the key.
+    Function to get a value from the registry. The template parameter determines to which type to convert the key.
     @param file the file in which to look
     @param block under which block is the value
     @param key for which key to look
@@ -196,8 +198,8 @@ public:
 };
 
 /**
-the basic template for doing the conversion between strings and the requested type
-We use the C++ stringstreams thus we benefit from all overloads that are already provided by C++
+the basic template for doing the conversion between strings and the requested type.
+We use the C++ stringstreams thus we benefit from all overloads that are already provided by C++.
 */
 template < typename A >
 struct GetTrait
