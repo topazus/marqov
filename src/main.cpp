@@ -548,7 +548,7 @@ int main(int argc, char* argv[])
     if(threadingsupport < MPI_THREAD_SERIALIZED)
     {
         std::cout<<"couldn't initialize MPI! threading level not supported."<<std::endl;
-        return;
+        return -1;
     }
 #endif
 	// read config files
