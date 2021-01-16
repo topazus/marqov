@@ -13,8 +13,8 @@ class SSHLattice
 		
 		SSHLattice(int l, int ltau, int d) : len(l), lentime(ltau), dim(d)
 		{
-		    nsites = pow(len, dim-1);
-		    nsites = nsites * lentime;
+		    vol = pow(len, dim-1); // spatial volume
+		    nsites = vol * lentime; // total volume
 		}
 		
 		value_type getnbrs(int a, int i) const 
@@ -27,7 +27,7 @@ class SSHLattice
 			switch(a) 
 			{
 				case 0:
-					retval = {((k-1+lentime)%lentime)*len+offset, ((k+1)%lentime)*len+offset};
+					retval = {((k-1+lentime)%lentime)*vol+offset, ((k+1)%lentime)*vol+offset};
 					break;
 				case 1:
 					retval.reserve(this->nsites);
@@ -38,23 +38,37 @@ class SSHLattice
 					break;
 			}
 
-//			cout << i << " ---   " << endl;
-//			for (int i=0; i<retval.size(); i++) cout << retval[i] << "\t";
-//			cout << endl;
-//			cout << endl;
-
 			return retval;
 		}
+// 1+1 D
+
+//  t
+//  ^
+//  | 3  oooooooo
+//  | 2  oooooooo
+//  | 1  oooooooo
+//  | 0  oooooooo
+//  |    01234556...
+//     -----------> x
 
 
+// 2+1 D
 
-
-
-//  3  oooooooo
-//  2  oooooooo
-//  1  oooooooo
-//  0  oooooooo
-//     01234556...
+//        24      25     26
+//      21.     22     23
+//    18. |   19     20
+//    . | |
+//    | | |
+//    | | .
+//    | . 15      16     17
+//    . 12.     13     14
+//    9 . |  10     11
+//    . | |
+//    | | |
+//    | | .
+//    | . 6      7     8
+//    . 3      4     5
+//    0      1     2
 
 
 		
@@ -64,8 +78,6 @@ class SSHLattice
 			std::vector<int> indices = IndexOfRect(k, dim, len, lentime);
 		 	std::vector<double> retval(dim,0);
 
-//			cout << k << "  " << indices[0] << "  " << indices[1] << endl;
-		
 		 	for (int i=0; i<retval.size(); i++) 
 		 	{ 
 		 		retval[i] = double(indices[i]); ///len; 
@@ -98,7 +110,7 @@ class SSHLattice
 		std::size_t size() const {return nsites;}
 		int len, lentime;
 		int dim;
-		std::size_t nsites;
+		std::size_t nsites, vol;
 };
 
 #endif
