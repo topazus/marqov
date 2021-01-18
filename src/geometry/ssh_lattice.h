@@ -90,11 +90,12 @@ class SSHLattice
 		            retval = {1,1};
 		            break;
 		        case 1:
+			   		cout << "This should not have happened!" << endl;
 		            retval.reserve(this->nsites);
 		            for(int j = 0; j < i; ++j)
-		            	retval.push_back(1.0/j);
+		            	retval.push_back(1.0);
 		            for(int j = i+1; j < this->nsites; ++j)
-		            	retval.push_back(1.0/j);
+		            	retval.push_back(1.0);
 		            break;
 		    }
 		    return retval;
