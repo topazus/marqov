@@ -46,70 +46,6 @@ using std::ofstream;
 
 using namespace MARQOV;
 
-// ---------------------------------------
-
-template <class Hamiltonian, class Lattice, class Parameters, class Callable>
-void Loop(const std::vector<Parameters>& params, Callable filter)
-{
-    typename GetSchedulerType<Hamiltonian, Lattice, Parameters >::MarqovScheduler sched(1);
-    
-  	for(auto p : params)
-       sched.createSimfromParameter(p, filter);
-    sched.start();
-}
-
-// ---------------------------------------
-
-
-template <class Hamiltonian, class Params, class Callable>
-void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& hp, Callable filter)
-{
-	const auto name      = reg.Get<std::string>("mc", "General", "Hamiltonian" );
-	      auto nreplicas = reg.Get<std::vector<int>>("mc", name, "rep" );
-	const auto nL  	 = reg.Get<std::vector<int>>("mc", name, "L" );
-	const auto dim 	 = reg.Get<int>("mc", name, "dim" );
-
-    typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType;
-    
-	if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-	std::vector<RegularHypercubic> latts;
-    for (std::size_t j=0; j<nL.size(); j++)
-	{
-		// prepare. Extend lifetime of lattices.
-		int L = nL[j];
-        latts.emplace_back(L, dim);
-    }
-    
-    typename GetSchedulerType<Hamiltonian, RegularHypercubic, typename PPType::value_type>::MarqovScheduler sched(1);
-    
-	for (std::size_t j=0; j<nL.size(); j++)
-	{
-		// prepare
-		int L = nL[j];
-		cout << endl << "L = " << L << endl << endl;
-
-		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-
-        	MARQOV::Config mp(outpath);
-        	mp.setnsweeps(2);
-		mp.setncluster(int(L/2));
-		mp.setwarmupsteps(300);
-		mp.setgameloopsteps(600);
-
-		makeDir(mp.outpath);
-
-		auto params = finalize_parameter_pair(mp, hp);
-		auto rparams = replicator_pair(params, nreplicas[j]);
-        
-		// set up and execute        
-        RegularHypercubic& latt = latts[j];
- 		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
-        for(auto p : rparams)
-            sched.createSimfromParameter(p, f);
-	}
-    sched.start();
-}
-
 
 // ---------------------------------------
 
@@ -201,7 +137,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
      	     mp.setnsweeps(25);
      	     mp.setncluster(0);
      	     mp.setwarmupsteps(0);
-     	     mp.setgameloopsteps(100);
+     	     mp.setgameloopsteps(50);
 
      	     makeDir(mp.outpath);
 
