@@ -108,9 +108,9 @@ class SSHLattice
 		 
 		
 		std::size_t size() const {return nsites;}
-		int len, lentime;
+		int len, lentime, vol;
 		int dim;
-		std::size_t nsites, vol;
+		std::size_t nsites;
 };
 
 #endif
