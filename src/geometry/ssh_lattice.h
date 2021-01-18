@@ -21,8 +21,8 @@ class SSHLattice
 		{
 			value_type retval;
 
-			const int k = i / len;
-			const int offset = i % len;
+			const int k = i / vol;
+			const int offset = i % vol;
 
 			switch(a) 
 			{
