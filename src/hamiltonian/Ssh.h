@@ -231,22 +231,20 @@ class SSH_multisite
 	
 		
 		#ifdef SSH_2D
+		// Green's function for a square lattice
+		// takes two coordinate vectors (x,y,t), that is 2+1 dimensions
 		double green(std::vector<double> c1, std::vector<double> c2)
 		{
 			std::complex<double> retval = 0;
 			std::complex<double> jj(0,1);
 
-			const double x1 = c1[0];
-			const double y1 = c1[1];
-			const double x2 = c2[0];
-			const double y2 = c2[1];
-
-			double distx = x1-x2;
-			double disty = y1-y2;
-
+			// space
+			double distx = c1[0]-c2[0];
+			double disty = c1[1]-c2[1];
 			if (distx < 0) distx = L + distx;
 			if (disty < 0) disty = L + disty;
 
+			// time
 			const double t1 = c1[2];
 			const double t2 = c2[2];
 			int t1i = floor(t1);
@@ -265,21 +263,22 @@ class SSH_multisite
 			std::complex<double> expkx = 1.0;
 			std::complex<double> expky = 1.0;
 
-
 			for (int jx = 0; jx < L; ++jx)
 			{
 				for (int jy = 0; jy < L; ++jy)
 				{
+					// dispersion relation
 					double disp = - 2*cos(2*M_PI*jx/L) - 2*cos(2*M_PI*jy/L);
+					// do the summation
 					retval += expkx * expky * exp(dti*dtau*disp) * fermi(beta*disp);
-					expky *= dexpky;
+					// increment Fourier transform
+					expky *= dexpky; 
 				}
-
 				expkx *= dexpkx; // increment Fourier transform
 			}
 
-			auto retv = signum*retval.real()/double(pow(2*L,2));
-			return retv;
+			const double norml = 1.0 / pow(2*L,2); // the number of sites per time slice
+			return norml*signum*retval.real();
 		}
 
 		#else
