@@ -26,7 +26,8 @@ using std::ofstream;
 
 // Geometry
 #include "geometry/regular_lattice.h"
-#include "geometry/ssh_lattice.h"
+//#include "geometry/ssh_lattice.h"
+#include "geometry/ssh_lattice2d.h"
 #include "geometry/grid.h"
 #include "geometry/neighbourclass.h"
 #include "geometry/io.h"
@@ -137,7 +138,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
      	     mp.setnsweeps(25);
      	     mp.setncluster(0);
      	     mp.setwarmupsteps(0);
-     	     mp.setgameloopsteps(50);
+     	     mp.setgameloopsteps(10);
 
      	     makeDir(mp.outpath);
 

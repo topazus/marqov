@@ -11,10 +11,10 @@ class SSHLattice
 		
 		SSHLattice() {}
 		
-		SSHLattice(int l, int ltau, int d) : len(l), lentime(ltau), dim(d)
+		SSHLattice(int l, int ltau, int d) : len(l), lentime(ltau), dim(d) // dim is the spatial dimension!
 		{
-		    vol = pow(len, dim-1); // spatial volume
-		    nsites = vol * lentime; // total volume
+		    vol = dim * pow(len, dim); // spatial volume (number of bonds in a time slice)
+		    nsites = vol * lentime; // total volume (number of sites)
 		}
 		
 		value_type getnbrs(int a, int i) const 

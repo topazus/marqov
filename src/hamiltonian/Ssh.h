@@ -246,7 +246,63 @@ class SSH_multisite
 		    return retval;
 		}
 	
-	
+		
+		double g2D(std::vector<double> c1, std::vector<double> c2)
+		{
+			std::complex<double> retval = 0;
+			std::complex<double> jj(0,1);
+		
+			const double x1 = c1[0];
+			const double y1 = c1[1];
+			const double x2 = c2[1];
+			const double y2 = c2[1];
+
+			double distx = x1-x2;
+			double disty = y1-y2;
+
+			if (distx < 0) distx = L + distx;
+			if (disty < 0) disty = L + disty;
+
+			const double t1 = c1[4];
+			const double t2 = c2[4];
+			int t1i = floor(t1);
+			int t2i = floor(t2);
+			int dti = t1i - t2i;
+			double signum = 1;
+			if (dti < 0) 
+			{
+				signum = -1; // anti-symmetric behaviour in delta tau
+				dti = ntau+dti;
+			}
+
+			// compute Greens function in Fourier space
+			std::complex<double> dexpkx = std::exp(-2*M_PI/L*jj*distx);
+			std::complex<double> dexpky = std::exp(-2*M_PI/L*jj*disty);
+			std::complex<double> expkx = 1.0;
+			std::complex<double> expky = 1.0;
+
+
+			for (int jx = 0; jx < L; ++jx)
+			{
+				for (int jy = 0; jy < L; ++jy)
+				{
+					double disp = - 2*cos(2*M_PI*jx/L) - 2*cos(2*M_PI*jy/L);
+					retval += expkx * expky * exp(dti*dtau*disp) * fermi(beta*disp);
+					expky *= dexpky;
+				}
+
+				expkx *= dexpkx; // increment Fourier transform
+			}
+
+			auto retv = signum*retval.real()/double(pow(2*L,2));
+
+			return retv;
+
+
+
+		}
+
+
 		// Green's function for a regular hypercubic lattice in 1D (i.e. a chain)
 		double g1D(std::vector<double> c1, std::vector<double> c2, int sign1, int sign2)
 		{
@@ -306,75 +362,116 @@ class SSH_multisite
 
 */
 
-
-	std::complex<double> g4(std::vector<std::vector<double>> s, std::vector<int> e)
+	std::complex<double> g4(std::vector<double> v0, std::vector<double> v1, std::vector<double> v2, std::vector<double> v3)
 	{
 		std::complex<double> retval = 0;
-
-		// the square of the number operator of fermions is the number operator
-		if (s[0]==s[1] && s[1]==s[2] && s[2]==s[3] && e[0]==e[1] && e[1]==e[2] && e[2]==e[3])
+		if (v0==v1 && v1==v2 && v2==v3 && v3==v0)
 		{
-			retval = g1D(s[0], s[1], e[0], e[1]);
+			retval = g2D(v0,v0);
 		}
-
-		// Wick decomposition
-		else 
+		else
 		{
-			retval = g1D(s[0],s[1],e[0],e[1])*g1D(s[2],s[3],e[2],e[3]) 
-				  - g1D(s[0],s[3],e[0],e[3])*g1D(s[2],s[1],e[2],e[1]);
-		}
+			retval = g2D(v0,v1)*g2D(v2,v3) - g2D(v0,v3)*g2D(v2,v1);
 
+		}
 		return retval;
+
 	}
 
 
+//	std::complex<double> g4(std::vector<std::vector<double>> s, std::vector<int> e)
+//	{
+//		std::complex<double> retval = 0;
+//
+//		// the square of the number operator of fermions is the number operator
+//		if (s[0]==s[1] && s[1]==s[2] && s[2]==s[3] && e[0]==e[1] && e[1]==e[2] && e[2]==e[3])
+//		{
+//			retval = g1D(s[0], s[1], e[0], e[1]);
+//		}
+//
+//		// Wick decomposition
+//		else 
+//		{
+//			retval = g1D(s[0],s[1],e[0],e[1])*g1D(s[2],s[3],e[2],e[3]) 
+//				  - g1D(s[0],s[3],e[0],e[3])*g1D(s[2],s[1],e[2],e[1]);
+//		}
+//
+//		return retval;
+//	}
 
 
 
 	template <class Lattice>
 	double suscept(Lattice& grid, int idx1, int idx2)
 	{
+		std::complex<double> retval = 0;
 
 		auto w1 = grid.getcrds(idx1);
 		auto w2 = grid.getcrds(idx2);
 		const int L = grid.len;
-	
-		// signs
-		const int i = -1;
-		const int j = +1;
 
-		std::complex<double> retval = 0;
-
-		/*
-
-		< K(b1,t1) K(b2,t2) > = 	  
-							  < c†(i1) c(j1) c†(i2) c(j2) > 
-							+ < c†(i1) c(j1) c†(j2) c(i2) > 
-							+ < c†(j1) c(i1) c†(i2) c(j2) > 
-							+ < c†(j1) c(i1) c†(j2) c(i2) > // temporal indices supressed; b1 = (i1,j1), b2 = (i2,j2)
-						  =
-						  	  <i1 j1> <i2 j2> - <i1 i2> <i2 i1>
-						  	+ <i1 j1> <j2 i2> - <i1 i2> <j2 j1>
-						  	+ <j1 i1> <i2 j2> - <j1 j2> <i2 i1>
-						  	+ <j1 i1> <j2 i2> - <j1 j2> <j2 j1> // operators supressed
-		*/
-
-		std::vector<std::vector<double>> sites = {w1,w1,w2,w2};
-
-		const auto c1 = g4(sites, {i,j,i,j});
-		const auto c2 = g4(sites, {i,j,j,i});
-		const auto c3 = g4(sites, {j,i,i,j});
-		const auto c4 = g4(sites, {j,i,j,i});
+		const auto c1 = g4({w1[0],w1[1],w1[4]}, {w1[2],w1[3],w1[4]}, {w2[0],w2[1],w2[4]}, {w2[2],w2[3],w2[4]});
+		const auto c2 = g4({w1[0],w1[1],w1[4]}, {w1[2],w1[3],w1[4]}, {w2[2],w2[3],w2[4]}, {w2[0],w2[1],w2[4]});
+		const auto c3 = g4({w1[2],w1[3],w1[4]}, {w1[0],w1[1],w1[4]}, {w2[0],w2[1],w2[4]}, {w2[2],w2[3],w2[4]});
+		const auto c4 = g4({w1[2],w1[3],w1[4]}, {w1[0],w1[1],w1[4]}, {w2[2],w2[3],w2[4]}, {w2[0],w2[1],w2[4]});
 
 		retval = c1+c2+c3+c4;
 
-		/*       < K(b1,t1) > < K(b2,t2 >    	*/
-		const std::complex<double> K1 = g1D(w1,w1,i,j)+g1D(w1,w1,j,i);
-		const std::complex<double> K2 = g1D(w2,w2,i,j)+g1D(w2,w2,j,i);
+		const std::complex<double> K1 = g2D({w1[0],w1[1],w1[4]},{w1[2],w1[3],w1[4]}) + g2D({w1[2],w1[3],w1[4]},{w1[0],w1[1],w1[4]});
+		const std::complex<double> K2 = g2D({w2[0],w2[1],w2[4]},{w2[2],w2[3],w2[4]}) + g2D({w2[2],w2[3],w2[4]},{w2[0],w2[1],w2[4]});
+
 		retval -= K1*K2;
 
 		return std::real(retval);
+
 	}
+
+
+//	template <class Lattice>
+//	double suscept(Lattice& grid, int idx1, int idx2)
+//	{
+//
+//		auto w1 = grid.getcrds(idx1);
+//		auto w2 = grid.getcrds(idx2);
+//		const int L = grid.len;
+//	
+//		// signs
+//		const int i = -1;
+//		const int j = +1;
+//
+//		std::complex<double> retval = 0;
+//
+//		/*
+//
+//		< K(b1,t1) K(b2,t2) > = 	  
+//							  < c†(i1) c(j1) c†(i2) c(j2) > 
+//							+ < c†(i1) c(j1) c†(j2) c(i2) > 
+//							+ < c†(j1) c(i1) c†(i2) c(j2) > 
+//							+ < c†(j1) c(i1) c†(j2) c(i2) > // temporal indices supressed; b1 = (i1,j1), b2 = (i2,j2)
+//						  =
+//						  	  <i1 j1> <i2 j2> - <i1 i2> <i2 i1>
+//						  	+ <i1 j1> <j2 i2> - <i1 i2> <j2 j1>
+//						  	+ <j1 i1> <i2 j2> - <j1 j2> <i2 i1>
+//						  	+ <j1 i1> <j2 i2> - <j1 j2> <j2 j1> // operators supressed
+//		*/
+//
+//		std::vector<std::vector<double>> sites = {w1,w1,w2,w2};
+//
+//		const auto c1 = g4(sites, {i,j,i,j});
+//		const auto c2 = g4(sites, {i,j,j,i});
+//		const auto c3 = g4(sites, {j,i,i,j});
+//		const auto c4 = g4(sites, {j,i,j,i});
+//
+//		retval = c1+c2+c3+c4;
+//
+//		/*       < K(b1,t1) > < K(b2,t2 >    	*/
+//		const std::complex<double> K1 = g1D(w1,w1,i,j)+g1D(w1,w1,j,i);
+//		const std::complex<double> K2 = g1D(w2,w2,i,j)+g1D(w2,w2,j,i);
+//		retval -= K1*K2;
+//
+//		return std::real(retval);
+//	}
+
 };
 
 
