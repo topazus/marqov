@@ -247,7 +247,7 @@ class SSH_multisite
 		}
 	
 		
-		double g2D(std::vector<double> c1, std::vector<double> c2)
+		double green(std::vector<double> c1, std::vector<double> c2)
 		{
 			std::complex<double> retval = 0;
 			std::complex<double> jj(0,1);
@@ -304,6 +304,7 @@ class SSH_multisite
 
 
 		// Green's function for a regular hypercubic lattice in 1D (i.e. a chain)
+		/*
 		double green(std::vector<double> c1, std::vector<double> c2, int sign1, int sign2)
 		{
 			std::complex<double> retval = 0;
@@ -348,6 +349,7 @@ class SSH_multisite
 
 			return retv;
 		}
+		*/
 
 
 /*
@@ -362,16 +364,17 @@ class SSH_multisite
 
 */
 
+	// performs a Wick decomposition
 	std::complex<double> wick(std::vector<double> v0, std::vector<double> v1, std::vector<double> v2, std::vector<double> v3)
 	{
 		std::complex<double> retval = 0;
 		if (v0==v1 && v1==v2 && v2==v3 && v3==v0)
 		{
-			retval = g2D(v0,v0);
+			retval = green(v0,v0);
 		}
 		else
 		{
-			retval = g2D(v0,v1)*g2D(v2,v3) - g2D(v0,v3)*g2D(v2,v1);
+			retval = green(v0,v1)*green(v2,v3) - green(v0,v3)*green(v2,v1);
 
 		}
 		return retval;
@@ -417,8 +420,8 @@ class SSH_multisite
 
 		retval = c1+c2+c3+c4;
 
-		const std::complex<double> K1 = g2D({w1[0],w1[1],w1[4]},{w1[2],w1[3],w1[4]}) + g2D({w1[2],w1[3],w1[4]},{w1[0],w1[1],w1[4]});
-		const std::complex<double> K2 = g2D({w2[0],w2[1],w2[4]},{w2[2],w2[3],w2[4]}) + g2D({w2[2],w2[3],w2[4]},{w2[0],w2[1],w2[4]});
+		const std::complex<double> K1 = green({w1[0],w1[1],w1[4]},{w1[2],w1[3],w1[4]}) + green({w1[2],w1[3],w1[4]},{w1[0],w1[1],w1[4]});
+		const std::complex<double> K2 = green({w2[0],w2[1],w2[4]},{w2[2],w2[3],w2[4]}) + green({w2[2],w2[3],w2[4]},{w2[0],w2[1],w2[4]});
 
 		retval -= K1*K2;
 
