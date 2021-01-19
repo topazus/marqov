@@ -9,10 +9,12 @@
 #include "../hamparts.h"
 #include "../metropolis.h"
 
-#define SSH_2D
+// --------------------------------
+#define SSH_2D  // dimension switch
+// --------------------------------
 
 
-// ------------------------------ OBSERVABLES ---------------------------
+// ----------------------------------- OBSERVABLES --------------------------------
 
 class SSHMag
 {
@@ -57,6 +59,7 @@ class SSHMagSq
 
 
 
+// only 1D so far!!!
 class SSHTwoPointCorrSpace
 {
 	public:
@@ -142,7 +145,9 @@ class SSH_onsite : public OnSite<StateVector, double>
 
 
 
-// =========================== Multi-Site Class =================================
+// --------------------------------------------------------------------------------
+// ============================ Multi-Site Class ==================================
+// --------------------------------------------------------------------------------
 
 template <class StateSpace, class StateVector>
 class SSH_multisite
@@ -225,8 +230,9 @@ class SSH_multisite
 	
 		
 		#ifdef SSH_2D
-		// Green's function for a square lattice
-		// takes two coordinate vectors (x,y,t), that is 2+1 dimensions
+
+		// Green's function for 2+1 dimensions
+		// takes two coordinate vectors (x,y,t)
 		double green(std::vector<double> c1, std::vector<double> c2)
 		{
 			std::complex<double> retval = 0;
@@ -278,7 +284,8 @@ class SSH_multisite
 		#else
 
 
-		// Green's function for a regular hypercubic lattice in 1D (i.e. a chain)
+		// Green's function for 1+1 dimensions
+		// takes two coordinate vectors (x,t)
 		double green(std::vector<double> c1, std::vector<double> c2)
 		{
 			std::complex<double> retval = 0;
@@ -318,24 +325,11 @@ class SSH_multisite
 				expk   *= dexpk; //loop-carried dependency. breaks vectorization.
 			}
 
-
 			const double norml = 1.0/L;
 			return norml*signum*retval.real();
 		}
 		#endif
 
-
-/*
-
-	 j1/i2      b2     j2/i3      b3      j3/i4      b4
-  ------x-----------------x------------------x-----------------x---------- // original model: bonds
-
-  ---------------o-----------------o------------------o----------------    // our model: bonds represented as sites
-
-
-   e.g.  r(b2(j2)) = r(b3(i3))
-
-*/
 
 
 
@@ -353,11 +347,12 @@ class SSH_multisite
 
 		}
 		return retval;
-
 	}
 
 
 
+	// the actual susceptibility
+	// takes two indices, representing two bonds in the system
 	template <class Lattice>
 	double suscept(Lattice& grid, int idx1, int idx2)
 	{
@@ -399,15 +394,14 @@ class SSH_multisite
 		#endif
 
 		return std::real(c1+c2+c3+c4-K1*K2);
-
 	}
-
 };
 
 
 
 
 
+// ------------------------------ Initializer ------------------------------
 
 
 template <class StateVector, class RNG>
