@@ -383,7 +383,6 @@ class SSH_multisite
 #endif
 
 
-#ifdef SSH_2D
 	template <class Lattice>
 	double suscept(Lattice& grid, int idx1, int idx2)
 	{
@@ -427,56 +426,6 @@ class SSH_multisite
 		return std::real(c1+c2+c3+c4-K1*K2);
 
 	}
-
-#else
-
-
-	template <class Lattice>
-	double suscept(Lattice& grid, int idx1, int idx2)
-	{
-
-		auto w1 = grid.getcrds(idx1);
-		auto w2 = grid.getcrds(idx2);
-		const int L = grid.len;
-	
-		// signs
-		const int i = -1;
-		const int j = +1;
-
-		std::complex<double> retval = 0;
-
-		/*
-
-		< K(b1,t1) K(b2,t2) > = 	  
-							  < c†(i1) c(j1) c†(i2) c(j2) > 
-							+ < c†(i1) c(j1) c†(j2) c(i2) > 
-							+ < c†(j1) c(i1) c†(i2) c(j2) > 
-							+ < c†(j1) c(i1) c†(j2) c(i2) > // temporal indices supressed; b1 = (i1,j1), b2 = (i2,j2)
-						  =
-						  	  <i1 j1> <i2 j2> - <i1 i2> <i2 i1>
-						  	+ <i1 j1> <j2 i2> - <i1 i2> <j2 j1>
-						  	+ <j1 i1> <i2 j2> - <j1 j2> <i2 i1>
-						  	+ <j1 i1> <j2 i2> - <j1 j2> <j2 j1> // operators supressed
-		*/
-
-		std::vector<std::vector<double>> sites = {w1,w1,w2,w2};
-
-		const auto c1 = wick(sites, {i,j,i,j});
-		const auto c2 = wick(sites, {i,j,j,i});
-		const auto c3 = wick(sites, {j,i,i,j});
-		const auto c4 = wick(sites, {j,i,j,i});
-
-		retval = c1+c2+c3+c4;
-
-		/*       < K(b1,t1) > < K(b2,t2 >    	*/
-		const std::complex<double> K1 = green(w1,w1,i,j)+green(w1,w1,j,i);
-		const std::complex<double> K2 = green(w2,w2,i,j)+green(w2,w2,j,i);
-		retval -= K1*K2;
-
-		return std::real(retval);
-	}
-
-	#endif
 
 };
 
