@@ -150,12 +150,12 @@ class SSH_multisite
 	public:
 		double k, beta, dtau, g;
 		int L;
-		double* gdat;
+		double* gdat1D;
 		int ntau;
 		SSH_multisite(double g, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL), g(g)
 		{
 			ntau = std::round(beta/dtau); // ntau should be nothing else than Ltime
-			gdat = new double[ntau*L];
+			gdat1D = new double[ntau*L];
 
 			for(int j = 0; j < L; ++j)
 			{
@@ -165,7 +165,7 @@ class SSH_multisite
 				double eps = -2.0*std::cos(k)-mu;
 				for(int dt = 0; dt < ntau; ++dt)
 				{
-					gdat[dt * L + j] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
+					gdat1D[dt * L + j] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
 				}
 			}
 		}
@@ -202,7 +202,7 @@ class SSH_multisite
 			return retval;
 		}
 
-		~SSH_multisite() {delete [] gdat;}
+		~SSH_multisite() {delete [] gdat1D;}
 
 		/**
 		The fermi function
@@ -233,7 +233,7 @@ class SSH_multisite
 			std::complex<double> jj(0,1);
 
 			// space
-			double distx = c1[0]-c2[0];
+			double distx = c1[0]-c2[0]; // account for p.b.c not relevant? 
 			double disty = c1[1]-c2[1];
 			if (distx < 0) distx = L + distx;
 			if (disty < 0) disty = L + disty;
@@ -279,20 +279,16 @@ class SSH_multisite
 
 
 		// Green's function for a regular hypercubic lattice in 1D (i.e. a chain)
-		double green(std::vector<double> c1, std::vector<double> c2, int sign1, int sign2)
+		double green(std::vector<double> c1, std::vector<double> c2)
 		{
 			std::complex<double> retval = 0;
 			std::complex<double> jj(0,1);
 		
-			double step = 2*M_PI/double(L);
-		
-			// spatial coordinates
-			const double r1 = c1[0] + sign1*0.5; // account for p.b.c not relevant? (we only use relative distances...)
-			const double r2 = c2[0] + sign2*0.5;
-			double dist = r1-r2;
+			// space
+			double dist = c1[0]-c2[0];
 			if (dist < 0) dist = L + dist;
 	
-			// temporal coordinates
+			// time
 			const double t1 = c1[1];
 			const double t2 = c2[1];
 			int t1i = floor(t1);
@@ -307,8 +303,8 @@ class SSH_multisite
 	
 			// account for periodic boundaries of the lattice
 			// not needed, says Florian
-//			if (dti  > 0.5*ntau) dti = ntau - dti;
-//			if (dist > 0.5*L)   dist = L - dist;
+			// if (dti  > 0.5*ntau) dti = ntau - dti;
+			// if (dist > 0.5*L)   dist = L - dist;
 	
 	
 			// compute Greens function in Fourier space
@@ -316,12 +312,15 @@ class SSH_multisite
 			std::complex<double> expk = 1.0;
 			for (int j = 0; j < L; ++j)
 			{
-				retval += expk.real()*gdat[dti*L + j];
+				// perform sum
+				retval += expk.real()*gdat1D[dti*L + j];
+				// increment Fourier step
 				expk   *= dexpk; //loop-carried dependency. breaks vectorization.
 			}
-			auto retv = signum*retval.real()/double(L);
 
-			return retv;
+
+			const double norml = 1.0/L;
+			return norml*signum*retval.real();
 		}
 		#endif
 
@@ -339,7 +338,6 @@ class SSH_multisite
 */
 
 
-#ifdef SSH_2D
 
 	// performs a Wick decomposition
 	std::complex<double> wick(std::vector<double> v0, std::vector<double> v1, std::vector<double> v2, std::vector<double> v3)
@@ -358,29 +356,6 @@ class SSH_multisite
 
 	}
 
-#else
-
-  	std::complex<double> wick(std::vector<std::vector<double>> s, std::vector<int> e)
-  	{
-  		std::complex<double> retval = 0;
-  
-  		// the square of the number operator of fermions is the number operator
-  		if (s[0]==s[1] && s[1]==s[2] && s[2]==s[3] && e[0]==e[1] && e[1]==e[2] && e[2]==e[3])
-  		{
-  			retval = green(s[0], s[1], e[0], e[1]);
-  		}
-  
-  		// Wick decomposition
-  		else 
-  		{
-  			retval = green(s[0],s[1],e[0],e[1])*green(s[2],s[3],e[2],e[3]) 
-  				  - green(s[0],s[3],e[0],e[3])*green(s[2],s[1],e[2],e[1]);
-  		}
-  
-  		return retval;
-  	}
-
-#endif
 
 
 	template <class Lattice>
