@@ -8,6 +8,8 @@
 #include "../hamparts.h"
 #include "../metropolis.h"
 
+#define SSH_2D
+
 namespace ssh
 {
 
@@ -172,25 +174,6 @@ class SSH_multisite
 					gdat[dt * L + j] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
 				}
 			}
-
-
-
-			/*
-			auto c1 = std::vector<double>{0,0};
-			auto c2 = std::vector<double>{11,0};
-			auto c3 = std::vector<double>{7,0};
-			auto c4 = std::vector<double>{42,0};
-			std::vector<std::vector<double>> arg1;
-			arg1.push_back(c1);
-			arg1.push_back(c2);
-			arg1.push_back(c3);
-			arg1.push_back(c4);
-
-			std::vector<int> arg2 = {1,1,1,1};
-
-			cout << wick(arg1, arg2) << endl;
-			*/
-
 		}
 
 
@@ -247,6 +230,7 @@ class SSH_multisite
 		}
 	
 		
+		#ifdef SSH_2D
 		double green(std::vector<double> c1, std::vector<double> c2)
 		{
 			std::complex<double> retval = 0;
@@ -295,16 +279,13 @@ class SSH_multisite
 			}
 
 			auto retv = signum*retval.real()/double(pow(2*L,2));
-
 			return retv;
-
-
-
 		}
+
+		#else
 
 
 		// Green's function for a regular hypercubic lattice in 1D (i.e. a chain)
-		/*
 		double green(std::vector<double> c1, std::vector<double> c2, int sign1, int sign2)
 		{
 			std::complex<double> retval = 0;
@@ -349,7 +330,7 @@ class SSH_multisite
 
 			return retv;
 		}
-		*/
+		#endif
 
 
 /*
@@ -363,6 +344,9 @@ class SSH_multisite
    e.g.  r(b2(j2)) = r(b3(i3))
 
 */
+
+
+#ifdef SSH_2D
 
 	// performs a Wick decomposition
 	std::complex<double> wick(std::vector<double> v0, std::vector<double> v1, std::vector<double> v2, std::vector<double> v3)
@@ -381,29 +365,32 @@ class SSH_multisite
 
 	}
 
+#else
 
-//	std::complex<double> wick(std::vector<std::vector<double>> s, std::vector<int> e)
-//	{
-//		std::complex<double> retval = 0;
-//
-//		// the square of the number operator of fermions is the number operator
-//		if (s[0]==s[1] && s[1]==s[2] && s[2]==s[3] && e[0]==e[1] && e[1]==e[2] && e[2]==e[3])
-//		{
-//			retval = green(s[0], s[1], e[0], e[1]);
-//		}
-//
-//		// Wick decomposition
-//		else 
-//		{
-//			retval = green(s[0],s[1],e[0],e[1])*green(s[2],s[3],e[2],e[3]) 
-//				  - green(s[0],s[3],e[0],e[3])*green(s[2],s[1],e[2],e[1]);
-//		}
-//
-//		return retval;
-//	}
+  	std::complex<double> wick(std::vector<std::vector<double>> s, std::vector<int> e)
+  	{
+  		std::complex<double> retval = 0;
+  
+  		// the square of the number operator of fermions is the number operator
+  		if (s[0]==s[1] && s[1]==s[2] && s[2]==s[3] && e[0]==e[1] && e[1]==e[2] && e[2]==e[3])
+  		{
+  			retval = green(s[0], s[1], e[0], e[1]);
+  		}
+  
+  		// Wick decomposition
+  		else 
+  		{
+  			retval = green(s[0],s[1],e[0],e[1])*green(s[2],s[3],e[2],e[3]) 
+  				  - green(s[0],s[3],e[0],e[3])*green(s[2],s[1],e[2],e[1]);
+  		}
+  
+  		return retval;
+  	}
+
+#endif
 
 
-
+#ifdef SSH_2D
 	template <class Lattice>
 	double suscept(Lattice& grid, int idx1, int idx2)
 	{
@@ -429,51 +416,55 @@ class SSH_multisite
 
 	}
 
+#else
 
-//	template <class Lattice>
-//	double suscept(Lattice& grid, int idx1, int idx2)
-//	{
-//
-//		auto w1 = grid.getcrds(idx1);
-//		auto w2 = grid.getcrds(idx2);
-//		const int L = grid.len;
-//	
-//		// signs
-//		const int i = -1;
-//		const int j = +1;
-//
-//		std::complex<double> retval = 0;
-//
-//		/*
-//
-//		< K(b1,t1) K(b2,t2) > = 	  
-//							  < c†(i1) c(j1) c†(i2) c(j2) > 
-//							+ < c†(i1) c(j1) c†(j2) c(i2) > 
-//							+ < c†(j1) c(i1) c†(i2) c(j2) > 
-//							+ < c†(j1) c(i1) c†(j2) c(i2) > // temporal indices supressed; b1 = (i1,j1), b2 = (i2,j2)
-//						  =
-//						  	  <i1 j1> <i2 j2> - <i1 i2> <i2 i1>
-//						  	+ <i1 j1> <j2 i2> - <i1 i2> <j2 j1>
-//						  	+ <j1 i1> <i2 j2> - <j1 j2> <i2 i1>
-//						  	+ <j1 i1> <j2 i2> - <j1 j2> <j2 j1> // operators supressed
-//		*/
-//
-//		std::vector<std::vector<double>> sites = {w1,w1,w2,w2};
-//
-//		const auto c1 = wick(sites, {i,j,i,j});
-//		const auto c2 = wick(sites, {i,j,j,i});
-//		const auto c3 = wick(sites, {j,i,i,j});
-//		const auto c4 = wick(sites, {j,i,j,i});
-//
-//		retval = c1+c2+c3+c4;
-//
-//		/*       < K(b1,t1) > < K(b2,t2 >    	*/
-//		const std::complex<double> K1 = green(w1,w1,i,j)+green(w1,w1,j,i);
-//		const std::complex<double> K2 = green(w2,w2,i,j)+green(w2,w2,j,i);
-//		retval -= K1*K2;
-//
-//		return std::real(retval);
-//	}
+
+	template <class Lattice>
+	double suscept(Lattice& grid, int idx1, int idx2)
+	{
+
+		auto w1 = grid.getcrds(idx1);
+		auto w2 = grid.getcrds(idx2);
+		const int L = grid.len;
+	
+		// signs
+		const int i = -1;
+		const int j = +1;
+
+		std::complex<double> retval = 0;
+
+		/*
+
+		< K(b1,t1) K(b2,t2) > = 	  
+							  < c†(i1) c(j1) c†(i2) c(j2) > 
+							+ < c†(i1) c(j1) c†(j2) c(i2) > 
+							+ < c†(j1) c(i1) c†(i2) c(j2) > 
+							+ < c†(j1) c(i1) c†(j2) c(i2) > // temporal indices supressed; b1 = (i1,j1), b2 = (i2,j2)
+						  =
+						  	  <i1 j1> <i2 j2> - <i1 i2> <i2 i1>
+						  	+ <i1 j1> <j2 i2> - <i1 i2> <j2 j1>
+						  	+ <j1 i1> <i2 j2> - <j1 j2> <i2 i1>
+						  	+ <j1 i1> <j2 i2> - <j1 j2> <j2 j1> // operators supressed
+		*/
+
+		std::vector<std::vector<double>> sites = {w1,w1,w2,w2};
+
+		const auto c1 = wick(sites, {i,j,i,j});
+		const auto c2 = wick(sites, {i,j,j,i});
+		const auto c3 = wick(sites, {j,i,i,j});
+		const auto c4 = wick(sites, {j,i,j,i});
+
+		retval = c1+c2+c3+c4;
+
+		/*       < K(b1,t1) > < K(b2,t2 >    	*/
+		const std::complex<double> K1 = green(w1,w1,i,j)+green(w1,w1,j,i);
+		const std::complex<double> K2 = green(w2,w2,i,j)+green(w2,w2,j,i);
+		retval -= K1*K2;
+
+		return std::real(retval);
+	}
+
+	#endif
 
 };
 
