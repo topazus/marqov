@@ -26,8 +26,7 @@ using std::ofstream;
 
 // Geometry
 #include "geometry/regular_lattice.h"
-//#include "geometry/ssh_lattice.h"
-#include "geometry/ssh_lattice2d.h"
+#include "geometry/ssh_lattice.h"
 #include "geometry/grid.h"
 #include "geometry/neighbourclass.h"
 #include "geometry/io.h"

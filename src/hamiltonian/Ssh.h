@@ -5,16 +5,11 @@
 #include <string>
 #include <complex>
 #include <functional>
+#include <math.h> // for debug, provides "isnan"
 #include "../hamparts.h"
 #include "../metropolis.h"
 
 #define SSH_2D
-
-namespace ssh
-{
-
-
-}
 
 
 // ------------------------------ OBSERVABLES ---------------------------
@@ -61,7 +56,6 @@ class SSHMagSq
 
 
 
-#include <math.h> // for debug, provides "isnan"
 
 class SSHTwoPointCorrSpace
 {
@@ -397,21 +391,40 @@ class SSH_multisite
 
 		auto w1 = grid.getcrds(idx1);
 		auto w2 = grid.getcrds(idx2);
-		const int L = grid.len;
 
-		const auto c1 = wick({w1[0],w1[1],w1[4]}, {w1[2],w1[3],w1[4]}, {w2[0],w2[1],w2[4]}, {w2[2],w2[3],w2[4]});
-		const auto c2 = wick({w1[0],w1[1],w1[4]}, {w1[2],w1[3],w1[4]}, {w2[2],w2[3],w2[4]}, {w2[0],w2[1],w2[4]});
-		const auto c3 = wick({w1[2],w1[3],w1[4]}, {w1[0],w1[1],w1[4]}, {w2[0],w2[1],w2[4]}, {w2[2],w2[3],w2[4]});
-		const auto c4 = wick({w1[2],w1[3],w1[4]}, {w1[0],w1[1],w1[4]}, {w2[2],w2[3],w2[4]}, {w2[0],w2[1],w2[4]});
+		#ifdef SSH_2D
+			const auto t1 = w1[4];
+			const auto t2 = w2[4];
 
-		retval = c1+c2+c3+c4;
+//			const auto c1 = wick({w1[0],w1[1],t1}, {w1[2],w1[3],t1}, {w2[0],w2[1],t2}, {w2[2],w2[3],t2});
+//			const auto c2 = wick({w1[0],w1[1],t1}, {w1[2],w1[3],t1}, {w2[2],w2[3],t2}, {w2[0],w2[1],t2});
+//			const auto c3 = wick({w1[2],w1[3],t1}, {w1[0],w1[1],t1}, {w2[0],w2[1],t2}, {w2[2],w2[3],t2});
+//			const auto c4 = wick({w1[2],w1[3],t1}, {w1[0],w1[1],t1}, {w2[2],w2[3],t2}, {w2[0],w2[1],t2});
 
-		const std::complex<double> K1 = green({w1[0],w1[1],w1[4]},{w1[2],w1[3],w1[4]}) + green({w1[2],w1[3],w1[4]},{w1[0],w1[1],w1[4]});
-		const std::complex<double> K2 = green({w2[0],w2[1],w2[4]},{w2[2],w2[3],w2[4]}) + green({w2[2],w2[3],w2[4]},{w2[0],w2[1],w2[4]});
+			const auto c1 = wick({w1[0],w1[2],t1}, {w1[1],w1[3],t1}, {w2[0],w2[2],t2}, {w2[1],w2[3],t2});
+			const auto c2 = wick({w1[0],w1[2],t1}, {w1[1],w1[3],t1}, {w2[1],w2[3],t2}, {w2[0],w2[2],t2});
+			const auto c3 = wick({w1[1],w1[3],t1}, {w1[0],w1[2],t1}, {w2[0],w2[2],t2}, {w2[1],w2[3],t2});
+			const auto c4 = wick({w1[1],w1[3],t1}, {w1[0],w1[2],t1}, {w2[1],w2[3],t2}, {w2[0],w2[2],t2});
 
-		retval -= K1*K2;
+//			const std::complex<double> K1 = green({w1[0],w1[1],w1[4]},{w1[2],w1[3],w1[4]}) + green({w1[2],w1[3],w1[4]},{w1[0],w1[1],w1[4]});
+//			const std::complex<double> K2 = green({w2[0],w2[1],w2[4]},{w2[2],w2[3],w2[4]}) + green({w2[2],w2[3],w2[4]},{w2[0],w2[1],w2[4]});
 
-		return std::real(retval);
+			const std::complex<double> K1 = green({w1[0],w1[2],t1},{w1[1],w1[3],t1}) + green({w1[1],w1[3],t1},{w1[0],w1[2],t1});
+			const std::complex<double> K2 = green({w2[0],w2[2],t2},{w2[1],w2[3],t2}) + green({w2[1],w2[3],t2},{w2[0],w2[2],t2});
+		#else
+			const auto t1 = w1[2];
+			const auto t2 = w2[2];
+
+			const auto c1 = wick({w1[0],t1}, {w1[1],t1}, {w2[0],t2}, {w2[1],t2});
+			const auto c2 = wick({w1[0],t1}, {w1[1],t1}, {w2[1],t2}, {w2[0],t2});
+			const auto c3 = wick({w1[1],t1}, {w1[0],t1}, {w2[0],t2}, {w2[1],t2});
+			const auto c4 = wick({w1[1],t1}, {w1[0],t1}, {w2[1],t2}, {w2[0],t2});
+
+			const std::complex<double> K1 = green({w1[0],t1},{w1[1],t1}) + green({w1[1],t1},{w1[0],t1});
+			const std::complex<double> K2 = green({w2[0],t2},{w2[1],t2}) + green({w2[1],t2},{w2[0],t2});
+		#endif
+
+		return std::real(c1+c2+c3+c4-K1*K2);
 
 	}
 
