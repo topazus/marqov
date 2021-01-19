@@ -235,10 +235,10 @@ class SSH_multisite
 		{
 			std::complex<double> retval = 0;
 			std::complex<double> jj(0,1);
-		
+
 			const double x1 = c1[0];
 			const double y1 = c1[1];
-			const double x2 = c2[1];
+			const double x2 = c2[0];
 			const double y2 = c2[1];
 
 			double distx = x1-x2;
@@ -247,8 +247,8 @@ class SSH_multisite
 			if (distx < 0) distx = L + distx;
 			if (disty < 0) disty = L + disty;
 
-			const double t1 = c1[4];
-			const double t2 = c2[4];
+			const double t1 = c1[2];
+			const double t2 = c2[2];
 			int t1i = floor(t1);
 			int t2i = floor(t2);
 			int dti = t1i - t2i;
