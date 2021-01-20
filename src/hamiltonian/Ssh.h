@@ -10,7 +10,7 @@
 #include "../metropolis.h"
 
 // --------------------------------
-#define SSH_2D  // dimension switch
+#undef SSH_2D  // dimension switch
 // --------------------------------
 
 
@@ -358,7 +358,7 @@ class SSH_multisite
 	{
 		std::complex<double> retval = 0;
 
-		auto w1 = grid.getcrds(idx1);
+		auto w1 = grid.getcrds(idx1); // (xstart, xend, time) in 1D / (xstart, xend, ystart, yend, time) in 2D
 		auto w2 = grid.getcrds(idx2);
 
 		#ifdef SSH_2D
