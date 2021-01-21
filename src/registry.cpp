@@ -192,7 +192,7 @@ IsFile (const dirent *used)
 
 RegistryDB::RegistryDB( const std::string& arg, const std::string pat)
 {
-    init(arg);
+    init(arg,pat);
     return;
 }
 
