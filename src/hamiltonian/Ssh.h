@@ -297,10 +297,8 @@ class SSH_multisite
 				for (int jy = 0; jy < L; ++jy)
 				{
 					// dispersion relation
-// 					double disp = - 2*std::cos(2*M_PI*jx/L) - 2*std::cos(2*M_PI*jy/L);
 					// do the summation
 					retval += expk.real() * gdat[dti*L*L + jx*L + jy];
-// 					std::exp(dti*dtau*disp) * fermi(beta*disp);
 					// increment Fourier transform
 					expk *= dexpky; 
 				}
