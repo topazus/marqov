@@ -156,11 +156,15 @@ class SSH_multisite
 		double k, beta, dtau, g;
 		int L;
 		double* gdat1D;
+        std::complex<double>* dexpk;
 		int ntau;
 		SSH_multisite(double g, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL), g(g)
 		{
 			ntau = std::round(beta/dtau); // ntau should be nothing else than Ltime
 			gdat1D = new double[ntau*L];
+            dexpk = new std::complex<double>[L];
+            for(int d = 0; d < L; ++d)
+                dexpk[d] = std::exp(std::complex<double>(0.0, -2.0*M_PI/L*d ));
 
 			for(int j = 0; j < L; ++j)
 			{
@@ -207,7 +211,7 @@ class SSH_multisite
 			return retval;
 		}
 
-		~SSH_multisite() {delete [] gdat1D;}
+		~SSH_multisite() {delete [] gdat1D; delete [] dexpk;}
 
 		/**
 		The fermi function
@@ -239,8 +243,8 @@ class SSH_multisite
 			std::complex<double> jj(0,1);
 
 			// space
-			double distx = c1[0]-c2[0]; // account for p.b.c not relevant? 
-			double disty = c1[1]-c2[1];
+			auto distx = std::lrint(c1[0]-c2[0]); // account for p.b.c not relevant? 
+			auto disty = std::lrint(c1[1]-c2[1]);
 			if (distx < 0) distx = L + distx;
 			if (disty < 0) disty = L + disty;
 
@@ -258,8 +262,8 @@ class SSH_multisite
 			}
 
 			// compute Greens function in Fourier space
-			std::complex<double> dexpkx = std::exp(-2*M_PI/L*jj*distx);
-			std::complex<double> dexpky = std::exp(-2*M_PI/L*jj*disty);
+			std::complex<double> dexpkx = dexpk[distx];
+			std::complex<double> dexpky = dexpk[disty];
 			std::complex<double> expk = 1.0;
 
 			for (int jx = 0; jx < L; ++jx)
@@ -267,7 +271,7 @@ class SSH_multisite
 				for (int jy = 0; jy < L; ++jy)
 				{
 					// dispersion relation
-					double disp = - 2*cos(2*M_PI*jx/L) - 2*cos(2*M_PI*jy/L);
+					double disp = - 2*std::cos(2*M_PI*jx/L) - 2*std::cos(2*M_PI*jy/L);
 					// do the summation
 					retval += expk * std::exp(dti*dtau*disp) * fermi(beta*disp);
 					// increment Fourier transform
@@ -291,7 +295,7 @@ class SSH_multisite
 			std::complex<double> jj(0,1);
 		
 			// space
-			double dist = c1[0]-c2[0];
+			auto dist = std::lrint(c1[0]-c2[0]);
 			if (dist < 0) dist = L + dist;
 	
 			// time
@@ -314,14 +318,14 @@ class SSH_multisite
 	
 	
 			// compute Greens function in Fourier space
-			std::complex<double> dexpk = std::exp(-2*M_PI/L*jj*dist);
+			std::complex<double> dexpkx = dexpk[dist];
 			std::complex<double> expk = 1.0;
 			for (int j = 0; j < L; ++j)
 			{
 				// perform sum
 				retval += expk.real()*gdat1D[dti*L + j];
 				// increment Fourier step
-				expk   *= dexpk; //loop-carried dependency. breaks vectorization.
+				expk   *= dexpkx; //loop-carried dependency. breaks vectorization.
 			}
 
 			const double norml = 1.0/L;
