@@ -151,16 +151,16 @@ class SSH_multisite
 	public:
 		double k, beta, dtau, g;
 		int L;
-		double* gdat1D;
-        std::complex<double>* dexpk;
-        double* ftexp;
 		int ntau;
-		SSH_multisite(double g, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL), g(g)
+		double *const gdat1D;
+        std::complex<double>* dexpk;
+        double *const ftexp;
+		SSH_multisite(double g, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL), ntau(std::round(beta/dtau)), g(g),
+		gdat1D(new double[ntau*L]),
+		ftexp(new double[L*L])
 		{
-			ntau = std::round(beta/dtau); // ntau should be nothing else than Ltime
-			gdat1D = new double[ntau*L];
+			// ntau should be nothing else than Ltime
             dexpk = new std::complex<double>[L];
-            ftexp = new double[L*L];
             for(int d = 0; d < L; ++d)
             {
                 dexpk[d] = std::exp(std::complex<double>(0.0, -2.0*M_PI/L*d ));
@@ -295,8 +295,6 @@ class SSH_multisite
 		template <typename VertexType>
 		double green(const VertexType& c1, const VertexType& c2)
 		{
-			std::complex<double> jj(0,1);
-		
 			// space
 			auto dist = std::lrint(c1[0]-c2[0]);
 			if (dist < 0) dist = L + dist;
@@ -326,20 +324,15 @@ class SSH_multisite
             const double *const __restrict__ dat = ftexp + dist*L;
             const double *const __restrict__ gdat =  gdat1D + dti*L;
             double retval = 0;
-// #pragma omp simd
 			for (int j = 0; j < L; ++j)
 			{
-                retval = std::fma(dat[j], gdat[j], retval);
-				// perform sum
-//                 retval[0] = std::fma(dat[j], gdat[j], retval[0]);//currently fastest and simplest on my CPU...
-//                 retval[1] = std::fma(dat[j+1], gdat[j+1], retval[1]);//currently fastest and simplest on my CPU...
-//                 retval[2] = std::fma(dat[j+2], gdat[j+2], retval[2]);//currently fastest and simplest on my CPU...
-//                 retval[3] = std::fma(dat[j+3], gdat[j+3], retval[3]);//currently fastest and simplest on my CPU...
-// 				retval +=  dat[j] * gdat[j];
+                retval = std::fma(dat[j], gdat[j], retval);//currently fastest and simplest on my CPU...
+
+// // 				retval +=  dat[j] * gdat[j];
 			}
 
 			const double norml = 1.0/L;
-			return norml*signum*(retval /*+ retval[1] + retval[2] + retval[3]*/);
+			return norml*signum*retval;
 		}
 		#endif
 
