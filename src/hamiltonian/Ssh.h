@@ -233,7 +233,7 @@ class SSH_multisite
 
 		// Green's function for 2+1 dimensions
 		// takes two coordinate vectors (x,y,t)
-		double green(std::vector<double> c1, std::vector<double> c2)
+		double green(const std::vector<double>& c1, const std::vector<double>& c2)
 		{
 			std::complex<double> retval = 0;
 			std::complex<double> jj(0,1);
@@ -260,8 +260,7 @@ class SSH_multisite
 			// compute Greens function in Fourier space
 			std::complex<double> dexpkx = std::exp(-2*M_PI/L*jj*distx);
 			std::complex<double> dexpky = std::exp(-2*M_PI/L*jj*disty);
-			std::complex<double> expkx = 1.0;
-			std::complex<double> expky = 1.0;
+			std::complex<double> expk = 1.0;
 
 			for (int jx = 0; jx < L; ++jx)
 			{
@@ -270,11 +269,11 @@ class SSH_multisite
 					// dispersion relation
 					double disp = - 2*cos(2*M_PI*jx/L) - 2*cos(2*M_PI*jy/L);
 					// do the summation
-					retval += expkx * expky * exp(dti*dtau*disp) * fermi(beta*disp);
+					retval += expk * std::exp(dti*dtau*disp) * fermi(beta*disp);
 					// increment Fourier transform
-					expky *= dexpky; 
+					expk *= dexpky; 
 				}
-				expkx *= dexpkx; // increment Fourier transform
+				expk *= dexpkx; // increment Fourier transform
 			}
 
 			const double norml = 1.0 / pow(2*L,2); // the number of sites per time slice
@@ -286,7 +285,7 @@ class SSH_multisite
 
 		// Green's function for 1+1 dimensions
 		// takes two coordinate vectors (x,t)
-		double green(std::vector<double> c1, std::vector<double> c2)
+		double green(const std::vector<double>& c1, const std::vector<double>& c2)
 		{
 			std::complex<double> retval = 0;
 			std::complex<double> jj(0,1);
