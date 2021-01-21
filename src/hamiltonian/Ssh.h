@@ -172,7 +172,7 @@ class SSH_multisite
                 for(int k = 0; k < L; ++k)
                     ftexp[d*L + k] = std::real(std::exp(std::complex<double>(0.0, -2.0*M_PI*k/L*d )));
             }
-
+#ifndef SSH_2D
 			for(int j = 0; j < L; ++j)
 			{
 				double k = (j*2)*M_PI/double(L);
@@ -184,6 +184,24 @@ class SSH_multisite
 					gdat[dt * L + j] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
 				}
 			}
+#else
+			for(int jx = 0; jx < L; ++jx)
+			{
+				double kx = (jx*2)*M_PI/double(L);
+                for(int jy = 0; jy < L; ++jy)
+                {
+                    double ky = (jy*2)*M_PI/double(L);
+                    // 2D disperson relation
+                    const double mu = 0;
+                    double eps = -2.0*std::cos(kx) - std::cos(ky) - mu;
+                    for(int dt = 0; dt < ntau; ++dt)
+                    {
+                        gdat[dt * L*L + L*jx + jy] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
+                    }
+                }
+			}
+
+#endif
 		}
 
 
@@ -279,9 +297,10 @@ class SSH_multisite
 				for (int jy = 0; jy < L; ++jy)
 				{
 					// dispersion relation
-					double disp = - 2*std::cos(2*M_PI*jx/L) - 2*std::cos(2*M_PI*jy/L);
+// 					double disp = - 2*std::cos(2*M_PI*jx/L) - 2*std::cos(2*M_PI*jy/L);
 					// do the summation
-					retval += expk.real() * std::exp(dti*dtau*disp) * fermi(beta*disp);
+					retval += expk.real() * gdat[dti*L*L + jx*L + jy];
+// 					std::exp(dti*dtau*disp) * fermi(beta*disp);
 					// increment Fourier transform
 					expk *= dexpky; 
 				}
