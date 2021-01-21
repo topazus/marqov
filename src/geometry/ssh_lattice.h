@@ -1,6 +1,9 @@
 #ifndef SSHLATTE_H
 #define SSHLATTE_H
 
+#include <vector>
+#include <array>
+
 // covers the 1+1 dimensional and the 2+1 dimensional case
 // note that the dimension is set via the proceessor statement SSH_2D
 
@@ -9,20 +12,19 @@ class SSHLattice
 	public:
 	
 		int counter = 0;
-	
+#ifdef SSH_2D
+        static constexpr int dim = 2;
+#else
+        static constexpr int dim = 1;
+#endif
+        typedef std::array<double, 2*dim + 1> CoordType;
 		typedef std::vector<int> value_type;
 		
 		SSHLattice() {}
 		
-		SSHLattice(int l, int ltau, int d) : len(l), lentime(ltau), dim(d) // dim is the spatial dimension!
+		SSHLattice(int l, int ltau, int d) : len(l), lentime(ltau) // dim is the spatial dimension!
 		{
 			// dim from config file will be ignored (improve me!)
-
-			#ifdef SSH_2D
-				dim = 2;
-			#else
-				dim = 1;
-			#endif
 
 			vol = dim * pow(len, dim); // spatial volume (number of bonds in a time slice)
 			nsites = vol * lentime; // total volume (number of sites)
@@ -77,7 +79,7 @@ class SSHLattice
 		}
 
 
-		std::vector<double> getcrds(int i) const 
+		CoordType getcrds(int i) const 
 		{
 			// returns bond coordinates, which is five numbers in 2+1 dimension
    			// (xstart, xend, ystart, yend, time)
@@ -142,7 +144,6 @@ class SSHLattice
 		
 		std::size_t size() const {return nsites;}
 		int len, lentime, vol;
-		int dim;
 		std::size_t nsites;
 };
 

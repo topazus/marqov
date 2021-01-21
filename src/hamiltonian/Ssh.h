@@ -237,7 +237,8 @@ class SSH_multisite
 
 		// Green's function for 2+1 dimensions
 		// takes two coordinate vectors (x,y,t)
-		double green(const std::vector<double>& c1, const std::vector<double>& c2)
+		template <typename VertexType>
+		double green(const VertexType& c1, const VertexType& c2)
 		{
 			std::complex<double> retval = 0;
 			std::complex<double> jj(0,1);
@@ -289,7 +290,8 @@ class SSH_multisite
 
 		// Green's function for 1+1 dimensions
 		// takes two coordinate vectors (x,t)
-		double green(const std::vector<double>& c1, const std::vector<double>& c2)
+		template <typename VertexType>
+		double green(const VertexType& c1, const VertexType& c2)
 		{
 			std::complex<double> retval = 0;
 			std::complex<double> jj(0,1);
@@ -341,7 +343,8 @@ class SSH_multisite
 
 
 	// performs a Wick decomposition
-	std::complex<double> wick(std::vector<double> v0, std::vector<double> v1, std::vector<double> v2, std::vector<double> v3)
+	template <typename VertexType>
+	std::complex<double> wick(VertexType v0,VertexType v1, VertexType v2, VertexType v3)
 	{
 		std::complex<double> retval = 0;
 		if (v0==v1 && v1==v2 && v2==v3 && v3==v0)
@@ -351,7 +354,6 @@ class SSH_multisite
 		else
 		{
 			retval = green(v0,v1)*green(v2,v3) - green(v0,v3)*green(v2,v1);
-
 		}
 		return retval;
 	}
@@ -377,27 +379,27 @@ class SSH_multisite
 //			const auto c3 = wick({w1[2],w1[3],t1}, {w1[0],w1[1],t1}, {w2[0],w2[1],t2}, {w2[2],w2[3],t2});
 //			const auto c4 = wick({w1[2],w1[3],t1}, {w1[0],w1[1],t1}, {w2[2],w2[3],t2}, {w2[0],w2[1],t2});
 
-			const auto c1 = wick({w1[0],w1[2],t1}, {w1[1],w1[3],t1}, {w2[0],w2[2],t2}, {w2[1],w2[3],t2});
-			const auto c2 = wick({w1[0],w1[2],t1}, {w1[1],w1[3],t1}, {w2[1],w2[3],t2}, {w2[0],w2[2],t2});
-			const auto c3 = wick({w1[1],w1[3],t1}, {w1[0],w1[2],t1}, {w2[0],w2[2],t2}, {w2[1],w2[3],t2});
-			const auto c4 = wick({w1[1],w1[3],t1}, {w1[0],w1[2],t1}, {w2[1],w2[3],t2}, {w2[0],w2[2],t2});
+			const auto c1 = wick<decltype(w1)>({w1[0],w1[2],t1}, {w1[1],w1[3],t1}, {w2[0],w2[2],t2}, {w2[1],w2[3],t2});
+			const auto c2 = wick<decltype(w1)>({w1[0],w1[2],t1}, {w1[1],w1[3],t1}, {w2[1],w2[3],t2}, {w2[0],w2[2],t2});
+			const auto c3 = wick<decltype(w1)>({w1[1],w1[3],t1}, {w1[0],w1[2],t1}, {w2[0],w2[2],t2}, {w2[1],w2[3],t2});
+			const auto c4 = wick<decltype(w1)>({w1[1],w1[3],t1}, {w1[0],w1[2],t1}, {w2[1],w2[3],t2}, {w2[0],w2[2],t2});
 
 //			const std::complex<double> K1 = green({w1[0],w1[1],w1[4]},{w1[2],w1[3],w1[4]}) + green({w1[2],w1[3],w1[4]},{w1[0],w1[1],w1[4]});
 //			const std::complex<double> K2 = green({w2[0],w2[1],w2[4]},{w2[2],w2[3],w2[4]}) + green({w2[2],w2[3],w2[4]},{w2[0],w2[1],w2[4]});
 
-			const std::complex<double> K1 = green({w1[0],w1[2],t1},{w1[1],w1[3],t1}) + green({w1[1],w1[3],t1},{w1[0],w1[2],t1});
-			const std::complex<double> K2 = green({w2[0],w2[2],t2},{w2[1],w2[3],t2}) + green({w2[1],w2[3],t2},{w2[0],w2[2],t2});
+			const std::complex<double> K1 = green<decltype(w1)>({w1[0],w1[2],t1},{w1[1],w1[3],t1}) + green<decltype(w1)>>({w1[1],w1[3],t1},{w1[0],w1[2],t1});
+			const std::complex<double> K2 = green<decltype(w1)>({w2[0],w2[2],t2},{w2[1],w2[3],t2}) + green<decltype(w1)>({w2[1],w2[3],t2},{w2[0],w2[2],t2});
 		#else
 			const auto t1 = w1[2];
 			const auto t2 = w2[2];
 
-			const auto c1 = wick({w1[0],t1}, {w1[1],t1}, {w2[0],t2}, {w2[1],t2});
-			const auto c2 = wick({w1[0],t1}, {w1[1],t1}, {w2[1],t2}, {w2[0],t2});
-			const auto c3 = wick({w1[1],t1}, {w1[0],t1}, {w2[0],t2}, {w2[1],t2});
-			const auto c4 = wick({w1[1],t1}, {w1[0],t1}, {w2[1],t2}, {w2[0],t2});
+			const auto c1 = wick<decltype(w1)>({w1[0],t1}, {w1[1],t1}, {w2[0],t2}, {w2[1],t2});
+			const auto c2 = wick<decltype(w1)>({w1[0],t1}, {w1[1],t1}, {w2[1],t2}, {w2[0],t2});
+			const auto c3 = wick<decltype(w1)>({w1[1],t1}, {w1[0],t1}, {w2[0],t2}, {w2[1],t2});
+			const auto c4 = wick<decltype(w1)>({w1[1],t1}, {w1[0],t1}, {w2[1],t2}, {w2[0],t2});
 
-			const std::complex<double> K1 = green({w1[0],t1},{w1[1],t1}) + green({w1[1],t1},{w1[0],t1});
-			const std::complex<double> K2 = green({w2[0],t2},{w2[1],t2}) + green({w2[1],t2},{w2[0],t2});
+			const std::complex<double> K1 = green<decltype(w1)>({w1[0],t1},{w1[1],t1}) + green<decltype(w1)>({w1[1],t1},{w1[0],t1});
+			const std::complex<double> K2 = green<decltype(w1)>({w2[0],t2},{w2[1],t2}) + green<decltype(w1)>({w2[1],t2},{w2[0],t2});
 		#endif
 
 		return std::real(c1+c2+c3+c4-K1*K2);
