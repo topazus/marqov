@@ -152,12 +152,17 @@ class SSH_multisite
 		double k, beta, dtau, g;
 		int L;
 		int ntau;
-		double *const gdat1D;
+		double *const gdat;
         std::complex<double>* dexpk;
         double *const ftexp;
 		SSH_multisite(double g, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL), ntau(std::round(beta/dtau)), g(g),
-		gdat1D(new double[ntau*L]),
+#ifndef SSH_2D
+		gdat(new double[ntau*L]),
 		ftexp(new double[L*L])
+#else
+        gdat(new double[ntau*L*L]),
+		ftexp(new double[L*L*L*L])
+#endif
 		{
 			// ntau should be nothing else than Ltime
             dexpk = new std::complex<double>[L];
@@ -176,7 +181,7 @@ class SSH_multisite
 				double eps = -2.0*std::cos(k)-mu;
 				for(int dt = 0; dt < ntau; ++dt)
 				{
-					gdat1D[dt * L + j] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
+					gdat[dt * L + j] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
 				}
 			}
 		}
@@ -213,7 +218,7 @@ class SSH_multisite
 			return retval;
 		}
 
-		~SSH_multisite() {delete [] gdat1D; delete [] dexpk;}
+		~SSH_multisite() {delete [] gdat; delete [] dexpk; delete [] ftexp; }
 
 		/**
 		The fermi function
@@ -242,7 +247,7 @@ class SSH_multisite
 		template <typename VertexType>
 		double green(const VertexType& c1, const VertexType& c2)
 		{
-			std::complex<double> retval = 0;
+			double retval = 0;
 			std::complex<double> jj(0,1);
 
 			// space
@@ -276,7 +281,7 @@ class SSH_multisite
 					// dispersion relation
 					double disp = - 2*std::cos(2*M_PI*jx/L) - 2*std::cos(2*M_PI*jy/L);
 					// do the summation
-					retval += expk * std::exp(dti*dtau*disp) * fermi(beta*disp);
+					retval += expk.real() * std::exp(dti*dtau*disp) * fermi(beta*disp);
 					// increment Fourier transform
 					expk *= dexpky; 
 				}
@@ -284,7 +289,7 @@ class SSH_multisite
 			}
 
 			const double norml = 1.0 / pow(2*L,2); // the number of sites per time slice
-			return norml*signum*retval.real();
+			return norml*signum*retval;
 		}
 
 		#else
@@ -322,11 +327,11 @@ class SSH_multisite
 			std::complex<double> dexpkx = dexpk[dist];
 			std::complex<double> expk = 1.0;
             const double *const __restrict__ dat = ftexp + dist*L;
-            const double *const __restrict__ gdat =  gdat1D + dti*L;
+            const double *const __restrict__ gdatloc =  gdat + dti*L;
             double retval = 0;
 			for (int j = 0; j < L; ++j)
 			{
-                retval = std::fma(dat[j], gdat[j], retval);//currently fastest and simplest on my CPU...
+                retval = std::fma(dat[j], gdatloc[j], retval);//currently fastest and simplest on my CPU...
 
 // // 				retval +=  dat[j] * gdat[j];
 			}
