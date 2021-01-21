@@ -8,6 +8,8 @@
 #include <tuple>
 #include <iomanip>
 
+#define SSH_2D  // dimension switch
+
 using std::cout;
 using std::endl;
 using std::flush;

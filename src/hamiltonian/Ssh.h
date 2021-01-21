@@ -9,10 +9,6 @@
 #include "../hamparts.h"
 #include "../metropolis.h"
 
-// --------------------------------
-#undef SSH_2D  // dimension switch
-// --------------------------------
-
 
 // ----------------------------------- OBSERVABLES --------------------------------
 
@@ -395,7 +391,7 @@ class SSH_multisite
 //			const std::complex<double> K1 = green({w1[0],w1[1],w1[4]},{w1[2],w1[3],w1[4]}) + green({w1[2],w1[3],w1[4]},{w1[0],w1[1],w1[4]});
 //			const std::complex<double> K2 = green({w2[0],w2[1],w2[4]},{w2[2],w2[3],w2[4]}) + green({w2[2],w2[3],w2[4]},{w2[0],w2[1],w2[4]});
 
-			const std::complex<double> K1 = green<decltype(w1)>({w1[0],w1[2],t1},{w1[1],w1[3],t1}) + green<decltype(w1)>>({w1[1],w1[3],t1},{w1[0],w1[2],t1});
+			const std::complex<double> K1 = green<decltype(w1)>({w1[0],w1[2],t1},{w1[1],w1[3],t1}) + green<decltype(w1)>({w1[1],w1[3],t1},{w1[0],w1[2],t1});
 			const std::complex<double> K2 = green<decltype(w1)>({w2[0],w2[2],t2},{w2[1],w2[3],t2}) + green<decltype(w1)>({w2[1],w2[3],t2},{w2[0],w2[2],t2});
 		#else
 			const auto t1 = w1[2];
