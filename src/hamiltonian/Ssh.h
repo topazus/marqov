@@ -325,7 +325,11 @@ class SSH_multisite
 				// perform sum
 				retval += expk.real()*gdat1D[dti*L + j];
 				// increment Fourier step
-				expk   *= dexpkx; //loop-carried dependency. breaks vectorization.
+                expk = std::complex<double>(
+                    expk.real() * dexpkx.real() - expk.imag() * dexpkx.imag(),
+                    expk.real() * dexpkx.imag() + expk.imag() * dexpkx.real()
+                                    );
+// 				expk   *= dexpkx; //loop-carried dependency. breaks vectorization.
 			}
 
 			const double norml = 1.0/L;
