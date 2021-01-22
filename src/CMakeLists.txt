@@ -13,9 +13,14 @@ target_link_libraries(${target} ${HDF5_LIBRARIES} Threads::Threads)
 set_target_properties(${target} PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 # target_compile_features(${target} PUBLIC cxx_return_type_deduction)
 
+# check whether the found compiler supports -march=native
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
+if(COMPILER_SUPPORTS_MARCH_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+endif()
 
-
-#add_definitions("-fopenmp")
+# add_definitions("-march=native")
 #set_target_properties(MARQOV PROPERTIES LINK_FLAGS " ${LINK_FLAGS} -fopenmp")
 
 set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DHAVE_CONFIG_H -DGIT_SHA1=\"${GIT_SHA1}\" -DGIT_BRANCH=\"${GIT_BRANCH}\"" )
