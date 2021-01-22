@@ -263,6 +263,7 @@ class SSH_multisite
 		// Green's function for 2+1 dimensions
 		// takes two coordinate vectors (x,y,t)
 		template <typename VertexType>
+[[gnu::hot, gnu::optimize("fast-math") ]]
 		double green(const VertexType& c1, const VertexType& c2)
 		{
 			double retval = 0;
@@ -409,14 +410,18 @@ class SSH_multisite
 		#else
 			const auto t1 = w1[2];
 			const auto t2 = w2[2];
+                        std::array<double, 2> v10 = {w1[0], t1};
+                        std::array<double, 2> v11 = {w1[1], t1};
+                        std::array<double, 2> v20 = {w2[0], t2};
+                        std::array<double, 2> v21 = {w2[1], t2};
 
-			const auto c1 = wick<decltype(w1)>({w1[0],t1}, {w1[1],t1}, {w2[0],t2}, {w2[1],t2});
-			const auto c2 = wick<decltype(w1)>({w1[0],t1}, {w1[1],t1}, {w2[1],t2}, {w2[0],t2});
-			const auto c3 = wick<decltype(w1)>({w1[1],t1}, {w1[0],t1}, {w2[0],t2}, {w2[1],t2});
-			const auto c4 = wick<decltype(w1)>({w1[1],t1}, {w1[0],t1}, {w2[1],t2}, {w2[0],t2});
+			const auto c1 = wick(v10, v11, v20, v21);
+			const auto c2 = wick(v10, v11, v21, v20);
+			const auto c3 = wick(v11, v10, v20, v21);
+			const auto c4 = wick(v11, v10, v21, v20);
 
-			const std::complex<double> K1 = green<decltype(w1)>({w1[0],t1},{w1[1],t1}) + green<decltype(w1)>({w1[1],t1},{w1[0],t1});
-			const std::complex<double> K2 = green<decltype(w1)>({w2[0],t2},{w2[1],t2}) + green<decltype(w1)>({w2[1],t2},{w2[0],t2});
+			const std::complex<double> K1 = green(v10, v11) + green(v11, v10);
+			const std::complex<double> K2 = green(v20, v21) + green(v21, v20);
 		#endif
 
 		return std::real(c1+c2+c3+c4-K1*K2);
