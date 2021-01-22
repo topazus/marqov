@@ -315,6 +315,7 @@ class SSH_multisite
 		// Green's function for 1+1 dimensions
 		// takes two coordinate vectors (x,t)
 		template <typename VertexType>
+[[gnu::hot, gnu::optimize("fast-math") ]]
 		double green(const VertexType& c1, const VertexType& c2)
 		{
 			// space
@@ -341,16 +342,13 @@ class SSH_multisite
 	
 	
 			// compute Greens function in Fourier space
-			std::complex<double> dexpkx = dexpk[dist];
-			std::complex<double> expk = 1.0;
-            const double *const __restrict__ dat = ftexp + dist*L;
-            const double *const __restrict__ gdatloc =  gdat + dti*L;
-            double retval = 0;
+                        const double *const __restrict__ dat = ftexp + dist*L;
+                        const double *const __restrict__ gdatloc =  gdat + dti*L;
+                        double retval = 0;
 			for (int j = 0; j < L; ++j)
 			{
-                retval = std::fma(dat[j], gdatloc[j], retval);//currently fastest and simplest on my CPU...
-
-// // 				retval +=  dat[j] * gdat[j];
+//                retval = std::fma(dat[j], gdatloc[j], retval);//currently fastest and simplest on my CPU...
+ 				retval +=  dat[j] * gdat[j];
 			}
 
 			const double norml = 1.0/L;
