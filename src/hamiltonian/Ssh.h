@@ -316,8 +316,8 @@ class SSH_multisite
 		// Green's function for 1+1 dimensions
 		// takes two coordinate vectors (x,t)
 		template <typename VertexType>
-[[gnu::hot, gnu::optimize("fast-math") ]]
-		double green(const VertexType& c1, const VertexType& c2)
+[[gnu::hot, gnu::optimize("fast-math"), gnu::pure ]]
+		inline double green(const VertexType& c1, const VertexType& c2)
 		{
 			// space
 			auto dist = std::lrint(c1[0]-c2[0]);
@@ -348,7 +348,6 @@ class SSH_multisite
                         double retval = 0;
 			for (int j = 0; j < L; ++j)
 			{
-//                retval = std::fma(dat[j], gdatloc[j], retval);//currently fastest and simplest on my CPU...
  				retval +=  dat[j] * gdat[j];
 			}
 
@@ -362,9 +361,9 @@ class SSH_multisite
 
 	// performs a Wick decomposition
 	template <typename VertexType>
-	std::complex<double> wick(VertexType v0,VertexType v1, VertexType v2, VertexType v3)
+	double wick(VertexType v0,VertexType v1, VertexType v2, VertexType v3)
 	{
-		std::complex<double> retval = 0;
+		double retval = 0;
 		if (v0==v1 && v1==v2 && v2==v3 && v3==v0)
 		{
 			retval = green(v0,v0);
