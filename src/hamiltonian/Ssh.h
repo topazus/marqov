@@ -497,7 +497,7 @@ class SSH
 		{
 			for (int i=0; i<grid.size(); i++)
 			{
-				if (rng.real() > 0.5) statespace[i][0] = 1;
+				if (rng.real() > 0.1) statespace[i][0] = 1;
 				else statespace[i][0] = -1;
 			}
 		}

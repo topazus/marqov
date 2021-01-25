@@ -54,15 +54,16 @@
 		std::string str_repid = std::to_string(mp.repid);
 		std::string str_k     = "k"+std::to_string(std::get<2>(hp));
 		std::string str_g     = "g"+std::to_string(std::get<3>(hp));
+		std::string str_mu    = "mu"+std::to_string(std::get<4>(hp));
 
-		double betaQM = std::get<4>(hp);
-		int Ltime = std::get<5>(hp); 
+		double betaQM = std::get<5>(hp);
+		int Ltime = std::get<6>(hp); 
 		double dtau = betaQM / double(Ltime);
 
 		std::string str_Ltime = "Ltime"+std::to_string(Ltime);
 		std::string str_dtau  = "dtau"+std::to_string(dtau); 
 
-		mp.outname = str_Ltime+"_"+str_k+"_"+str_g+"_"+str_dtau+"_"+str_repid;
+		mp.outname = str_Ltime+"_"+str_k+"_"+str_g+"_"+str_mu+"_"+str_dtau+"_"+str_repid;
 		return std::tuple_cat(std::forward_as_tuple(latt), p);
 
 	};

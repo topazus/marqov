@@ -131,13 +131,13 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
      	     cout << endl << "L_space = " << L << "\t" << "L_time = " << Ltime << endl << endl;
 
 
-			for (std::size_t i=0; i<hp.size(); i++) std::get<5>(hp[i]) = Ltime;
-			for (std::size_t i=0; i<hp.size(); i++) std::get<6>(hp[i]) = L;
+			for (std::size_t i=0; i<hp.size(); i++) std::get<6>(hp[i]) = Ltime;
+			for (std::size_t i=0; i<hp.size(); i++) std::get<7>(hp[i]) = L;
 
      	     std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
      	     MARQOV::Config mp(outpath);
-     	     mp.setnsweeps(5);
+     	     mp.setnsweeps(1);
      	     mp.setncluster(0);
      	     mp.setwarmupsteps(0);
      	     mp.setgameloopsteps(10);
