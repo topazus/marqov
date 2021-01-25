@@ -53,12 +53,12 @@ using namespace MARQOV;
 
 std::string selectsim_startup(RegistryDB& registry)
 {
-	const auto ham        = registry.Get<std::string>("mc", "General", "Hamiltonian" );
-	const auto dim 	  = registry.Get<int>("mc", ham, "dim" );
-	const auto nreplicas  = registry.Get<std::vector<int>>("mc", ham, "rep" );
-	const auto nreplicass = registry.Get<std::string>("mc", ham, "rep" );
-	const auto nL  	  = registry.Get<std::vector<int>>("mc", ham, "L" );
-	const auto nLs 	  = registry.Get<std::string>("mc", ham, "L" );
+	const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+	const auto dim 	  = registry.Get<int>("mc.ini", ham, "dim" );
+	const auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
+	const auto nreplicass = registry.Get<std::string>("mc.ini", ham, "rep" );
+	const auto nL  	  = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
+	const auto nLs 	  = registry.Get<std::string>("mc.ini", ham, "L" );
 
 	cout << endl;
 	cout << "Hamiltonian: \t" << ham << endl;
@@ -81,23 +81,24 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	// ----------------- select simulation ------------------
 
-     auto beta   = registry.Get<std::vector<double> >("mc", ham, "betaMC");
-     auto betaQM = registry.Get<std::vector<double> >("mc", ham, "betaQM");
-     auto m      = registry.Get<std::vector<double> >("mc", ham, "m");
-     auto k      = registry.Get<std::vector<double> >("mc", ham, "k");
-     auto g      = registry.Get<std::vector<double> >("mc", ham, "g");
+     auto beta   = registry.Get<std::vector<double> >("mc.ini", ham, "betaMC");
+     auto betaQM = registry.Get<std::vector<double> >("mc.ini", ham, "betaQM");
+     auto m      = registry.Get<std::vector<double> >("mc.ini", ham, "m");
+     auto k      = registry.Get<std::vector<double> >("mc.ini", ham, "k");
+     auto g      = registry.Get<std::vector<double> >("mc.ini", ham, "g");
+     auto mu     = registry.Get<std::vector<double> >("mc.ini", ham, "mu");
 
-     const auto name      = registry.Get<std::string>("mc", "General", "Hamiltonian" );
-           auto nreplicas = registry.Get<std::vector<int>>("mc", name, "rep" );
-     const auto nL        = registry.Get<std::vector<int>>("mc", name, "L" );
-     const auto nLtime    = registry.Get<std::vector<int>>("mc", name, "Ltime" );
-     const auto dim       = registry.Get<int>("mc", name, "dim" );
+     const auto name      = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+           auto nreplicas = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
+     const auto nL        = registry.Get<std::vector<int>>("mc.ini", name, "L" );
+     const auto nLtime    = registry.Get<std::vector<int>>("mc.ini", name, "Ltime" );
+     const auto dim       = registry.Get<int>("mc.ini", name, "dim" );
 
 
 	// we need "L" and "Ltime" as explicit parameters in the Hamiltonian
 	// which requires some gymnastics ...
 	std::vector<int> dummy = {0};
-     auto hp = cart_prod(beta, m, k, g, betaQM, dummy, dummy);
+     auto hp = cart_prod(beta, m, k, g, mu, betaQM, dummy, dummy);
 
 
 	// prepare lattices
@@ -136,7 +137,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
      	     std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
      	     MARQOV::Config mp(outpath);
-     	     mp.setnsweeps(25);
+     	     mp.setnsweeps(5);
      	     mp.setncluster(0);
      	     mp.setwarmupsteps(0);
      	     mp.setgameloopsteps(10);
@@ -167,11 +168,11 @@ int main()
 {
 
 	// read config files
-	RegistryDB registry("../src/config");
+	RegistryDB registry("../src/config", "ini");
 
 	// remove old output and prepare new one
-	std::string outbasedir = registry.Get<std::string>("mc", "IO", "outdir" );
-	std::string logbasedir = registry.Get<std::string>("mc", "IO", "logdir" );
+	std::string outbasedir = registry.Get<std::string>("mc.ini", "IO", "outdir" );
+	std::string logbasedir = registry.Get<std::string>("mc.ini", "IO", "logdir" );
 
 	//FIXME: NEVER DELETE USER DATA
 	std::string command;

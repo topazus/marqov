@@ -149,13 +149,13 @@ template <class StateSpace, class StateVector>
 class SSH_multisite
 {
 	public:
-		double k, beta, dtau, g;
+		double k, beta, dtau, g, mu;
 		int L;
 		int ntau;
 		double *const gdat;
         std::complex<double>* dexpk;
         double *const ftexp;
-		SSH_multisite(double g, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL), ntau(std::round(beta/dtau)), g(g),
+		SSH_multisite(double g, double mu, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL), ntau(std::round(beta/dtau)), g(g), mu(mu),
 #ifndef SSH_2D
 		gdat(new double[ntau*L]),
 		ftexp(new double[L*L])
@@ -177,7 +177,6 @@ class SSH_multisite
 			{
 				double k = (j*2)*M_PI/double(L);
 				// 1D disperson relation
-				const double mu = 0;
 				double eps = -2.0*std::cos(k)-mu;
 				for(int dt = 0; dt < ntau; ++dt)
 				{
@@ -192,7 +191,6 @@ class SSH_multisite
                 {
                     double ky = (jy*2)*M_PI/double(L);
                     // 2D disperson relation
-                    const double mu = 0;
                     double eps = -2.0*std::cos(kx) - std::cos(ky) - mu;
                     for(int dt = 0; dt < ntau; ++dt)
                     {
@@ -463,7 +461,7 @@ template <typename SpinType = double>
 class SSH
 {
 	public:
-		double m, k, g, dtau, betaQM, L;
+		double m, k, g, mu, dtau, betaQM, L;
 		constexpr static int SymD = 1;
 		const std::string name;
 		typedef std::array<SpinType, SymD> StateVector;
@@ -474,11 +472,11 @@ class SSH
 		static constexpr uint Nbeta = 1;
 		static constexpr uint Ngamma = 1;
 		
-		SSH(double m, double k, double g, double bQ, int Ltime, int L) : m(m), k(k), g(g), dtau(bQ/double(Ltime)), L(L), betaQM(bQ), name("SSH")
+		SSH(double m, double k, double g, double mu, double bQ, int Ltime, int L) : m(m), k(k), g(g), mu(mu), dtau(bQ/double(Ltime)), L(L), betaQM(bQ), name("SSH")
 		{
 			interactions[0] = new SSH_interaction<StateVector>(m, dtau); 
 			onsite[0] = new SSH_onsite<StateVector>(m, k, dtau);
-			multisite[0] = new SSH_multisite<StateVector*,StateVector>(g, betaQM, dtau, L);
+			multisite[0] = new SSH_multisite<StateVector*,StateVector>(g, mu, betaQM, dtau, L);
 		}
 		
 		// instantiate interaction terms (requires pointers)
