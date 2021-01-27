@@ -117,9 +117,13 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		}
 		latts.emplace_back(lat);
 	}
-
-	typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType; 
-	typename GetSchedulerType<SSH<SSHLattice,double>, SSHLattice, typename PPType::value_type>::MarqovScheduler sched(1);
+    
+    	typedef decltype( finalize_parameter_pair(std::declval<MARQOV::Config>(),
+                                                  std::declval<std::vector<decltype(std::tuple_cat(hp[0], std::forward_as_tuple(latts[0][0])))>>()
+                                                 )) PPType;
+                                                 
+	typename GetSchedulerType<
+	SSH<SSHLattice, double>, SSHLattice, typename PPType::value_type>::MarqovScheduler sched(1);
 
      for (std::size_t j=0; j<nL.size(); j++)
 	{

@@ -51,8 +51,6 @@
 		auto& mp = p.first;		// Monte Carlo params
 		auto& hp = p.second;	// Hamiltonian params
 
-		auto hpnew =  std::tuple_cat(p, std::forward_as_tuple(latt));
-
 		std::string str_repid = std::to_string(mp.repid);
 		std::string str_k     = "k"+std::to_string(std::get<2>(hp));
 		std::string str_g     = "g"+std::to_string(std::get<3>(hp));
@@ -66,7 +64,8 @@
 		std::string str_dtau  = "dtau"+std::to_string(dtau); 
 
 		mp.outname = str_Ltime+"_"+str_k+"_"+str_g+"_"+str_mu+"_"+str_dtau+"_"+str_repid;
-		return std::tuple_cat(std::forward_as_tuple(latt), p);
+        auto p3 = std::make_tuple(mp, std::tuple_cat(hp, std::forward_as_tuple(latt)));
+		return std::tuple_cat(std::forward_as_tuple(latt), p3 );
 
 	};
 
