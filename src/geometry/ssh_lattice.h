@@ -101,13 +101,13 @@ class SSHLattice
 				{
 					const int left = xpos;
 					const int right = (xpos+1)%len;  // account for p.b.c in x
-					return {left, right, yreal, yreal, tslice};
+					return {(double)left, (double)right, (double)yreal, (double)yreal, (double)tslice};
 				}
 				else
 				{
 					const int lower = yreal;
 					const int upper = (yreal+1)%len; // account for p.b.c in y
-					return {xpos, xpos, lower, upper, tslice};
+					return {(double)xpos, (double)xpos, (double)lower, (double)upper, (double)tslice};
 				}
 
 			#else
