@@ -457,7 +457,7 @@ class SSH_Initializer
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
-template <typename SpinType = double>
+template <class Lattice, typename SpinType = double>
 class SSH
 {
 	public:
@@ -468,11 +468,13 @@ class SSH
 		template <typename RNG>
 		using MetroInitializer = SSH_Initializer<StateVector, RNG>;
 
+		Lattice& grid;
+
 		static constexpr uint Nalpha = 1;
 		static constexpr uint Nbeta = 1;
 		static constexpr uint Ngamma = 1;
 		
-		SSH(double m, double k, double g, double mu, double bQ, int Ltime, int L) : m(m), k(k), g(g), mu(mu), dtau(bQ/double(Ltime)), L(L), betaQM(bQ), name("SSH")
+		SSH(double m, double k, double g, double mu, double bQ, int Ltime, int L, Lattice& lattice) : m(m), k(k), g(g), mu(mu), dtau(bQ/double(Ltime)), L(L), betaQM(bQ), name("SSH"), grid(lattice)
 		{
 			interactions[0] = new SSH_interaction<StateVector>(m, dtau); 
 			onsite[0] = new SSH_onsite<StateVector>(m, k, dtau);
@@ -492,8 +494,8 @@ class SSH
 
 
 		// initialize state space
-		template <class StateSpace, class Lattice, class RNG>
-		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
+		template <class StateSpace, class Latt, class RNG>
+		void initstatespace(StateSpace& statespace, Latt& grid, RNG& rng) const
 		{
 			for (int i=0; i<grid.size(); i++)
 			{

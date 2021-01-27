@@ -51,6 +51,8 @@
 		auto& mp = p.first;		// Monte Carlo params
 		auto& hp = p.second;	// Hamiltonian params
 
+		auto hpnew =  std::tuple_cat(p, std::forward_as_tuple(latt));
+
 		std::string str_repid = std::to_string(mp.repid);
 		std::string str_k     = "k"+std::to_string(std::get<2>(hp));
 		std::string str_g     = "g"+std::to_string(std::get<3>(hp));
