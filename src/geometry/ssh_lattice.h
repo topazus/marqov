@@ -147,4 +147,9 @@ class SSHLattice
 		std::size_t nsites;
 };
 
+//Eat the dumping of parameters for now
+inline void dumpscalartoH5(H5::Group& h5loc, std::string key, const SSHLattice&)
+{
+}
+
 #endif
