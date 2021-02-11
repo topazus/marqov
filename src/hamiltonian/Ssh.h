@@ -68,7 +68,7 @@ class SSHTwoPointCorrSpace
 		const int Ls = grid.len;
 		const int Lt = grid.lentime;
 
-		const double norml = 1.0 / Ls / Ls;
+		const double norml = 1.0 / Ls / Ls / 2;  // division by two accounts for double counting
 
 //		std::vector<double> retval;
 //		for (int i=0; i<10; i++) retval.push_back(0);
@@ -155,7 +155,7 @@ class SSH_multisite
 		double *const gdat;
         std::complex<double>* dexpk;
         double *const ftexp;
-		SSH_multisite(double g, double mu, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL), ntau(std::round(beta/dtau)), g(g), mu(mu),
+		SSH_multisite(double g, double mu, double b, double d, int myL) : k(-0.5*g*g*d*d), beta(b), dtau(d), L(myL), ntau(std::round(beta/dtau)), g(g), mu(mu),
 #ifndef SSH_2D
 		gdat(new double[ntau*L]),
 		ftexp(new double[L*L])
@@ -389,18 +389,10 @@ class SSH_multisite
 			const auto t1 = w1[4];
 			const auto t2 = w2[4];
 
-//			const auto c1 = wick({w1[0],w1[1],t1}, {w1[2],w1[3],t1}, {w2[0],w2[1],t2}, {w2[2],w2[3],t2});
-//			const auto c2 = wick({w1[0],w1[1],t1}, {w1[2],w1[3],t1}, {w2[2],w2[3],t2}, {w2[0],w2[1],t2});
-//			const auto c3 = wick({w1[2],w1[3],t1}, {w1[0],w1[1],t1}, {w2[0],w2[1],t2}, {w2[2],w2[3],t2});
-//			const auto c4 = wick({w1[2],w1[3],t1}, {w1[0],w1[1],t1}, {w2[2],w2[3],t2}, {w2[0],w2[1],t2});
-
 			const auto c1 = wick<decltype(w1)>({w1[0],w1[2],t1}, {w1[1],w1[3],t1}, {w2[0],w2[2],t2}, {w2[1],w2[3],t2});
 			const auto c2 = wick<decltype(w1)>({w1[0],w1[2],t1}, {w1[1],w1[3],t1}, {w2[1],w2[3],t2}, {w2[0],w2[2],t2});
 			const auto c3 = wick<decltype(w1)>({w1[1],w1[3],t1}, {w1[0],w1[2],t1}, {w2[0],w2[2],t2}, {w2[1],w2[3],t2});
 			const auto c4 = wick<decltype(w1)>({w1[1],w1[3],t1}, {w1[0],w1[2],t1}, {w2[1],w2[3],t2}, {w2[0],w2[2],t2});
-
-//			const std::complex<double> K1 = green({w1[0],w1[1],w1[4]},{w1[2],w1[3],w1[4]}) + green({w1[2],w1[3],w1[4]},{w1[0],w1[1],w1[4]});
-//			const std::complex<double> K2 = green({w2[0],w2[1],w2[4]},{w2[2],w2[3],w2[4]}) + green({w2[2],w2[3],w2[4]},{w2[0],w2[1],w2[4]});
 
 			const std::complex<double> K1 = green<decltype(w1)>({w1[0],w1[2],t1},{w1[1],w1[3],t1}) + green<decltype(w1)>({w1[1],w1[3],t1},{w1[0],w1[2],t1});
 			const std::complex<double> K2 = green<decltype(w1)>({w2[0],w2[2],t2},{w2[1],w2[3],t2}) + green<decltype(w1)>({w2[1],w2[3],t2},{w2[0],w2[2],t2});
@@ -446,7 +438,7 @@ class SSH_Initializer
 		StateVector newsv(const StateVector& svold) 
 		{
 			StateVector retval(svold); 
-			double amp = 0.7;
+			double amp = 0.5;
 			double diff = rng.real(-amp, amp);
 			retval[0] += diff;
 			return retval;
@@ -472,7 +464,7 @@ class SSH
 		static constexpr uint Nbeta = 1;
 		static constexpr uint Ngamma = 1;
 		
-		SSH(double m, double k, double g, double mu, double bQ, int Ltime, int L) : m(m), k(k), g(g), mu(mu), dtau(bQ/double(Ltime)), L(L), betaQM(bQ), name("SSH")
+		SSH(double m, double k, double g, double mu, double dtau, int Ltime, int L) : m(m), k(k), g(g), mu(mu), dtau(dtau), betaQM(dtau*Ltime), L(L), name("SSH")
 		{
 			interactions[0] = new SSH_interaction<StateVector>(m, dtau); 
 			onsite[0] = new SSH_onsite<StateVector>(m, k, dtau);
@@ -497,7 +489,7 @@ class SSH
 		{
 			for (int i=0; i<grid.size(); i++)
 			{
-				if (rng.real() > 0.1) statespace[i][0] = 1;
+				if (rng.real() > 0.5) statespace[i][0] = 1;
 				else statespace[i][0] = -1;
 			}
 		}
