@@ -449,7 +449,7 @@ class SSH_Initializer
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
-template <class Lattice, typename SpinType = double>
+template <typename SpinType = double>
 class SSH
 {
 	public:
@@ -459,8 +459,6 @@ class SSH
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = SSH_Initializer<StateVector, RNG>;
-
-		Lattice& grid;
 
 		static constexpr uint Nalpha = 1;
 		static constexpr uint Nbeta = 1;
