@@ -9,6 +9,9 @@
 #include "../hamparts.h"
 #include "../metropolis.h"
 
+//#define USE_CHI_TABLE
+#define TABULATE
+
 
 // ----------------------------------- OBSERVABLES --------------------------------
 
@@ -155,6 +158,7 @@ class SSH_multisite
 		double *const gdat;
         std::complex<double>* dexpk;
         double *const ftexp;
+		std::vector<double> chi_table;
 		SSH_multisite(double g, double mu, double b, double d, int myL) : k(-0.5*g*g*d*d), beta(b), dtau(d), L(myL), ntau(std::round(beta/dtau)), g(g), mu(mu),
 #ifndef SSH_2D
 		gdat(new double[ntau*L]),
@@ -162,8 +166,21 @@ class SSH_multisite
 #else
         gdat(new double[ntau*L*L]),
 		ftexp(new double[L*L*L*L])
+
+
 #endif
 		{
+			#ifdef USE_CHI_TABLE
+			double innumber;
+			std::ifstream infile("/home/schrauth/chi.dat", std::fstream::in);
+			while (infile >> innumber)
+			{
+				chi_table.push_back(innumber);
+			}
+			infile.close();
+			#endif
+
+
 			// ntau should be nothing else than Ltime
             dexpk = new std::complex<double>[L];
             for(int d = 0; d < L; ++d)
@@ -214,6 +231,25 @@ class SSH_multisite
 					StateSpace& s,
 					Lattice& grid)
 		{
+
+			#ifdef TABULATE
+			cout << grid.size() << endl;
+			std::ofstream os("/home/schrauth/chi.dat");
+			for (int i=0; i<grid.size(); i++)
+			{
+				os << std::fixed << std::setprecision(14);
+				for (int j=0; j<grid.size(); j++)
+				{
+					os << suscept(grid,i,j) << endl;
+				}
+			}
+			os.close();
+
+			exit(0);
+
+			#endif
+					
+
 
 			double retval = 0;
 			for (int i=0; i<nbrs.size(); i++)
@@ -377,6 +413,13 @@ class SSH_multisite
 
 	// the actual susceptibility
 	// takes two indices, representing two bonds in the system
+	#ifdef USE_CHI_TABLE
+	template <class Lattice>
+	double suscept(Lattice& grid, int idx1, int idx2)
+	{
+		return chi_table[idx1*grid.size()+idx2];
+	}
+	#else
 	template <class Lattice>
 	double suscept(Lattice& grid, int idx1, int idx2)
 	{
@@ -415,6 +458,7 @@ class SSH_multisite
 
 		return std::real(c1+c2+c3+c4-K1*K2);
 	}
+	#endif
 };
 
 
@@ -479,8 +523,9 @@ class SSH
 		// instantiate and choose observables
 		SSHMag       obs_m;
 		SSHMagSq       obs_msq;
-		SSHTwoPointCorrSpace obs_corr;
-		auto getobs()	{return std::make_tuple(obs_m, obs_msq, obs_corr);}
+//		SSHTwoPointCorrSpace obs_corr;
+		auto getobs()	{return std::make_tuple(obs_m, obs_msq);}
+//		auto getobs()	{return std::make_tuple(obs_m, obs_msq, obs_corr);}
 
 
 		// initialize state space

@@ -8,7 +8,7 @@
 #include <tuple>
 #include <iomanip>
 
-#define SSH_2D  // dimension switch
+#undef SSH_2D  // dimension switch
 
 using std::cout;
 using std::endl;
@@ -137,10 +137,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
      	     std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
      	     MARQOV::Config mp(outpath);
-     	     mp.setnsweeps(5);
+     	     mp.setnsweeps(10);
      	     mp.setncluster(0);
      	     mp.setwarmupsteps(0);
-     	     mp.setgameloopsteps(100);
+     	     mp.setgameloopsteps(20000);
 
      	     makeDir(mp.outpath);
 
