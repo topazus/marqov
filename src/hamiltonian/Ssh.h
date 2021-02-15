@@ -9,8 +9,8 @@
 #include "../hamparts.h"
 #include "../metropolis.h"
 
-//#define USE_CHI_TABLE
-#define TABULATE
+#define CREATE_CHI_TABLE  // writes out the susceptibility and exits the simulation
+//#define USE_CHI_TABLE   // read susceptibility from file and use it
 
 
 // ----------------------------------- OBSERVABLES --------------------------------
@@ -156,40 +156,49 @@ class SSH_multisite
 		int L;
 		int ntau;
 		double *const gdat;
-        std::complex<double>* dexpk;
-        double *const ftexp;
+        	std::complex<double>* dexpk;
+		double *const ftexp;
+
 		std::vector<double> chi_table;
-		SSH_multisite(double g, double mu, double b, double d, int myL) : k(-0.5*g*g*d*d), beta(b), dtau(d), L(myL), ntau(std::round(beta/dtau)), g(g), mu(mu),
-#ifndef SSH_2D
-		gdat(new double[ntau*L]),
-		ftexp(new double[L*L])
-#else
-        gdat(new double[ntau*L*L]),
-		ftexp(new double[L*L*L*L])
 
-
-#endif
+		SSH_multisite(double g, double mu, double b, double d, int myL) : k(-0.5*g*g*d*d), 
+															 beta(b), 
+															 dtau(d), 
+															 L(myL), 
+															 ntau(std::round(beta/dtau)),
+															 g(g), 
+															 mu(mu),
+															 #ifndef SSH_2D
+															 gdat(new double[ntau*L]),
+															 ftexp(new double[L*L])
+															 #else
+															 gdat(new double[ntau*L*L]),
+															 ftexp(new double[L*L*L*L])
+															 #endif
 		{
 			#ifdef USE_CHI_TABLE
-			double innumber;
-			std::ifstream infile("/home/schrauth/chi.dat", std::fstream::in);
-			while (infile >> innumber)
-			{
-				chi_table.push_back(innumber);
-			}
-			infile.close();
+			// read susceptibility from file
+				double innumber;
+				std::ifstream infile("/home/schrauth/chi.dat", std::fstream::in);
+				while (infile >> innumber)
+				{
+					chi_table.push_back(innumber);
+				}
+				infile.close();
 			#endif
 
 
 			// ntau should be nothing else than Ltime
-            dexpk = new std::complex<double>[L];
-            for(int d = 0; d < L; ++d)
-            {
-                dexpk[d] = std::exp(std::complex<double>(0.0, -2.0*M_PI/L*d ));
-                for(int k = 0; k < L; ++k)
-                    ftexp[d*L + k] = std::real(std::exp(std::complex<double>(0.0, -2.0*M_PI*k/L*d )));
-            }
-#ifndef SSH_2D
+            	dexpk = new std::complex<double>[L];
+            	for(int d = 0; d < L; ++d)
+            	{
+            	    dexpk[d] = std::exp(std::complex<double>(0.0, -2.0*M_PI/L*d ));
+            	    for(int k = 0; k < L; ++k)
+            	        ftexp[d*L + k] = std::real(std::exp(std::complex<double>(0.0, -2.0*M_PI*k/L*d )));
+            	}
+
+
+			#ifndef SSH_2D
 			for(int j = 0; j < L; ++j)
 			{
 				double k = (j*2)*M_PI/double(L);
@@ -200,23 +209,23 @@ class SSH_multisite
 					gdat[dt * L + j] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
 				}
 			}
-#else
+			#else
 			for(int jx = 0; jx < L; ++jx)
 			{
 				double kx = (jx*2)*M_PI/double(L);
-                for(int jy = 0; jy < L; ++jy)
-                {
-                    double ky = (jy*2)*M_PI/double(L);
-                    // 2D disperson relation
-                    double eps = -2.0*std::cos(kx) - std::cos(ky) - mu;
-                    for(int dt = 0; dt < ntau; ++dt)
-                    {
-                        gdat[dt * L*L + L*jx + jy] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
-                    }
-                }
+                	for(int jy = 0; jy < L; ++jy)
+                	{
+                    	double ky = (jy*2)*M_PI/double(L);
+                    	// 2D disperson relation
+                    	double eps = -2.0*std::cos(kx) - std::cos(ky) - mu;
+                    	for(int dt = 0; dt < ntau; ++dt)
+                    	{
+                    	    gdat[dt * L*L + L*jx + jy] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
+                    	}
+				}
 			}
+			#endif
 
-#endif
 		}
 
 
@@ -232,9 +241,10 @@ class SSH_multisite
 					Lattice& grid)
 		{
 
-			#ifdef TABULATE
-			cout << grid.size() << endl;
-			std::ofstream os("/home/schrauth/chi.dat");
+			// write susceptibiliy to file
+			#ifdef CREATE_CHI_TABLE
+			cout << "writing susceptibiliy to file ... ";
+			std::ofstream os("../log/chi.dat");
 			for (int i=0; i<grid.size(); i++)
 			{
 				os << std::fixed << std::setprecision(14);
@@ -244,9 +254,8 @@ class SSH_multisite
 				}
 			}
 			os.close();
-
+			cout << "done! exiting ... " << endl;
 			exit(0);
-
 			#endif
 					
 
@@ -297,7 +306,7 @@ class SSH_multisite
 		// Green's function for 2+1 dimensions
 		// takes two coordinate vectors (x,y,t)
 		template <typename VertexType>
-[[gnu::hot, gnu::optimize("fast-math") ]]
+		[[gnu::hot, gnu::optimize("fast-math") ]]
 		double green(const VertexType& c1, const VertexType& c2)
 		{
 			double retval = 0;
@@ -350,7 +359,7 @@ class SSH_multisite
 		// Green's function for 1+1 dimensions
 		// takes two coordinate vectors (x,t)
 		template <typename VertexType>
-[[gnu::hot, gnu::optimize("fast-math"), gnu::pure ]]
+		[[gnu::hot, gnu::optimize("fast-math"), gnu::pure ]]
 		inline double green(const VertexType& c1, const VertexType& c2)
 		{
 			// space
@@ -413,6 +422,7 @@ class SSH_multisite
 
 	// the actual susceptibility
 	// takes two indices, representing two bonds in the system
+
 	#ifdef USE_CHI_TABLE
 	template <class Lattice>
 	double suscept(Lattice& grid, int idx1, int idx2)
@@ -437,8 +447,10 @@ class SSH_multisite
 			const auto c3 = wick<decltype(w1)>({w1[1],w1[3],t1}, {w1[0],w1[2],t1}, {w2[0],w2[2],t2}, {w2[1],w2[3],t2});
 			const auto c4 = wick<decltype(w1)>({w1[1],w1[3],t1}, {w1[0],w1[2],t1}, {w2[1],w2[3],t2}, {w2[0],w2[2],t2});
 
-			const std::complex<double> K1 = green<decltype(w1)>({w1[0],w1[2],t1},{w1[1],w1[3],t1}) + green<decltype(w1)>({w1[1],w1[3],t1},{w1[0],w1[2],t1});
-			const std::complex<double> K2 = green<decltype(w1)>({w2[0],w2[2],t2},{w2[1],w2[3],t2}) + green<decltype(w1)>({w2[1],w2[3],t2},{w2[0],w2[2],t2});
+			const std::complex<double> K1 = green<decltype(w1)>({w1[0],w1[2],t1},{w1[1],w1[3],t1}) 
+									+ green<decltype(w1)>({w1[1],w1[3],t1},{w1[0],w1[2],t1});
+			const std::complex<double> K2 = green<decltype(w1)>({w2[0],w2[2],t2},{w2[1],w2[3],t2}) 
+									+ green<decltype(w1)>({w2[1],w2[3],t2},{w2[0],w2[2],t2});
 		#else
 			const auto t1 = w1[2];
 			const auto t2 = w2[2];
@@ -508,7 +520,14 @@ class SSH
 		static constexpr uint Nbeta = 1;
 		static constexpr uint Ngamma = 1;
 		
-		SSH(double m, double k, double g, double mu, double dtau, int Ltime, int L) : m(m), k(k), g(g), mu(mu), dtau(dtau), betaQM(dtau*Ltime), L(L), name("SSH")
+		SSH(double m, double k, double g, double mu, double dtau, int Ltime, int L) : m(m), 
+																	   k(k), 
+																	   g(g), 
+																	   mu(mu), 
+																	   dtau(dtau), 
+																	   betaQM(dtau*Ltime), 
+																	   L(L), 
+																	   name("SSH")
 		{
 			interactions[0] = new SSH_interaction<StateVector>(m, dtau); 
 			onsite[0] = new SSH_onsite<StateVector>(m, k, dtau);
