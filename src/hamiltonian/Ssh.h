@@ -153,19 +153,17 @@ class SSH_multisite
 {
 	public:
 		double k, beta, dtau, g, mu;
-		int L;
-		int ntau;
+		int L, ntau;
 		double *const gdat;
-        	std::complex<double>* dexpk;
 		double *const ftexp;
-
+        	std::complex<double>* dexpk;
 		std::vector<double> chi_table;
 
 		SSH_multisite(double g, double mu, double b, double d, int myL) : k(-0.5*g*g*d*d), 
 															 beta(b), 
 															 dtau(d), 
 															 L(myL), 
-															 ntau(std::round(beta/dtau)),
+															 ntau(std::round(b/d)),
 															 g(g), 
 															 mu(mu),
 															 #ifndef SSH_2D
@@ -176,6 +174,7 @@ class SSH_multisite
 															 ftexp(new double[L*L*L*L])
 															 #endif
 		{
+
 			#ifdef USE_CHI_TABLE
 			// read susceptibility from file
 				double innumber;
@@ -188,7 +187,6 @@ class SSH_multisite
 			#endif
 
 
-			// ntau should be nothing else than Ltime
             	dexpk = new std::complex<double>[L];
             	for(int d = 0; d < L; ++d)
             	{
@@ -201,9 +199,8 @@ class SSH_multisite
 			#ifndef SSH_2D
 			for(int j = 0; j < L; ++j)
 			{
-				double k = (j*2)*M_PI/double(L);
-				// 1D disperson relation
-				double eps = -2.0*std::cos(k)-mu;
+				double k = (j*2)*M_PI/double(L);	// Fourier faktor
+				double eps = -2.0*std::cos(k)-mu;  // 1D disperson relation (chain)
 				for(int dt = 0; dt < ntau; ++dt)
 				{
 					gdat[dt * L + j] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
@@ -215,9 +212,8 @@ class SSH_multisite
 				double kx = (jx*2)*M_PI/double(L);
                 	for(int jy = 0; jy < L; ++jy)
                 	{
-                    	double ky = (jy*2)*M_PI/double(L);
-                    	// 2D disperson relation
-                    	double eps = -2.0*std::cos(kx) - std::cos(ky) - mu;
+                    	double ky = (jy*2)*M_PI/double(L);  			   // Fourier faktor
+                    	double eps = -2.0*std::cos(kx) - std::cos(ky) - mu;  // 2D disperson relation (square lattice)
                     	for(int dt = 0; dt < ntau; ++dt)
                     	{
                     	    gdat[dt * L*L + L*jx + jy] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
@@ -364,7 +360,7 @@ class SSH_multisite
 		{
 			// space
 			auto dist = std::lrint(c1[0]-c2[0]);
-			if (dist < 0) dist = L + dist;
+			if (dist < 0) dist = L + dist; // yes or no?
 	
 			// time
 			const double t1 = c1[1];
@@ -386,12 +382,12 @@ class SSH_multisite
 	
 	
 			// compute Greens function in Fourier space
-                        const double *const __restrict__ dat = ftexp + dist*L;
-                        const double *const __restrict__ gdatloc =  gdat + dti*L;
-                        double retval = 0;
+			const double *const __restrict__ dat = ftexp + dist*L;
+			const double *const __restrict__ gdatloc =  gdat + dti*L;
+			double retval = 0;
 			for (int j = 0; j < L; ++j)
 			{
- 				retval +=  dat[j] * gdat[j];
+ 				retval +=  dat[j] * gdatloc[j];
 			}
 
 			const double norml = 1.0/L;
@@ -454,10 +450,11 @@ class SSH_multisite
 		#else
 			const auto t1 = w1[2];
 			const auto t2 = w2[2];
-                        std::array<double, 2> v10 = {w1[0], t1};
-                        std::array<double, 2> v11 = {w1[1], t1};
-                        std::array<double, 2> v20 = {w2[0], t2};
-                        std::array<double, 2> v21 = {w2[1], t2};
+
+			std::array<double, 2> v10 = {w1[0], t1};
+			std::array<double, 2> v11 = {w1[1], t1};
+			std::array<double, 2> v20 = {w2[0], t2};
+			std::array<double, 2> v21 = {w2[1], t2};
 
 			const auto c1 = wick(v10, v11, v20, v21);
 			const auto c2 = wick(v10, v11, v21, v20);
