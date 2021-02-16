@@ -9,8 +9,8 @@
 #include "../hamparts.h"
 #include "../metropolis.h"
 
-#define CREATE_CHI_TABLE  // writes out the susceptibility and exits the simulation
-//#define USE_CHI_TABLE   // read susceptibility from file and use it
+//#define CREATE_CHI_TABLE  // writes out the susceptibility and exits the simulation
+#define USE_CHI_TABLE   // read susceptibility from file and use it
 
 
 // ----------------------------------- OBSERVABLES --------------------------------
@@ -178,7 +178,7 @@ class SSH_multisite
 			#ifdef USE_CHI_TABLE
 			// read susceptibility from file
 				double innumber;
-				std::ifstream infile("/home/schrauth/chi.dat", std::fstream::in);
+				std::ifstream infile("../log/chi.dat", std::fstream::in);
 				while (infile >> innumber)
 				{
 					chi_table.push_back(innumber);
@@ -213,7 +213,7 @@ class SSH_multisite
                 	for(int jy = 0; jy < L; ++jy)
                 	{
                     	double ky = (jy*2)*M_PI/double(L);  			   // Fourier faktor
-                    	double eps = -2.0*std::cos(kx) - std::cos(ky) - mu;  // 2D disperson relation (square lattice)
+                    	double eps = -2.0*std::cos(kx) - 2.0*std::cos(ky) - mu;  // 2D disperson relation (square lattice)
                     	for(int dt = 0; dt < ntau; ++dt)
                     	{
                     	    gdat[dt * L*L + L*jx + jy] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
@@ -249,9 +249,28 @@ class SSH_multisite
 					os << suscept(grid,i,j) << endl;
 				}
 			}
+
 			os.close();
 			cout << "done! exiting ... " << endl;
+//			exit(0);
+
+			
+			std::ofstream oss("../log/green.dat");
+			for (int i=0; i<grid.lentime; i++)
+			{
+//				std::vector<double> vx1 = {0, 0, i};
+//				std::vector<double> vx2 = {1, 0, 17};
+//				std::vector<double> vx3 = {0, 0, 0};
+//				std::vector<double> vx4 = {0, 0, 0};
+
+//				oss << green(vx1,vx2) << endl;
+//				oss << wick(vx1,vx2,vx3,vx4) << endl;
+//				oss << suscept(grid, i, i) << endl;
+			}
+
 			exit(0);
+
+
 			#endif
 					
 
@@ -345,7 +364,7 @@ class SSH_multisite
 				expk *= dexpkx; // increment Fourier transform
 			}
 
-			const double norml = 1.0 / pow(2*L,2); // the number of sites per time slice
+			const double norml = 1.0 / pow(L,2); // the number of sites (not bonds!)
 			return norml*signum*retval;
 		}
 
@@ -358,6 +377,7 @@ class SSH_multisite
 		[[gnu::hot, gnu::optimize("fast-math"), gnu::pure ]]
 		inline double green(const VertexType& c1, const VertexType& c2)
 		{
+
 			// space
 			auto dist = std::lrint(c1[0]-c2[0]);
 			if (dist < 0) dist = L + dist; // yes or no?
@@ -550,7 +570,7 @@ class SSH
 		{
 			for (int i=0; i<grid.size(); i++)
 			{
-				if (rng.real() > 0.5) statespace[i][0] = 1;
+				if (rng.real() > 0.0) statespace[i][0] = 1;
 				else statespace[i][0] = -1;
 			}
 		}
