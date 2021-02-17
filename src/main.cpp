@@ -140,7 +140,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
      	     mp.setnsweeps(10);
      	     mp.setncluster(0);
      	     mp.setwarmupsteps(0);
-     	     mp.setgameloopsteps(2500);
+     	     mp.setgameloopsteps(2000);
 
      	     makeDir(mp.outpath);
 

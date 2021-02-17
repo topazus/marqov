@@ -9,8 +9,8 @@
 #include "../hamparts.h"
 #include "../metropolis.h"
 
-//#define CREATE_CHI_TABLE  // writes out the susceptibility and exits the simulation
-#define USE_CHI_TABLE   // read susceptibility from file and use it
+#define CREATE_CHI_TABLE  // writes out the susceptibility and exits the simulation
+//#define USE_CHI_TABLE   // read susceptibility from file and use it
 
 
 // ----------------------------------- OBSERVABLES --------------------------------
@@ -252,24 +252,7 @@ class SSH_multisite
 
 			os.close();
 			cout << "done! exiting ... " << endl;
-//			exit(0);
-
-			
-			std::ofstream oss("../log/green.dat");
-			for (int i=0; i<grid.lentime; i++)
-			{
-//				std::vector<double> vx1 = {0, 0, i};
-//				std::vector<double> vx2 = {1, 0, 17};
-//				std::vector<double> vx3 = {0, 0, 0};
-//				std::vector<double> vx4 = {0, 0, 0};
-
-//				oss << green(vx1,vx2) << endl;
-//				oss << wick(vx1,vx2,vx3,vx4) << endl;
-//				oss << suscept(grid, i, i) << endl;
-			}
-
 			exit(0);
-
 
 			#endif
 					
