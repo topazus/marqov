@@ -9,8 +9,8 @@
 #include "../hamparts.h"
 #include "../metropolis.h"
 
-#define CREATE_CHI_TABLE  // writes out the susceptibility and exits the simulation
-//#define USE_CHI_TABLE   // read susceptibility from file and use it
+//#define CREATE_CHI_TABLE  // writes out the susceptibility and exits the simulation
+#define USE_CHI_TABLE   // read susceptibility from file and use it
 
 
 // ----------------------------------- OBSERVABLES --------------------------------
@@ -241,6 +241,7 @@ class SSH_multisite
 			#ifdef CREATE_CHI_TABLE
 			cout << "writing susceptibiliy to file ... ";
 			std::ofstream os("../log/chi.dat");
+			cout << grid.size() << endl;
 			for (int i=0; i<grid.size(); i++)
 			{
 				os << std::fixed << std::setprecision(14);
@@ -257,13 +258,41 @@ class SSH_multisite
 			#endif
 					
 
-
 			double retval = 0;
+			for (int i=0; i<nbrs.size(); i++)
+			{
+				auto chi = suscept(grid, rsite, nbrs[i]);
+				auto new1 = dot(svnew, mult(chi,s[nbrs[i]]));
+				auto old1 = dot(svold, mult(chi,s[nbrs[i]]));
+				retval = retval + 2*(new1 - old1); // since matrix is symmetric
+			}
+			/*
+			for (int i=0; i<nbrs.size(); i++)
+			{
+				auto chi = suscept(grid, nbrs[i], rsite);
+				auto new2 = dot(s[nbrs[i]], mult(chi,svnew));
+				auto old2 = dot(s[nbrs[i]], mult(chi,svold));
+				retval = retval  + (new2 - old2); 
+			}
+			*/
+			
+			auto chi = suscept(grid, rsite, rsite);
+			auto newself = dot(svnew, mult(chi, svnew));
+			auto oldself = dot(svold, mult(chi, svold));
+
+			retval = retval + (newself-oldself);
+			
+			return retval;
+
+
+			/* old version (not debugged!)
+			double retval = 0;
+
 			for (int i=0; i<nbrs.size(); i++)
 			{
 				auto b1 = svnew-svold;
 				auto b2 = suscept(grid, rsite, nbrs[i]);
-				auto b3 = s[i];
+				auto b3 = s[nbrs[i]];
 
 				auto a1 = dot(b1, mult(b2,b3));
 				auto a2 = dot(b3, mult(b2,b1));
@@ -275,6 +304,7 @@ class SSH_multisite
 			retval -= dot(svold, mult(suscept(grid, rsite, rsite), svold));
 
 			return retval;
+			*/
 		}
 
 		~SSH_multisite() {delete [] gdat; delete [] dexpk; delete [] ftexp; }

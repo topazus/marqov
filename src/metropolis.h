@@ -92,6 +92,7 @@ namespace MARQOV
     template <class StateSpace, class M, class RNGType>
     int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNGCache<RNGType>& rng, double beta, int rsite)
     {
+
         typedef typename Hamiltonian::StateVector StateVector;
         
         // old state vector at rsite
@@ -158,7 +159,6 @@ namespace MARQOV
 
 	  double dE  = interactionenergydiff + onsiteenergydiff + multisiteenergdiff;
 
-        
         int retval = 0;
         if ( dE <= 0 )
         {

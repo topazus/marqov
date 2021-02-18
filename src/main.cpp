@@ -8,7 +8,7 @@
 #include <tuple>
 #include <iomanip>
 
-#define SSH_2D  // dimension switch
+#undef SSH_2D  // dimension switch
 
 using std::cout;
 using std::endl;
@@ -140,7 +140,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
      	     mp.setnsweeps(10);
      	     mp.setncluster(0);
      	     mp.setwarmupsteps(0);
-     	     mp.setgameloopsteps(2000);
+     	     mp.setgameloopsteps(3000);
 
      	     makeDir(mp.outpath);
 
@@ -148,7 +148,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
      	     // set up parameters
      	     auto rparams = finalize_parameter_pair(mp, hp);
 			auto params = replicator_pair(rparams, nreplicas[0]);
-
 
      	     SSHLattice& latt = latts[j][jj];
      	     auto f = [&latt, &outbasedir, L](auto p){return sshfilter(latt, p);}; //partially apply filter
