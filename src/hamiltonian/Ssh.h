@@ -9,8 +9,8 @@
 #include "../hamparts.h"
 #include "../metropolis.h"
 
-//#define CREATE_CHI_TABLE  // writes out the susceptibility and exits the simulation
-#define USE_CHI_TABLE   // read susceptibility from file and use it
+#define CREATE_CHI_TABLE  // writes out the susceptibility and exits the simulation
+//#define USE_CHI_TABLE   // read susceptibility from file and use it
 
 
 // ----------------------------------- OBSERVABLES --------------------------------
@@ -217,6 +217,7 @@ class SSH_multisite
                     	for(int dt = 0; dt < ntau; ++dt)
                     	{
                     	    gdat[dt * L*L + L*jx + jy] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
+
                     	}
 				}
 			}
@@ -241,20 +242,89 @@ class SSH_multisite
 			#ifdef CREATE_CHI_TABLE
 			cout << "writing susceptibiliy to file ... ";
 			std::ofstream os("../log/chi.dat");
+			os << std::fixed << std::setprecision(12);
 			cout << grid.size() << endl;
 			for (int i=0; i<grid.size(); i++)
 			{
-				os << std::fixed << std::setprecision(14);
 				for (int j=0; j<grid.size(); j++)
 				{
 					os << suscept(grid,i,j) << endl;
 				}
 			}
 
+
+
+			// transform to Flo's Mathematica index ordering
+			//
+			/*
+
+			os << std::fixed << std::setprecision(12);
+			int counter = 0;
+
+			int len = grid.len;
+			int vspace = 2*len*len;
+			int lentime = grid.lentime;
+			int dim = 2;
+
+			for (int xy1=0; xy1<=len; xy1+=len)
+			{
+				for (int i1=xy1; i1<vspace; i1+=len*dim)
+				{
+					for (int j1=0; j1<len; j1++)
+					{
+						for (int k1=0; k1<lentime; k1++)
+						{
+							int idx1 = i1 + j1 + 2*k1*len*len;
+							counter++;
+							for (int xy2=0; xy2<=len; xy2+=len)
+							{
+								for (int i2=xy2; i2<vspace; i2+=len*dim)
+								{
+									for (int j2=0; j2<len; j2++)
+									{
+										for (int k2=0; k2<lentime; k2++)
+										{
+											int idx2 = i2 + j2 + 2*k2*len*len;
+
+											os << suscept(grid,idx1,idx2) << endl;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			*/
+
+					
+
 			os.close();
 			cout << "done! exiting ... " << endl;
 			exit(0);
 
+
+			/* used for debugging
+			std::ofstream oss("../log/green.dat");
+
+			for (int idx1=0; idx1<2*L*L; idx1++)
+			{
+				for (int idx2=0; idx2<2*L*L; idx2++)
+				{
+					auto w1 = grid.getcrds(idx1);
+					auto w2 = grid.getcrds(idx2);
+
+					auto c1 = wick<decltype(w1)>({w1[0],w1[2],0}, {w1[1],w1[3],0}, {w2[0],w2[2],0}, {w2[1],w2[3],0});
+
+					if (c1 < 1e-14) c1 = 0;
+
+					oss << c1 << "\t";
+				}
+				oss << endl;
+			}
+			oss.close();
+			exit(0);
+			*/
 			#endif
 					
 
@@ -265,6 +335,7 @@ class SSH_multisite
 				auto new1 = dot(svnew, mult(chi,s[nbrs[i]]));
 				auto old1 = dot(svold, mult(chi,s[nbrs[i]]));
 				retval = retval + 2*(new1 - old1); // since matrix is symmetric
+//				retval = retval + (new1 - old1); // since matrix is symmetric
 			}
 			/*
 			for (int i=0; i<nbrs.size(); i++)
@@ -283,28 +354,6 @@ class SSH_multisite
 			retval = retval + (newself-oldself);
 			
 			return retval;
-
-
-			/* old version (not debugged!)
-			double retval = 0;
-
-			for (int i=0; i<nbrs.size(); i++)
-			{
-				auto b1 = svnew-svold;
-				auto b2 = suscept(grid, rsite, nbrs[i]);
-				auto b3 = s[nbrs[i]];
-
-				auto a1 = dot(b1, mult(b2,b3));
-				auto a2 = dot(b3, mult(b2,b1));
-
-				retval = retval + a1 + a2;
-			}
-
-			retval += dot(svnew, mult(suscept(grid, rsite, rsite), svnew));
-			retval -= dot(svold, mult(suscept(grid, rsite, rsite), svold));
-
-			return retval;
-			*/
 		}
 
 		~SSH_multisite() {delete [] gdat; delete [] dexpk; delete [] ftexp; }
@@ -370,7 +419,12 @@ class SSH_multisite
 				{
 					// dispersion relation
 					// do the summation
+
+					int index = dti*L*L + jx*L + jy;
+
+					double fourierterm = expk.real() * gdat[dti*L*L + jx*L + jy];
 					retval += expk.real() * gdat[dti*L*L + jx*L + jy];
+
 					// increment Fourier transform
 					expk *= dexpky; 
 				}
@@ -393,7 +447,7 @@ class SSH_multisite
 
 			// space
 			auto dist = std::lrint(c1[0]-c2[0]);
-			if (dist < 0) dist = L + dist; // yes or no?
+			if (dist < 0) dist = L + dist;
 	
 			// time
 			const double t1 = c1[1];
@@ -480,6 +534,8 @@ class SSH_multisite
 									+ green<decltype(w1)>({w1[1],w1[3],t1},{w1[0],w1[2],t1});
 			const std::complex<double> K2 = green<decltype(w1)>({w2[0],w2[2],t2},{w2[1],w2[3],t2}) 
 									+ green<decltype(w1)>({w2[1],w2[3],t2},{w2[0],w2[2],t2});
+
+
 		#else
 			const auto t1 = w1[2];
 			const auto t2 = w2[2];
