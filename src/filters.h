@@ -64,8 +64,8 @@
 		std::string str_dtau  = "dtau"+std::to_string(dtau); 
 
 		mp.outname = str_Ltime+"_"+str_k+"_"+str_g+"_"+str_mu+"_"+str_dtau+"_"+str_repid;
-        auto p3 = std::make_tuple(mp, std::tuple_cat(hp, std::forward_as_tuple(latt)));
-		return std::tuple_cat(std::forward_as_tuple(latt), p3 );
+        auto p3 = std::make_pair(mp, std::tuple_cat(hp, std::forward_as_tuple(latt)));
+		return std::make_tuple(latt, p3 );
 
 	};
 

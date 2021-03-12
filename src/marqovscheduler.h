@@ -91,7 +91,13 @@ namespace MARQOV
     };
     
     template <class ... Ts>
-    struct sims_helper2 {};
+    struct sims_helper2 {
+// // //                 template <typename T>
+// // //         static void/*MarqovType*/* creator(std::mutex& mtx, /*std::tuple<Lattice, std::pair<MARQOV::Config, HArgs> >*/T& t)
+// // //         {
+// // //             t = 5;
+// // //             return NULL;}
+    };
     
     template <class Hamiltonian, class Lattice, class LArgs, class HArgs>
     struct sims_helper2<Hamiltonian, Lattice, Triple<LArgs, MARQOV::Config, HArgs> >
@@ -113,12 +119,11 @@ namespace MARQOV
     };
     
     template <class Hamiltonian, class Lattice, class HArgs>
-    struct sims_helper2<Hamiltonian, Lattice, std::pair<MARQOV::Config, HArgs> >
+    struct sims_helper2<Hamiltonian, Lattice, std::tuple<Lattice, std::pair<MARQOV::Config, HArgs> > >
     {
         static constexpr std::size_t tsize = std::tuple_size<typename std::remove_reference<HArgs>::type>::value;
         typedef std::make_index_sequence<tsize> HArgSequence;
         typedef typename sims_helper<Hamiltonian, Lattice, HArgs, HArgSequence>::MarqovType MarqovType;
-        
         template <typename T>
         static void emplacer(std::vector<MarqovType>& sims, T& t, std::mutex& mtx)
         {
@@ -126,9 +131,8 @@ namespace MARQOV
                                std::forward<decltype(std::get<0>(t))>(std::get<0>(t)), 
                                std::forward<MARQOV::Config>(std::get<1>(t)), mtx, std::get<2>(t));
         }
-        
         template <typename T>
-        static MarqovType* creator(std::mutex& mtx, T& t)
+        static MarqovType* creator(std::mutex& mtx, /*std::tuple<Lattice, std::pair<MARQOV::Config, HArgs> >*/T& t)
         {
             return ptr_from_tuple<MarqovType>(std::forward<decltype(std::get<0>(t))>(std::get<0>(t)), 
                                               std::forward<MARQOV::Config>(std::get<1>(t)), std::forward<decltype(mtx)>(mtx), std::get<2>(t));
@@ -149,7 +153,10 @@ namespace MARQOV
         void createSimfromParameter(ParamType& p, Callable filter)
         {
             auto t = filter(p);
-            auto simptr = sims_helper2<typename Sim::HamiltonianType, typename Sim::Lattice, ParamType>::template creator(mutexes.hdf, t);
+
+//             sims_helper2<typename Sim::HamiltonianType, typename std::remove_reference<typename Sim::Lattice>::type, decltype(t)> x = 5;
+//         int m = sims_helper2<typename Sim::HamiltonianType, typename std::remove_reference<typename Sim::Lattice>::type, decltype(t)>::value;
+            auto simptr = sims_helper2<typename Sim::HamiltonianType, typename Sim::Lattice, decltype(t)>::template creator(mutexes.hdf, t);
             oursims.push_back(simptr);
             this->enqueuesim(*simptr);
         }
