@@ -247,7 +247,7 @@ class Core : public RefType<Grid>
 	* First we have the parameters for the MARQOV::Core class, then follows the arbitrary number of
 	* arguments for a particular Hamiltonian.
 	* @param lattice A reference to the instantiated lattice object. You are responsible for managing its lifetime.
-	* @param outfile Where to create the output file
+	* @param mtx A mutex for the HDF5 Container
 	* @param mybeta the temperature that governs the Metropolis dynamics
 	* @param args A template parameter pack for the Hamiltonian
 	*/
@@ -412,7 +412,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
          H5::StrType strdatatype(H5::PredType::C_S1, ham.name.size());
          H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
          H5::DataSet dset(h5loc.createDataSet("Model", strdatatype, dspace));
-         dset.setComment("This is the Model. This should correspond to a class name");
+         dset.setComment("This is the Model. This should correspond to a class name.");
          dset.write(ham.name.c_str(), strdatatype);
          
         h5loc.setComment("These parameters are peculiar to the considered Hamiltonian.");
