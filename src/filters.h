@@ -56,9 +56,8 @@
 		std::string str_g     = "g"+std::to_string(std::get<3>(hp));
 		std::string str_mu    = "mu"+std::to_string(std::get<4>(hp));
 
-		double betaQM = std::get<5>(hp);
+		double dtau = std::get<5>(hp);
 		int Ltime = std::get<6>(hp); 
-		double dtau = betaQM / double(Ltime);
 
 		std::string str_Ltime = "Ltime"+std::to_string(Ltime);
 		std::string str_dtau  = "dtau"+std::to_string(dtau); 

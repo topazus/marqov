@@ -9,6 +9,9 @@
 #include "../hamparts.h"
 #include "../metropolis.h"
 
+#define CREATE_CHI_TABLE  // writes out the susceptibility and exits the simulation
+//#define USE_CHI_TABLE   // read susceptibility from file and use it
+
 
 // ----------------------------------- OBSERVABLES --------------------------------
 
@@ -68,7 +71,7 @@ class SSHTwoPointCorrSpace
 		const int Ls = grid.len;
 		const int Lt = grid.lentime;
 
-		const double norml = 1.0 / Ls / Ls;
+		const double norml = 1.0 / Ls / Ls / 2;  // division by two accounts for double counting
 
 //		std::vector<double> retval;
 //		for (int i=0; i<10; i++) retval.push_back(0);
@@ -150,56 +153,76 @@ class SSH_multisite
 {
 	public:
 		double k, beta, dtau, g, mu;
-		int L;
-		int ntau;
+		int L, ntau;
 		double *const gdat;
-        std::complex<double>* dexpk;
-        double *const ftexp;
-		SSH_multisite(double g, double mu, double b, double d, int myL) : k(-0.5*g*g), beta(b), dtau(d), L(myL), ntau(std::round(beta/dtau)), g(g), mu(mu),
-#ifndef SSH_2D
-		gdat(new double[ntau*L]),
-		ftexp(new double[L*L])
-#else
-        gdat(new double[ntau*L*L]),
-		ftexp(new double[L*L*L*L])
-#endif
+		double *const ftexp;
+        	std::complex<double>* dexpk;
+		std::vector<double> chi_table;
+
+		SSH_multisite(double g, double mu, double b, double d, int myL) : k(-0.5*g*g*d*d), 
+															 beta(b), 
+															 dtau(d), 
+															 L(myL), 
+															 ntau(std::round(b/d)),
+															 g(g), 
+															 mu(mu),
+															 #ifndef SSH_2D
+															 gdat(new double[ntau*L]),
+															 ftexp(new double[L*L])
+															 #else
+															 gdat(new double[ntau*L*L]),
+															 ftexp(new double[L*L*L*L])
+															 #endif
 		{
-			// ntau should be nothing else than Ltime
-            dexpk = new std::complex<double>[L];
-            for(int d = 0; d < L; ++d)
-            {
-                dexpk[d] = std::exp(std::complex<double>(0.0, -2.0*M_PI/L*d ));
-                for(int k = 0; k < L; ++k)
-                    ftexp[d*L + k] = std::real(std::exp(std::complex<double>(0.0, -2.0*M_PI*k/L*d )));
-            }
-#ifndef SSH_2D
+
+			#ifdef USE_CHI_TABLE
+			// read susceptibility from file
+				double innumber;
+				std::ifstream infile("../log/chi.dat", std::fstream::in);
+				while (infile >> innumber)
+				{
+					chi_table.push_back(innumber);
+				}
+				infile.close();
+			#endif
+
+
+            	dexpk = new std::complex<double>[L];
+            	for(int d = 0; d < L; ++d)
+            	{
+            	    dexpk[d] = std::exp(std::complex<double>(0.0, -2.0*M_PI/L*d ));
+            	    for(int k = 0; k < L; ++k)
+            	        ftexp[d*L + k] = std::real(std::exp(std::complex<double>(0.0, -2.0*M_PI*k/L*d )));
+            	}
+
+
+			#ifndef SSH_2D
 			for(int j = 0; j < L; ++j)
 			{
-				double k = (j*2)*M_PI/double(L);
-				// 1D disperson relation
-				double eps = -2.0*std::cos(k)-mu;
+				double k = (j*2)*M_PI/double(L);	// Fourier faktor
+				double eps = -2.0*std::cos(k)-mu;  // 1D disperson relation (chain)
 				for(int dt = 0; dt < ntau; ++dt)
 				{
 					gdat[dt * L + j] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
 				}
 			}
-#else
+			#else
 			for(int jx = 0; jx < L; ++jx)
 			{
 				double kx = (jx*2)*M_PI/double(L);
-                for(int jy = 0; jy < L; ++jy)
-                {
-                    double ky = (jy*2)*M_PI/double(L);
-                    // 2D disperson relation
-                    double eps = -2.0*std::cos(kx) - std::cos(ky) - mu;
-                    for(int dt = 0; dt < ntau; ++dt)
-                    {
-                        gdat[dt * L*L + L*jx + jy] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
-                    }
-                }
-			}
+                	for(int jy = 0; jy < L; ++jy)
+                	{
+                    	double ky = (jy*2)*M_PI/double(L);  			   // Fourier faktor
+                    	double eps = -2.0*std::cos(kx) - 2.0*std::cos(ky) - mu;  // 2D disperson relation (square lattice)
+                    	for(int dt = 0; dt < ntau; ++dt)
+                    	{
+                    	    gdat[dt * L*L + L*jx + jy] = 0.5*std::exp((-beta/2 + dt*dtau)*eps)/std::cosh(beta*eps/2);
 
-#endif
+                    	}
+				}
+			}
+			#endif
+
 		}
 
 
@@ -215,22 +238,121 @@ class SSH_multisite
 					Lattice& grid)
 		{
 
+			// write susceptibiliy to file
+			#ifdef CREATE_CHI_TABLE
+			cout << "writing susceptibiliy to file ... ";
+			std::ofstream os("../log/chi.dat");
+			os << std::fixed << std::setprecision(12);
+			cout << grid.size() << endl;
+			for (int i=0; i<grid.size(); i++)
+			{
+				for (int j=0; j<grid.size(); j++)
+				{
+					os << suscept(grid,i,j) << endl;
+				}
+			}
+
+
+
+			// transform to Flo's Mathematica index ordering
+			//
+			/*
+
+			os << std::fixed << std::setprecision(12);
+			int counter = 0;
+
+			int len = grid.len;
+			int vspace = 2*len*len;
+			int lentime = grid.lentime;
+			int dim = 2;
+
+			for (int xy1=0; xy1<=len; xy1+=len)
+			{
+				for (int i1=xy1; i1<vspace; i1+=len*dim)
+				{
+					for (int j1=0; j1<len; j1++)
+					{
+						for (int k1=0; k1<lentime; k1++)
+						{
+							int idx1 = i1 + j1 + 2*k1*len*len;
+							counter++;
+							for (int xy2=0; xy2<=len; xy2+=len)
+							{
+								for (int i2=xy2; i2<vspace; i2+=len*dim)
+								{
+									for (int j2=0; j2<len; j2++)
+									{
+										for (int k2=0; k2<lentime; k2++)
+										{
+											int idx2 = i2 + j2 + 2*k2*len*len;
+
+											os << suscept(grid,idx1,idx2) << endl;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			*/
+
+					
+
+			os.close();
+			cout << "done! exiting ... " << endl;
+			exit(0);
+
+
+			/* used for debugging
+			std::ofstream oss("../log/green.dat");
+
+			for (int idx1=0; idx1<2*L*L; idx1++)
+			{
+				for (int idx2=0; idx2<2*L*L; idx2++)
+				{
+					auto w1 = grid.getcrds(idx1);
+					auto w2 = grid.getcrds(idx2);
+
+					auto c1 = wick<decltype(w1)>({w1[0],w1[2],0}, {w1[1],w1[3],0}, {w2[0],w2[2],0}, {w2[1],w2[3],0});
+
+					if (c1 < 1e-14) c1 = 0;
+
+					oss << c1 << "\t";
+				}
+				oss << endl;
+			}
+			oss.close();
+			exit(0);
+			*/
+			#endif
+					
+
 			double retval = 0;
 			for (int i=0; i<nbrs.size(); i++)
 			{
-				auto b1 = svnew-svold;
-				auto b2 = suscept(grid, rsite, nbrs[i]);
-				auto b3 = s[i];
-
-				auto a1 = dot(b1, mult(b2,b3));
-				auto a2 = dot(b3, mult(b2,b1));
-
-				retval = retval + a1 + a2;
+				auto chi = suscept(grid, rsite, nbrs[i]);
+				auto new1 = dot(svnew, mult(chi,s[nbrs[i]]));
+				auto old1 = dot(svold, mult(chi,s[nbrs[i]]));
+				retval = retval + 2*(new1 - old1); // since matrix is symmetric
+//				retval = retval + (new1 - old1); // since matrix is symmetric
 			}
+			/*
+			for (int i=0; i<nbrs.size(); i++)
+			{
+				auto chi = suscept(grid, nbrs[i], rsite);
+				auto new2 = dot(s[nbrs[i]], mult(chi,svnew));
+				auto old2 = dot(s[nbrs[i]], mult(chi,svold));
+				retval = retval  + (new2 - old2); 
+			}
+			*/
+			
+			auto chi = suscept(grid, rsite, rsite);
+			auto newself = dot(svnew, mult(chi, svnew));
+			auto oldself = dot(svold, mult(chi, svold));
 
-			retval += dot(svnew, mult(suscept(grid, rsite, rsite), svnew));
-			retval -= dot(svold, mult(suscept(grid, rsite, rsite), svold));
-
+			retval = retval + (newself-oldself);
+			
 			return retval;
 		}
 
@@ -261,7 +383,7 @@ class SSH_multisite
 		// Green's function for 2+1 dimensions
 		// takes two coordinate vectors (x,y,t)
 		template <typename VertexType>
-[[gnu::hot, gnu::optimize("fast-math") ]]
+		[[gnu::hot, gnu::optimize("fast-math") ]]
 		double green(const VertexType& c1, const VertexType& c2)
 		{
 			double retval = 0;
@@ -297,14 +419,19 @@ class SSH_multisite
 				{
 					// dispersion relation
 					// do the summation
+
+					int index = dti*L*L + jx*L + jy;
+
+					double fourierterm = expk.real() * gdat[dti*L*L + jx*L + jy];
 					retval += expk.real() * gdat[dti*L*L + jx*L + jy];
+
 					// increment Fourier transform
 					expk *= dexpky; 
 				}
 				expk *= dexpkx; // increment Fourier transform
 			}
 
-			const double norml = 1.0 / pow(2*L,2); // the number of sites per time slice
+			const double norml = 1.0 / pow(L,2); // the number of sites (not bonds!)
 			return norml*signum*retval;
 		}
 
@@ -314,9 +441,10 @@ class SSH_multisite
 		// Green's function for 1+1 dimensions
 		// takes two coordinate vectors (x,t)
 		template <typename VertexType>
-[[gnu::hot, gnu::optimize("fast-math"), gnu::pure ]]
+		[[gnu::hot, gnu::optimize("fast-math"), gnu::pure ]]
 		inline double green(const VertexType& c1, const VertexType& c2)
 		{
+
 			// space
 			auto dist = std::lrint(c1[0]-c2[0]);
 			if (dist < 0) dist = L + dist;
@@ -341,12 +469,12 @@ class SSH_multisite
 	
 	
 			// compute Greens function in Fourier space
-                        const double *const __restrict__ dat = ftexp + dist*L;
-                        const double *const __restrict__ gdatloc =  gdat + dti*L;
-                        double retval = 0;
+			const double *const __restrict__ dat = ftexp + dist*L;
+			const double *const __restrict__ gdatloc =  gdat + dti*L;
+			double retval = 0;
 			for (int j = 0; j < L; ++j)
 			{
- 				retval +=  dat[j] * gdat[j];
+ 				retval +=  dat[j] * gdatloc[j];
 			}
 
 			const double norml = 1.0/L;
@@ -377,6 +505,14 @@ class SSH_multisite
 
 	// the actual susceptibility
 	// takes two indices, representing two bonds in the system
+
+	#ifdef USE_CHI_TABLE
+	template <class Lattice>
+	double suscept(Lattice& grid, int idx1, int idx2)
+	{
+		return chi_table[idx1*grid.size()+idx2];
+	}
+	#else
 	template <class Lattice>
 	double suscept(Lattice& grid, int idx1, int idx2)
 	{
@@ -389,28 +525,25 @@ class SSH_multisite
 			const auto t1 = w1[4];
 			const auto t2 = w2[4];
 
-//			const auto c1 = wick({w1[0],w1[1],t1}, {w1[2],w1[3],t1}, {w2[0],w2[1],t2}, {w2[2],w2[3],t2});
-//			const auto c2 = wick({w1[0],w1[1],t1}, {w1[2],w1[3],t1}, {w2[2],w2[3],t2}, {w2[0],w2[1],t2});
-//			const auto c3 = wick({w1[2],w1[3],t1}, {w1[0],w1[1],t1}, {w2[0],w2[1],t2}, {w2[2],w2[3],t2});
-//			const auto c4 = wick({w1[2],w1[3],t1}, {w1[0],w1[1],t1}, {w2[2],w2[3],t2}, {w2[0],w2[1],t2});
-
 			const auto c1 = wick<decltype(w1)>({w1[0],w1[2],t1}, {w1[1],w1[3],t1}, {w2[0],w2[2],t2}, {w2[1],w2[3],t2});
 			const auto c2 = wick<decltype(w1)>({w1[0],w1[2],t1}, {w1[1],w1[3],t1}, {w2[1],w2[3],t2}, {w2[0],w2[2],t2});
 			const auto c3 = wick<decltype(w1)>({w1[1],w1[3],t1}, {w1[0],w1[2],t1}, {w2[0],w2[2],t2}, {w2[1],w2[3],t2});
 			const auto c4 = wick<decltype(w1)>({w1[1],w1[3],t1}, {w1[0],w1[2],t1}, {w2[1],w2[3],t2}, {w2[0],w2[2],t2});
 
-//			const std::complex<double> K1 = green({w1[0],w1[1],w1[4]},{w1[2],w1[3],w1[4]}) + green({w1[2],w1[3],w1[4]},{w1[0],w1[1],w1[4]});
-//			const std::complex<double> K2 = green({w2[0],w2[1],w2[4]},{w2[2],w2[3],w2[4]}) + green({w2[2],w2[3],w2[4]},{w2[0],w2[1],w2[4]});
+			const std::complex<double> K1 = green<decltype(w1)>({w1[0],w1[2],t1},{w1[1],w1[3],t1}) 
+									+ green<decltype(w1)>({w1[1],w1[3],t1},{w1[0],w1[2],t1});
+			const std::complex<double> K2 = green<decltype(w1)>({w2[0],w2[2],t2},{w2[1],w2[3],t2}) 
+									+ green<decltype(w1)>({w2[1],w2[3],t2},{w2[0],w2[2],t2});
 
-			const std::complex<double> K1 = green<decltype(w1)>({w1[0],w1[2],t1},{w1[1],w1[3],t1}) + green<decltype(w1)>({w1[1],w1[3],t1},{w1[0],w1[2],t1});
-			const std::complex<double> K2 = green<decltype(w1)>({w2[0],w2[2],t2},{w2[1],w2[3],t2}) + green<decltype(w1)>({w2[1],w2[3],t2},{w2[0],w2[2],t2});
+
 		#else
 			const auto t1 = w1[2];
 			const auto t2 = w2[2];
-                        std::array<double, 2> v10 = {w1[0], t1};
-                        std::array<double, 2> v11 = {w1[1], t1};
-                        std::array<double, 2> v20 = {w2[0], t2};
-                        std::array<double, 2> v21 = {w2[1], t2};
+
+			std::array<double, 2> v10 = {w1[0], t1};
+			std::array<double, 2> v11 = {w1[1], t1};
+			std::array<double, 2> v20 = {w2[0], t2};
+			std::array<double, 2> v21 = {w2[1], t2};
 
 			const auto c1 = wick(v10, v11, v20, v21);
 			const auto c2 = wick(v10, v11, v21, v20);
@@ -423,6 +556,7 @@ class SSH_multisite
 
 		return std::real(c1+c2+c3+c4-K1*K2);
 	}
+	#endif
 };
 
 
@@ -446,7 +580,7 @@ class SSH_Initializer
 		StateVector newsv(const StateVector& svold) 
 		{
 			StateVector retval(svold); 
-			double amp = 0.7;
+			double amp = 0.5;
 			double diff = rng.real(-amp, amp);
 			retval[0] += diff;
 			return retval;
@@ -457,7 +591,7 @@ class SSH_Initializer
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
-template <class Lattice, typename SpinType = double>
+template <typename SpinType = double>
 class SSH
 {
 	public:
@@ -468,13 +602,18 @@ class SSH
 		template <typename RNG>
 		using MetroInitializer = SSH_Initializer<StateVector, RNG>;
 
-		Lattice& grid;
-
 		static constexpr uint Nalpha = 1;
 		static constexpr uint Nbeta = 1;
 		static constexpr uint Ngamma = 1;
 		
-		SSH(double m, double k, double g, double mu, double bQ, int Ltime, int L, Lattice& lattice) : m(m), k(k), g(g), mu(mu), dtau(bQ/double(Ltime)), L(L), betaQM(bQ), name("SSH"), grid(lattice)
+		SSH(double m, double k, double g, double mu, double dtau, int Ltime, int L) : m(m), 
+																	   k(k), 
+																	   g(g), 
+																	   mu(mu), 
+																	   dtau(dtau), 
+																	   betaQM(dtau*Ltime), 
+																	   L(L), 
+																	   name("SSH")
 		{
 			interactions[0] = new SSH_interaction<StateVector>(m, dtau); 
 			onsite[0] = new SSH_onsite<StateVector>(m, k, dtau);
@@ -489,8 +628,9 @@ class SSH
 		// instantiate and choose observables
 		SSHMag       obs_m;
 		SSHMagSq       obs_msq;
-		SSHTwoPointCorrSpace obs_corr;
-		auto getobs()	{return std::make_tuple(obs_m, obs_msq, obs_corr);}
+//		SSHTwoPointCorrSpace obs_corr;
+		auto getobs()	{return std::make_tuple(obs_m, obs_msq);}
+//		auto getobs()	{return std::make_tuple(obs_m, obs_msq, obs_corr);}
 
 
 		// initialize state space
@@ -499,7 +639,7 @@ class SSH
 		{
 			for (int i=0; i<grid.size(); i++)
 			{
-				if (rng.real() > 0.1) statespace[i][0] = 1;
+				if (rng.real() > 0.0) statespace[i][0] = 1;
 				else statespace[i][0] = -1;
 			}
 		}

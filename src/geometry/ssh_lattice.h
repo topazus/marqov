@@ -72,6 +72,7 @@ class SSHLattice
 						retval.push_back(j);
 					for(int j = i+1; j < this->nsites; ++j)
 						retval.push_back(j);
+
 					break;
 			}
 

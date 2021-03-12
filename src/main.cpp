@@ -82,7 +82,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	// ----------------- select simulation ------------------
 
      auto beta   = registry.Get<std::vector<double> >("mc.ini", ham, "betaMC");
-     auto betaQM = registry.Get<std::vector<double> >("mc.ini", ham, "betaQM");
+     auto dtau   = registry.Get<std::vector<double> >("mc.ini", ham, "dtau");
      auto m      = registry.Get<std::vector<double> >("mc.ini", ham, "m");
      auto k      = registry.Get<std::vector<double> >("mc.ini", ham, "k");
      auto g      = registry.Get<std::vector<double> >("mc.ini", ham, "g");
@@ -98,7 +98,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	// we need "L" and "Ltime" as explicit parameters in the Hamiltonian
 	// which requires some gymnastics ...
 	std::vector<int> dummy = {0};
-     auto hp = cart_prod(beta, m, k, g, mu, betaQM, dummy, dummy);
+     auto hp = cart_prod(beta, m, k, g, mu, dtau, dummy, dummy);
 
 
 	// prepare lattices
@@ -117,7 +117,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		}
 		latts.emplace_back(lat);
 	}
-	
+
         typedef decltype(sshfilter(latts[0][0], std::declval<std::pair<MARQOV::Config, decltype(hp[0])>>()
         )) PPType;
     	typedef decltype( finalize_parameter_pair(std::declval<MARQOV::Config>(),
@@ -126,6 +126,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	typename GetSchedulerType<
 	SSH<SSHLattice, double>, SSHLattice, PPType>::MarqovScheduler sched(1);
+
      for (std::size_t j=0; j<nL.size(); j++)
 	{
      	for (std::size_t jj=0; jj<nLtime.size(); jj++)
@@ -142,16 +143,17 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
      	     std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
      	     MARQOV::Config mp(outpath);
-     	     mp.setnsweeps(1);
+     	     mp.setnsweeps(10);
      	     mp.setncluster(0);
      	     mp.setwarmupsteps(0);
-     	     mp.setgameloopsteps(10);
+     	     mp.setgameloopsteps(300);
 
      	     makeDir(mp.outpath);
 
 
      	     // set up parameters
-     	     auto params = finalize_parameter_pair(mp, hp);
+     	     auto rparams = finalize_parameter_pair(mp, hp);
+			auto params = replicator_pair(rparams, nreplicas[0]);
 
      	     SSHLattice& latt = latts[j][jj];
      	     auto f = [&latt, &outbasedir, L](auto p){return sshfilter(latt, p);}; //partially apply filter
@@ -183,11 +185,11 @@ int main()
 	std::string command;
 	command = "rm -r " + outbasedir;
 	system(command.c_str());
-	command = "rm -r " + logbasedir;
-	system(command.c_str());
+//	command = "rm -r " + logbasedir;
+//	system(command.c_str());
 
 	makeDir(outbasedir);
-	makeDir(logbasedir);
+//	makeDir(logbasedir);
 	
 	selectsim(registry, outbasedir, logbasedir);
 }
