@@ -50,6 +50,9 @@ class IsingMag
 		IsingMag() : name("m"), desc("The Magnetization of the Ising Modell") {}
 };
 
+
+
+
 template <class Hamiltonian>
 class Energy
 {
@@ -64,8 +67,31 @@ class Energy
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			return 1;
-//			this->ham. // .. copy from metropolis move
+			const int N = grid.size();
+			double ene = 0.0;
+
+			for (int a=0; a<ham.Nalpha; a++)
+			{
+				for (int idx=0; idx<N; idx++)
+				{
+					auto nbrs = grid.getnbrs(a, idx);
+					auto self = ham.interactions[a]->get(statespace[idx]);
+
+					for (std::size_t i = 0; i < nbrs.size(); ++i)
+					{
+						// index of the neighbour
+						auto nbridx = nbrs[i];
+
+						// configuration of the neighbour
+						auto nbr = ham.interactions[a]->get(statespace[nbridx]);
+
+						ene += dot(self,nbr);
+
+					}
+				}
+			}
+
+			return ene/double(N);
 		}
 };
 
@@ -147,7 +173,7 @@ class Ising
 		static constexpr uint Nbeta = 0;
 		static constexpr uint Ngamma = 0;
 		
-		Ising(double J) : J(J), name("Ising")
+		Ising(double J) : J(J), name("Ising"), obs_e(*this), obs_fx(0), obs_fy(1)
 		{
 			interactions[0] = new Ising_interaction<StateVector>(J); 
 		}
@@ -160,8 +186,12 @@ class Ising
 	
 		// instantiate and choose observables
 		IsingMag       obs_m;
+		Energy<Ising>		obs_e;
+		IsingMagFTComp obs_fx;
+		IsingMagFTComp obs_fy;
 		IsingGenericVectorValuedObs dummy;
-		auto getobs()	{return std::make_tuple(obs_m, dummy);}
+//		auto getobs()	{return std::make_tuple(obs_m, dummy);}
+		auto getobs()	{return std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy);}
 
 
 		// initialize state space
