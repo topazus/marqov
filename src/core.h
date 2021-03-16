@@ -438,9 +438,8 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
          H5::DataSet dset(h5loc.createDataSet("Model", strdatatype, dspace));
          dset.setComment("This is the Model. This should correspond to a class name");
          dset.write(ham.name.c_str(), strdatatype);
-         
+
         h5loc.setComment("These parameters are peculiar to the considered Hamiltonian.");
-        dumpscalartoH5(h5loc, "beta", beta);
         //Let's dump the unknown number of unknown parameters of the Hamiltonian....
         int paramnr = 0;
         (void) std::initializer_list<int>{((void) dumpscalartoH5(h5loc,
@@ -475,7 +474,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
     template <class... HArgs>
     void createstep(H5::H5File& file, int s, const Config& mc, HArgs&& ...hargs)
     {
-        file.setComment("A caclculation is made up by a series of steps. Each step can use as input the previous step.");
+        file.setComment("A calculation is made up by a series of steps. Each step can use as input the previous step.");
         std::string stepname = "step" + std::to_string(s);
         H5::Group step(file.createGroup(stepname));
         step.setComment("A single step encapsulates the initial config, the observable time series and the final state.");
@@ -485,6 +484,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
           H5::Group config(step.createGroup("config"));
             config.setComment("Here we have all configuration related parameters that are required to start a simulation.");
             H5::Group marqovconfig(config.createGroup("marqovconfig"));
+            dumpscalartoH5(marqovconfig, "beta", beta);
             mc.dumpparamstoH5(marqovconfig);
 
             H5::Group latticeconfig(config.createGroup("lattice"));
