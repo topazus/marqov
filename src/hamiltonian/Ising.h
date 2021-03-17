@@ -70,8 +70,11 @@ class Energy
 			const int N = grid.size();
 			double ene = 0.0;
 
+			// interaction part
 			for (int a=0; a<ham.Nalpha; a++)
 			{
+
+				double enepart = 0.0;
 				for (int idx=0; idx<N; idx++)
 				{
 					auto nbrs = grid.getnbrs(a, idx);
@@ -85,11 +88,34 @@ class Energy
 						// configuration of the neighbour
 						auto nbr = ham.interactions[a]->get(statespace[nbridx]);
 
-						ene += dot(self,nbr);
+						enepart += dot(self,nbr);
 
 					}
 				}
+
+				ene += ham.interactions[a]->J * enepart;
 			}
+
+			// self energy part
+			for (int b=0; b<ham.Nbeta; b++)
+			{
+				double enepart = 0.0;
+
+				for (int idx=0; idx<N; idx++)
+				{
+					enepart += ham.onsite[b]->get(statespace[idx]);
+				}
+				ene += ham.onsite[b]->h * enepart;
+			}
+
+			// multi-site terms
+			for (int c=0; c<ham.Ngamma; c++)
+			{
+//				enepart = ham.multisite[c]->energy();
+//				ene += ham.onsite[c]->k * enepart;
+			}
+
+
 
 			return ene/double(N);
 		}
