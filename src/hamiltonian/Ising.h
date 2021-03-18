@@ -31,34 +31,6 @@ class IsingGenericVectorValuedObs
 
 
 
-class IsingMagFTComp
-{
-	public:
-		int dir;
-		std::string name;
-		template <class StateSpace, class Grid>
-
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			const int N = grid.size();
-			const int L = grid.len;
-
-			std::complex<double> magFTcomp = 0.0;
-			std::complex<double> jj(0,1);
-
-			for (int i=0; i<N; i++)
-			{
-				double x = grid.getcrds(i)[dir];
-				magFTcomp += double(statespace[i][0]) * std::exp(2.0*M_PI*x*jj);
-			}
-
-			return std::pow(std::abs(magFTcomp/double(N)),2);
-		}
-
-		IsingMagFTComp(int dir=0) : dir(dir), name("x"+std::to_string(dir)) {}
-};
-
-
 // ----------------------------------------------------------------------
 
 template <class StateVector>
@@ -119,12 +91,12 @@ class Ising
 		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 	
 		// instantiate and choose observables
-		ScalarMagnetization   obs_m;
-		Energy<Ising>		obs_e;
-		IsingMagFTComp obs_fx;
-		IsingMagFTComp obs_fy;
+		ScalarMagnetization  obs_m;
+		Energy<Ising>		 obs_e;
+		ScalarMagFTComp      obs_fx;
+		ScalarMagFTComp      obs_fy;
 		IsingGenericVectorValuedObs dummy;
-//		auto getobs()	{return std::make_tuple(obs_m, dummy);}
+
 		auto getobs()	{return std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy);}
 
 
