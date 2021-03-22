@@ -6,40 +6,7 @@
 #include <functional>
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
-
-
-// ------------------------------ OBSERVABLES ---------------------------
-
-// Magnetization
-class HeisenbergMag
-{
-	public:
-		std::string name;
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			constexpr static int SymD = 3;	// improve me
-			const     int N = grid.size();
-
-			std::vector<double> mag(SymD,0) ;
-
-			for (int i=0; i<N; i++)
-			{
-				for (int j=0; j<SymD; j++)
-				{
-					mag[j] += statespace[i][j];
-				}
-			}
-			
-			double retval = 0;
-			for (int j=0; j<SymD; j++)
-			{
-				retval += mag[j]*mag[j];
-			}
-			return sqrt(retval)/double(N);
-		}
-		HeisenbergMag() : name("m") {}
-};
+#include "../obsparts.h"
 
 
 // ----------------------------------------------------------------------
@@ -112,7 +79,7 @@ class Heisenberg
 		
 
 		// instantiate and choose observables
-		HeisenbergMag obs_m;
+		Magnetization obs_m;
 		auto getobs() { return std::make_tuple(obs_m); }
 		
 
