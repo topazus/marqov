@@ -42,7 +42,7 @@ using std::ofstream;
 #include "hamiltonian/XXZAntiferroSingleAniso.h"
 #include "hamiltonian/AshkinTeller.h"
 #include "hamiltonian/EdwardsAndersonIsing.h"
-#include "hamiltonian/Ssh.h"
+//#include "hamiltonian/Ssh.h" // seperate branch
 #include "hamiltonian/BlumeCapelBipartite.h"
 
 using namespace MARQOV;
