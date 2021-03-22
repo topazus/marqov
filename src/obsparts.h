@@ -11,7 +11,7 @@ class ScalarMagnetization
 
 		ScalarMagnetization(std::string name, std::string description) : name(name), desc(description) {}
 		ScalarMagnetization(std::string name) : name(name), desc("scalar magnetization") {}
-		ScalarMagnetization() : name("m"), desc("scalar magnetization") {}
+		ScalarMagnetization() : name("mx"), desc("scalar magnetization") {}
 
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
@@ -22,6 +22,65 @@ class ScalarMagnetization
 		}
 };
 
+// Magnetization
+// Euclidean norm of the sum of state vectors
+class Magnetization
+{
+	public:
+		std::string name, desc;
+
+		Magnetization(std::string name, std::string description) : name(name), desc(description) {}
+		Magnetization(std::string name) : name(name), desc("magnetization") {}
+		Magnetization() : name("m"), desc("magnetization") {}
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			constexpr static int SymD = statespace[0].size();
+			std::vector<double> mag(SymD, 0);
+
+			for (int i=0; i<grid.size(); i++) 
+			{
+				for (int j=0; j<SymD; j++)
+				{
+					mag[j] += statespace[i][j]; 
+				}
+			}
+
+			double retval = 0;
+			for (int j=0; j<SymD; j++) retval += mag[j]*mag[j];
+
+			return sqrt(retval)/double(grid.size());
+		}
+};
+
+// Vector Magnetization
+// sum of every component of the state vectors
+class VectorMagnetization
+{
+	public:
+		std::string name, desc;
+
+		VectorMagnetization(std::string name, std::string description) : name(name), desc(description) {}
+		VectorMagnetization(std::string name) : name(name), desc("vector magnetization") {}
+		VectorMagnetization() : name("mvec"), desc("vector magnetization") {}
+
+		template <class StateSpace, class Grid>
+		std::vector<double> measure(const StateSpace& statespace, const Grid& grid)
+		{
+			constexpr static int SymD = statespace[0].size();
+			std::vector<double> mag(SymD, 0);
+
+			for (int i=0; i<grid.size(); i++) 
+			{
+				for (int j=0; j<SymD; j++)
+				{
+					mag[j] += statespace[i][j]; 
+				}
+			}
+			return mag;
+		}
+};
 
 // Scalar Magnetization Fourier Component
 // considers only the first component of the state vector
