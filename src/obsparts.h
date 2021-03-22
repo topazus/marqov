@@ -1,6 +1,8 @@
 #ifndef OBSPARTS_H
 #define OBSPARTS_H
 
+#include <complex>
+
 
 // Scalar Magnetization Observable
 // considers only the first component of the state vector
@@ -36,7 +38,7 @@ class Magnetization
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			constexpr static int SymD = statespace[0].size();
+			const/*expr static*/ int SymD = statespace[0].size();
 			std::vector<double> mag(SymD, 0);
 
 			for (int i=0; i<grid.size(); i++) 
@@ -68,7 +70,7 @@ class VectorMagnetization
 		template <class StateSpace, class Grid>
 		std::vector<double> measure(const StateSpace& statespace, const Grid& grid)
 		{
-			constexpr static int SymD = statespace[0].size();
+			const/*expr static*/ int SymD = statespace[0].size();
 			std::vector<double> mag(SymD, 0);
 
 			for (int i=0; i<grid.size(); i++) 
@@ -92,7 +94,7 @@ class ScalarMagFTComp
 
 		ScalarMagFTComp(int dir, std::string name, std::string description) : dir(dir), name(name), desc(description) {}
 		ScalarMagFTComp(int dir, std::string name) : dir(dir), name(name), desc("Fourier Component of Magnetization") {}
-		ScalarMagFTComp(int dir) : dir(dir), name("magft"+std::to_string(dir)), desc("Fourier Component of Magnetization") {}
+		ScalarMagFTComp(int dir) : dir(dir), name("scalarmagft"+std::to_string(dir)), desc("Fourier Component of Magnetization") {}
 
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
@@ -110,6 +112,46 @@ class ScalarMagFTComp
 		}
 
 };
+
+
+
+
+
+class MagFTComp
+{
+	public:
+		int dir;
+		std::string name, desc;
+		MagFTComp(int dir, std::string name, std::string description) : dir(dir), name(name), desc(description) {}
+		MagFTComp(int dir, std::string name) : dir(dir), name(name), desc("Fourier Component of Magnetization") {}
+		MagFTComp(int dir) : dir(dir), name("magft"+std::to_string(dir)), desc("Fourier Component of Magnetization") {}
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			const/*expr static*/ int SymD = statespace[0].size();
+			const int N = grid.size();
+
+			std::vector<std::complex<double>> magFTcomp(SymD,0);
+			const std::complex<double> jj(0,1);
+
+			for (int i=0; i<N; i++)
+			{
+				double x = grid.getcrds(i)[dir];
+				for (int j=0; j<SymD; j++) magFTcomp[j] += double(statespace[i][j]) * std::exp(2.0*M_PI*x*jj);
+			}
+
+			// normalize
+			for (int j=0; j<SymD; j++) magFTcomp[j] /= double(N);
+
+			// dot product of complex vector 
+			double retval = 0;
+			for (int j=0; j<SymD; j++) retval += std::norm(magFTcomp[j]);
+
+			return retval;
+		}
+};
+
 
 
 
