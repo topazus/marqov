@@ -72,7 +72,7 @@ class Heisenberg
 		// requires pointers
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, FPType>* onsite[Nbeta];
-		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
+		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
 		Heisenberg(double J) : J(J), name("Heisenberg") {interactions[0] = new Heisenberg_interaction<StateVector>(J);}
 		~Heisenberg() {delete interactions[0];}

@@ -131,7 +131,6 @@ namespace MARQOV
         auto terms = get_terms<Lattice>(grid, rsite);
         if (terms[0] == -1) terms = arange(0, ham.Nbeta);
         
-        
         double onsiteenergydiff = 0;
         for (typename std::remove_cv<decltype(ham.Nbeta)>::type b=0; b<terms.size(); ++b)
         {
@@ -146,23 +145,21 @@ namespace MARQOV
             onsiteenergydiff += dot(ham.onsite[tidx]->h, diff);
         }
         
-        // multi-site energy
-        double multisiteenergyold = 0;
-        double multisiteenergynew = 0;
-        
-        for (typename std::remove_cv<decltype(ham.Ngamma)>::type g=0; g<ham.Ngamma; ++g)
+
+        // flex term energy
+	   double flexenergydiff = 0;
+        for (typename std::remove_cv<decltype(ham.Ngamma)>::type c=0; c<ham.Ngamma; ++c)
         {
-            multisiteenergynew += ham.multisite[g]->get(svnew, rsite, statespace);//FIXME: think about this...
-            multisiteenergyold += ham.multisite[g]->get(svold, rsite, statespace);
-            //forgot k_gamma
+			auto nbrs = grid.getnbrs(c, rsite); // todo: we need to seperate the neighbours from those used above!
+			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace, grid);
+			flexenergydiff += dot(ham.multisite[c]->k, diff);
         }
         
-        // sum up energy differences
-        double dE 	= interactionenergydiff + onsiteenergydiff + (multisiteenergynew - multisiteenergyold);
+
+        // collect everything
+        double dE 	= interactionenergydiff + onsiteenergydiff + flexenergydiff;
         
-        // improve me: what about models with discrete statevectors where the acceptance probability should be
-        // looked up in tables? -> specialized Metropolis routine for this case??
-        
+	   // evaluate
         int retval = 0;
         if ( dE <= 0 )
         {

@@ -308,7 +308,7 @@ class EdwardsAndersonIsing
 		// instantiate interaction terms (requires pointers)
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, int>* onsite[Nbeta];
-		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
+		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 	
 		// instantiate and choose observables
 		EdwardsAndersonOrderParameter      obs_qEA;

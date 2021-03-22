@@ -315,67 +315,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		}
 		sched.start();
 	}
-	/*
-	else if (ham == "SSH")
-	{
-
-		auto beta   = registry.Get<std::vector<double> >("mc.ini", ham, "betaMC");
-		auto betaQM = registry.Get<double>("mc.ini", ham, "betaQM");
-		auto m      = registry.Get<std::vector<double> >("mc.ini", ham, "m");
-		auto k      = registry.Get<std::vector<double> >("mc.ini", ham, "k");
-
-		const auto name      = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-		      auto nreplicas = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
-		const auto nL 	      = registry.Get<std::vector<int>>("mc.ini", name, "L" );
-		const auto nLtime  	 = registry.Get<std::vector<int>>("mc.ini", name, "Ltime" );
-		const auto dim 	 = registry.Get<int>("mc.ini", name, "dim" );
-
-
-
-		// set up replicas
-		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-	
-		// lattice size loop
-		for (std::size_t j=0; j<nL.size(); j++)
-		{
-			for (std::size_t jj=0; jj<nLtime.size(); jj++)
-			{
-				// prepare
-				int L = nL[j];
-				int Ltime  = nLtime[jj];
-				cout << endl << "L_space = " << L << "\t" << "L_time = " << Ltime << endl << endl;
-	
-				std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-	
-	     	   	MARQOV::Config mp(outpath);
-	     	   	mp.setnsweeps(5);
-				mp.setncluster(0);
-				mp.setwarmupsteps(1000);
-				mp.setgameloopsteps(5000);
-
-				mp.outname = "Ltime"+std::to_string(Ltime);
-	
-				makeDir(mp.outpath);
-
-	
-				// compute delta tau
-				std::vector<double> dtau = {betaQM/double(Ltime)};
-
-				// set up parameters
-				auto hp = cart_prod(beta, m, k, dtau);
-				auto params = finalize_parameter_pair(mp, hp);
-				auto rparams = replicator_pair(params, nreplicas[j]);
-	
-				// lattice
-				SSHLattice latt(L, Ltime, dim);
-	
-				// set up and execute
-	 			auto f = [&latt, &outbasedir, L](auto p){return sshfilter(latt, p);}; //partially apply filter
-	 			Loop<SSH<double>, SSHLattice>(rparams, f);
-			}
-		}
-	}
-	*/
 	else if (ham == "IsingCC")
 	{
 		const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );

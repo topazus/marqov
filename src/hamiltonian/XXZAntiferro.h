@@ -200,7 +200,7 @@ class XXZAntiferro
 		// requires pointers
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, FPType>* onsite[Nbeta];
-		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
+		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
 		XXZAntiferro(double myDelta, double myH) : Delta(myDelta), H(myH), name("XXZAntiferro")
 		{

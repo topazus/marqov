@@ -241,7 +241,7 @@ class XXZAntiferroSingleAniso
 		// instantiate interaction terms (requires pointers) 
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, FPType>* onsite[Nbeta];
-		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
+		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
 		XXZAntiferroSingleAniso(double myH, double myDelta, double myD) : Delta(myDelta), H(myH), D(myD), name("XXZAntiferroSingleAniso")
 		{

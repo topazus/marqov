@@ -123,7 +123,7 @@ class Phi4
 		// requires pointers
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, FPType>* onsite[Nbeta]; //Todo: External fields not yet supported
-		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
+		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
 		Phi4(double beta, double lambda, double mass) : beta(beta), lambda(lambda), mass(mass), name("Phi4"), obs_fx(0), obs_fy(1), obs_fz(2)
 		{

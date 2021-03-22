@@ -94,7 +94,7 @@ class BlumeCapel
 		// instantiate interaction terms (requires pointers)
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, double>* onsite[Nbeta];
-		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
+		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 	
 		BlumeCapel(double J, double D) : J(J), D(D), name("BlumeCapel")
 		{	
