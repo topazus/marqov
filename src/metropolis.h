@@ -65,47 +65,66 @@ namespace MARQOV
 
 
 
-    // A helper to check whether the lattice provides a termselector method
+	// A helper to check whether the lattice provides a termselector method
+	
+	template<class, class = void> 
+	struct has_terms : std::false_type {};
+	
+	template<class Grid>
+//	struct has_terms<Grid, MARQOV::detail::type_sink_t<decltype(&Grid::termselector)>> : std::true_type {};
+	struct has_terms<Grid, MARQOV::detail::type_sink_t<decltype(&Grid::termselector(std::declval<int>()))>> : std::true_type {};
+//	struct has_terms<Grid, std::void_t<decltype(&Grid::termselector)>> : std::true_type {}; // C++17 feature
+	
+	template <class Grid>
+	std::vector<int> get_terms_helper(Grid& grid, int idx, std::false_type) 
+	{
+		cout << "O" << endl;
+		return {-1};}
+	
+	template <class Grid>
+	std::vector<int> get_terms_helper(Grid& grid, int idx, std::true_type) 
+	{
+		cout << "X" << endl;
+		return grid.termselector(idx);}
+	
+	template <class Grid>
+	std::vector<int> get_terms(Grid& grid, int idx) {	return get_terms_helper<Grid>(grid, idx, has_terms<Grid>{}); }
+	
+	
+	
+/*	
+	// A helper to check whether the lattice provides a getflexnbrs method
+	
+	template<class, class = void> 
+	struct has_getflexnbrs : std::false_type {};
+	
+	template<class Grid>
+	struct has_getflexnbrs<Grid, MARQOV::detail::type_sink_t< decltype( std::declval<Grid>().getflexnbrs(std::declval<int>(), std::declval<int>()) )  >> : std::true_type {};
 
-    template<class, class = void> 
-    struct has_terms : std::false_type {};
-    
-    template<class Grid>
-    struct has_terms<Grid, MARQOV::detail::type_sink_t<decltype(&Grid::termselector)>> : std::true_type {};
-    //struct has_terms<Grid, std::void_t<decltype(&Grid::termselector)>> : std::true_type {}; // C++17 feature
-    
-    template <class Grid>
-    std::vector<int> get_terms_helper(Grid& grid, int idx, std::false_type) {return {-1};}
-    
-    template <class Grid>
-    std::vector<int> get_terms_helper(Grid& grid, int idx, std::true_type) {return grid.termselector(idx);}
-    
-    template <class Grid>
-    std::vector<int> get_terms(Grid& grid, int idx) {	return get_terms_helper<Grid>(grid, idx, has_terms<Grid>{}); }
-    
-    
-    // A helper to check whether the lattice provides a getnbrs method
-
-    template<class, class = void> 
-    struct has_getnbrs : std::false_type {};
-    
-    template<class Grid>
-    struct has_getnbrs<Grid, MARQOV::detail::type_sink_t<decltype(&Grid::getnbrs)>> : std::true_type {};
-    
-    template <class Grid>
-    auto get_nbrs_helper(Grid& grid, int fam, int idx, std::false_type) {return std::vector<int>{-1};}
-    
-    template <class Grid>
-    auto get_nbrs_helper(Grid& grid, int fam, int idx, std::true_type) {return grid.getnbrs(fam,idx);}
-    
-    template <class Grid>
-    auto get_nbrs(Grid& grid, int fam, int idx) {	return get_nbrs_helper<Grid>(grid, fam, idx, has_getnbrs<Grid>{}); }
+//	struct has_getflexnbrs<Grid, MARQOV::detail::type_sink_t<decltype(&Grid::getflexnbrs())>> : std::true_type {};
+	
+	template <class Grid>
+	auto get_flexnbrs_helper(Grid& grid, int fam, int idx, std::false_type) 
+	{
+		cout << "getflexnbrs not implement!" << flush;
+//		exit(0);
+		return std::vector<int>{};
+	}
+	
+	template <class Grid>
+	auto get_flexnbrs_helper(Grid& grid, int fam, int idx, std::true_type) {return grid.getflexnbrs(fam,idx);}
+	
+	template <class Grid>
+	auto get_flexnbrs(Grid& grid, int fam, int idx) {	return get_flexnbrs_helper<Grid>(grid, fam, idx, has_getflexnbrs<Grid>{}); }
+*/
 
 
 
 
 
 
+
+// -------------------------- Metropolis Algorithm -----------------------------
 
     template <class Hamiltonian, class Lattice>
     struct Metropolis
@@ -130,14 +149,13 @@ namespace MARQOV
         double interactionenergydiff = 0;
         for (typename std::remove_cv<decltype(ham.Nalpha)>::type a=0; a<ham.Nalpha; ++a)
         {
-            typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
-            typedef decltype(callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
-            typedef typename Promote_Array<InteractionType, BondType>::CommonArray CommonArray;
-            
-//            auto nbrs = grid.getnbrs(a, rsite);
-		auto nbrs = get_nbrs<Lattice>(grid, a, rsite);
-            
-            CommonArray averagevector = {0};
+			typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
+			typedef decltype(callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
+			typedef typename Promote_Array<InteractionType, BondType>::CommonArray CommonArray;
+			            
+			auto nbrs = grid.getnbrs(a, rsite);
+			            
+			CommonArray averagevector = {0};
             
             // sum over neighbours
             for (std::size_t i = 0; i < nbrs.size(); ++i)
@@ -158,6 +176,7 @@ namespace MARQOV
         // onsite energy part
         auto terms = get_terms<Lattice>(grid, rsite);
         if (terms[0] == -1) terms = arange(0, ham.Nbeta);
+//		auto terms = grid.termselector(rsite);
         
         double onsiteenergydiff = 0;
         for (typename std::remove_cv<decltype(ham.Nbeta)>::type b=0; b<terms.size(); ++b)
@@ -173,14 +192,13 @@ namespace MARQOV
             onsiteenergydiff += dot(ham.onsite[tidx]->h, diff);
         }
         
-
         // flex term energy
 	   double flexenergydiff = 0;
         for (typename std::remove_cv<decltype(ham.Ngamma)>::type c=0; c<ham.Ngamma; ++c)
         {
-			auto nbrs = grid.getnbrs(c, rsite); // todo: we need to seperate the neighbours from those used above!
-			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace, grid);
-			flexenergydiff += dot(ham.multisite[c]->k, diff);
+//			auto nbrs = get_flexnbrs<Lattice>(grid, c, rsite);
+//			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace, grid);
+//			flexenergydiff += dot(ham.multisite[c]->k, diff);
         }
         
 

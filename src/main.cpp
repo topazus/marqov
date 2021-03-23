@@ -146,175 +146,177 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	if (startswith(ham, "Ising"))
 	{
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-		auto parameters = cart_prod(beta, J);
-
-		write_logfile(registry, beta);
- 		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
-	else if (ham == "Heisenberg")
-	{
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-		auto parameters = cart_prod(beta, J);
-
-		write_logfile(registry, beta);
-		RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
-	}
-    else if (ham == "Phi4")
-    {
-		auto beta   = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto lambda = registry.Get<std::vector<double> >("mc.ini", ham, "lambda");
-		auto mass   = registry.Get<std::vector<double> >("mc.ini", ham, "mass");
-
-		// we need "beta" as an explicit parameter in the Hamiltonian
-		// this requires some gymnastics ...
-		std::vector<double> dummy = {0.0};
-		auto parameters = cart_prod(beta, dummy, lambda, mass);
-		for (std::size_t i=0; i<parameters.size(); i++) std::get<1>(parameters[i]) = std::get<0>(parameters[i]);
-
-		write_logfile(registry, beta);
-		RegularLatticeLoop<Phi4<double, double> >(registry, outbasedir, parameters, defaultfilter);
-    }
-    else if (ham == "BlumeCapel")
-    {
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-		auto D    = registry.Get<std::vector<double> >("mc.ini", ham, "D");
-		auto parameters = cart_prod(beta, J, D);
-
-		write_logfile(registry, beta);
- 		RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
-    }
-    else if (startswith(ham, "AshkinTeller"))
-    {
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-		auto K    = registry.Get<std::vector<double> >("mc.ini", ham, "K");
-		auto parameters = cart_prod(beta, J, K);
-
-		write_logfile(registry, beta);
- 		RegularLatticeLoop<AshkinTeller<int>>(registry, outbasedir, parameters, defaultfilter);
-	}
-	else if (ham == "XXZAntiferro")
-	{
-		auto beta     = registry.Get<std::vector<double>>("mc.ini", ham, "beta");
-		auto extfield = registry.Get<std::vector<double>>("mc.ini", ham, "extfield");
-		auto aniso    = registry.Get<std::vector<double>>("mc.ini", ham, "aniso");
-		auto parameters = cart_prod(beta, aniso, extfield);
-
-		write_logfile(registry, beta);
-		RegularLatticeLoop<XXZAntiferro<double, double> >(registry, outbasedir, parameters, defaultfilter);
-	}
-	else if (ham == "XXZAntiferroSingleAniso")
-	{
-		auto beta        = registry.Get<std::vector<double>>("mc.ini", ham, "beta");
-		auto extfield    = registry.Get<std::vector<double>>("mc.ini", ham, "extfield");
-		auto aniso       = registry.Get<std::vector<double>>("mc.ini", ham, "aniso");
-		auto singleaniso = registry.Get<std::vector<double>>("mc.ini", ham, "singleaniso");
-		auto parameters = cart_prod(beta, extfield, aniso, singleaniso);
-
-		write_logfile(registry, extfield);
-		RegularLatticeLoop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
-	}
-	else if (startswith(ham, "Bimodal-Ising-EdwardsAnderson"))
-	{
-		const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-		const auto dim 	  = registry.Get<int>("mc.ini", ham, "dim" );
-		      auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
-		const auto nL  	  = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
-
-		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-
-		auto hp = cart_prod(beta, J);
-		write_logfile(registry, beta);
-
-        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
-        typedef EdwardsAndersonIsing<int> Hamiltonian;
-        typedef RegularRandomBond<BimodalPDF> Lattice;
-        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
-
-		// lattice size loop
-		for (std::size_t j=0; j<nL.size(); j++)
-		{
-			// prepare output
-			int L = nL[j];
-			cout << endl << "L = " << L << endl << endl;
-			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-			makeDir(outpath);
-	
-			// Monte Carlo parameters
-	        	MARQOV::Config mp(outpath);
-	        	mp.setnsweeps(15);
-			mp.setncluster(0);
-			mp.setwarmupsteps(300);
-			mp.setgameloopsteps(300);
-
-			// lattice parameters
-			auto lp = std::make_tuple(L,dim);
-
-			// form parameter triple and replicate
-			auto params  = finalize_parameter_triple(lp, mp, hp);
-			auto rparams = replicator(params, nreplicas[j]);
-			// perform simulations
-            for (auto p: rparams)
-                sched.createSimfromParameter(p, defaultfilter_triple);
-//		 	Loop<Hamiltonian, RegularRandomBond<BimodalPDF> >(rparams, defaultfilter_triple);
-		}
-		sched.start();
-	}
-	else if (startswith(ham, "Gaussian-Ising-EdwardsAnderson"))
-	{
-		const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-		const auto dim 	  = registry.Get<int>("mc.ini", ham, "dim" );
-		      auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
-		const auto nL  	  = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
-
-		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-
-		auto hp = cart_prod(beta, J);
-		write_logfile(registry, beta);
-        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
-        typedef EdwardsAndersonIsing<int> Hamiltonian;
-        typedef RegularRandomBond<GaussianPDF> Lattice;
-        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
-	
-		// lattice size loop
-		for (std::size_t j=0; j<nL.size(); j++)
-		{
-			// prepare output
-			int L = nL[j];
-			cout << endl << "L = " << L << endl << endl;
-			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-			makeDir(outpath);
-	
-			// Monte Carlo parameters
-	        	MARQOV::Config mp(outpath);
-	        	mp.setnsweeps(50);
-			mp.setncluster(0);
-			mp.setwarmupsteps(100);
-			mp.setgameloopsteps(1000);
-
-			// lattice parameters
-			auto lp = std::make_tuple(L,dim);
-
-			// form parameter triple and replicate
-			auto params  = finalize_parameter_triple(lp, mp, hp);
-			auto rparams = replicator(params, nreplicas[j]);
-            for (auto p: rparams)
-                sched.createSimfromParameter(p, defaultfilter_triple);
-			// perform simulations
-//		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<GaussianPDF>>(rparams, defaultfilter_triple);
-		}
-		sched.start();
-	}
+//		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+//		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+//		auto parameters = cart_prod(beta, J);
+//
+//		write_logfile(registry, beta);
+// 		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
+//	}
+//	else if (ham == "Heisenberg")
+//	{
+//		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+//		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+//		auto parameters = cart_prod(beta, J);
+//
+//		write_logfile(registry, beta);
+//		RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
+//	}
+//    else if (ham == "Phi4")
+//    {
+//		auto beta   = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+//		auto lambda = registry.Get<std::vector<double> >("mc.ini", ham, "lambda");
+//		auto mass   = registry.Get<std::vector<double> >("mc.ini", ham, "mass");
+//
+//		// we need "beta" as an explicit parameter in the Hamiltonian
+//		// this requires some gymnastics ...
+//		std::vector<double> dummy = {0.0};
+//		auto parameters = cart_prod(beta, dummy, lambda, mass);
+//		for (std::size_t i=0; i<parameters.size(); i++) std::get<1>(parameters[i]) = std::get<0>(parameters[i]);
+//
+//		write_logfile(registry, beta);
+//		RegularLatticeLoop<Phi4<double, double> >(registry, outbasedir, parameters, defaultfilter);
+//    }
+//    else if (ham == "BlumeCapel")
+//    {
+//		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+//		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+//		auto D    = registry.Get<std::vector<double> >("mc.ini", ham, "D");
+//		auto parameters = cart_prod(beta, J, D);
+//
+//		write_logfile(registry, beta);
+// 		RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
+//    }
+//    else if (startswith(ham, "AshkinTeller"))
+//    {
+//		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+//		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+//		auto K    = registry.Get<std::vector<double> >("mc.ini", ham, "K");
+//		auto parameters = cart_prod(beta, J, K);
+//
+//		write_logfile(registry, beta);
+// 		RegularLatticeLoop<AshkinTeller<int>>(registry, outbasedir, parameters, defaultfilter);
+//	}
+//	else if (ham == "XXZAntiferro")
+//	{
+//		auto beta     = registry.Get<std::vector<double>>("mc.ini", ham, "beta");
+//		auto extfield = registry.Get<std::vector<double>>("mc.ini", ham, "extfield");
+//		auto aniso    = registry.Get<std::vector<double>>("mc.ini", ham, "aniso");
+//		auto parameters = cart_prod(beta, aniso, extfield);
+//
+//		write_logfile(registry, beta);
+//		RegularLatticeLoop<XXZAntiferro<double, double> >(registry, outbasedir, parameters, defaultfilter);
+//	}
+//	else if (ham == "XXZAntiferroSingleAniso")
+//	{
+//		auto beta        = registry.Get<std::vector<double>>("mc.ini", ham, "beta");
+//		auto extfield    = registry.Get<std::vector<double>>("mc.ini", ham, "extfield");
+//		auto aniso       = registry.Get<std::vector<double>>("mc.ini", ham, "aniso");
+//		auto singleaniso = registry.Get<std::vector<double>>("mc.ini", ham, "singleaniso");
+//		auto parameters = cart_prod(beta, extfield, aniso, singleaniso);
+//
+//		write_logfile(registry, extfield);
+//		RegularLatticeLoop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
+//	}
+//	else if (startswith(ham, "Bimodal-Ising-EdwardsAnderson"))
+//	{
+//		const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+//		const auto dim 	  = registry.Get<int>("mc.ini", ham, "dim" );
+//		      auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
+//		const auto nL  	  = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
+//
+//		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+//
+//		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+//		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+//
+//		auto hp = cart_prod(beta, J);
+//		write_logfile(registry, beta);
+//
+//        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
+//        typedef EdwardsAndersonIsing<int> Hamiltonian;
+//        typedef RegularRandomBond<BimodalPDF> Lattice;
+//        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
+//
+//		// lattice size loop
+//		for (std::size_t j=0; j<nL.size(); j++)
+//		{
+//			// prepare output
+//			int L = nL[j];
+//			cout << endl << "L = " << L << endl << endl;
+//			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+//			makeDir(outpath);
+//	
+//			// Monte Carlo parameters
+//	        	MARQOV::Config mp(outpath);
+//	        	mp.setnsweeps(15);
+//			mp.setncluster(0);
+//			mp.setwarmupsteps(300);
+//			mp.setgameloopsteps(300);
+//
+//			// lattice parameters
+//			auto lp = std::make_tuple(L,dim);
+//
+//			// form parameter triple and replicate
+//			auto params  = finalize_parameter_triple(lp, mp, hp);
+//			auto rparams = replicator(params, nreplicas[j]);
+//			// perform simulations
+//            for (auto p: rparams)
+//                sched.createSimfromParameter(p, defaultfilter_triple);
+////		 	Loop<Hamiltonian, RegularRandomBond<BimodalPDF> >(rparams, defaultfilter_triple);
+//		}
+//		sched.start();
+//	}
+//	else if (startswith(ham, "Gaussian-Ising-EdwardsAnderson"))
+//	{
+//		const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+//		const auto dim 	  = registry.Get<int>("mc.ini", ham, "dim" );
+//		      auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
+//		const auto nL  	  = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
+//
+//		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+//
+//		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+//		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+//
+//		auto hp = cart_prod(beta, J);
+//		write_logfile(registry, beta);
+//        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
+//        typedef EdwardsAndersonIsing<int> Hamiltonian;
+//        typedef RegularRandomBond<GaussianPDF> Lattice;
+//        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
+//	
+//		// lattice size loop
+//		for (std::size_t j=0; j<nL.size(); j++)
+//		{
+//			// prepare output
+//			int L = nL[j];
+//			cout << endl << "L = " << L << endl << endl;
+//			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+//			makeDir(outpath);
+//	
+//			// Monte Carlo parameters
+//	        	MARQOV::Config mp(outpath);
+//	        	mp.setnsweeps(50);
+//			mp.setncluster(0);
+//			mp.setwarmupsteps(100);
+//			mp.setgameloopsteps(1000);
+//
+//			// lattice parameters
+//			auto lp = std::make_tuple(L,dim);
+//
+//			// form parameter triple and replicate
+//			auto params  = finalize_parameter_triple(lp, mp, hp);
+//			auto rparams = replicator(params, nreplicas[j]);
+//            for (auto p: rparams)
+//                sched.createSimfromParameter(p, defaultfilter_triple);
+//			// perform simulations
+////		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<GaussianPDF>>(rparams, defaultfilter_triple);
+//		}
+//		sched.start();
+//	}
+	/*
 	else if (ham == "IsingCC")
 	{
 		const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
@@ -365,45 +367,47 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		}
 		sched.start();
 	}
-    else if (ham == "IrregularIsing1")
-    {
-		//
-		// construct irregular lattice and pass it to MARQOV as a reference
-		//
+	*/
 
-		const int L = 32;
-		const int dim = 2;
-		ConstantCoordinationLattice<Poissonian> ccl(L, dim);
-
-		// prepare output
-		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-		makeDir(outpath);
-
-		// Hamiltonian parameters
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		std::vector<double> myj = {-1.0};
-		auto hp = cart_prod(beta, myj);
-
-		// Monte Carlo parameters
-		MARQOV::Config mp(outpath);
-		mp.setrepid(1);
-		mp.setnsweeps(L);
-		mp.setncluster(10);
-
-		auto params = finalize_parameter_pair(mp, hp);
-		// partially apply filter
-		auto f = [&ccl](auto p){return defaultfilter(ccl, p);};
-
-        typedef typename decltype(params)::value_type PPType;
-        typedef Ising<int> Hamiltonian;
-        typedef ConstantCoordinationLattice<Poissonian> Lattice;
-        typename GetSchedulerType<Hamiltonian, Lattice, PPType>::MarqovScheduler sched(1);
-		// perform simulations
-        for (auto p: params)
-            sched.createSimfromParameter(p, f);
-//		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
-        sched.start();
-	}
+//    else if (ham == "IrregularIsing1")
+//    {
+//		//
+//		// construct irregular lattice and pass it to MARQOV as a reference
+//		//
+//
+//		const int L = 32;
+//		const int dim = 2;
+//		ConstantCoordinationLattice<Poissonian> ccl(L, dim);
+//
+//		// prepare output
+//		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+//		makeDir(outpath);
+//
+//		// Hamiltonian parameters
+//		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+//		std::vector<double> myj = {-1.0};
+//		auto hp = cart_prod(beta, myj);
+//
+//		// Monte Carlo parameters
+//		MARQOV::Config mp(outpath);
+//		mp.setrepid(1);
+//		mp.setnsweeps(L);
+//		mp.setncluster(10);
+//
+//		auto params = finalize_parameter_pair(mp, hp);
+//		// partially apply filter
+//		auto f = [&ccl](auto p){return defaultfilter(ccl, p);};
+//
+//        typedef typename decltype(params)::value_type PPType;
+//        typedef Ising<int> Hamiltonian;
+//        typedef ConstantCoordinationLattice<Poissonian> Lattice;
+//        typename GetSchedulerType<Hamiltonian, Lattice, PPType>::MarqovScheduler sched(1);
+//		// perform simulations
+//        for (auto p: params)
+//            sched.createSimfromParameter(p, f);
+////		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
+//        sched.start();
+//	}
     else if (ham == "BlumeCapelBipartite")
     {
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");

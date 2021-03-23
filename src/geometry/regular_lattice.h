@@ -23,6 +23,7 @@ public:
 
 
     value_type getnbrs(int a, int i) const {return this->operator[](i);}
+    value_type getflexnbrs(int a, int i) const {return this->operator[](i);}
 
     std::vector<double> getcrds(int k) const 
     {
