@@ -61,8 +61,12 @@ namespace MARQOV
         typedef typename std::conditional<std::is_same<AElemType, CommonType>::value, A, B>::type CommonArray;
     };
     
+
+
+
+
     // A helper to check whether the lattice provides a termselector method
-    
+
     template<class, class = void> 
     struct has_terms : std::false_type {};
     
@@ -80,6 +84,29 @@ namespace MARQOV
     std::vector<int> get_terms(Grid& grid, int idx) {	return get_terms_helper<Grid>(grid, idx, has_terms<Grid>{}); }
     
     
+    // A helper to check whether the lattice provides a getnbrs method
+
+    template<class, class = void> 
+    struct has_getnbrs : std::false_type {};
+    
+    template<class Grid>
+    struct has_getnbrs<Grid, MARQOV::detail::type_sink_t<decltype(&Grid::getnbrs)>> : std::true_type {};
+    
+    template <class Grid>
+    auto get_nbrs_helper(Grid& grid, int fam, int idx, std::false_type) {return std::vector<int>{-1};}
+    
+    template <class Grid>
+    auto get_nbrs_helper(Grid& grid, int fam, int idx, std::true_type) {return grid.getnbrs(fam,idx);}
+    
+    template <class Grid>
+    auto get_nbrs(Grid& grid, int fam, int idx) {	return get_nbrs_helper<Grid>(grid, fam, idx, has_getnbrs<Grid>{}); }
+
+
+
+
+
+
+
     template <class Hamiltonian, class Lattice>
     struct Metropolis
     {
@@ -107,7 +134,8 @@ namespace MARQOV
             typedef decltype(callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
             typedef typename Promote_Array<InteractionType, BondType>::CommonArray CommonArray;
             
-            auto nbrs = grid.getnbrs(a, rsite);
+//            auto nbrs = grid.getnbrs(a, rsite);
+		auto nbrs = get_nbrs<Lattice>(grid, a, rsite);
             
             CommonArray averagevector = {0};
             
