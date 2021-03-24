@@ -71,6 +71,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 	const auto dim 	 = reg.Get<int>("mc.ini", name, "dim" );
 
     typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType;
+
     
 	if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 	std::vector<RegularHypercubic> latts;
@@ -146,14 +147,13 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	if (startswith(ham, "Ising"))
 	{
+		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+		auto parameters = cart_prod(beta, J);
+
+		write_logfile(registry, beta);
+ 		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
-//		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-//		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-//		auto parameters = cart_prod(beta, J);
-//
-//		write_logfile(registry, beta);
-// 		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
-//	}
 //	else if (ham == "Heisenberg")
 //	{
 //		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
