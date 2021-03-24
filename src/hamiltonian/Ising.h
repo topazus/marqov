@@ -76,8 +76,8 @@ class Ising
 		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
 
 		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta = 0;
-		static constexpr uint Ngamma = 1;
+		static constexpr uint Nbeta  = 0;
+		static constexpr uint Ngamma = 0;
 		
 		Ising(double J) : J(J), name("Ising"), obs_e(*this), obs_fx(0), obs_fy(1)
 		{

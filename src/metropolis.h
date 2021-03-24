@@ -71,7 +71,9 @@ namespace MARQOV
 	struct has_terms : std::false_type {};
 	
 	template<class Grid>
-	struct has_terms<Grid, MARQOV::detail::type_sink_t<decltype(std::declval<Grid>().termselector(std::declval<int>()))>> : std::true_type {};
+	struct has_terms<Grid, MARQOV::detail::type_sink_t<
+		decltype(std::declval<Grid>().termselector(std::declval<int>()))
+		>> : std::true_type {};
 	// in C++17 (which we don't use), this can be solved with void_t
 	
 	template <class Grid>
@@ -84,31 +86,72 @@ namespace MARQOV
 	std::vector<int> get_terms(Grid& grid, int idx) {	return get_terms_helper<Grid>(grid, idx, has_terms<Grid>{}); }
 	
 	
+
+
+	// A helper to check whether the lattice provides a getnbrs method
 	
+	template<class, class = void> 
+	struct has_getnbrs : std::false_type {};
+	
+	template<class Grid>
+	struct has_getnbrs<Grid, MARQOV::detail::type_sink_t< 
+		decltype( std::declval<Grid>().getnbrs(std::declval<int>(), std::declval<int>()) ) 
+		>> : std::true_type {};
+
+	
+	template <class Grid>
+	auto get_nbrs_helper(Grid& grid, int fam, int idx, std::false_type) 
+	{
+		cout << "getnbrs not implement!" << flush;
+		exit(0); // improve me
+		return std::vector<int>{};
+	}
+	
+	template <class Grid>
+	auto get_nbrs_helper(Grid& grid, int fam, int idx, std::true_type)  
+	{
+		return grid.getnbrs(fam,idx); 
+	}
+	
+	template <class Grid>
+	auto get_nbrs(Grid& grid, int fam, int idx) 
+	{
+		return get_nbrs_helper<Grid>(grid, fam, idx, has_getnbrs<Grid>{}); 
+	}
+
+
+
+
 	// A helper to check whether the lattice provides a getflexnbrs method
 	
 	template<class, class = void> 
 	struct has_getflexnbrs : std::false_type {};
 	
 	template<class Grid>
-	struct has_getflexnbrs<Grid, MARQOV::detail::type_sink_t< decltype( std::declval<Grid>().getflexnbrs(std::declval<int>(), std::declval<int>()) )  >> : std::true_type {};
+	struct has_getflexnbrs<Grid, MARQOV::detail::type_sink_t< 
+		decltype( std::declval<Grid>().getflexnbrs(std::declval<int>(), std::declval<int>()) ) 
+		>> : std::true_type {};
 
 	
 	template <class Grid>
 	auto get_flexnbrs_helper(Grid& grid, int fam, int idx, std::false_type) 
 	{
 		cout << "getflexnbrs not implement!" << flush;
+		exit(0); // improve me
 		return std::vector<int>{};
 	}
 	
 	template <class Grid>
-	auto get_flexnbrs_helper(Grid& grid, int fam, int idx, std::true_type) 
+	auto get_flexnbrs_helper(Grid& grid, int fam, int idx, std::true_type)  
 	{
-		cout << "true" << endl; return grid.getflexnbrs(fam,idx);
+		return grid.getflexnbrs(fam,idx); 
 	}
 	
 	template <class Grid>
-	auto get_flexnbrs(Grid& grid, int fam, int idx) {	return get_flexnbrs_helper<Grid>(grid, fam, idx, has_getflexnbrs<Grid>{}); }
+	auto get_flexnbrs(Grid& grid, int fam, int idx) 
+	{
+		return get_flexnbrs_helper<Grid>(grid, fam, idx, has_getflexnbrs<Grid>{}); 
+	}
 
 
 
@@ -145,24 +188,25 @@ namespace MARQOV
 			typedef decltype(callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
 			typedef typename Promote_Array<InteractionType, BondType>::CommonArray CommonArray;
 			            
-			auto nbrs = grid.getnbrs(a, rsite);
+			auto nbrs = get_nbrs<Lattice>(grid, a, rsite);
 			            
 			CommonArray averagevector = {0};
             
-            // sum over neighbours
-            for (std::size_t i = 0; i < nbrs.size(); ++i)
-            {
-                // index of the neighbour
-                auto idx = nbrs[i];
-                
-                // configuration of the neighbour
-                auto nbr = ham.interactions[a]->get(statespace[idx]);
-                
-                // add neighbours (also accounting for bond strength if available)
-                averagevector = averagevector + MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
-            }
-            interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
-        }
+			// sum over neighbours
+			for (std::size_t i = 0; i < nbrs.size(); ++i)
+			{
+				// index of the neighbour
+				auto idx = nbrs[i];
+				                
+				// configuration of the neighbour
+				auto nbr = ham.interactions[a]->get(statespace[idx]);
+				                
+				// add neighbours (also accounting for bond strength if available)
+				averagevector = averagevector + MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
+			}
+
+			interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
+		}
         
         
         // onsite energy part
