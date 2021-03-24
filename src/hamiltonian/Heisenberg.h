@@ -140,7 +140,7 @@ namespace MARQOV
 		auto coupling = ham.interactions[0]->J; 
 		const auto proj1 = coupling*dot(statespace[current], rdir);
 
-		const auto nbrs = grid.getnbrs(0, current);
+		const auto nbrs = grid.nbrs(0, current);
 		for (std::size_t i = 0; i < nbrs.size(); ++i)
 		{
 			const auto currentidx = nbrs[i];

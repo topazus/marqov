@@ -104,7 +104,7 @@ class ScalarMagFTComp
 
 			for (int i=0; i<grid.size(); i++)
 			{
-				const double x = grid.getcrds(i)[dir];
+				const double x = grid.crds(i)[dir];
 				retval += double(statespace[i][0]) * std::exp(2.0*M_PI*x*jj);
 			}
 
@@ -137,7 +137,7 @@ class MagFTComp
 
 			for (int i=0; i<N; i++)
 			{
-				double x = grid.getcrds(i)[dir];
+				double x = grid.crds(i)[dir];
 				for (int j=0; j<SymD; j++) magFTcomp[j] += double(statespace[i][j]) * std::exp(2.0*M_PI*x*jj);
 			}
 
@@ -182,7 +182,7 @@ class InteractionEnergy
 				double enepart = 0.0;
 				for (int idx=0; idx<N; idx++)
 				{
-					auto nbrs = grid.getnbrs(a, idx);
+					auto nbrs = grid.nbrs(a, idx);
 					auto self = ham.interactions[a]->get(statespace[idx]);
 
 					for (std::size_t i = 0; i < nbrs.size(); ++i)

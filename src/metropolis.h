@@ -49,7 +49,7 @@ namespace MARQOV
 			typedef decltype(callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
 			typedef typename Promote_Array<InteractionType, BondType>::CommonArray CommonArray;
 			            
-			auto nbrs = get_nbrs<Lattice>(grid, a, rsite);
+			auto nbrs = getnbrs<Lattice>(grid, a, rsite);
 			            
 			CommonArray averagevector = {0};
             
@@ -91,14 +91,14 @@ namespace MARQOV
 		double flexenergydiff = 0;
 		for (typename std::remove_cv<decltype(ham.Ngamma)>::type c=0; c<ham.Ngamma; ++c)
 		{
-			auto nbrs = get_flexnbrs<Lattice>(grid, c, rsite);
+			auto nbrs = getflexnbrs<Lattice>(grid, c, rsite);
 			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace, grid);
 			flexenergydiff += dot(ham.multisite[c]->k, diff);
 		}
         
 
 		// collect everything
-		double dE 	= interactionenergydiff + onsiteenergydiff + flexenergydiff;
+		double dE = interactionenergydiff + onsiteenergydiff + flexenergydiff;
 		
 		// evaluate
 		int retval = 0;

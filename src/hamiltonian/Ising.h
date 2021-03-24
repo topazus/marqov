@@ -158,7 +158,7 @@ namespace MARQOV {
 			double interactionenergydiff = 0;
 			for(typename std::remove_cv<decltype(ham.Nalpha)> ::type a = 0; a < ham.Nalpha; ++a)
 			{
-				auto nbrs = grid.getnbrs(a, rsite);
+				auto nbrs = grid.nbrs(a, rsite);
 				typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
 				typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
 				typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};
@@ -225,7 +225,7 @@ namespace MARQOV {
 				q--;
 			
 				// get its neighbours
-				const auto nbrs = grid.getnbrs(a, currentidx);
+				const auto nbrs = grid.nbrs(a, currentidx);
 	
 				// loop over neighbours
 				for (std::size_t i = 0; i < nbrs.size(); ++i)
