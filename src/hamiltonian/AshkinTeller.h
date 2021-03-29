@@ -158,7 +158,7 @@ namespace MARQOV
 	
 	         			 // get its neighbours
 					 const int a = 0; // spin family (hard-coded)
-	         			 const auto nbrs = grid.getnbrs(a, currentidx);
+	         			 const auto nbrs = grid.nbrs(a, currentidx);
 	
 	         			 // loop over neighbours
 	         			 for (std::size_t i = 0; i < nbrs.size(); ++i)
@@ -255,7 +255,7 @@ namespace MARQOV
 				const int a = 0;
 	
 				// extract neighbours
-				auto nbrs = grid.getnbrs(a, rsite);
+				auto nbrs = grid.nbrs(a, rsite);
 	
 				// sum over neighbours
 				double averagevector = 0; 

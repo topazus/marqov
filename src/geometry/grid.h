@@ -18,11 +18,11 @@ class DisorderType
 		DisorderType(int npoints) : npoints(npoints) {}
 
 	public:
-		std::vector<std::vector<int>> nbrs;
+		std::vector<std::vector<int>> neighbours;
 
-		std::vector<int> getnbrs(const int a, const int i)
+		std::vector<int> nbrs(const int a, const int i)
 		{
-			return nbrs[i];
+			return neighbours[i];
 		}
 
 		std::size_t size() const {return npoints;}
@@ -45,21 +45,21 @@ class ConstantCoordinationLattice
 		int counter = 0; // only for test, remove me later
 
 		int npoints, len, dim;
-		std::vector<std::vector<int>> nbrs;
+		std::vector<std::vector<int>> neighbours;
 		ConstantCoordinationLattice(const int len, const int dim) : cloud(len*len, len, dim), npoints(pow(len,dim)), len(len), dim(dim)
 		{
 			if (dim > 2) throw std::invalid_argument("The CC lattice is currently not implemented for d="+std::to_string(dim));
-			constant_coordination_lattice(cloud, nbrs);
+			constant_coordination_lattice(cloud, neighbours);
 		}
 
-		std::vector<int> getnbrs(const int a, const int i) const
+		std::vector<int> nbrs(const int a, const int i) const
 		{
-			return nbrs[i];
+			return neighbours[i];
 		}
-		// implement getcrds
-		std::vector<double> getcrds(const int i) const
+		// implement crds
+		std::vector<double> crds(const int i) const
 		{
-			return cloud.getcrds(i);
+			return cloud.crds(i);
 		}
 
 		std::size_t size() const {return npoints;}
@@ -81,16 +81,16 @@ class RegularHypercubic
 
 		RegularHypercubic(int len, int dim) : len(len), dim(dim), npoints(pow(len,dim)), lattice(len,dim) {};
 
-		// override getnbrs
-		std::vector<int> getnbrs(const int alpha, const int i) const
+		// override nbrs
+		std::vector<int> nbrs(const int alpha, const int i) const
 		{
-			return lattice.getnbrs(alpha, i);
+			return lattice.nbrs(alpha, i);
 		}
 
-		// implement getcrds
-		std::vector<double> getcrds(const int i) const
+		// implement crds
+		std::vector<double> crds(const int i) const
 		{
-			return lattice.getcrds(i);
+			return lattice.crds(i);
 		}
 
 		std::size_t size() const {return npoints;}
@@ -132,16 +132,16 @@ class SimpleBipartite
 		}
 
 
-		// override getnbrs
-		std::vector<int> getnbrs(const int alpha, const int i) const
+		// override nbrs
+		std::vector<int> nbrs(const int alpha, const int i) const
 		{
-			return lattice.getnbrs(alpha, i);
+			return lattice.nbrs(alpha, i);
 		}
 
-		// implement getcrds
-		std::vector<double> getcrds(const int i) const
+		// implement crds
+		std::vector<double> crds(const int i) const
 		{
-			return lattice.getcrds(i);
+			return lattice.crds(i);
 		}
 
 		std::size_t size() const {return npoints;}
@@ -158,14 +158,14 @@ private:
 	RND rng;
 
 public:
-	std::vector<std::vector<std::vector<bond_type>>> bnds;
+	std::vector<std::vector<std::vector<bond_type>>> bonds;
 
 	SuperChaos(const PointCloud& cloud) : DisorderType(cloud.size()), rng(0,1)
 	{
 		// prepare neighbour array
 		const int npoints = cloud.size;
-		this->nbrs.resize(npoints);
-		this->bnds.resize(npoints);
+		this->neighbours.resize(npoints);
+		this->bonds.resize(npoints);
 
 		// prepare random number generator
 		rng.seed(time(NULL)+std::random_device{}());	
@@ -178,14 +178,14 @@ public:
 			const int j = rng.i();
 			const int k = rng.i();
 
-			auto jcrds = cloud.getcrds(j);
-			auto kcrds = cloud.getcrds(k);
+			auto jcoordinates = cloud.crds(j);
+			auto kcoordinates = cloud.crds(k);
 
-			if (i!=k && distancePBSQ_nD(jcrds,kcrds) < 0.1) // make me 1/L dependent
+			if (i!=k && distancePBSQ_nD(jcoordinates,kcoordinates) < 0.1) // make me 1/L dependent
 			// improve me: make sure bond does not already exist!
 			{
-				this->nbrs[j].push_back(k);
-				this->nbrs[k].push_back(j);
+				this->neighbours[j].push_back(k);
+				this->neighbours[k].push_back(j);
 			}
 		}
 
@@ -204,15 +204,15 @@ public:
 				}
 				temp.push_back(subtemp);
 			}
-			bnds[k] = temp;
+			bonds[k] = temp;
 		}
 				*/
 	}
 
-	// override getbnds
-	std::vector<bond_type> getbnds(const int i)
+	// override bnds
+	std::vector<bond_type> bnds(const int i)
 	{
-		return bnds[i];
+		return bonds[i];
 	}
 };
 
@@ -232,7 +232,7 @@ class ErdosRenyi : public DisorderType
 		ErdosRenyi(int npoints, double p) : DisorderType(npoints), p(p), rng(0,1)
 		{
 			// prepare neighbour array
-			this->nbrs.resize(npoints);
+			this->neighbours.resize(npoints);
 	
 			// seed random number generator
 			rng.seed(time(NULL)+std::random_device{}());	
@@ -245,8 +245,8 @@ class ErdosRenyi : public DisorderType
 				{
 					if (rng.d() < p)
 					{
-						this->nbrs[i].push_back(j);
-						this->nbrs[j].push_back(i);
+						this->neighbours[i].push_back(j);
+						this->neighbours[j].push_back(i);
 					}
 				}
 			}
@@ -296,55 +296,55 @@ class RegularRandomBond :  public DisorderType
 		int len, dim, npoints;
 
 		using bond_type = decltype(PDF.draw());
-		std::vector<std::vector<bond_type>> bnds;
+		std::vector<std::vector<bond_type>> bonds;
 		
 		RegularRandomBond(int len, int dim) : dim(dim), len(len), lattice(len,dim), npoints(pow(len,dim))
 		{
 			// construct bonds
-			bnds.resize(lattice.size());
+			bonds.resize(lattice.size());
 			for (int i=0; i<lattice.size(); i++)
 			{
 				for (int j=0; j<lattice[i].size(); j++) // why does lattice[i].size even work?
 				{
-					bnds[i].push_back(PDF.draw());
+					bonds[i].push_back(PDF.draw());
 				}
 			}
 
 			// "symmetrize" bonds
 			for (int i=0; i<lattice.size(); i++)
 			{
-				auto lnbrs = lattice.getnbrs(1,i);
+				auto lnbrs = lattice.nbrs(1,i);
 
 				for (int j=0; j<lattice[i].size(); j++)
 				{
-					// find i in bnds[lnbr] and replace its value by bnds[i][j]
+					// find i in bonds[lnbr] and replace its value by bonds[i][j]
 					auto lnbr = lnbrs[j];
-					auto nbrs_temp = lattice.getnbrs(1, lnbr);
+					auto nbrs_temp = lattice.nbrs(1, lnbr);
 
 					auto it  = std::find(nbrs_temp.begin(), nbrs_temp.end(), i);
 					auto idx = std::distance(nbrs_temp.begin(), it);
 
-					bnds[lnbr][idx] = bnds[i][j];
+					bonds[lnbr][idx] = bonds[i][j];
 				}
 			}
 		}
 
-		// override getnbrs
-		std::vector<int> getnbrs(const int alpha, const int i) const
+		// override nbrs
+		std::vector<int> nbrs(const int alpha, const int i) const
 		{
-			return lattice.getnbrs(alpha, i);
+			return lattice.nbrs(alpha, i);
 		}
 
-		// implement getbnds
-		std::vector<bond_type> getbnds(const int alpha, const int i) const
+		// implement bnds
+		std::vector<bond_type> bnds(const int alpha, const int i) const
 		{
-			return bnds[i];
+			return bonds[i];
 		}
 
-		// implement getcrds
-		std::vector<double> getcrds(const int i) const
+		// implement crds
+		std::vector<double> crds(const int i) const
 		{
-			return lattice.getcrds(i);
+			return lattice.crds(i);
 		}
 
 		std::size_t size() const {return npoints;}

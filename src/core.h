@@ -113,7 +113,7 @@ namespace MARQOV
 		template<class L, class=void, class=void> struct is_Lattice : std::false_type {};
 		
 		template<class Lattice> struct is_Lattice<Lattice,
-		type_sink_t< decltype( std::declval<Lattice>().getnbrs(std::declval<int>(), std::declval<int>()) ) >,
+		type_sink_t< decltype( std::declval<Lattice>().nbrs(std::declval<int>(), std::declval<int>()) ) >,
 		type_sink_t< decltype( std::declval<Lattice>().size() ) >
 		> : std::true_type {};
 		

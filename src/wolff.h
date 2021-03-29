@@ -36,7 +36,7 @@ namespace MARQOV
             
             // get its neighbours
             int a = 0; // to be replaced by loop over Nalpha
-            const auto nbrs = grid.getnbrs(a, currentidx);
+            const auto nbrs = grid.nbrs(a, currentidx);
             
             // loop over neighbours
             for (std::size_t i = 0; i < nbrs.size(); ++i)
@@ -50,14 +50,14 @@ namespace MARQOV
                 const auto   local_coupling  = 1;
                 
                 /* under construction
-                 *			const auto   local_coupling  = grid.getbnds(a, currentnbr)[0];
+                 *			const auto   local_coupling  = grid.bnds(a, currentnbr)[0];
                  * 
                  *			// !!!  Wolff and Swendsen-Wang cluster algorithms are only valid if 
                  *			// !!!  all interactions are ferromagnetic, i.e., if all J_ij > 0 (Zhu et. al 2015)
                  * 
                  * 
                  *			// even more general would be somthing like that:
-                 *			// const auto   local_coupling  = ham.wolff_scalarize(grid.getbnds(a, currentnbr));
+                 *			// const auto   local_coupling  = ham.wolff_scalarize(grid.bnds(a, currentnbr));
                  *			// overkill, or even necessary?
                  */
                 

@@ -62,7 +62,7 @@ class LinkOverlap /// not working so far!!!!
 				sum_ij.resize(size);
 				for (int i=0; i<size; i++)
 				{
-					auto bnds = grid.getbnds(0,i);
+					auto bnds = grid.bnds(0,i);
 					auto nbnds = bnds.size();
 					sum_ij[i].resize(nbnds);
 
@@ -73,7 +73,7 @@ class LinkOverlap /// not working so far!!!!
 
 			for (int i=0; i<size; i++)
 			{
-				auto bnds = grid.getbnds(0,i);
+				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
 				nbondstot += nbnds;
 				for (int j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
@@ -87,7 +87,7 @@ class LinkOverlap /// not working so far!!!!
 
 			for (int i=0; i<size; i++)
 			{
-				auto bnds = grid.getbnds(0,i);
+				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
 				for (int j=0; j<nbnds; j++) retval += pow(sum_ij[i][j],2);
 			}
@@ -115,7 +115,7 @@ class InternalEnergy /// not working so far!!!!
 				sum_ij.resize(size);
 				for (int i=0; i<size; i++)
 				{
-					auto bnds = grid.getbnds(0,i);
+					auto bnds = grid.bnds(0,i);
 					auto nbnds = bnds.size();
 					sum_ij[i].resize(nbnds);
 
@@ -125,7 +125,7 @@ class InternalEnergy /// not working so far!!!!
 
 			for (int i=0; i<size; i++)
 			{
-				auto bnds = grid.getbnds(0,i);
+				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
 				for (int j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
 			}
@@ -138,7 +138,7 @@ class InternalEnergy /// not working so far!!!!
 
 			for (int i=0; i<size; i++)
 			{
-				auto bnds = grid.getbnds(0,i);
+				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
 				for (int j=0; j<nbnds; j++) retval += sum_ij[i][j] * bnds[j];
 			}
@@ -209,8 +209,8 @@ class Susceptibility
 				{
 					const int dir = 0; // we consider only the first spatial component
 
-					const std::vector<double> xi = {grid.getcrds(i)[dir]};
-					const std::vector<double> xj = {grid.getcrds(j)[dir]};
+					const std::vector<double> xi = {grid.crds(i)[dir]};
+					const std::vector<double> xj = {grid.crds(j)[dir]};
 
 					auto diff = xi[0] - xj[0];
 
@@ -308,7 +308,7 @@ class EdwardsAndersonIsing
 		// instantiate interaction terms (requires pointers)
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, int>* onsite[Nbeta];
-		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
+		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 	
 		// instantiate and choose observables
 		EdwardsAndersonOrderParameter      obs_qEA;
@@ -378,7 +378,7 @@ namespace MARQOV {
 			double interactionenergydiff = 0;
 			for(typename std::remove_cv<decltype(ham.Nalpha)> ::type a = 0; a < ham.Nalpha; ++a)
 			{
-				auto nbrs = grid.getnbrs(a, rsite);
+				auto nbrs = grid.nbrs(a, rsite);
 				typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
 				typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
 				typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};

@@ -6,6 +6,7 @@
 #include <complex>
 #include <functional>
 #include "../hamparts.h"
+#include "../obsparts.h"
 #include "../metropolis.h"
 
 
@@ -28,75 +29,6 @@ class IsingGenericVectorValuedObs
 		IsingGenericVectorValuedObs() : name("dummy"), desc("testing vector-valued observables ...") {}
 };
 
-// Magnetization
-class IsingMag
-{
-	public:
-		std::string name, desc;
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			const int N = grid.size();
-
-			double mag = 0.0;
-
-			for (int i=0; i<N; i++)
-			{
-				mag += statespace[i][0];
-			}
-
-			return std::abs(mag)/double(N);
-		}
-		IsingMag() : name("m"), desc("The Magnetization of the Ising Modell") {}
-};
-
-template <class Hamiltonian>
-class Energy
-{
-	private:
-		Hamiltonian& ham;
-
-	public:
-		Energy (Hamiltonian& ham) : ham(ham), name("e")  {};
-
-
-		std::string name;
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			return 1;
-//			this->ham. // .. copy from metropolis move
-		}
-};
-
-
-
-class IsingMagFTComp
-{
-	public:
-		int dir;
-		std::string name;
-		template <class StateSpace, class Grid>
-
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			const int N = grid.size();
-			const int L = grid.len;
-
-			std::complex<double> magFTcomp = 0.0;
-			std::complex<double> jj(0,1);
-
-			for (int i=0; i<N; i++)
-			{
-				double x = grid.getcrds(i)[dir];
-				magFTcomp += double(statespace[i][0]) * std::exp(2.0*M_PI*x*jj);
-			}
-
-			return std::pow(std::abs(magFTcomp/double(N)),2);
-		}
-
-		IsingMagFTComp(int dir=0) : dir(dir), name("x"+std::to_string(dir)) {}
-};
 
 
 // ----------------------------------------------------------------------
@@ -144,10 +76,10 @@ class Ising
 		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
 
 		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta = 0;
+		static constexpr uint Nbeta  = 0;
 		static constexpr uint Ngamma = 0;
 		
-		Ising(double J) : J(J), name("Ising")
+		Ising(double J) : J(J), name("Ising"), obs_e(*this), obs_fx(0), obs_fy(1)
 		{
 			interactions[0] = new Ising_interaction<StateVector>(J); 
 		}
@@ -156,12 +88,16 @@ class Ising
 		// instantiate interaction terms (requires pointers)
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, int>* onsite[Nbeta];
-		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
+		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 	
 		// instantiate and choose observables
-		IsingMag       obs_m;
+		ScalarMagnetization  obs_m;
+		Energy<Ising>		 obs_e;
+		ScalarMagFTComp      obs_fx;
+		ScalarMagFTComp      obs_fy;
 		IsingGenericVectorValuedObs dummy;
-		auto getobs()	{return std::make_tuple(obs_m, dummy);}
+
+		auto getobs()	{return std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy);}
 
 
 		// initialize state space
@@ -197,7 +133,7 @@ class Ising
 
 
 
-
+/* // comment out for debug
 
 
 namespace MARQOV {
@@ -222,7 +158,7 @@ namespace MARQOV {
 			double interactionenergydiff = 0;
 			for(typename std::remove_cv<decltype(ham.Nalpha)> ::type a = 0; a < ham.Nalpha; ++a)
 			{
-				auto nbrs = grid.getnbrs(a, rsite);
+				auto nbrs = grid.nbrs(a, rsite);
 				typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
 				typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
 				typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};
@@ -289,7 +225,7 @@ namespace MARQOV {
 				q--;
 			
 				// get its neighbours
-				const auto nbrs = grid.getnbrs(a, currentidx);
+				const auto nbrs = grid.nbrs(a, currentidx);
 	
 				// loop over neighbours
 				for (std::size_t i = 0; i < nbrs.size(); ++i)
@@ -317,4 +253,8 @@ namespace MARQOV {
 	};
 
 }
+
+*/
+
+
 #endif

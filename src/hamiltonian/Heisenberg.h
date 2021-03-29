@@ -6,40 +6,7 @@
 #include <functional>
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
-
-
-// ------------------------------ OBSERVABLES ---------------------------
-
-// Magnetization
-class HeisenbergMag
-{
-	public:
-		std::string name;
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			constexpr static int SymD = 3;	// improve me
-			const     int N = grid.size();
-
-			std::vector<double> mag(SymD,0) ;
-
-			for (int i=0; i<N; i++)
-			{
-				for (int j=0; j<SymD; j++)
-				{
-					mag[j] += statespace[i][j];
-				}
-			}
-			
-			double retval = 0;
-			for (int j=0; j<SymD; j++)
-			{
-				retval += mag[j]*mag[j];
-			}
-			return sqrt(retval)/double(N);
-		}
-		HeisenbergMag() : name("m") {}
-};
+#include "../obsparts.h"
 
 
 // ----------------------------------------------------------------------
@@ -105,14 +72,14 @@ class Heisenberg
 		// requires pointers
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, FPType>* onsite[Nbeta];
-		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
+		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
 		Heisenberg(double J) : J(J), name("Heisenberg") {interactions[0] = new Heisenberg_interaction<StateVector>(J);}
 		~Heisenberg() {delete interactions[0];}
 		
 
 		// instantiate and choose observables
-		HeisenbergMag obs_m;
+		Magnetization obs_m;
 		auto getobs() { return std::make_tuple(obs_m); }
 		
 
@@ -173,7 +140,7 @@ namespace MARQOV
 		auto coupling = ham.interactions[0]->J; 
 		const auto proj1 = coupling*dot(statespace[current], rdir);
 
-		const auto nbrs = grid.getnbrs(0, current);
+		const auto nbrs = grid.nbrs(0, current);
 		for (std::size_t i = 0; i < nbrs.size(); ++i)
 		{
 			const auto currentidx = nbrs[i];

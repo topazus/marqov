@@ -4,91 +4,7 @@
 #include <cmath>
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
-
-
-// ------------------------------ OBSERVABLES ---------------------------
-
-class Phi4Mag // normalized
-{
-     public:
-          std::string name;
-          template <class StateSpace, class Grid>
-          double measure(const StateSpace& statespace, const Grid& grid)
-          {
-               constexpr static int SymD = 3;     // improve me
-               const     int N = grid.size();
-
-               std::vector<double> mag(SymD,0) ;
-
-               for (int i=0; i<N; i++)
-               {
-                    for (int j=0; j<SymD; j++)
-                    {
-                         mag[j] += statespace[i][j];
-                    }
-               }
-
-               double retval = 0;
-               for (int j=0; j<SymD; j++)
-               {
-                    retval += mag[j]*mag[j];
-               }
-               return sqrt(retval)/double(N);
-          }
-          Phi4Mag() : name("m") {}
-};
-
-
-class Phi4MagFTComp
-{
-	public:
-		int dir;
-		std::string name;
-
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			constexpr static int SymD = 3;     // improve me
-
-			const int N = grid.size();
-//			const int L = grid.len;
-
-			std::vector<std::complex<double>> magFTcomp(SymD,0);
-			std::complex<double> jj(0,1);
-
-			for (int i=0; i<N; i++)
-			{
-				double x = grid.getcrds(i)[dir];
-//				double x = 0;  // debug
-
-				for (int j=0; j<SymD; j++)
-				{
-					magFTcomp[j] += double(statespace[i][j]) * std::exp(2.0*M_PI*x*jj);
-				}
-			}
-
-			// normalize (per spin)
-			for (int j=0; j<SymD; j++)
-			{
-				magFTcomp[j] /= double(N); 
-			}
-
-			// dot product of complex vector
-			double retval = 0;
-			for (int j=0; j<SymD; j++)
-			{
-//				retval += std::real(magFTcomp[j]*std::conj(magFTcomp[j])); 
-				retval += std::norm(magFTcomp[j]);
-			}
-
-			return retval;
-
-		}
-
-	Phi4MagFTComp(int dir=0) : dir(dir), name("x"+std::to_string(dir)) {}
-};
-
-
+#include "../obsparts.h"
 
 
 // ----------------------------------------------------------------------
@@ -207,7 +123,7 @@ class Phi4
 		// requires pointers
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, FPType>* onsite[Nbeta]; //Todo: External fields not yet supported
-		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
+		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
 		Phi4(double beta, double lambda, double mass) : beta(beta), lambda(lambda), mass(mass), name("Phi4"), obs_fx(0), obs_fy(1), obs_fz(2)
 		{
@@ -216,10 +132,10 @@ class Phi4
 			onsite[1]       = new Phi4_onsitefour<StateVector>(lambda, beta);
 		}
 
-		Phi4Mag obs_m;
-		Phi4MagFTComp obs_fx;
-		Phi4MagFTComp obs_fy;
-		Phi4MagFTComp obs_fz;
+		Magnetization obs_m;
+		MagFTComp obs_fx;
+		MagFTComp obs_fy;
+		MagFTComp obs_fz;
 		auto getobs() { return std::make_tuple(obs_m, obs_fx, obs_fy, obs_fz);}
 
 

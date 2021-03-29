@@ -126,7 +126,7 @@ public:
 //         return data[pos*nbsize];
 //     }
 
-    inline auto getnbrs(int fam, int pos) const
+    inline auto nbrs(int fam, int pos) const
     {
         //Determine neighbour class (i.e. has it three or four or five neighbours)
         int c = get_class(pos);
