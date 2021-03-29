@@ -251,9 +251,10 @@ class Core : public RefType<Grid>
 	* First we have the parameters for the MARQOV::Core class, then follows the arbitrary number of
 	* arguments for a particular Hamiltonian.
 	* @param lattice A reference to the instantiated lattice object. You are responsible for managing its lifetime.
-	* @param outfile Where to create the output file
+	* @param mc A MarqovConfig object that contains all MARQOV specific configuration.
+	* @param mtx The mutex to prevent simultaneous accesses to the HDF5 Runtime.
 	* @param mybeta the temperature that governs the Metropolis dynamics
-	* @param args A template parameter pack for the Hamiltonian
+	* @param hargs A template parameter pack for the Hamiltonian
 	*/
 	
 	template <class ...HArgs>
@@ -287,9 +288,11 @@ class Core : public RefType<Grid>
 		
 	/** ----- Alternate constructor -----
 	* If you require MARQOV::Core to instantiate and embed the lattice for you.
-	* @param outfile Where to create the output file
+	* @param largs The arguments that MARQOV should use for setting up the lattice.
+	* @param mc A MarqovConfig object that contains all MARQOV specific configuration.
+	* @param mtx The mutex to prevent simultaneous accesses to the HDF5 Runtime.
 	* @param mybeta the temperature that governs the Metropolis dynamics
-	* @param p A pair containing in the second Argument the lattice parameters and in the first the Hamiltonian parameters
+	* @param hargs The parameters of the Hamiltonian.
 	*/
 	template <class ...HArgs, class ... LArgs>
 	Core(std::tuple<LArgs...>& largs, Config mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
