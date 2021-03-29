@@ -17,6 +17,7 @@
 #include "cachecontainer.h"
 #include "svmath.h"
 #include "rngcache.h"
+#include "timetracker.h"
 
 namespace MARQOV
 {
@@ -112,7 +113,7 @@ namespace MARQOV
 		template<class L, class=void, class=void> struct is_Lattice : std::false_type {};
 		
 		template<class Lattice> struct is_Lattice<Lattice,
-		type_sink_t< decltype( std::declval<Lattice>().getnbrs(std::declval<int>(), std::declval<int>()) ) >,
+		type_sink_t< decltype( std::declval<Lattice>().nbrs(std::declval<int>(), std::declval<int>()) ) >,
 		type_sink_t< decltype( std::declval<Lattice>().size() ) >
 		> : std::true_type {};
 		
@@ -194,6 +195,9 @@ class Core : public RefType<Grid>
 		typedef int redStateVector; // reduced StateVector (so far needed only for AT model, improve me!!!)
 		typedef StateVector* StateSpace;
 
+		timetracker marqovtime;
+
+
 		// Local classes. We gain access to all Types of MARQOV::Core       
         
 		template <typename T>
@@ -265,10 +269,20 @@ class Core : public RefType<Grid>
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
-        obs(ham.getobs()),
+		obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()),
 		metro(rngcache)
-	{hdf5lock.unlock();}
+		{
+			hdf5lock.unlock();
+
+			marqovtime.add_clock("cluster");
+			marqovtime.add_clock("local");
+			marqovtime.add_clock("measurements");
+			marqovtime.add_clock("other");
+			//marqovtime.status();
+			marqovtime.run("other");
+
+		}
 		
 		
 	/** ----- Alternate constructor -----
@@ -280,11 +294,11 @@ class Core : public RefType<Grid>
 	template <class ...HArgs, class ... LArgs>
 	Core(std::tuple<LArgs...>& largs, Config mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
-        beta(mybeta),
+		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
 		step(0),
-        statespace(setupstatespace(this->grid.size())),
+		statespace(setupstatespace(this->grid.size())),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
@@ -293,7 +307,17 @@ class Core : public RefType<Grid>
 		obs(ham.getobs()),
 		rngcache(time(NULL)+std::random_device{}()), 
 		metro(rngcache)
-	{hdf5lock.unlock();}
+		{
+			hdf5lock.unlock();
+
+			marqovtime.add_clock("cluster");
+			marqovtime.add_clock("local");
+			marqovtime.add_clock("measurements");
+			marqovtime.add_clock("other");
+			//	marqovtime.status();
+			marqovtime.run("other");
+
+		}
 
 auto setupstatespace(int size)
 {
@@ -622,6 +646,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 
 	void gameloop()
 	{
+
 		double avgclustersize = 0;
 		for (int k=0; k < this->mcfg.gli; k++)
 		{
@@ -630,10 +655,13 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 			for (int i=0; i < this->mcfg.gameloopsteps/10; ++i)
 			{
 				avgclustersize += elementaryMCstep();
+				 marqovtime.switch_clock("measurements");
 				marqov_measure(obs, statespace, this->grid);
 			}
 		}
+		marqovtime.stop();
 
+		marqovtime.status();
 		if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.gameloopsteps << std::endl;
 	}
 	

@@ -7,29 +7,6 @@
 #include "../hamparts.h"
 
 
-// ------------------------------ OBSERVABLES ---------------------------
-
-// Magnetization
-class BlumeCapelMag
-{
-	public:
-		std::string name;
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			const int N = grid.size();
-
-			double mag = 0.0;
-
-			for (int i=0; i<N; i++)
-			{
-					mag += statespace[i][0];
-			}
-
-			return std::abs(mag)/double(N);
-		}
-		BlumeCapelMag() : name("m") {}
-};
 
 
 // ----------------------------------------------------------------------
@@ -117,7 +94,7 @@ class BlumeCapel
 		// instantiate interaction terms (requires pointers)
 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, double>* onsite[Nbeta];
-		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
+		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 	
 		BlumeCapel(double J, double D) : J(J), D(D), name("BlumeCapel")
 		{	
@@ -127,7 +104,7 @@ class BlumeCapel
 		
 	
 		// instantiate and choose observables
-		BlumeCapelMag       obs_m;
+		Magnetization obs_m;
 		auto getobs()
 		{
 			return std::make_tuple(obs_m);

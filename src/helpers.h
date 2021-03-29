@@ -38,8 +38,8 @@ constexpr auto make_triple( T1&& t, T2&& u, T3&& v)
 
 void write_logfile(RegistryDB& reg, std::vector<double> loopvar)
 {
-	std::string logdir  = reg.Get<std::string>("mc", "IO", "logdir" );
-	std::string logfile = reg.Get<std::string>("mc", "IO", "logfile" );
+	std::string logdir  = reg.Get<std::string>("mc.ini", "IO", "logdir" );
+	std::string logfile = reg.Get<std::string>("mc.ini", "IO", "logfile" );
 	std::ofstream os(logdir+"/"+logfile);
 	os << std::setprecision(7);
 	for (std::size_t i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;

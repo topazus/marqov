@@ -22,9 +22,9 @@ public:
     }
 
 
-    value_type getnbrs(int a, int i) const {return this->operator[](i);}
+    value_type nbrs(int a, int i) const {return this->operator[](i);}
 
-    std::vector<double> getcrds(int k) const 
+    std::vector<double> crds(int k) const 
     {
 		// transform one-dimensional index to n-d coordinates
     		std::vector<int> indices = IndexOf(k, dim, length);
