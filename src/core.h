@@ -641,19 +641,15 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
         hdf5lock.unlock();
 	}
 
-
-
 	// ------------------ update --------------------
 
 	double elementaryMCstep();
 
 	void gameloop()
 	{
-
 		double avgclustersize = 0;
 		for (int k=0; k < this->mcfg.gli; k++)
 		{
-
 			if (this->mcfg.id == 0) std::cout << "." << std::flush;
 			for (int i=0; i < this->mcfg.gameloopsteps/10; ++i)
 			{
@@ -667,7 +663,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		marqovtime.status();
 		if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.gameloopsteps << std::endl;
 	}
-	
+
 	void wrmploop()
 	{
 		if (this->mcfg.id == 0) std::cout << "|";
@@ -678,11 +674,7 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		}
 		if (this->mcfg.id == 0) std::cout << "|";
 	}
-	
-
 	// -------------- special purpose functions ----------------
-
-
      void full_output_2D(int dim=0)
      {
           const int LL = this->grid.length;
