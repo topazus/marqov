@@ -346,12 +346,29 @@ namespace MARQOV
         void calcprob() {}
         void exchange() {}
     };
+
+    //Helpers to determine if the interactions are container-like
+    template <class Cont, class = void>
+    struct Is_Container
+    {
+        static constexpr bool value = false;
+    };
     
+    template <class Cont>
+    struct Is_Container<Cont, MARQOV::type_sink_t
+    <
+    decltype(std::declval<Cont>().size())
+    >
+    >
+    {
+        static constexpr bool value = false;
+    };
     /** A helper class to figure out the type of the scheduler
      */
     template <class Hamiltonian, class Lattice, class Parameters>
     struct GetSchedulerType
     {
+        static_assert(Is_Container<decltype(Hamiltonian::interactions)>::value, "[MARQOV::Scheduler] COMPILATION FAILED: interactions are not a container.");
         typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType;
         typedef Scheduler<MarqovType> MarqovScheduler;
     };
