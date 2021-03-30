@@ -176,7 +176,7 @@ class InteractionEnergy
 			double ene = 0.0;
 
 			// interaction part
-			for (int a=0; a<ham.Nalpha; a++)
+			for (int a=0; a<ham.interactions.size(); a++)
 			{
 
 				double enepart = 0.0;

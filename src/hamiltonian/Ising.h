@@ -34,7 +34,7 @@ class IsingGenericVectorValuedObs
 // ----------------------------------------------------------------------
 
 template <class StateVector>
-class Ising_interaction : public Interaction<StateVector> 
+class Ising_interaction : public Interaction<StateVector>
 {
 public:
 	Ising_interaction(double J)
@@ -74,8 +74,9 @@ class Ising
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
+        std::vector<Ising_interaction<StateVector>*> interactions;
 
-		static constexpr uint Nalpha = 1;
+// 		static constexpr uint Nalpha = 1;
 		static constexpr uint Nbeta  = 0;
 		static constexpr uint Ngamma = 0;
 		
@@ -86,7 +87,8 @@ class Ising
 		~Ising() {delete interactions[0];}
 		
 		// instantiate interaction terms (requires pointers)
-		Interaction<StateVector>* interactions[Nalpha];
+		
+//		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, int>* onsite[Nbeta];
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 	

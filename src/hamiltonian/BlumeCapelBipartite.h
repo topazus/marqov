@@ -88,13 +88,14 @@ class BlumeCapelBipartite
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = BlumeCapelBipartite_Initializer<StateVector, RNG>;
-
-		static constexpr uint Nalpha = 1;
+        
+        std::vector<BlumeCapelBipartite_interaction<StateVector>*> interactions;
+// 		static constexpr uint Nalpha = 1;
 		static constexpr uint Nbeta = 2;
 		static constexpr uint Ngamma = 0;
 		
 		// instantiate interaction terms (requires pointers)
-		Interaction<StateVector>* interactions[Nalpha];
+// 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, double>* onsite[Nbeta];
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 	

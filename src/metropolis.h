@@ -43,7 +43,7 @@ namespace MARQOV
 		        
 		// interaction part
 		double interactionenergydiff = 0;
-		for (typename std::remove_cv<decltype(ham.Nalpha)>::type a=0; a<ham.Nalpha; ++a)
+		for (typename std::remove_cv<decltype(ham.interactions.size())>::type a=0; a<ham.interactions.size(); ++a)
 		{
 			typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
 			typedef decltype(callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
