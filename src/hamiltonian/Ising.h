@@ -29,8 +29,6 @@ class IsingGenericVectorValuedObs
 		IsingGenericVectorValuedObs() : name("dummy"), desc("testing vector-valued observables ...") {}
 };
 
-
-
 // ----------------------------------------------------------------------
 
 template <class StateVector>
@@ -74,7 +72,7 @@ class Ising
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
-        std::vector<Ising_interaction<StateVector>*> interactions;
+                std::vector<Ising_interaction<StateVector>*> interactions;
 
 		static constexpr uint Nbeta  = 0;
 		static constexpr uint Ngamma = 0;
