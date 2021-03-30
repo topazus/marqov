@@ -76,7 +76,6 @@ class Ising
 		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
         std::vector<Ising_interaction<StateVector>*> interactions;
 
-// 		static constexpr uint Nalpha = 1;
 		static constexpr uint Nbeta  = 0;
 		static constexpr uint Ngamma = 0;
 		
