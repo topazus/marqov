@@ -82,13 +82,11 @@ class Ising
 		
 		Ising(double J) : J(J), name("Ising"), obs_e(*this), obs_fx(0), obs_fy(1)
 		{
-			interactions[0] = new Ising_interaction<StateVector>(J); 
+			interactions.push_back(new Ising_interaction<StateVector>(J));
 		}
 		~Ising() {delete interactions[0];}
 		
 		// instantiate interaction terms (requires pointers)
-		
-//		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, int>* onsite[Nbeta];
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 	

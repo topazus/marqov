@@ -73,9 +73,6 @@ class BlumeCapelBipartite_Initializer
 };
 
 
-
-
-
 // ------------------------------ HAMILTONIAN ---------------------------
 
 template <typename SpinType = int>
@@ -89,31 +86,28 @@ class BlumeCapelBipartite
 		template <typename RNG>
 		using MetroInitializer = BlumeCapelBipartite_Initializer<StateVector, RNG>;
         
-        std::vector<BlumeCapelBipartite_interaction<StateVector>*> interactions;
-// 		static constexpr uint Nalpha = 1;
+        std::array<BlumeCapelBipartite_interaction<StateVector>*, 1> interactions = {new BlumeCapelBipartite_interaction<StateVector>(J)};
 		static constexpr uint Nbeta = 2;
 		static constexpr uint Ngamma = 0;
 		
 		// instantiate interaction terms (requires pointers)
-// 		Interaction<StateVector>* interactions[Nalpha];
 		OnSite<StateVector, double>* onsite[Nbeta];
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 	
 		BlumeCapelBipartite(double J, double DA, double DB) : J(J), DA(DA), DB(DB), name("BlumeCapelBipartite")
 		{	
-			interactions[0] = new BlumeCapelBipartite_interaction<StateVector>(J); 
 			onsite[0]       = new BlumeCapelBipartite_onsite<StateVector>(DA);		
 			onsite[1]       = new BlumeCapelBipartite_onsite<StateVector>(DB);		
 		}
 		
-	
+		~BlumeCapelBipartite(){delete interactions[0]; }
+
 		// instantiate and choose observables
 		Magnetization obs_m;
 		auto getobs()
 		{
 			return std::make_tuple(obs_m);
 		}
-
 
 		// state space initializer
 		template <class StateSpace, class Lattice, class RNG>
@@ -125,9 +119,6 @@ class BlumeCapelBipartite
 				else statespace[i][0] = -1;
 			}
 		}
-				
-
-
 
 		// using the Wolff cluster algorithm requires to implement
 		// the functions 'wolff_coupling' and 'wolff_flip'
