@@ -367,11 +367,9 @@ namespace MARQOV
     template <class Hamiltonian, class Lattice, class Parameters>
     struct GetSchedulerType
     {
-//        decltype(Hamiltonian::interactions) a = "ert";
         static_assert(Is_Container<decltype(std::declval<Hamiltonian>().interactions)>::value, "[MARQOV::Scheduler] COMPILATION FAILED: interactions are not a container.");
         typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType;
         typedef Scheduler<MarqovType> MarqovScheduler;
     };
-    
 };
 #endif
