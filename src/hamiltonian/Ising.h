@@ -5,6 +5,7 @@
 #include <string>
 #include <complex>
 #include <functional>
+#include <array>
 #include "../hamparts.h"
 #include "../obsparts.h"
 #include "../metropolis.h"
@@ -32,14 +33,12 @@ class IsingGenericVectorValuedObs
 // ----------------------------------------------------------------------
 
 template <class StateVector>
-class Ising_interaction : public Interaction<StateVector>
+class Ising_interaction
 {
 public:
-	Ising_interaction(double J)
-	{
-		this->J = J;
-	}
+	Ising_interaction(double myJ) : J(myJ) {}
 	StateVector get (const StateVector& phi) {return phi;};
+    double J;
 };
 
 
@@ -72,21 +71,19 @@ class Ising
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
-                std::vector<Ising_interaction<StateVector>*> interactions;
+        std::array<Ising_interaction<StateVector>*, 1> interactions = {new Ising_interaction<StateVector>(J)};
 
 		static constexpr uint Nbeta  = 0;
 		static constexpr uint Ngamma = 0;
-		
+
 		Ising(double J) : J(J), name("Ising"), obs_e(*this), obs_fx(0), obs_fy(1)
-		{
-			interactions.push_back(new Ising_interaction<StateVector>(J));
-		}
+		{}
 		~Ising() {delete interactions[0];}
-		
+
 		// instantiate interaction terms (requires pointers)
 		OnSite<StateVector, int>* onsite[Nbeta];
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
-	
+
 		// instantiate and choose observables
 		ScalarMagnetization  obs_m;
 		Energy<Ising>		 obs_e;

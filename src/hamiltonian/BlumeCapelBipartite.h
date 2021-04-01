@@ -4,6 +4,7 @@
 #include <tuple>
 #include <string>
 #include <functional>
+#include <vector>
 #include "../hamparts.h"
 
 
@@ -86,7 +87,7 @@ class BlumeCapelBipartite
 		template <typename RNG>
 		using MetroInitializer = BlumeCapelBipartite_Initializer<StateVector, RNG>;
         
-        std::array<BlumeCapelBipartite_interaction<StateVector>*, 1> interactions = {new BlumeCapelBipartite_interaction<StateVector>(J)};
+        std::vector<BlumeCapelBipartite_interaction<StateVector>*> interactions;
 		static constexpr uint Nbeta = 2;
 		static constexpr uint Ngamma = 0;
 		
@@ -96,8 +97,9 @@ class BlumeCapelBipartite
 	
 		BlumeCapelBipartite(double J, double DA, double DB) : J(J), DA(DA), DB(DB), name("BlumeCapelBipartite")
 		{	
-			onsite[0]       = new BlumeCapelBipartite_onsite<StateVector>(DA);		
-			onsite[1]       = new BlumeCapelBipartite_onsite<StateVector>(DB);		
+			onsite[0]       = new BlumeCapelBipartite_onsite<StateVector>(DA);
+			onsite[1]       = new BlumeCapelBipartite_onsite<StateVector>(DB);
+            interactions.push_back(new BlumeCapelBipartite_interaction<StateVector>(J));
 		}
 		
 		~BlumeCapelBipartite(){delete interactions[0]; }
