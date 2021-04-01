@@ -63,14 +63,12 @@ class Phi4_Initializer
 };
 
 template <class StateVector>
-class Phi4_interaction : public Interaction<StateVector>
+class Phi4_interaction
 {
 	public:
-		Phi4_interaction()
-		{
-	 		this->J = -1;	
-		}
+		Phi4_interaction(){}
 		StateVector get (const StateVector& phi) {return phi;};
+        static constexpr double J = -1;
 };
 
 template <class StateVector>
@@ -115,19 +113,16 @@ class Phi4
 		// this construction allows to specify a number of template arguments
 		// while leaving others open (C++11 feature)
 
-		
-		static constexpr uint Nalpha = 1;
 		static constexpr uint Nbeta  = 2;
 		static constexpr uint Ngamma = 0;
 
 		// requires pointers
-		Interaction<StateVector>* interactions[Nalpha];
+        std::array<Phi4_interaction<StateVector>*, 1> interactions = {new Phi4_interaction<StateVector>()};
 		OnSite<StateVector, FPType>* onsite[Nbeta]; //Todo: External fields not yet supported
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
 		Phi4(double beta, double lambda, double mass) : beta(beta), lambda(lambda), mass(mass), name("Phi4"), obs_fx(0), obs_fy(1), obs_fz(2)
 		{
-			interactions[0] = new Phi4_interaction<StateVector>();
 			onsite[0]       = new Phi4_onsitesquare<StateVector>(mass, beta);
 			onsite[1]       = new Phi4_onsitefour<StateVector>(lambda, beta);
 		}
