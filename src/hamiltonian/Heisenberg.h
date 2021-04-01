@@ -4,6 +4,7 @@
 #include <cmath>
 #include <string>
 #include <functional>
+#include <array>
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
 #include "../obsparts.h"
@@ -35,16 +36,13 @@ class Heisenberg_Initializer
 
 
 template <class StateVector>
-class Heisenberg_interaction : public Interaction<StateVector> 
+class Heisenberg_interaction
 {
 	public:
-		Heisenberg_interaction(double J)
-		{
-	 		this->J = -J;
-		}
+		Heisenberg_interaction(double myJ) : J(-myJ) {}
 		StateVector get (const StateVector& phi) {return phi;};
+        double J;
 };
-
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
@@ -64,17 +62,15 @@ class Heisenberg
 		// this construction allows to specify a number of template arguments
 		// while leaving others open (C++11 feature)
 
-		
-		static constexpr uint Nalpha = 1;
 		static constexpr uint Nbeta = 0;
 		static constexpr uint Ngamma = 0;
 
 		// requires pointers
-		Interaction<StateVector>* interactions[Nalpha];
+        std::array<Heisenberg_interaction<StateVector>*, 1> interactions = {new Heisenberg_interaction<StateVector>(J)};
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Heisenberg(double J) : J(J), name("Heisenberg") {interactions[0] = new Heisenberg_interaction<StateVector>(J);}
+		Heisenberg(double J) : J(J), name("Heisenberg") {}
 		~Heisenberg() {delete interactions[0];}
 		
 
