@@ -139,15 +139,12 @@ class XXZAntiferro_Initializer
 
 
 template <class StateVector>
-class XXZAntiferro_interaction : public Interaction<StateVector> 
+class XXZAntiferro_interaction
 {
 	public:
-		double Delta; // uniaxial exchange anisotropy
-
-		XXZAntiferro_interaction(double myDelta) : Delta(myDelta)
-		{
-	 		this->J = 1;
-		}
+		const double& Delta; // uniaxial exchange anisotropy
+		static constexpr double J = 1;
+		XXZAntiferro_interaction(const double& myDelta) : Delta(myDelta) {}
 		StateVector get (const StateVector& phi) 
 		{
 			StateVector retval;
@@ -198,13 +195,12 @@ class XXZAntiferro
 		const std::string name;
 
 		// requires pointers
-		Interaction<StateVector>* interactions[Nalpha];
+        std::array<XXZAntiferro_interaction<StateVector>*, 1> interactions = {new XXZAntiferro_interaction<StateVector>(Delta)};
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
 		XXZAntiferro(double myDelta, double myH) : Delta(myDelta), H(myH), name("XXZAntiferro")
 		{
-			interactions[0] = new XXZAntiferro_interaction<StateVector>(Delta); 
 			onsite[0]       = new XXZAntiferro_extfield<StateVector>(H);
 		}
 		
