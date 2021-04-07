@@ -5,21 +5,15 @@
 #include <string>
 #include <functional>
 #include "../hamparts.h"
-
-
-
-
 // ----------------------------------------------------------------------
 
 template <class StateVector>
-class BlumeCapel_interaction : public Interaction<StateVector> 
+class BlumeCapel_interaction
 {
 	public:
-		BlumeCapel_interaction(double J)
-		{
-			this->J = J;
-		}
-		StateVector get (const StateVector& phi) {return phi;};
+		BlumeCapel_interaction(double myJ) : J(myJ) {}
+		StateVector get (const StateVector& phi) {return phi;}
+        double J;
 };
 
 
@@ -92,13 +86,13 @@ class BlumeCapel
 		static constexpr uint Ngamma = 0;
 		
 		// instantiate interaction terms (requires pointers)
-		Interaction<StateVector>* interactions[Nalpha];
+        std::vector<BlumeCapel_interaction<StateVector>*> interactions;
 		OnSite<StateVector, double>* onsite[Nbeta];
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 	
 		BlumeCapel(double J, double D) : J(J), D(D), name("BlumeCapel")
-		{	
-			interactions[0] = new BlumeCapel_interaction<StateVector>(J); 
+		{
+            interactions.push_back(new BlumeCapel_interaction<StateVector>(J));
 			onsite[0]       = new BlumeCapel_onsite<StateVector>(D);		
 		}
 		
