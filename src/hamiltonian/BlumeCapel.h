@@ -93,7 +93,7 @@ class BlumeCapel
 		BlumeCapel(double J, double D) : J(J), D(D), name("BlumeCapel")
 		{
             interactions.push_back(new BlumeCapel_interaction<StateVector>(J));
-			onsite[0]       = new BlumeCapel_onsite<StateVector>(D);		
+			onsite[0]       = new BlumeCapel_onsite<StateVector>(D);
 		}
 		
 	
@@ -115,7 +115,6 @@ class BlumeCapel
 				else statespace[i][0] = -1;
 			}
 		}
-				
 
 
 

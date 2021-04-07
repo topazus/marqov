@@ -153,7 +153,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		write_logfile(registry, beta);
  		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
-	}/*
+	}
 	else if (ham == "Heisenberg")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
@@ -187,7 +187,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		write_logfile(registry, beta);
  		RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
-    }
+    }/*
     else if (startswith(ham, "AshkinTeller"))
     {
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");

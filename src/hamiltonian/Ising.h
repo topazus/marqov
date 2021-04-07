@@ -36,9 +36,9 @@ template <class StateVector>
 class Ising_interaction
 {
 public:
-	Ising_interaction(double myJ) : J(myJ) {}
+	Ising_interaction(const double& myJ) : J(myJ) {}
 	StateVector get (const StateVector& phi) {return phi;};
-    double J;
+    const double& J;
 };
 
 

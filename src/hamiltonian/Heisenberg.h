@@ -5,6 +5,7 @@
 #include <string>
 #include <functional>
 #include <array>
+#include <vector>
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
 #include "../obsparts.h"
@@ -39,9 +40,9 @@ template <class StateVector>
 class Heisenberg_interaction
 {
 	public:
-		Heisenberg_interaction(double myJ) : J(-myJ) {}
+		Heisenberg_interaction(const double myJ) : J(-myJ) {}
 		StateVector get (const StateVector& phi) {return phi;};
-        double J;
+        const double J;
 };
 
 // ------------------------------ HAMILTONIAN ---------------------------
@@ -66,11 +67,14 @@ class Heisenberg
 		static constexpr uint Ngamma = 0;
 
 		// requires pointers
-        std::array<Heisenberg_interaction<StateVector>*, 1> interactions = {new Heisenberg_interaction<StateVector>(J)};
+        std::vector<Heisenberg_interaction<StateVector>*> interactions;
 		OnSite<StateVector, FPType>* onsite[Nbeta];
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Heisenberg(double J) : J(J), name("Heisenberg") {}
+		Heisenberg(double J) : J(J), name("Heisenberg")
+        {
+            interactions.push_back(new Heisenberg_interaction<StateVector>(J));
+        }
 		~Heisenberg() {delete interactions[0];}
 		
 
