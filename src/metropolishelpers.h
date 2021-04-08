@@ -1,5 +1,7 @@
 #ifndef METROPOLISHELPERS_H
 #define METROPOLISHELPERS_H
+#include <utility>
+#include <type_traits>
 
 namespace MARQOV
 {
@@ -158,8 +160,25 @@ namespace MARQOV
 	{
 		return getflexnbrs_helper<Grid>(grid, fam, idx, has_flexnbrs<Grid>{}); 
 	}
-
-
+    
+    /**
+     * Helpers to determine if the interactions are container-like.
+     * See metroplois.h for an example.
+     */
+    template <class Cont, class = void, class = void>
+    struct Is_Container
+    {
+        static constexpr bool value = false;
+    };
+    
+    template <class Cont>
+    struct Is_Container<Cont,
+    MARQOV::type_sink_t<decltype(std::declval<Cont>().size())>,
+    MARQOV::type_sink_t<decltype(std::declval<Cont>().operator[](std::declval<std::size_t>()))>
+    >
+    {
+        static constexpr bool value = true;
+    };
 };
 
 
