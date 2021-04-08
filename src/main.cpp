@@ -71,7 +71,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 	const auto dim 	 = reg.Get<int>("mc.ini", name, "dim" );
     int nthreads = 0;
     try {
-        nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );
+        nthreads = reg.template Get<int>("mc.ini", "General", "threads_per_node" );
     }
     catch (const Registry_Key_not_found_Exception&) {
         std::cout<<"threads_per_node not set -> automatic"<<std::endl;
