@@ -142,6 +142,13 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 {
 
 	auto ham = selectsim_startup(registry);
+    int nthreads = 0;
+    try {
+        nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );
+    }
+    catch (const Registry_Key_not_found_Exception&) {
+        std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+    }
 
 	// ----------------- select simulation ------------------
 
@@ -237,7 +244,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
         typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
         typedef EdwardsAndersonIsing<int> Hamiltonian;
         typedef RegularRandomBond<BimodalPDF> Lattice;
-        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
+        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
 
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
@@ -285,7 +292,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
         typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
         typedef EdwardsAndersonIsing<int> Hamiltonian;
         typedef RegularRandomBond<GaussianPDF> Lattice;
-        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
+        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
 	
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
@@ -335,7 +342,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
         typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
         typedef Ising<int> Hamiltonian;
         typedef ConstantCoordinationLattice<Poissonian> Lattice;
-        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
+        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
 
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
@@ -401,7 +408,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 //        typedef typename decltype(params)::value_type PPType;
 //        typedef Ising<int> Hamiltonian;
 //        typedef ConstantCoordinationLattice<Poissonian> Lattice;
-//        typename GetSchedulerType<Hamiltonian, Lattice, PPType>::MarqovScheduler sched(1);
+//        typename GetSchedulerType<Hamiltonian, Lattice, PPType>::MarqovScheduler sched(1, nthreads);
 //		// perform simulations
 //        for (auto p: params)
 //            sched.createSimfromParameter(p, f);
@@ -425,7 +432,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
         
 		std::vector<SimpleBipartite> latts;
         typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), parameters)) PPType;
-        typename GetSchedulerType<BlumeCapelBipartite<int>, SimpleBipartite, typename PPType::value_type>::MarqovScheduler sched(1);
+        typename GetSchedulerType<BlumeCapelBipartite<int>, SimpleBipartite, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
 		// set up replicas
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 		
