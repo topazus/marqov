@@ -71,19 +71,16 @@ class Ising
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
+
+        // instantiate interaction terms (requires pointers)
         std::array<Ising_interaction<StateVector>*, 1> interactions = {new Ising_interaction<StateVector>(J)};
         std::array<OnSite<StateVector, int>*, 0> onsite;
+        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
-// 		static constexpr uint Nbeta  = 0;
-		static constexpr uint Ngamma = 0;
 
 		Ising(double J) : J(J), name("Ising"), obs_e(*this), obs_fx(0), obs_fy(1)
 		{}
 		~Ising() {delete interactions[0];}
-
-		// instantiate interaction terms (requires pointers)
-// 		OnSite<StateVector, int>* onsite[Nbeta];
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
 		// instantiate and choose observables
 		ScalarMagnetization  obs_m;

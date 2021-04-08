@@ -183,13 +183,12 @@ class XXZAntiferro
 		// this construction allows to specify a number of template arguments
 		// while leaving others open (C++11 feature)
 
-		static constexpr uint Ngamma = 0;
 		const std::string name;
 
 		// requires pointers
         std::array<XXZAntiferro_interaction<StateVector>*, 1> interactions = {new XXZAntiferro_interaction<StateVector>(Delta)};
         std::array<XXZAntiferro_extfield<StateVector>*, 1> onsite = {new XXZAntiferro_extfield<StateVector>(H)};
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
+        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
 		XXZAntiferro(double myDelta, double myH) : Delta(myDelta), H(myH), name("XXZAntiferro") {}
 		

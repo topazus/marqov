@@ -38,6 +38,7 @@ namespace MARQOV
     {
         static_assert(Is_Container<decltype(std::declval<Hamiltonian>().interactions)>::value, "[MARQOV::Metropolis] COMPILATION FAILED: interactions are not a container.");
         static_assert(Is_Container<decltype(std::declval<Hamiltonian>().onsite)>::value, "[MARQOV::Metropolis] COMPILATION FAILED: onsite terms are not a container.");
+        static_assert(Is_Container<decltype(std::declval<Hamiltonian>().multisite)>::value, "[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
 		typedef typename Hamiltonian::StateVector StateVector;
         
 		// old state vector at rsite
@@ -93,7 +94,7 @@ namespace MARQOV
         
 		// flex term energy
 		double flexenergydiff = 0;
-		for (typename std::remove_cv<decltype(ham.Ngamma)>::type c=0; c<ham.Ngamma; ++c)
+		for (typename std::remove_cv<decltype(ham.multisite.size())>::type c = 0; c < ham.multisite.size(); ++c)
 		{
 			auto nbrs = getflexnbrs<Lattice>(grid, c, rsite);
 			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace, grid);

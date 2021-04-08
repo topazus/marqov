@@ -114,12 +114,10 @@ class Phi4
 		// this construction allows to specify a number of template arguments
 		// while leaving others open (C++11 feature)
 
-		static constexpr uint Ngamma = 0;
-
 		// requires pointers
         std::array<Phi4_interaction<StateVector>*, 1> interactions = {new Phi4_interaction<StateVector>()};
 		std::vector<OnSite<StateVector, FPType>*> onsite; //Todo: External fields not yet supported
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
+		std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
 		Phi4(double beta, double lambda, double mass) : beta(beta), lambda(lambda), mass(mass), name("Phi4"), obs_fx(0), obs_fy(1), obs_fz(2)
 		{

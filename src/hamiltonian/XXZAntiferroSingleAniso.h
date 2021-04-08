@@ -221,32 +221,31 @@ template <typename SpinType, typename MyFPType>
 class XXZAntiferroSingleAniso
 {
 	public:
-        	double Delta, H, D;
+        double Delta, H, D;
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer =  XXZAntiferroSingleAniso_Initializer<StateVector, RNG>; 
 
-		static constexpr uint Ngamma = 0;
 		const std::string name;
 
 		// instantiate interaction terms (requires pointers)
         std::array<XXZAntiferroSingleAniso_interaction<StateVector>*, 1> interactions = {new XXZAntiferroSingleAniso_interaction<StateVector>(Delta)};
         std::vector<OnSite<StateVector, FPType>*> onsite;
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
+        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
 		XXZAntiferroSingleAniso(double myH, double myDelta, double myD) : Delta(myDelta), H(myH), D(myD), name("XXZAntiferroSingleAniso")
 		{
             onsite.push_back(new XXZAntiferroSingleAniso_extfield<StateVector>(H));
             onsite.push_back(new XXZAntiferroSingleAniso_onsiteaniso<StateVector>(D));
 		}
-		
+
 		~XXZAntiferroSingleAniso()
         {
             delete onsite[1]; delete onsite[0]; delete interactions[0];
         }
-		
+
 		std::string paramname(int i) {//A helper function to have nice names for the I/O
             std::string retval;
             switch(i)

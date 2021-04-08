@@ -63,12 +63,10 @@ class Heisenberg
 		template <typename RNG>
 		using MetroInitializer =  Heisenberg_Initializer<StateVector, RNG>; 
 
-		static constexpr uint Ngamma = 0;
-
 		// requires pointers
         std::vector<Heisenberg_interaction<StateVector>*> interactions;
         std::array<OnSite<StateVector, FPType>*, 0> onsite;
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
+        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
 		Heisenberg(double J) : J(J), name("Heisenberg")
         {

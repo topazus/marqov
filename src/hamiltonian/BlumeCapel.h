@@ -76,12 +76,10 @@ class BlumeCapel
 		template <typename RNG>
 		using MetroInitializer = BlumeCapel_Initializer<StateVector, RNG>;
 
-		static constexpr uint Ngamma = 0;
-		
 		// instantiate interaction terms (requires pointers)
         std::array<BlumeCapel_interaction<StateVector>*, 1> interactions = {new BlumeCapel_interaction<StateVector>(J)};
         std::array<BlumeCapel_onsite<StateVector>*, 1> onsite = {new BlumeCapel_onsite<StateVector>(D)};
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
+        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 	
 		BlumeCapel(double J, double D) : J(J), D(D), name("BlumeCapel") {}
 

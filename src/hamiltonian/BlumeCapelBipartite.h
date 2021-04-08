@@ -87,10 +87,7 @@ class BlumeCapelBipartite
         
         std::vector<BlumeCapelBipartite_interaction<StateVector>*> interactions;
         std::array<BlumeCapelBipartite_onsite<StateVector>*, 2> onsite = {new BlumeCapelBipartite_onsite<StateVector>(DA), new BlumeCapelBipartite_onsite<StateVector>(DB)};
-		static constexpr uint Ngamma = 0;
-		
-		// instantiate interaction terms (requires pointers)
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
+        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 	
 		BlumeCapelBipartite(double J, double DA, double DB) : J(J), DA(DA), DB(DB), name("BlumeCapelBipartite")
 		{
