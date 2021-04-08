@@ -3,7 +3,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2020 Florian Goth
+ * Copyright (c) 2020-2021 Florian Goth
  * fgoth@physik.uni-wuerzburg.de
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
