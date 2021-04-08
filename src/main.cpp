@@ -69,6 +69,13 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 	      auto nreplicas = reg.Get<std::vector<int>>("mc.ini", name, "rep" );
 	const auto nL  	 = reg.Get<std::vector<int>>("mc.ini", name, "L" );
 	const auto dim 	 = reg.Get<int>("mc.ini", name, "dim" );
+    int nthreads = 0;
+    try {
+        nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );
+    }
+    catch (const Registry_Key_not_found_Exception&) {
+        std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+    }
 
     typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType;
 
@@ -82,7 +89,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
         latts.emplace_back(L, dim);
     }
     
-    typename GetSchedulerType<Hamiltonian, RegularHypercubic, typename PPType::value_type>::MarqovScheduler sched(1);
+    typename GetSchedulerType<Hamiltonian, RegularHypercubic, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
     
 	for (std::size_t j=0; j<nL.size(); j++)
 	{
@@ -142,13 +149,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 {
 
 	auto ham = selectsim_startup(registry);
-    int nthreads = 0;
-    try {
-        nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );
-    }
-    catch (const Registry_Key_not_found_Exception&) {
-        std::cout<<"threads_per_node not set -> automatic"<<std::endl;
-    }
 
 	// ----------------- select simulation ------------------
 
@@ -232,6 +232,13 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		const auto dim 	  = registry.Get<int>("mc.ini", ham, "dim" );
 		      auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
 		const auto nL  	  = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
+        int nthreads = 0;
+        try {
+            nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );            
+            }
+        catch (const Registry_Key_not_found_Exception&) {
+            std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+        }
 
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
@@ -281,6 +288,13 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		const auto dim 	  = registry.Get<int>("mc.ini", ham, "dim" );
 		      auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
 		const auto nL  	  = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
+        int nthreads = 0;
+        try {
+            nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );            
+            }
+        catch (const Registry_Key_not_found_Exception&) {
+            std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+        }
 
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
@@ -422,6 +436,13 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto DA   = registry.Get<std::vector<double> >("mc.ini", ham, "DA");
 		auto DB   = registry.Get<std::vector<double> >("mc.ini", ham, "DB");
 		auto parameters = cart_prod(beta, J, DA, DB);
+        int nthreads = 0;
+        try {
+            nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );            
+            }
+        catch (const Registry_Key_not_found_Exception&) {
+            std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+        }
 
 		const auto name      = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
 		      auto nreplicas = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
@@ -484,10 +505,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		sched.start();
 	}
 }
-
-
-
-
 
 
 
