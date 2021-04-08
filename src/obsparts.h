@@ -2,6 +2,8 @@
 #define OBSPARTS_H
 
 #include <complex>
+#include <string>
+#include <vector>
 
 
 // Scalar Magnetization Observable
@@ -224,7 +226,7 @@ class SelfEnergy
 			double ene = 0.0;
 
 			// self energy part
-			for (int b=0; b<ham.Nbeta; b++)
+			for (int b=0; b < ham.onsite.size(); b++)
 			{
 				double enepart = 0.0;
 

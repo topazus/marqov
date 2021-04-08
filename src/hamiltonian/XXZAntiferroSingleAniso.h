@@ -168,10 +168,8 @@ class XXZAntiferroSingleAniso_Initializer
 		RNG& rng;
 };
 
-
-
 template <class StateVector>
-class XXZAntiferroSingleAniso_interaction : public Interaction<StateVector> 
+class XXZAntiferroSingleAniso_interaction
 {
 	public:
 		const double& Delta; // uniaxial exchange anisotropy
@@ -229,22 +227,25 @@ class XXZAntiferroSingleAniso
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer =  XXZAntiferroSingleAniso_Initializer<StateVector, RNG>; 
-		
-		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta  = 2;
+
 		static constexpr uint Ngamma = 0;
 		const std::string name;
 
 		// instantiate interaction terms (requires pointers)
         std::array<XXZAntiferroSingleAniso_interaction<StateVector>*, 1> interactions = {new XXZAntiferroSingleAniso_interaction<StateVector>(Delta)};
-		OnSite<StateVector, FPType>* onsite[Nbeta];
+        std::vector<OnSite<StateVector, FPType>*> onsite;
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
 		XXZAntiferroSingleAniso(double myH, double myDelta, double myD) : Delta(myDelta), H(myH), D(myD), name("XXZAntiferroSingleAniso")
 		{
-			onsite[0]       = new XXZAntiferroSingleAniso_extfield<StateVector>(H);
-			onsite[1]       = new XXZAntiferroSingleAniso_onsiteaniso<StateVector>(D);
+            onsite.push_back(new XXZAntiferroSingleAniso_extfield<StateVector>(H));
+            onsite.push_back(new XXZAntiferroSingleAniso_onsiteaniso<StateVector>(D));
 		}
+		
+		~XXZAntiferroSingleAniso()
+        {
+            delete onsite[1]; delete onsite[0]; delete interactions[0];
+        }
 		
 		std::string paramname(int i) {//A helper function to have nice names for the I/O
             std::string retval;

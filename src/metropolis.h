@@ -37,6 +37,7 @@ namespace MARQOV
 										int rsite)
     {
         static_assert(Is_Container<decltype(std::declval<Hamiltonian>().interactions)>::value, "[MARQOV::Metropolis] COMPILATION FAILED: interactions are not a container.");
+        static_assert(Is_Container<decltype(std::declval<Hamiltonian>().onsite)>::value, "[MARQOV::Metropolis] COMPILATION FAILED: onsite terms are not a container.");
 		typedef typename Hamiltonian::StateVector StateVector;
         
 		// old state vector at rsite
@@ -46,7 +47,7 @@ namespace MARQOV
 		        
 		// interaction part
 		double interactionenergydiff = 0;
-		for (typename std::remove_cv<decltype(ham.interactions.size())>::type a=0; a<ham.interactions.size(); ++a)
+		for (typename std::remove_cv<decltype(ham.interactions.size())>::type a=0; a < ham.interactions.size(); ++a)
 		{
 			typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
 			typedef decltype(callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
@@ -75,10 +76,10 @@ namespace MARQOV
         
 		// onsite energy part
 		auto terms = get_terms<Lattice>(grid, rsite);
-		if (terms[0] == -1) terms = arange(0, ham.Nbeta);
+		if (terms[0] == -1) terms = arange(0, ham.onsite.size());
 		
 		double onsiteenergydiff = 0;
-		for (typename std::remove_cv<decltype(ham.Nbeta)>::type b=0; b<terms.size(); ++b)
+		for (typename std::remove_cv<decltype(ham.onsite.size())>::type b=0; b < terms.size(); ++b)
 		{
 			// select on-site term
 			const int tidx = terms[b]; 

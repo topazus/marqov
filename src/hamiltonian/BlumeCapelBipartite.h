@@ -27,14 +27,12 @@ class BlumeCapelBipartite_interaction : public Interaction<StateVector>
 
 
 template <class StateVector>
-class BlumeCapelBipartite_onsite : public OnSite<StateVector, double>
+class BlumeCapelBipartite_onsite
 {
 	public:
-		BlumeCapelBipartite_onsite(double D)
-		{
-			this->h = D;
-		}
-		double get (const StateVector& phi) {return dot(phi,phi);};
+        const double& h;
+		BlumeCapelBipartite_onsite(const double& D) : h(D) {}
+		double get (const StateVector& phi) {return dot(phi, phi);};
 };
 
 
@@ -88,21 +86,18 @@ class BlumeCapelBipartite
 		using MetroInitializer = BlumeCapelBipartite_Initializer<StateVector, RNG>;
         
         std::vector<BlumeCapelBipartite_interaction<StateVector>*> interactions;
-		static constexpr uint Nbeta = 2;
+        std::array<BlumeCapelBipartite_onsite<StateVector>*, 2> onsite = {new BlumeCapelBipartite_onsite<StateVector>(DA), new BlumeCapelBipartite_onsite<StateVector>(DB)};
 		static constexpr uint Ngamma = 0;
 		
 		// instantiate interaction terms (requires pointers)
-		OnSite<StateVector, double>* onsite[Nbeta];
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 	
 		BlumeCapelBipartite(double J, double DA, double DB) : J(J), DA(DA), DB(DB), name("BlumeCapelBipartite")
-		{	
-			onsite[0]       = new BlumeCapelBipartite_onsite<StateVector>(DA);
-			onsite[1]       = new BlumeCapelBipartite_onsite<StateVector>(DB);
+		{
             interactions.push_back(new BlumeCapelBipartite_interaction<StateVector>(J));
 		}
 		
-		~BlumeCapelBipartite(){delete interactions[0]; }
+		~BlumeCapelBipartite(){delete interactions[0]; delete onsite[0]; delete onsite[1];}
 
 		// instantiate and choose observables
 		Magnetization obs_m;

@@ -10,21 +10,19 @@
 template <class StateVector>
 class BlumeCapel_interaction
 {
-	public:
-		BlumeCapel_interaction(double myJ) : J(myJ) {}
+    public:
+        const double& J;
+		BlumeCapel_interaction(const double& myJ) : J(myJ) {}
 		StateVector get (const StateVector& phi) {return phi;}
-        double J;
 };
 
 
 template <class StateVector>
-class BlumeCapel_onsite : public OnSite<StateVector, double>
+class BlumeCapel_onsite
 {
-	public:
-		BlumeCapel_onsite(double D)
-		{
-			this->h = D;
-		}
+    public:
+        const double& h;
+		BlumeCapel_onsite(double D) : h(D) {}
 		double get (const StateVector& phi) {return dot(phi,phi);};
 };
 
@@ -65,9 +63,6 @@ class BlumeCapel_Initializer
 };
 
 
-
-
-
 // ------------------------------ HAMILTONIAN ---------------------------
 
 template <typename SpinType = int>
@@ -81,22 +76,15 @@ class BlumeCapel
 		template <typename RNG>
 		using MetroInitializer = BlumeCapel_Initializer<StateVector, RNG>;
 
-		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta = 1;
 		static constexpr uint Ngamma = 0;
 		
 		// instantiate interaction terms (requires pointers)
-        std::vector<BlumeCapel_interaction<StateVector>*> interactions;
-		OnSite<StateVector, double>* onsite[Nbeta];
+        std::array<BlumeCapel_interaction<StateVector>*, 1> interactions = {new BlumeCapel_interaction<StateVector>(J)};
+        std::array<BlumeCapel_onsite<StateVector>*, 1> onsite = {new BlumeCapel_onsite<StateVector>(D)};
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 	
-		BlumeCapel(double J, double D) : J(J), D(D), name("BlumeCapel")
-		{
-            interactions.push_back(new BlumeCapel_interaction<StateVector>(J));
-			onsite[0]       = new BlumeCapel_onsite<StateVector>(D);
-		}
-		
-	
+		BlumeCapel(double J, double D) : J(J), D(D), name("BlumeCapel") {}
+
 		// instantiate and choose observables
 		Magnetization obs_m;
 		auto getobs()

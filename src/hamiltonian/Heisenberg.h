@@ -58,17 +58,16 @@ class Heisenberg
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
 		
+        // the next construction allows to specify a number of template arguments
+		// while leaving others open (C++11 feature)
 		template <typename RNG>
 		using MetroInitializer =  Heisenberg_Initializer<StateVector, RNG>; 
-		// this construction allows to specify a number of template arguments
-		// while leaving others open (C++11 feature)
 
-		static constexpr uint Nbeta = 0;
 		static constexpr uint Ngamma = 0;
 
 		// requires pointers
         std::vector<Heisenberg_interaction<StateVector>*> interactions;
-		OnSite<StateVector, FPType>* onsite[Nbeta];
+        std::array<OnSite<StateVector, FPType>*, 0> onsite;
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
 		Heisenberg(double J) : J(J), name("Heisenberg")

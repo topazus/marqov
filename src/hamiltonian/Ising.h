@@ -72,8 +72,9 @@ class Ising
 		template <typename RNG>
 		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
         std::array<Ising_interaction<StateVector>*, 1> interactions = {new Ising_interaction<StateVector>(J)};
+        std::array<OnSite<StateVector, int>*, 0> onsite;
 
-		static constexpr uint Nbeta  = 0;
+// 		static constexpr uint Nbeta  = 0;
 		static constexpr uint Ngamma = 0;
 
 		Ising(double J) : J(J), name("Ising"), obs_e(*this), obs_fx(0), obs_fy(1)
@@ -81,7 +82,7 @@ class Ising
 		~Ising() {delete interactions[0];}
 
 		// instantiate interaction terms (requires pointers)
-		OnSite<StateVector, int>* onsite[Nbeta];
+// 		OnSite<StateVector, int>* onsite[Nbeta];
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
 		// instantiate and choose observables

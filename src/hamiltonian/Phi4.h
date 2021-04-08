@@ -2,6 +2,7 @@
 #define PHI4_H
 #include <array>
 #include <cmath>
+#include <vector>
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
 #include "../obsparts.h"
@@ -113,18 +114,17 @@ class Phi4
 		// this construction allows to specify a number of template arguments
 		// while leaving others open (C++11 feature)
 
-		static constexpr uint Nbeta  = 2;
 		static constexpr uint Ngamma = 0;
 
 		// requires pointers
         std::array<Phi4_interaction<StateVector>*, 1> interactions = {new Phi4_interaction<StateVector>()};
-		OnSite<StateVector, FPType>* onsite[Nbeta]; //Todo: External fields not yet supported
+		std::vector<OnSite<StateVector, FPType>*> onsite; //Todo: External fields not yet supported
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
 		Phi4(double beta, double lambda, double mass) : beta(beta), lambda(lambda), mass(mass), name("Phi4"), obs_fx(0), obs_fy(1), obs_fz(2)
 		{
-			onsite[0]       = new Phi4_onsitesquare<StateVector>(mass, beta);
-			onsite[1]       = new Phi4_onsitefour<StateVector>(lambda, beta);
+            onsite.push_back(new Phi4_onsitesquare<StateVector>(mass, beta));
+            onsite.push_back(new Phi4_onsitefour<StateVector>(lambda, beta));
 		}
 
 		Magnetization obs_m;
@@ -148,7 +148,7 @@ class Phi4
 			const double dotp = dot(sv, a);
 			for (int i=0; i<SymD; i++) sv[i] -= 2*dotp*a[i];
 		}
-
 		
+		~Phi4() {delete onsite[1]; delete onsite[0]; delete interactions[0];}
 };
 #endif

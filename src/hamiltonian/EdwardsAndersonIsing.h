@@ -294,14 +294,14 @@ class EdwardsAndersonIsing
 		template <typename RNG>
 		using MetroInitializer = EdwardsAndersonIsing_Initializer<StateVector, RNG>;
 
-		static constexpr uint Nbeta = 0;
 		static constexpr uint Ngamma = 0;
 		
 		EdwardsAndersonIsing(double J) : J(J), name("EdwardsAndersonIsing"), obs_chi(0, "chi") , obs_chiKmin(2.0*M_PI, "chiKmin") {}
+		~EdwardsAndersonIsing() {delete interactions[0];}
 		
 		// instantiate interaction terms (requires pointers)
 		std::array<EdwardsAndersonIsing_interaction<StateVector>*, 1> interactions = {new EdwardsAndersonIsing_interaction<StateVector>(J)};
-		OnSite<StateVector, int>* onsite[Nbeta];
+        std::array<OnSite<StateVector, int>*, 0> onsite;
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 	
 		// instantiate and choose observables

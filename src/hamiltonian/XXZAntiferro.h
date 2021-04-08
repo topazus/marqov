@@ -107,7 +107,7 @@ class XXZAntiferroStaggeredMagXY
 				}
 			}
 
-			return std::sqrt(pow(magAx-magBx,2) + pow(magAy-magBy,2)) / double(0.5*N);
+			return std::sqrt(pow(magAx-magBx,2) + std::pow(magAy-magBy,2)) / double(0.5*N);
 		}
 
 		XXZAntiferroStaggeredMagXY() : name("mstagxy") {}
@@ -161,13 +161,8 @@ template <class StateVector>
 class XXZAntiferro_extfield : public OnSite<StateVector, double>
 {
 	public:
-
-		double H;
-
-		XXZAntiferro_extfield(double myH) : H(myH)
-		{
-			this->h = H;
-		}
+        const double& h;
+		XXZAntiferro_extfield(const double& myH) : h(myH) {}
 		double get (const StateVector& phi) {return phi[2];};
 };
 
@@ -188,21 +183,15 @@ class XXZAntiferro
 		// this construction allows to specify a number of template arguments
 		// while leaving others open (C++11 feature)
 
-		
-		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta  = 1;
 		static constexpr uint Ngamma = 0;
 		const std::string name;
 
 		// requires pointers
         std::array<XXZAntiferro_interaction<StateVector>*, 1> interactions = {new XXZAntiferro_interaction<StateVector>(Delta)};
-		OnSite<StateVector, FPType>* onsite[Nbeta];
+        std::array<XXZAntiferro_extfield<StateVector>*, 1> onsite = {new XXZAntiferro_extfield<StateVector>(H)};
 		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
 
-		XXZAntiferro(double myDelta, double myH) : Delta(myDelta), H(myH), name("XXZAntiferro")
-		{
-			onsite[0]       = new XXZAntiferro_extfield<StateVector>(H);
-		}
+		XXZAntiferro(double myDelta, double myH) : Delta(myDelta), H(myH), name("XXZAntiferro") {}
 		
 		XXZAntiferroStaggeredMagZ  obs_mstagz;
 		XXZAntiferroStaggeredMagXY obs_mstagxy;
