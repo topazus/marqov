@@ -52,11 +52,11 @@ using namespace MARQOV;
 template <class Hamiltonian, class Lattice, class Parameters, class Callable>
 void Loop(const std::vector<Parameters>& params, Callable filter)
 {
-    typename GetSchedulerType<Hamiltonian, Lattice, Parameters >::MarqovScheduler sched(1);
-    
-  	for(auto p : params)
-       sched.createSimfromParameter(p, filter);
-    sched.start();
+	typename GetSchedulerType<Hamiltonian, Lattice, Parameters >::MarqovScheduler sched(1);
+	    
+	for(auto p : params)
+	sched.createSimfromParameter(p, filter);
+	sched.start();
 }
 
 // ---------------------------------------
@@ -65,51 +65,50 @@ void Loop(const std::vector<Parameters>& params, Callable filter)
 template <class Hamiltonian, class Params, class Callable>
 void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& hp, Callable filter)
 {
-	const auto name      = reg.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-	      auto nreplicas = reg.Get<std::vector<int>>("mc.ini", name, "rep" );
-	const auto nL  	 = reg.Get<std::vector<int>>("mc.ini", name, "L" );
-	const auto dim 	 = reg.Get<int>("mc.ini", name, "dim" );
+	const auto name = reg.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+	auto nreplicas  = reg.Get<std::vector<int>>("mc.ini", name, "rep" );
+	const auto nL   = reg.Get<std::vector<int>>("mc.ini", name, "L" );
+	const auto dim  = reg.Get<int>("mc.ini", name, "dim" );
 
-    typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType;
+	typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType;
 
-    
 	if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 	std::vector<RegularHypercubic> latts;
-    for (std::size_t j=0; j<nL.size(); j++)
+	for (std::size_t j=0; j<nL.size(); j++)
 	{
 		// prepare. Extend lifetime of lattices.
 		int L = nL[j];
-        latts.emplace_back(L, dim);
-    }
-    
-    typename GetSchedulerType<Hamiltonian, RegularHypercubic, typename PPType::value_type>::MarqovScheduler sched(1);
-    
+		latts.emplace_back(L, dim);
+	}
+ 
+	typename GetSchedulerType<Hamiltonian, RegularHypercubic, typename PPType::value_type>::MarqovScheduler sched(1);
+ 
 	for (std::size_t j=0; j<nL.size(); j++)
 	{
 		// prepare
 		int L = nL[j];
 		cout << endl << "L = " << L << endl << endl;
-
+		
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-
-        	MARQOV::Config mp(outpath);
-        	mp.setnsweeps(10);
+		
+		MARQOV::Config mp(outpath);
+		mp.setnsweeps(10);
 		mp.setncluster(int(L/2));
 		mp.setwarmupsteps(500);
 		mp.setgameloopsteps(1000);
-
+		
 		makeDir(mp.outpath);
-
+		
 		auto params = finalize_parameter_pair(mp, hp);
 		auto rparams = replicator_pair(params, nreplicas[j]);
-        
+		
 		// set up and execute        
-        RegularHypercubic& latt = latts[j];
- 		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
-        for(auto p : rparams)
-            sched.createSimfromParameter(p, f);
+		RegularHypercubic& latt = latts[j];
+		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
+		for(auto p : rparams)
+		sched.createSimfromParameter(p, f);
 	}
-    sched.start();
+	sched.start();
 }
 
 
@@ -118,11 +117,11 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 std::string selectsim_startup(RegistryDB& registry)
 {
 	const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-	const auto dim 	  = registry.Get<int>("mc.ini", ham, "dim" );
+	const auto dim 	    = registry.Get<int>("mc.ini", ham, "dim" );
 	const auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
 	const auto nreplicass = registry.Get<std::string>("mc.ini", ham, "rep" );
-	const auto nL  	  = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
-	const auto nLs 	  = registry.Get<std::string>("mc.ini", ham, "L" );
+	const auto nL  	    = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
+	const auto nLs 	    = registry.Get<std::string>("mc.ini", ham, "L" );
 
 	cout << endl;
 	cout << "Hamiltonian: \t" << ham << endl;
@@ -163,40 +162,40 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
 		RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
 	}
-    else if (ham == "Phi4")
-    {
+	else if (ham == "Phi4")
+	{
 		auto beta   = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
 		auto lambda = registry.Get<std::vector<double> >("mc.ini", ham, "lambda");
 		auto mass   = registry.Get<std::vector<double> >("mc.ini", ham, "mass");
-
+		
 		// we need "beta" as an explicit parameter in the Hamiltonian
 		// this requires some gymnastics ...
 		std::vector<double> dummy = {0.0};
 		auto parameters = cart_prod(beta, dummy, lambda, mass);
 		for (std::size_t i=0; i<parameters.size(); i++) std::get<1>(parameters[i]) = std::get<0>(parameters[i]);
-
+		
 		write_logfile(registry, beta);
 		RegularLatticeLoop<Phi4<double, double> >(registry, outbasedir, parameters, defaultfilter);
-    }
-    else if (ham == "BlumeCapel")
-    {
+	}
+	else if (ham == "BlumeCapel")
+	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
 		auto D    = registry.Get<std::vector<double> >("mc.ini", ham, "D");
 		auto parameters = cart_prod(beta, J, D);
-
+		
 		write_logfile(registry, beta);
- 		RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
-    }
-    else if (startswith(ham, "AshkinTeller"))
-    {
+		RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
+	}
+	else if (startswith(ham, "AshkinTeller"))
+	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
 		auto K    = registry.Get<std::vector<double> >("mc.ini", ham, "K");
 		auto parameters = cart_prod(beta, J, K);
-
+		
 		write_logfile(registry, beta);
- 		RegularLatticeLoop<AshkinTeller<int>>(registry, outbasedir, parameters, defaultfilter);
+		RegularLatticeLoop<AshkinTeller<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
 	else if (ham == "XXZAntiferro")
 	{
@@ -204,7 +203,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto extfield = registry.Get<std::vector<double>>("mc.ini", ham, "extfield");
 		auto aniso    = registry.Get<std::vector<double>>("mc.ini", ham, "aniso");
 		auto parameters = cart_prod(beta, aniso, extfield);
-
+		
 		write_logfile(registry, beta);
 		RegularLatticeLoop<XXZAntiferro<double, double> >(registry, outbasedir, parameters, defaultfilter);
 	}
@@ -234,10 +233,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
 
-        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
-        typedef EdwardsAndersonIsing<int> Hamiltonian;
-        typedef RegularRandomBond<BimodalPDF> Lattice;
-        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
+		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
+		typedef EdwardsAndersonIsing<int> Hamiltonian;
+		typedef RegularRandomBond<BimodalPDF> Lattice;
+		typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
 
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
@@ -249,8 +248,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			makeDir(outpath);
 	
 			// Monte Carlo parameters
-	        	MARQOV::Config mp(outpath);
-	        	mp.setnsweeps(15);
+	     	MARQOV::Config mp(outpath);
+	     	mp.setnsweeps(15);
 			mp.setncluster(0);
 			mp.setwarmupsteps(300);
 			mp.setgameloopsteps(300);
@@ -261,11 +260,11 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			// form parameter triple and replicate
 			auto params  = finalize_parameter_triple(lp, mp, hp);
 			auto rparams = replicator(params, nreplicas[j]);
-			// perform simulations
-            for (auto p: rparams)
-                sched.createSimfromParameter(p, defaultfilter_triple);
+			// schedule simulations
+			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter_triple);
 //		 	Loop<Hamiltonian, RegularRandomBond<BimodalPDF> >(rparams, defaultfilter_triple);
 		}
+		// run!
 		sched.start();
 	}
 	else if (startswith(ham, "Gaussian-Ising-EdwardsAnderson"))
@@ -282,10 +281,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
-        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
-        typedef EdwardsAndersonIsing<int> Hamiltonian;
-        typedef RegularRandomBond<GaussianPDF> Lattice;
-        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
+		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
+		typedef EdwardsAndersonIsing<int> Hamiltonian;
+		typedef RegularRandomBond<GaussianPDF> Lattice;
+		typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
 	
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
@@ -297,8 +296,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			makeDir(outpath);
 	
 			// Monte Carlo parameters
-	        	MARQOV::Config mp(outpath);
-	        	mp.setnsweeps(50);
+        	MARQOV::Config mp(outpath);
+        	mp.setnsweeps(50);
 			mp.setncluster(0);
 			mp.setwarmupsteps(100);
 			mp.setgameloopsteps(1000);
@@ -309,12 +308,12 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			// form parameter triple and replicate
 			auto params  = finalize_parameter_triple(lp, mp, hp);
 			auto rparams = replicator(params, nreplicas[j]);
-            for (auto p: rparams)
-                sched.createSimfromParameter(p, defaultfilter_triple);
-			// perform simulations
+
+			// schedule simulations
+			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter_triple);
 //		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<GaussianPDF>>(rparams, defaultfilter_triple);
 		}
-		sched.start();
+		sched.start(); // run!
 	}
 	else if (ham == "IsingCC")
 	{
@@ -331,10 +330,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
         
-        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
-        typedef Ising<int> Hamiltonian;
-        typedef ConstantCoordinationLattice<Poissonian> Lattice;
-        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
+		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
+		typedef Ising<int> Hamiltonian;
+		typedef ConstantCoordinationLattice<Poissonian> Lattice;
+		typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
 
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
@@ -346,8 +345,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			makeDir(outpath);
 	
 			// Monte Carlo parameters
-	        	MARQOV::Config mp(outpath);
-	        	mp.setnsweeps(5);
+        	MARQOV::Config mp(outpath);
+        	mp.setnsweeps(5);
 			mp.setncluster(15);
 			mp.setwarmupsteps(500);
 			mp.setgameloopsteps(1500);
@@ -367,112 +366,107 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		sched.start();
 	}
 
-//    else if (ham == "IrregularIsing1")
-//    {
-//		//
-//		// construct irregular lattice and pass it to MARQOV as a reference
-//		//
-//
-//		const int L = 32;
-//		const int dim = 2;
-//		ConstantCoordinationLattice<Poissonian> ccl(L, dim);
-//
-//		// prepare output
-//		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-//		makeDir(outpath);
-//
-//		// Hamiltonian parameters
-//		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-//		std::vector<double> myj = {-1.0};
-//		auto hp = cart_prod(beta, myj);
-//
-//		// Monte Carlo parameters
-//		MARQOV::Config mp(outpath);
-//		mp.setrepid(1);
-//		mp.setnsweeps(L);
-//		mp.setncluster(10);
-//
-//		auto params = finalize_parameter_pair(mp, hp);
-//		// partially apply filter
-//		auto f = [&ccl](auto p){return defaultfilter(ccl, p);};
-//
-//        typedef typename decltype(params)::value_type PPType;
-//        typedef Ising<int> Hamiltonian;
-//        typedef ConstantCoordinationLattice<Poissonian> Lattice;
-//        typename GetSchedulerType<Hamiltonian, Lattice, PPType>::MarqovScheduler sched(1);
-//		// perform simulations
-//        for (auto p: params)
-//            sched.createSimfromParameter(p, f);
-////		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
-//        sched.start();
-//	}
-    else if (ham == "BlumeCapelBipartite")
+    else if (ham == "IrregularIsing1")
     {
+		// construct irregular lattice and pass it to MARQOV as a reference
+
+		const int L = 32;
+		const int dim = 2;
+		ConstantCoordinationLattice<Poissonian> ccl(L, dim);
+
+		// prepare output
+		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+		makeDir(outpath);
+
+		// Hamiltonian parameters
+		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+		std::vector<double> myj = {-1.0};
+		auto hp = cart_prod(beta, myj);
+
+		// Monte Carlo parameters
+		MARQOV::Config mp(outpath);
+		mp.setrepid(1);
+		mp.setnsweeps(L);
+		mp.setncluster(10);
+
+		auto params = finalize_parameter_pair(mp, hp);
+		// partially apply filter
+		auto f = [&ccl](auto p){return defaultfilter(ccl, p);};
+
+		typedef typename decltype(params)::value_type PPType;
+		typedef Ising<int> Hamiltonian;
+		typedef ConstantCoordinationLattice<Poissonian> Lattice;
+		typename GetSchedulerType<Hamiltonian, Lattice, PPType>::MarqovScheduler sched(1);
+
+		// schedule simulations
+		for (auto p: params) sched.createSimfromParameter(p, f);
+//		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
+
+		// run!
+		sched.start();
+	}
+	else if (ham == "BlumeCapelBipartite")
+	{
+		// import parameters
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
 		auto DA   = registry.Get<std::vector<double> >("mc.ini", ham, "DA");
 		auto DB   = registry.Get<std::vector<double> >("mc.ini", ham, "DB");
 		auto parameters = cart_prod(beta, J, DA, DB);
-
-		const auto name      = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-		      auto nreplicas = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
-		const auto nL 	      = registry.Get<std::vector<int>>("mc.ini", name, "L" );
-		const auto dim 	 = registry.Get<int>("mc.ini", name, "dim" );
-
+		
+		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
+		const auto nL 	 = registry.Get<std::vector<int>>("mc.ini", name, "L" );
+		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
+		
 		write_logfile(registry, beta);
-        
+		
 		std::vector<SimpleBipartite> latts;
-        typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), parameters)) PPType;
-        typename GetSchedulerType<BlumeCapelBipartite<int>, SimpleBipartite, typename PPType::value_type>::MarqovScheduler sched(1);
+		typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), parameters)) PPType;
+		typename GetSchedulerType<BlumeCapelBipartite<int>, SimpleBipartite, typename PPType::value_type>::MarqovScheduler sched(1);
+
 		// set up replicas
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 		
-        // lattice size loop
-        for (std::size_t j=0; j<nL.size(); j++)
-        {
-            // prepare. Extend lifetime of lattices.
-            int L = nL[j];
-            latts.emplace_back(L, dim);
-        }
-
+		// lattice size loop
+		for (std::size_t j=0; j<nL.size(); j++)
+		{
+			// prepare. Extend lifetime of lattices.
+			int L = nL[j];
+			latts.emplace_back(L, dim);
+		}
+		
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
 		{
 			// prepare
 			int L = nL[j];
-	
+
 			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-	
-	     	MARQOV::Config mp(outpath);
-        		mp.setnsweeps(2);
+			MARQOV::Config mp(outpath);
+			makeDir(mp.outpath);
+
+			mp.setnsweeps(2);
 			mp.setncluster(int(L/2));
 			mp.setwarmupsteps(500);
 			mp.setgameloopsteps(2500);
 
-			makeDir(mp.outpath);
-
-			// set up parameters
+			// set up parameter space
 			auto params = finalize_parameter_pair(mp, parameters);
 			auto rparams = replicator_pair(params, nreplicas[j]);
-			// test area
-//			auto terms = get_terms<SimpleBipartite>(latt, 0);
-//			cout << "---> " << terms[0] << endl << endl;
-
-//			RegularHypercubic latt2(L, dim);
-//			auto terms2 = get_terms<RegularHypercubic>(latt2, 0);
-//			cout << "---> " << terms2[0] << endl << endl;
-
 
 			// lattice
 //			SimpleBipartite latt(L, dim);
-            SimpleBipartite& latt = latts[j];
-			// set up and execute
-	 		auto f = [&latt, &outbasedir, L](auto p){return defaultfilter(latt, p);}; //partially apply filter
-            for(auto p : rparams)
-                sched.createSimfromParameter(p, f);
+			SimpleBipartite& latt = latts[j]; 
+
+			// partially apply filter
+	 		auto f = [&latt, &outbasedir, L](auto p){return defaultfilter(latt, p);};
+
+			// schedule
+			for(auto p : rparams) sched.createSimfromParameter(p, f);
 //	 		Loop<BlumeCapelBipartite<int>, SimpleBipartite>(rparams, f);
 		}
-		sched.start();
+		sched.start(); // run!
 	}
 }
 
