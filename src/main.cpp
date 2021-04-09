@@ -142,7 +142,11 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	auto ham = selectsim_startup(registry);
 
+
+
 	// ----------------- select simulation ------------------
+
+
 
 	if (startswith(ham, "Ising"))
 	{
@@ -153,6 +157,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
  		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
+
+
+
+
 	else if (ham == "Heisenberg")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
@@ -162,6 +170,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
 		RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
 	}
+
+
+
+
 	else if (ham == "Phi4")
 	{
 		auto beta   = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
@@ -177,6 +189,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
 		RegularLatticeLoop<Phi4<double, double> >(registry, outbasedir, parameters, defaultfilter);
 	}
+
+
+
+
 	else if (ham == "BlumeCapel")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
@@ -187,6 +203,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
 		RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
+
+
+
+
 	else if (startswith(ham, "AshkinTeller"))
 	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
@@ -197,6 +217,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
 		RegularLatticeLoop<AshkinTeller<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
+
+
+
+
 	else if (ham == "XXZAntiferro")
 	{
 		auto beta     = registry.Get<std::vector<double>>("mc.ini", ham, "beta");
@@ -207,6 +231,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, beta);
 		RegularLatticeLoop<XXZAntiferro<double, double> >(registry, outbasedir, parameters, defaultfilter);
 	}
+
+
+
+
 	else if (ham == "XXZAntiferroSingleAniso")
 	{
 		auto beta        = registry.Get<std::vector<double>>("mc.ini", ham, "beta");
@@ -218,6 +246,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		write_logfile(registry, extfield);
 		RegularLatticeLoop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
 	}
+
+
+
+
 	else if (startswith(ham, "Bimodal-Ising-EdwardsAnderson"))
 	{
 		const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
@@ -267,6 +299,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		// run!
 		sched.start();
 	}
+
+
+
+
 	else if (startswith(ham, "Gaussian-Ising-EdwardsAnderson"))
 	{
 		const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
@@ -315,6 +351,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		}
 		sched.start(); // run!
 	}
+
+
+
+
 	else if (ham == "IsingCC")
 	{
 		const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
@@ -366,8 +406,11 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		sched.start();
 	}
 
-    else if (ham == "IrregularIsing1")
-    {
+
+
+
+	else if (ham == "IrregularIsing1")
+	{
 		// construct irregular lattice and pass it to MARQOV as a reference
 
 		const int L = 32;
@@ -405,6 +448,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		// run!
 		sched.start();
 	}
+
+
+
+
 	else if (ham == "BlumeCapelBipartite")
 	{
 		// import parameters
