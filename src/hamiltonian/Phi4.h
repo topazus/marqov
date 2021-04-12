@@ -132,6 +132,21 @@ class Phi4
 		auto getobs() { return std::make_tuple(obs_m, obs_fx, obs_fy, obs_fz);}
 
 
+		// provide names for the parameters
+		std::string paramname(int i)
+		{
+			std::string name;
+			switch (i)
+			{
+				case (0): name = "beta"; break;
+				case (1): name = "lambda"; break;
+				case (2): name = "mass"; break;
+				default: break;
+			}
+			return name;
+		}
+
+
 		// --- Wolff ---
 
 		template <class A>
