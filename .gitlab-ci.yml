@@ -61,6 +61,10 @@ MARQOV_Buster:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gxx
     <<: *build_definition
 
+MARQOV_Buster:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gxx
+    <<: *build_definition
+
 mpiMARQOV_Ubuntu_bionic:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack
     stage: build
