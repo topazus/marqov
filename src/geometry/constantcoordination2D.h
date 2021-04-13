@@ -181,10 +181,10 @@ int geometric_simulated_annealing_box(const PointCloud& cloud, std::vector<std::
 		// this is fullfilled implicitly
 		
 		// calculate the (squared!) distances of the bonds i--i1, j--j1, i--j and i1--j1 
-		const double d1 = distancePBSQ_nD(cloud.getcrds(i),  cloud.getcrds(i1));
-		const double d2 = distancePBSQ_nD(cloud.getcrds(j),  cloud.getcrds(j1));
-		const double d3 = distancePBSQ_nD(cloud.getcrds(i),  cloud.getcrds(j));
-		const double d4 = distancePBSQ_nD(cloud.getcrds(i1), cloud.getcrds(j1));
+		const double d1 = distancePBSQ_nD(cloud.crds(i),  cloud.crds(i1));
+		const double d2 = distancePBSQ_nD(cloud.crds(j),  cloud.crds(j1));
+		const double d3 = distancePBSQ_nD(cloud.crds(i),  cloud.crds(j));
+		const double d4 = distancePBSQ_nD(cloud.crds(i1), cloud.crds(j1));
 		
 		if ( (d3+d4) < (d1+d2) )
 		{

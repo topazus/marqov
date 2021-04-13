@@ -15,8 +15,8 @@ void save_geometry(Grid& grid, const std::string path)
 
 	for (int i=0; i<grid.size(); i++)
 	{
-		auto nbrs = grid.getnbrs(0,i);
-		auto crds = grid.getcrds(i);
+		auto nbrs = grid.nbrs(0,i);
+		auto crds = grid.crds(i);
 
 		os << nbrs.size() + crds.size();
 
@@ -42,8 +42,8 @@ void save_geometry_deluxe(Grid& grid, const std::string path)
 
 	for (int i=0; i<grid.size(); i++)
 	{
-		auto nbrs = grid.getnbrs(0,i);
-		auto crds = grid.getcrds(i);
+		auto nbrs = grid.nbrs(0,i);
+		auto crds = grid.crds(i);
 		auto bnds = grid.getbnds(0,i);
 
 		os << nbrs.size() + crds.size() + bnds.size();
