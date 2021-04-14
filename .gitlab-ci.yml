@@ -128,6 +128,18 @@ marqov_Bullseye-PGI-21-03:
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="pgc++" ..
       - make MARQOV VERBOSE=1
 
+marqov_Bullseye-Intel-21:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-intel-oneapi-icpc
+    stage: build
+    <<: *src_except_definition
+    script:
+      - apt-get update && apt-get install -y libhdf5-dev cmake
+      - . /opt/intel/oneapi/setvars.sh
+      - cmake -E make_directory build
+      - cd build
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="icpc" ..
+      - make MARQOV VERBOSE=1
+
 marqov_create_doc:
   image: aergus/latex
   stage: build
