@@ -1,6 +1,8 @@
 #ifndef TERMCOLLECTION_H
 #define TERMCOLLECTION_H
 
+#include "../hamparts.h"
+
 template <class StateVector, typename CouplingType = double>
 class standard_interaction : public Interaction<StateVector>
 {

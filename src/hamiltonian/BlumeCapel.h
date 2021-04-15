@@ -5,26 +5,7 @@
 #include <string>
 #include <functional>
 #include "../hamparts.h"
-// ----------------------------------------------------------------------
-
-template <class StateVector>
-class BlumeCapel_interaction
-{
-    public:
-        const double& J;
-		BlumeCapel_interaction(const double& myJ) : J(myJ) {}
-		StateVector get (const StateVector& phi) {return phi;}
-};
-
-
-template <class StateVector>
-class BlumeCapel_onsite
-{
-    public:
-        const double& h;
-		BlumeCapel_onsite(double D) : h(D) {}
-		double get (const StateVector& phi) {return dot(phi,phi);};
-};
+#include "termcollection.h"
 
 
 template <class StateVector, class RNG>
@@ -69,21 +50,35 @@ template <typename SpinType = int>
 class BlumeCapel
 {
 	public:
+
+		//  ----  Parameters  ----
+
 		double J, D;
 		constexpr static int SymD = 1;
 		const std::string name;
+
+
+		
+		//  ---- Definitions  -----
+
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = BlumeCapel_Initializer<StateVector, RNG>;
 
-		// instantiate interaction terms (requires pointers)
-        std::array<BlumeCapel_interaction<StateVector>*, 1> interactions = {new BlumeCapel_interaction<StateVector>(J)};
-        std::array<BlumeCapel_onsite<StateVector>*, 1> onsite = {new BlumeCapel_onsite<StateVector>(D)};
-        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
+
+
+		//  ----  Hamiltonian terms  ----
+
+		std::array<standard_interaction<StateVector>*, 1>    interactions = {new standard_interaction<StateVector>(J)};
+		std::array<onsite_quadratic<StateVector>*, 1>        onsite       = {new onsite_quadratic<StateVector>(D)};
+		std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 	
 		BlumeCapel(double J, double D) : J(J), D(D), name("BlumeCapel") {}
 
-		// instantiate and choose observables
+
+
+		//  ----  Observables ----
+
 		Magnetization obs_m;
 		auto getobs()
 		{
@@ -91,7 +86,9 @@ class BlumeCapel
 		}
 
 
-		// state space initializer
+
+		//  ----  Initializer  ----
+
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
@@ -104,8 +101,7 @@ class BlumeCapel
 
 
 
-		// using the Wolff cluster algorithm requires to implement
-		// the functions 'wolff_coupling' and 'wolff_flip'
+		//  ----  Wolff  ----
 
 		template <class A = bool>
 		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a=0) const
