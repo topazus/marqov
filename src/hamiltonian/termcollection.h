@@ -1,26 +1,24 @@
 #ifndef TERMCOLLECTION_H
 #define TERMCOLLECTION_H
 
-template <class StateVector, typename ConstantType = double>
+template <class StateVector, typename CouplingType = double>
 class standard_interaction : public Interaction<StateVector>
 {
 	public:
-//		const ConstantType& constant;
-//		standard_interaction(const ConstantType &constant) : constant(constant) {}
-//		StateVector get (const StateVector& phi) {return phi;};
-
-		const ConstantType& J;
-		standard_interaction(const ConstantType &J) : J(J) {}
+		const CouplingType& J;
+		standard_interaction(const CouplingType &J) : J(J) {}
 		StateVector get (const StateVector& phi) {return phi;};
+
+		// todo: rename J to something more generic, like "constant"
 		
 };
 
 
-template <class StateVector, typename ConstantType = double>
-class onsite_quadratic : public OnSite<StateVector, double> 
+template <class StateVector, typename CouplingType = double>
+class onsite_quadratic : public OnSite<StateVector, CouplingType> 
 {
 	public:
-		onsite_quadratic(ConstantType constant)
+		onsite_quadratic(CouplingType constant)
 		{
 			this->h = constant;
 		}
