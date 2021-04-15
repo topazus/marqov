@@ -1,27 +1,26 @@
 #ifndef TERMCOLLECTION_H
 #define TERMCOLLECTION_H
 
-//template <class StateVector, class ConstType>
-template <class StateVector>
+template <class StateVector, typename ConstantType = double>
 class standard_interaction : public Interaction<StateVector>
 {
 	public:
-//		const double& constant;
-//		standard_interaction(const double &constant) : constant(constant) {}
+//		const ConstantType& constant;
+//		standard_interaction(const ConstantType &constant) : constant(constant) {}
 //		StateVector get (const StateVector& phi) {return phi;};
 
-		const double& J;
-		standard_interaction(const double &J) : J(J) {}
+		const ConstantType& J;
+		standard_interaction(const ConstantType &J) : J(J) {}
 		StateVector get (const StateVector& phi) {return phi;};
 		
 };
 
 
-template <class StateVector>
+template <class StateVector, typename ConstantType = double>
 class onsite_quadratic : public OnSite<StateVector, double> 
 {
 	public:
-		onsite_quadratic(double constant)
+		onsite_quadratic(ConstantType constant)
 		{
 			this->h = constant;
 		}
