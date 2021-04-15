@@ -6,7 +6,7 @@
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
 #include "../obsparts.h"
-
+#include "termcollection.h" 
 
 // ----------------------------------------------------------------------
 
@@ -44,52 +44,22 @@ class Phi4_Initializer
 			auto newdir = rnddir<RNG, double, SymD>(rng);
 			auto nsv = osv + mult(amp,newdir);
 			return nsv;
-
-
-		  	/* old (and wrong)
-
-            	double amp = 0.05;
-            	double r = rng.real(-1.0, 1.0);
-            	double oldlen = std::sqrt(dot(osv, osv));
-            	double newlen = oldlen + amp*r;
-            	auto newdir = rnddir<RNG, double, SymD>(rng);
-            	for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
-            	    newdir[i] *= newlen;
-		  	   return newdir;
-		  	*/
 		};
 
 	private:
 		RNG& rng;
 };
 
-template <class StateVector>
-class Phi4_interaction
-{
-	public:
-		Phi4_interaction(){}
-		StateVector get (const StateVector& phi) {return phi;};
-        static constexpr double J = -1;
-};
+
+
 
 template <class StateVector>
-class Phi4_onsitesquare : public OnSite<StateVector, double> 
+class onsite_fourth_minus_one : public OnSite<StateVector, double> 
 {
 	public:
-		Phi4_onsitesquare(double mass, double beta)
+		onsite_fourth_minus_one(double constant)
 		{
-	 		this->h = mass/beta;
-		}
-		double get (const StateVector& phi) {return dot(phi,phi);};
-};
-
-template <class StateVector>
-class Phi4_onsitefour : public OnSite<StateVector, double> 
-{
-	public:
-		Phi4_onsitefour(double lambda, double beta)
-		{
-	 		this->h = lambda/beta;
+	 		this->h = constant;
 		}
 		double get (const StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);};
 };
@@ -103,36 +73,55 @@ class Phi4
 {
 	public:
 		double beta, lambda, mass;
-
+		const double J = -1;
 		constexpr static int SymD = 3;
 		const std::string name;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
-
 		template <typename RNG>
 		using MetroInitializer =  Phi4_Initializer<StateVector, RNG>; 
-		// this construction allows to specify a number of template arguments
-		// while leaving others open (C++11 feature)
 
-		// requires pointers
-        std::array<Phi4_interaction<StateVector>*, 1> interactions = {new Phi4_interaction<StateVector>()};
-		std::vector<OnSite<StateVector, FPType>*> onsite; //Todo: External fields not yet supported
-		std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
-		Phi4(double beta, double lambda, double mass) : beta(beta), lambda(lambda), mass(mass), name("Phi4"), obs_fx(0), obs_fy(1), obs_fz(2)
+		// Hamiltonian terms
+
+		standard_interaction<StateVector> INT;
+		onsite_quadratic<StateVector> ONS1;
+		onsite_fourth_minus_one<StateVector> ONS2;
+
+		std::vector<Interaction<StateVector>*>                 interactions;
+		std::vector<OnSite<StateVector, FPType>*>              onsite; 
+		std::array <FlexTerm<StateVector*,  StateVector>*, 0>  multisite;
+
+		Phi4(double beta, double lambda, double mass) : beta(beta), 
+												lambda(lambda), 
+												mass(mass), 
+												name("Phi4"), 
+												obs_fx(0), 
+												obs_fy(1), 
+												obs_fz(2), 
+												INT(J),
+												ONS1(mass/beta),
+												ONS2(lambda/beta)
 		{
-            onsite.push_back(new Phi4_onsitesquare<StateVector>(mass, beta));
-            onsite.push_back(new Phi4_onsitefour<StateVector>(lambda, beta));
+			interactions.push_back(&INT);
+			onsite.push_back(&ONS1);
+			onsite.push_back(&ONS2);
 		}
+
+
+		// Observables
 
 		Magnetization obs_m;
 		MagFTComp obs_fx;
 		MagFTComp obs_fy;
 		MagFTComp obs_fz;
+
 		auto getobs() { return std::make_tuple(obs_m, obs_fx, obs_fy, obs_fz);}
 
 
-		// provide names for the parameters
+
+		// Provide names for the parameters
+
 		std::string paramname(int i)
 		{
 			std::string name;
