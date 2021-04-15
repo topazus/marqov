@@ -72,17 +72,25 @@ template <typename SpinType, typename MyFPType>
 class Phi4
 {
 	public:
+		//  ----  Parameters  ----
+
 		double beta, lambda, mass;
 		const double J = -1;
 		constexpr static int SymD = 3;
-		const std::string name;
+		const std::string name = "Hello, my name is Phi";
+
+
+
+		//  ---- Definitions  -----
+
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer =  Phi4_Initializer<StateVector, RNG>; 
 
 
-		// Hamiltonian terms
+
+		//  ----  Hamiltonian terms  ----
 
 		standard_interaction<StateVector> INT;
 		onsite_quadratic<StateVector> ONS1;
@@ -109,7 +117,8 @@ class Phi4
 		}
 
 
-		// Observables
+
+		//  ----  Observables  ----
 
 		Magnetization obs_m;
 		MagFTComp obs_fx;
@@ -136,7 +145,7 @@ class Phi4
 		}
 
 
-		// --- Wolff ---
+		//  ----  Wolff  ----
 
 		template <class A>
 		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a) const 
@@ -150,7 +159,5 @@ class Phi4
 			const double dotp = dot(sv, a);
 			for (int i=0; i<SymD; i++) sv[i] -= 2*dotp*a[i];
 		}
-		
-		~Phi4() {delete onsite[1]; delete onsite[0]; delete interactions[0];}
 };
 #endif
