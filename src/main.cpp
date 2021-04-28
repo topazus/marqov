@@ -65,10 +65,17 @@ void Loop(const std::vector<Parameters>& params, Callable filter)
 template <class Hamiltonian, class Params, class Callable>
 void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& hp, Callable filter)
 {
-	const auto name = reg.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-	auto nreplicas  = reg.Get<std::vector<int>>("mc.ini", name, "rep" );
-	const auto nL   = reg.Get<std::vector<int>>("mc.ini", name, "L" );
-	const auto dim  = reg.Get<int>("mc.ini", name, "dim" );
+	const auto name      = reg.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+	      auto nreplicas = reg.Get<std::vector<int>>("mc.ini", name, "rep" );
+	const auto nL  	 = reg.Get<std::vector<int>>("mc.ini", name, "L" );
+	const auto dim 	 = reg.Get<int>("mc.ini", name, "dim" );
+    int nthreads = 0;
+    try {
+        nthreads = reg.template Get<int>("mc.ini", "General", "threads_per_node" );
+    }
+    catch (const Registry_Key_not_found_Exception&) {
+        std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+    }
 
 	typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType;
 
@@ -78,11 +85,11 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 	{
 		// prepare. Extend lifetime of lattices.
 		int L = nL[j];
-		latts.emplace_back(L, dim);
-	}
- 
-	typename GetSchedulerType<Hamiltonian, RegularHypercubic, typename PPType::value_type>::MarqovScheduler sched(1);
- 
+        latts.emplace_back(L, dim);
+    }
+    
+    typename GetSchedulerType<Hamiltonian, RegularHypercubic, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
+    
 	for (std::size_t j=0; j<nL.size(); j++)
 	{
 		// prepare
@@ -256,6 +263,13 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		const auto dim 	  = registry.Get<int>("mc.ini", ham, "dim" );
 		      auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
 		const auto nL  	  = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
+        int nthreads = 0;
+        try {
+            nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );            
+            }
+        catch (const Registry_Key_not_found_Exception&) {
+            std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+        }
 
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
@@ -265,10 +279,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
 
-		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
-		typedef EdwardsAndersonIsing<int> Hamiltonian;
-		typedef RegularRandomBond<BimodalPDF> Lattice;
-		typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
+        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
+        typedef EdwardsAndersonIsing<int> Hamiltonian;
+        typedef RegularRandomBond<BimodalPDF> Lattice;
+        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
 
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
@@ -309,6 +323,13 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		const auto dim 	  = registry.Get<int>("mc.ini", ham, "dim" );
 		      auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
 		const auto nL  	  = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
+        int nthreads = 0;
+        try {
+            nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );            
+            }
+        catch (const Registry_Key_not_found_Exception&) {
+            std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+        }
 
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
@@ -317,10 +338,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
-		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
-		typedef EdwardsAndersonIsing<int> Hamiltonian;
-		typedef RegularRandomBond<GaussianPDF> Lattice;
-		typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
+        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
+        typedef EdwardsAndersonIsing<int> Hamiltonian;
+        typedef RegularRandomBond<GaussianPDF> Lattice;
+        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
 	
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
@@ -361,7 +382,13 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		const auto dim 	  = registry.Get<int>("mc.ini", ham, "dim" );
 		      auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
 		const auto nL  	  = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
-
+        int nthreads = 0;
+        try {
+            nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );            
+            }
+        catch (const Registry_Key_not_found_Exception&) {
+            std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+        }
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
@@ -370,10 +397,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto hp = cart_prod(beta, J);
 		write_logfile(registry, beta);
         
-		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
-		typedef Ising<int> Hamiltonian;
-		typedef ConstantCoordinationLattice<Poissonian> Lattice;
-		typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1);
+        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
+        typedef Ising<int> Hamiltonian;
+        typedef ConstantCoordinationLattice<Poissonian> Lattice;
+        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
 
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
@@ -405,10 +432,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		}
 		sched.start();
 	}
-
-
-
-
 	else if (ham == "IrregularIsing1")
 	{
 		// construct irregular lattice and pass it to MARQOV as a reference
@@ -449,9 +472,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		sched.start();
 	}
 
-
-
-
 	else if (ham == "BlumeCapelBipartite")
 	{
 		// import parameters
@@ -460,18 +480,24 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto DA   = registry.Get<std::vector<double> >("mc.ini", ham, "DA");
 		auto DB   = registry.Get<std::vector<double> >("mc.ini", ham, "DB");
 		auto parameters = cart_prod(beta, J, DA, DB);
-		
-		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
-		const auto nL 	 = registry.Get<std::vector<int>>("mc.ini", name, "L" );
-		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
-		
+        int nthreads = 0;
+        try {
+            nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );            
+            }
+        catch (const Registry_Key_not_found_Exception&) {
+            std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+        }
+
+		const auto name      = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+		      auto nreplicas = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
+		const auto nL 	      = registry.Get<std::vector<int>>("mc.ini", name, "L" );
+		const auto dim 	 = registry.Get<int>("mc.ini", name, "dim" );
+
 		write_logfile(registry, beta);
 		
 		std::vector<SimpleBipartite> latts;
-		typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), parameters)) PPType;
-		typename GetSchedulerType<BlumeCapelBipartite<int>, SimpleBipartite, typename PPType::value_type>::MarqovScheduler sched(1);
-
+        typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), parameters)) PPType;
+        typename GetSchedulerType<BlumeCapelBipartite<int>, SimpleBipartite, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
 		// set up replicas
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 		
@@ -516,10 +542,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		sched.start(); // run!
 	}
 }
-
-
-
-
 
 
 
