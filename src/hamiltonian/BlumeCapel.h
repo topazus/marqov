@@ -22,7 +22,7 @@ class BlumeCapel_onsite
 {
     public:
         const double& h;
-		BlumeCapel_onsite(double D) : h(D) {}
+		BlumeCapel_onsite(double& D) : h(D) {}
 		double get (const StateVector& phi) {return dot(phi,phi);};
 };
 
