@@ -173,7 +173,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-/*
+
 	else if (ham == "Phi4")
 	{
 		auto beta   = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
@@ -514,7 +514,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 //	 		Loop<BlumeCapelBipartite<int>, SimpleBipartite>(rparams, f);
 		}
 		sched.start(); // run!
-	}*/
+	}
 }
 
 
