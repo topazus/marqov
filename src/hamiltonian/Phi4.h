@@ -2,6 +2,7 @@
 #define PHI4_H
 #include <array>
 #include <cmath>
+#include <vector>
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
 #include "../obsparts.h"
@@ -63,14 +64,12 @@ class Phi4_Initializer
 };
 
 template <class StateVector>
-class Phi4_interaction : public Interaction<StateVector>
+class Phi4_interaction
 {
 	public:
-		Phi4_interaction()
-		{
-	 		this->J = -1;	
-		}
+		Phi4_interaction(){}
 		StateVector get (const StateVector& phi) {return phi;};
+        static constexpr double J = -1;
 };
 
 template <class StateVector>
@@ -115,21 +114,15 @@ class Phi4
 		// this construction allows to specify a number of template arguments
 		// while leaving others open (C++11 feature)
 
-		
-		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta  = 2;
-		static constexpr uint Ngamma = 0;
-
 		// requires pointers
-		Interaction<StateVector>* interactions[Nalpha];
-		OnSite<StateVector, FPType>* onsite[Nbeta]; //Todo: External fields not yet supported
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
+        std::array<Phi4_interaction<StateVector>*, 1> interactions = {new Phi4_interaction<StateVector>()};
+		std::vector<OnSite<StateVector, FPType>*> onsite; //Todo: External fields not yet supported
+		std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
 		Phi4(double beta, double lambda, double mass) : beta(beta), lambda(lambda), mass(mass), name("Phi4"), obs_fx(0), obs_fy(1), obs_fz(2)
 		{
-			interactions[0] = new Phi4_interaction<StateVector>();
-			onsite[0]       = new Phi4_onsitesquare<StateVector>(mass, beta);
-			onsite[1]       = new Phi4_onsitefour<StateVector>(lambda, beta);
+            onsite.push_back(new Phi4_onsitesquare<StateVector>(mass, beta));
+            onsite.push_back(new Phi4_onsitefour<StateVector>(lambda, beta));
 		}
 
 		Magnetization obs_m;
@@ -137,6 +130,21 @@ class Phi4
 		MagFTComp obs_fy;
 		MagFTComp obs_fz;
 		auto getobs() { return std::make_tuple(obs_m, obs_fx, obs_fy, obs_fz);}
+
+
+		// provide names for the parameters
+		std::string paramname(int i)
+		{
+			std::string name;
+			switch (i)
+			{
+				case (0): name = "beta"; break;
+				case (1): name = "lambda"; break;
+				case (2): name = "mass"; break;
+				default: break;
+			}
+			return name;
+		}
 
 
 		// --- Wolff ---
@@ -153,7 +161,7 @@ class Phi4
 			const double dotp = dot(sv, a);
 			for (int i=0; i<SymD; i++) sv[i] -= 2*dotp*a[i];
 		}
-
 		
+		~Phi4() {delete onsite[1]; delete onsite[0]; delete interactions[0];}
 };
 #endif

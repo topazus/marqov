@@ -255,13 +255,11 @@ class ScalarOverlap
 // ----------------------------------------------------------------------
 
 template <class StateVector>
-class EdwardsAndersonIsing_interaction : public Interaction<StateVector> 
+class EdwardsAndersonIsing_interaction
 {
 public:
-	EdwardsAndersonIsing_interaction(double J)
-	{
-		this->J = J;
-	}
+    const double& J;
+	EdwardsAndersonIsing_interaction(const double& myJ) : J(myJ) {}
 	StateVector get (const StateVector& phi) {return phi;};
 };
 
@@ -296,19 +294,13 @@ class EdwardsAndersonIsing
 		template <typename RNG>
 		using MetroInitializer = EdwardsAndersonIsing_Initializer<StateVector, RNG>;
 
-		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta = 0;
-		static constexpr uint Ngamma = 0;
-		
-		EdwardsAndersonIsing(double J) : J(J), name("EdwardsAndersonIsing"), obs_chi(0, "chi") , obs_chiKmin(2.0*M_PI, "chiKmin")
-		{
-			interactions[0] = new EdwardsAndersonIsing_interaction<StateVector>(J); 
-		}
+		EdwardsAndersonIsing(double J) : J(J), name("EdwardsAndersonIsing"), obs_chi(0, "chi") , obs_chiKmin(2.0*M_PI, "chiKmin") {}
+		~EdwardsAndersonIsing() {delete interactions[0];}
 		
 		// instantiate interaction terms (requires pointers)
-		Interaction<StateVector>* interactions[Nalpha];
-		OnSite<StateVector, int>* onsite[Nbeta];
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
+		std::array<EdwardsAndersonIsing_interaction<StateVector>*, 1> interactions = {new EdwardsAndersonIsing_interaction<StateVector>(J)};
+        std::array<OnSite<StateVector, int>*, 0> onsite;
+        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 	
 		// instantiate and choose observables
 		EdwardsAndersonOrderParameter      obs_qEA;
@@ -376,7 +368,7 @@ namespace MARQOV {
 			
 			// interaction part
 			double interactionenergydiff = 0;
-			for(typename std::remove_cv<decltype(ham.Nalpha)> ::type a = 0; a < ham.Nalpha; ++a)
+			for(std::size_t a = 0; a < ham.interactions.size(); ++a)
 			{
 				auto nbrs = grid.nbrs(a, rsite);
 				typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;

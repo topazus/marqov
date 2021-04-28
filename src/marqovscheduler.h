@@ -346,7 +346,7 @@ namespace MARQOV
         void calcprob() {}
         void exchange() {}
     };
-    
+
     /** A helper class to figure out the type of the scheduler
      */
     template <class Hamiltonian, class Lattice, class Parameters>
@@ -355,6 +355,5 @@ namespace MARQOV
         typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType;
         typedef Scheduler<MarqovType> MarqovScheduler;
     };
-    
 };
 #endif

@@ -1,5 +1,7 @@
 #ifndef METROPOLISHELPERS_H
 #define METROPOLISHELPERS_H
+#include <utility>
+#include <type_traits>
 
 namespace MARQOV
 {
@@ -83,13 +85,13 @@ namespace MARQOV
 	// in C++17 (which we don't use), this can be solved with void_t
 	
 	template <class Grid>
-	std::vector<int> get_terms_helper(Grid& grid, int idx, std::false_type) {return {-1};}
+	std::vector<int> get_terms_helper(const Grid& grid, int idx, std::false_type) {return {-1};}
 	
 	template <class Grid>
-	std::vector<int> get_terms_helper(Grid& grid, int idx, std::true_type) {return grid.termselector(idx);}
+	std::vector<int> get_terms_helper(const Grid& grid, int idx, std::true_type) {return grid.termselector(idx);}
 	
 	template <class Grid>
-	std::vector<int> get_terms(Grid& grid, int idx) {	return get_terms_helper<Grid>(grid, idx, has_terms<Grid>{}); }
+	std::vector<int> get_terms(const Grid& grid, int idx) {	return get_terms_helper<Grid>(grid, idx, has_terms<Grid>{}); }
 	
 	
 
@@ -106,7 +108,7 @@ namespace MARQOV
 
 	
 	template <class Grid>
-	auto getnbrs_helper(Grid& grid, int fam, int idx, std::false_type) 
+	auto getnbrs_helper(const Grid& grid, int fam, int idx, std::false_type)
 	{
 		cout << "nbrs not implement!" << flush;
 		exit(0); // improve me
@@ -114,13 +116,13 @@ namespace MARQOV
 	}
 	
 	template <class Grid>
-	auto getnbrs_helper(Grid& grid, int fam, int idx, std::true_type)  
+	auto getnbrs_helper(const Grid& grid, int fam, int idx, std::true_type)
 	{
 		return grid.nbrs(fam,idx); 
 	}
 	
 	template <class Grid>
-	auto getnbrs(Grid& grid, int fam, int idx) 
+	auto getnbrs(const Grid& grid, int fam, int idx)
 	{
 		return getnbrs_helper<Grid>(grid, fam, idx, has_nbrs<Grid>{}); 
 	}
@@ -140,7 +142,7 @@ namespace MARQOV
 
 	
 	template <class Grid>
-	auto getflexnbrs_helper(Grid& grid, int fam, int idx, std::false_type) 
+	auto getflexnbrs_helper(const Grid& grid, int fam, int idx, std::false_type) 
 	{
 		cout << "flexnbrs not implement!" << flush;
 		exit(0); // improve me
@@ -148,18 +150,35 @@ namespace MARQOV
 	}
 	
 	template <class Grid>
-	auto getflexnbrs_helper(Grid& grid, int fam, int idx, std::true_type)  
+	auto getflexnbrs_helper(const Grid& grid, int fam, int idx, std::true_type)  
 	{
 		return grid.getflexnbrs(fam,idx); 
 	}
 	
 	template <class Grid>
-	auto getflexnbrs(Grid& grid, int fam, int idx) 
+	auto getflexnbrs(const Grid& grid, int fam, int idx) 
 	{
 		return getflexnbrs_helper<Grid>(grid, fam, idx, has_flexnbrs<Grid>{}); 
 	}
-
-
+    
+    /**
+     * Helpers to determine if the interactions are container-like.
+     * See metroplois.h for an example.
+     */
+    template <class Cont, class = void, class = void>
+    struct Is_Container
+    {
+        static constexpr bool value = false;
+    };
+    
+    template <class Cont>
+    struct Is_Container<Cont,
+    MARQOV::type_sink_t<decltype(std::declval<Cont>().size())>,
+    MARQOV::type_sink_t<decltype(std::declval<Cont>().operator[](std::declval<std::size_t>()))>
+    >
+    {
+        static constexpr bool value = true;
+    };
 };
 
 

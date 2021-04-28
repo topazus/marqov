@@ -4,6 +4,8 @@
 #include <cmath>
 #include <string>
 #include <functional>
+#include <array>
+#include <vector>
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
 #include "../obsparts.h"
@@ -35,16 +37,13 @@ class Heisenberg_Initializer
 
 
 template <class StateVector>
-class Heisenberg_interaction : public Interaction<StateVector> 
+class Heisenberg_interaction
 {
 	public:
-		Heisenberg_interaction(double J)
-		{
-	 		this->J = -J;
-		}
+		Heisenberg_interaction(const double myJ) : J(-myJ) {}
 		StateVector get (const StateVector& phi) {return phi;};
+        const double J;
 };
-
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
@@ -59,22 +58,20 @@ class Heisenberg
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
 		
+        // the next construction allows to specify a number of template arguments
+		// while leaving others open (C++11 feature)
 		template <typename RNG>
 		using MetroInitializer =  Heisenberg_Initializer<StateVector, RNG>; 
-		// this construction allows to specify a number of template arguments
-		// while leaving others open (C++11 feature)
-
-		
-		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta = 0;
-		static constexpr uint Ngamma = 0;
 
 		// requires pointers
-		Interaction<StateVector>* interactions[Nalpha];
-		OnSite<StateVector, FPType>* onsite[Nbeta];
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
+        std::vector<Heisenberg_interaction<StateVector>*> interactions;
+        std::array<OnSite<StateVector, FPType>*, 0> onsite;
+        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
-		Heisenberg(double J) : J(J), name("Heisenberg") {interactions[0] = new Heisenberg_interaction<StateVector>(J);}
+		Heisenberg(double J) : J(J), name("Heisenberg")
+        {
+            interactions.push_back(new Heisenberg_interaction<StateVector>(J));
+        }
 		~Heisenberg() {delete interactions[0];}
 		
 
