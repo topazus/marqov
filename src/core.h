@@ -61,10 +61,10 @@ namespace MARQOV
 		// MC variables
 		int id;
 		int repid;
-		int seed; ///< Doing this correctly opens a whole can of worms... We now dump the RNG state
-		int gli; ///< The unknown gameloop integer
-		int nsteps; ///< The number of elementary Monte Carlo steps
-		int warmupsteps; ///< The number of steps to do for warmups
+		int seed; ///< Doing this correctly opens a whole can of worms... We now dump the RNG state.
+		int gli; ///< The unknown gameloop integer.
+		int nsteps; ///< The number of elementary Monte Carlo steps.
+		int warmupsteps; ///< The number of steps to do for warmups.
 		int gameloopsteps;
 		int ncluster;
 		int nsweeps;
