@@ -81,15 +81,11 @@ class BlumeCapel
         std::array<BlumeCapel_onsite<StateVector>*, 1> onsite = {new BlumeCapel_onsite<StateVector>(D)};
         std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 	
-		BlumeCapel(double J, double D) : J(J), D(D), name("BlumeCapel") {}
+		BlumeCapel(double J, double D) : J(J), D(D), name("BlumeCapel"), observables(obs_m) {}
 
 		// instantiate and choose observables
 		Magnetization obs_m;
-		auto getobs()
-		{
-			return std::make_tuple(obs_m);
-		}
-
+        std::tuple<Magnetization> observables;
 
 		// state space initializer
 		template <class StateSpace, class Lattice, class RNG>

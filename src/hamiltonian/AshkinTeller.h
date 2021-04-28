@@ -65,16 +65,12 @@ class AshkinTeller
 		template <typename RNG>
 		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
 
-		AshkinTeller(double J, double K) : J(J), K(K), name("AshkinTeller") {}
+		AshkinTeller(double J, double K) : J(J), K(K), name("AshkinTeller"), observables(obs_m) {}
 		
 	
 		// instantiate and choose observables
 		AshkinTellerMag       obs_m;
-		auto getobs()
-		{
-			return std::make_tuple(obs_m);
-		}
-
+        std::tuple<AshkinTellerMag> observables;
 
 		// init
 		template <class StateSpace, class Lattice, class RNG>

@@ -309,8 +309,7 @@ class EdwardsAndersonIsing
 		Susceptibility					obs_chiKmin;
 		InternalEnergy					obs_U;
 		LinkOverlap					obs_ql;
-		auto getobs()	{return std::make_tuple(obs_qEA, obs_chi, obs_chiKmin, obs_U, obs_ql);}
-
+        decltype(std::make_tuple(obs_qEA, obs_chi, obs_chiKmin, obs_U, obs_ql)) observables = {std::make_tuple(obs_qEA, obs_chi, obs_chiKmin, obs_U, obs_ql)};
 
 		// initialize state space
 		template <class StateSpace, class Lattice, class RNG>
