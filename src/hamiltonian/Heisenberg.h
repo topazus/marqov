@@ -68,7 +68,7 @@ class Heisenberg
         std::array<OnSite<StateVector, FPType>*, 0> onsite;
         std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
-		Heisenberg(double J) : J(J), name("Heisenberg")
+		Heisenberg(double J) : J(J), name("Heisenberg"), observables(obs_m)
         {
             interactions.push_back(new Heisenberg_interaction<StateVector>(J));
         }
@@ -77,7 +77,7 @@ class Heisenberg
 
 		// instantiate and choose observables
 		Magnetization obs_m;
-		auto getobs() { return std::make_tuple(obs_m); }
+        std::tuple<Magnetization> observables;
 		
 
 		// state space initializer
