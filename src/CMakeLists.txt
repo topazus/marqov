@@ -2,6 +2,29 @@ find_package(HDF5 COMPONENTS CXX)
 # find_package(OpenMP)
 find_package(Threads)
 
+if(NOT HDF5_FOUND)
+include(ExternalProject)
+    set(hdf5_local_major_version "1.12")
+    set(hdf5_local_minor_version "0")
+    find_package(ZLIB REQUIRED)
+    #HDF5 also requires in its configure step a C++ compiler
+    ExternalProject_Add(HDF5_LOCAL
+        URL https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-${hdf5_local_major_version}/hdf5-${hdf5_local_major_version}.${hdf5_local_minor_version}/src/hdf5-${hdf5_local_major_version}.${hdf5_local_minor_version}.tar.gz
+        PREFIX hdf5_local
+        CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix=<INSTALL_DIR> --enable-build-mode=production --enable-cxx
+        BUILD_COMMAND make
+        INSTALL_COMMAND make install
+    )
+    set(HDF5_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/hdf5_local/include)
+    set(HDF5_Fortran_LIBRARIES ${PROJECT_BINARY_DIR}/hdf5_local/lib/libhdf5_fortran.so;${ZLIB_LIBRARIES})
+    set(HDF5_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/hdf5_local/lib/)
+    set(HDF5_Fortran_COMPILER_EXECUTABLE ${PROJECT_BINARY_DIR}/hdf5_local/bin/h5fc)
+    #Try again to find HDF5
+    set(ENV{HDF5_ROOT} ${PROJECT_BINARY_DIR}/hdf5_local)
+    find_package(HDF5 COMPONENTS CXX)
+endif()
+
+
 INCLUDE(CheckFunctionExists)
 
 SET(MARQOVTARGETS MARQOV mpiMARQOV)
