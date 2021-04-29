@@ -67,7 +67,7 @@ MARQOV_Bullseye:
 
 mpiMARQOV_Ubuntu_bionic:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack
-    stage: build
+    stage: buildMPI
     <<: *src_except_definition
     script:
       - apt-get update && apt-get install -y g++ cmake libhdf5-dev libopenmpi-dev
