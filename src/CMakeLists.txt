@@ -13,6 +13,7 @@ if( (NOT HDF5_FOUND) )
         GIT_TAG hdf5-1_12_0)
 	FetchContent_GetProperties(libhdf5)
         if(NOT libhdf5_POPULATED)
+	    message(INFO "Fetching libhdf-1.12.0")
 	    FetchContent_Populate(libhdf5)
             # Make subproject to use 'BUILD_SHARED_LIBS=ON' setting.
 	    set(HDF5_EXTERNALLY_CONFIGURED 1)
