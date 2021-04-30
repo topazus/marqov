@@ -11,10 +11,8 @@ if(NOT HDF5_FOUND)
     GIT_REPOSITORY https://github.com/HDFGroup/hdf5.git
     GIT_TAG hdf5-1_12_0)
     FetchContent_GetProperties(libhdf5)
-    message("teset1")
     if(NOT libhdf5_POPULATED)
 	FetchContent_Populate(libhdf5)
-	message("teset2")
         # Make subproject to use 'BUILD_SHARED_LIBS=ON' setting.
         set(HDF5_EXTERNALLY_CONFIGURED 1)
         set(HDF5_EXPORTED_TARGETS "hdf5_cpp-static")
@@ -29,41 +27,13 @@ if(NOT HDF5_FOUND)
 
 #        set (HDF5_EXTERNAL_LIB_PREFIX "marqovhdf5")
 	message(STATUS "libhdf5 source dir: ${libhdf5_SOURCE_DIR}")
-	message(STATUS "libhdf5 binary dir: ${libhdf5_BINARY_DIR} ${CMAKE_CURRENT_LIST_DIR} ${TARGET}")
+	message(STATUS "libhdf5 binary dir: ${libhdf5_BINARY_DIR}")
         add_subdirectory(${libhdf5_SOURCE_DIR} ${libhdf5_BINARY_DIR})
         set(HDF5_DIR ${libhdf5_BINARY_DIR} CACHE PATH "libhdf5 path"  FORCE)
-#        set(ENV{HDF5_ROOT} ${PROJECT_BINARY_DIR}/hdf5_local)
-#        find_package(HDF5 COMPONENTS CXX NO_MODULE)
     endif()
-#    find_package(HDF5 COMPONENTS CXX)
-set(MYHDF5INCLUDES ${HDF5_INCLUDE_DIR} ${libhdf5_BINARY_DIR})
-set(MYHDF5LIBS hdf5_cpp-static)
 
-#include(ExternalProject)
-#    set(hdf5_local_major_version "1.12")
-#    set(hdf5_local_minor_version "0")
-#    find_package(ZLIB)
-#    #HDF5 also requires in its configure step a C++ compiler
-#    ExternalProject_Add(libhdf5
-#        URL https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-${hdf5_local_major_version}/hdf5-${hdf5_local_major_version}.${hdf5_local_minor_version}/src/hdf5-${hdf5_local_major_version}.${hdf5_local_minor_version}.tar.gz
-#    PREFIX hdf5_local
-#        CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix=<INSTALL_DIR> --enable-cxx
-#        BUILD_COMMAND make
-#        INSTALL_COMMAND make install
-#    URL_HASH SHA256=5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa
-#    )
-#    target_include_directories(libhdf5
-#)
-#    set(HDF5_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/hdf5_local/include)
-#    set(HDF5_CXX_LIBRARIES ${PROJECT_BINARY_DIR}/hdf5_local/lib/libhdf5_cxx.so;${ZLIB_LIBRARIES})
-#    set(HDF5_LIBRARY_DIRS ${PROJECT_BINARY_DIR}/hdf5_local/lib/)
-#    set(HDF5_CXX_COMPILER_EXECUTABLE ${PROJECT_BINARY_DIR}/hdf5_local/bin/h5c++)
-    #Try again to find HDF5
-#    set(ENV{HDF5_ROOT} ${PROJECT_BINARY_DIR}/hdf5_local)
-#    find_package(HDF5 COMPONENTS CXX)
-
-
-
+    set(MYHDF5INCLUDES ${HDF5_INCLUDE_DIR} ${libhdf5_BINARY_DIR})
+    set(MYHDF5LIBS hdf5_cpp-static)
 endif()
 
 
