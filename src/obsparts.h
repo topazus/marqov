@@ -2,6 +2,8 @@
 #define OBSPARTS_H
 
 #include <complex>
+#include <string>
+#include <vector>
 
 
 // Scalar Magnetization Observable
@@ -176,7 +178,7 @@ class InteractionEnergy
 			double ene = 0.0;
 
 			// interaction part
-			for (int a=0; a<ham.Nalpha; a++)
+			for (int a=0; a<ham.interactions.size(); a++)
 			{
 
 				double enepart = 0.0;
@@ -224,7 +226,7 @@ class SelfEnergy
 			double ene = 0.0;
 
 			// self energy part
-			for (int b=0; b<ham.Nbeta; b++)
+			for (int b=0; b < ham.onsite.size(); b++)
 			{
 				double enepart = 0.0;
 
@@ -253,7 +255,7 @@ class FlexEnergy
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			for (int c=0; c<ham.Ngamma; c++)
+			for (int c = 0; c < ham.multisite.size(); c++)
 			{
 //				enepart = ham.multisite[c]->energy();
 //				ene += ham.onsite[c]->k * enepart;

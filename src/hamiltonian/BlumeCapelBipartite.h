@@ -4,6 +4,7 @@
 #include <tuple>
 #include <string>
 #include <functional>
+#include <vector>
 #include "../hamparts.h"
 
 
@@ -26,14 +27,12 @@ class BlumeCapelBipartite_interaction : public Interaction<StateVector>
 
 
 template <class StateVector>
-class BlumeCapelBipartite_onsite : public OnSite<StateVector, double>
+class BlumeCapelBipartite_onsite
 {
 	public:
-		BlumeCapelBipartite_onsite(double D)
-		{
-			this->h = D;
-		}
-		double get (const StateVector& phi) {return dot(phi,phi);};
+        const double& h;
+		BlumeCapelBipartite_onsite(const double& D) : h(D) {}
+		double get (const StateVector& phi) {return dot(phi, phi);};
 };
 
 
@@ -73,9 +72,6 @@ class BlumeCapelBipartite_Initializer
 };
 
 
-
-
-
 // ------------------------------ HAMILTONIAN ---------------------------
 
 template <typename SpinType = int>
@@ -88,31 +84,21 @@ class BlumeCapelBipartite
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = BlumeCapelBipartite_Initializer<StateVector, RNG>;
-
-		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta = 2;
-		static constexpr uint Ngamma = 0;
-		
-		// instantiate interaction terms (requires pointers)
-		Interaction<StateVector>* interactions[Nalpha];
-		OnSite<StateVector, double>* onsite[Nbeta];
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
+        
+        std::vector<BlumeCapelBipartite_interaction<StateVector>*> interactions;
+        std::array<BlumeCapelBipartite_onsite<StateVector>*, 2> onsite = {new BlumeCapelBipartite_onsite<StateVector>(DA), new BlumeCapelBipartite_onsite<StateVector>(DB)};
+        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 	
-		BlumeCapelBipartite(double J, double DA, double DB) : J(J), DA(DA), DB(DB), name("BlumeCapelBipartite")
-		{	
-			interactions[0] = new BlumeCapelBipartite_interaction<StateVector>(J); 
-			onsite[0]       = new BlumeCapelBipartite_onsite<StateVector>(DA);		
-			onsite[1]       = new BlumeCapelBipartite_onsite<StateVector>(DB);		
+		BlumeCapelBipartite(double J, double DA, double DB) : J(J), DA(DA), DB(DB), name("BlumeCapelBipartite"), observables(obs_m)
+		{
+            interactions.push_back(new BlumeCapelBipartite_interaction<StateVector>(J));
 		}
 		
-	
+		~BlumeCapelBipartite(){delete interactions[0]; delete onsite[0]; delete onsite[1];}
+
 		// instantiate and choose observables
 		Magnetization obs_m;
-		auto getobs()
-		{
-			return std::make_tuple(obs_m);
-		}
-
+        std::tuple<Magnetization> observables;
 
 		// state space initializer
 		template <class StateSpace, class Lattice, class RNG>
@@ -124,9 +110,6 @@ class BlumeCapelBipartite
 				else statespace[i][0] = -1;
 			}
 		}
-				
-
-
 
 		// using the Wolff cluster algorithm requires to implement
 		// the functions 'wolff_coupling' and 'wolff_flip'

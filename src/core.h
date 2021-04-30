@@ -61,10 +61,10 @@ namespace MARQOV
 		// MC variables
 		int id;
 		int repid;
-		int seed; ///< Doing this correctly opens a whole can of worms... We now dump the RNG state
-		int gli; ///< The unknown gameloop integer
-		int nsteps; ///< The number of elementary Monte Carlo steps
-		int warmupsteps; ///< The number of steps to do for warmups
+		int seed; ///< Doing this correctly opens a whole can of worms... We now dump the RNG state.
+		int gli; ///< The unknown gameloop integer.
+		int nsteps; ///< The number of elementary Monte Carlo steps.
+		int warmupsteps; ///< The number of steps to do for warmups.
 		int gameloopsteps;
 		int ncluster;
 		int nsweeps;
@@ -219,7 +219,7 @@ class Core : public RefType<Grid>
 		    )) RetType;
 		    
 		    static auto getargtuple(H5::Group& h5loc, Tup& t){
-		        return std::tuple_cat( 
+		        return std::tuple_cat(
 		        ObsCacheTupleIter<N-1, Tup>::getargtuple(h5loc, t)
                 , detail::createCArgTuple<N>(h5loc, t));}
 		};
@@ -239,7 +239,7 @@ class Core : public RefType<Grid>
 		{
 		    typedef typename ObsCacheTupleIter<std::tuple_size<Tup>::value-1, Tup>::RetType
 		    RetType;
-		    static auto getargtuple(H5::Group& h5loc, Tup&& t){
+		    static auto getargtuple(H5::Group& h5loc, Tup& t){
 		        return ObsCacheTupleIter<std::tuple_size<Tup>::value - 1, Tup>::getargtuple(h5loc, t);
 		    }
 		};
@@ -256,7 +256,7 @@ class Core : public RefType<Grid>
 	* @param mybeta the temperature that governs the Metropolis dynamics
 	* @param hargs A template parameter pack for the Hamiltonian
 	*/
-	
+
 	template <class ...HArgs>
 	Core(Grid&& lattice, Config mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<Grid>(lattice)),
@@ -269,8 +269,8 @@ class Core : public RefType<Grid>
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
-		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
-		obs(ham.getobs()),
+		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
+		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}()),
 		metro(rngcache)
 		{
@@ -306,8 +306,8 @@ class Core : public RefType<Grid>
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
-		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
-		obs(ham.getobs()),
+		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
+		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}()), 
 		metro(rngcache)
 		{
@@ -770,18 +770,18 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		template <typename DirType>
 		inline int wolffstep(int rsite, const DirType& rdir);
 
-		double beta; ///< The inverse temperature
-		Hamiltonian ham;
-		Config mcfg;
-		int step; ///< the current step of the simulation. Used for HDF5 paths.
-		StateSpace statespace;
-        std::unique_lock<std::mutex> hdf5lock;
-		H5::H5File dump; ///< The handle for the HDF5 file. must be before the obscaches
-		H5::Group obsgroup; ///< The HDF5 Group of all our observables
-		H5::Group stategroup; ///< The HDF5 Group where to dump the statespace
-		typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
-		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;//The HDF5 caches for each observable
-        ObsTs obs; //the actual observables
+		double beta; ///< The inverse temperature.
+		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.
+		Config mcfg; ///< An instance of all our MARQOV related parameters.
+		int step; ///< The current step of the simulation. Used for HDF5 paths.
+		StateSpace statespace; //The statespace. It holds the current configuration space.
+        std::unique_lock<std::mutex> hdf5lock; // The global lock to synchronize access to the HDF5 *library*.
+		H5::H5File dump; ///< The handle for the HDF5 file. Must be before the obscaches.
+		H5::Group obsgroup; ///< The HDF5 Group of all our observables.
+		H5::Group stategroup; ///< The HDF5 Group where to dump the statespace.
+		typedef decltype(std::declval<Hamiltonian>().observables) ObsTs;
+		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;//The HDF5 caches for each observable.
+        ObsTs& obs; //the actual observables
 
 //		typedef std::ranlux48_base RNGType;
 		typedef std::mt19937_64 RNGType;

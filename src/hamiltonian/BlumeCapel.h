@@ -5,32 +5,24 @@
 #include <string>
 #include <functional>
 #include "../hamparts.h"
-
-
-
-
 // ----------------------------------------------------------------------
 
 template <class StateVector>
-class BlumeCapel_interaction : public Interaction<StateVector> 
+class BlumeCapel_interaction
 {
-	public:
-		BlumeCapel_interaction(double J)
-		{
-			this->J = J;
-		}
-		StateVector get (const StateVector& phi) {return phi;};
+    public:
+        const double& J;
+		BlumeCapel_interaction(const double& myJ) : J(myJ) {}
+		StateVector get (const StateVector& phi) {return phi;}
 };
 
 
 template <class StateVector>
-class BlumeCapel_onsite : public OnSite<StateVector, double>
+class BlumeCapel_onsite
 {
-	public:
-		BlumeCapel_onsite(double D)
-		{
-			this->h = D;
-		}
+    public:
+        const double& h;
+		BlumeCapel_onsite(double& D) : h(D) {}
 		double get (const StateVector& phi) {return dot(phi,phi);};
 };
 
@@ -71,9 +63,6 @@ class BlumeCapel_Initializer
 };
 
 
-
-
-
 // ------------------------------ HAMILTONIAN ---------------------------
 
 template <typename SpinType = int>
@@ -87,29 +76,16 @@ class BlumeCapel
 		template <typename RNG>
 		using MetroInitializer = BlumeCapel_Initializer<StateVector, RNG>;
 
-		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta = 1;
-		static constexpr uint Ngamma = 0;
-		
 		// instantiate interaction terms (requires pointers)
-		Interaction<StateVector>* interactions[Nalpha];
-		OnSite<StateVector, double>* onsite[Nbeta];
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
+        std::array<BlumeCapel_interaction<StateVector>*, 1> interactions = {new BlumeCapel_interaction<StateVector>(J)};
+        std::array<BlumeCapel_onsite<StateVector>*, 1> onsite = {new BlumeCapel_onsite<StateVector>(D)};
+        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 	
-		BlumeCapel(double J, double D) : J(J), D(D), name("BlumeCapel")
-		{	
-			interactions[0] = new BlumeCapel_interaction<StateVector>(J); 
-			onsite[0]       = new BlumeCapel_onsite<StateVector>(D);		
-		}
-		
-	
+		BlumeCapel(double J, double D) : J(J), D(D), name("BlumeCapel"), observables(obs_m) {}
+
 		// instantiate and choose observables
 		Magnetization obs_m;
-		auto getobs()
-		{
-			return std::make_tuple(obs_m);
-		}
-
+        std::tuple<Magnetization> observables;
 
 		// state space initializer
 		template <class StateSpace, class Lattice, class RNG>
@@ -121,7 +97,6 @@ class BlumeCapel
 				else statespace[i][0] = -1;
 			}
 		}
-				
 
 
 

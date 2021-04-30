@@ -5,6 +5,7 @@
 #include <string>
 #include <complex>
 #include <functional>
+#include <array>
 #include "../hamparts.h"
 #include "../obsparts.h"
 #include "../metropolis.h"
@@ -29,19 +30,15 @@ class IsingGenericVectorValuedObs
 		IsingGenericVectorValuedObs() : name("dummy"), desc("testing vector-valued observables ...") {}
 };
 
-
-
 // ----------------------------------------------------------------------
 
 template <class StateVector>
-class Ising_interaction : public Interaction<StateVector> 
+class Ising_interaction
 {
 public:
-	Ising_interaction(double J)
-	{
-		this->J = J;
-	}
+	Ising_interaction(const double& myJ) : J(myJ) {}
 	StateVector get (const StateVector& phi) {return phi;};
+    const double& J;
 };
 
 
@@ -75,29 +72,25 @@ class Ising
 		template <typename RNG>
 		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
 
-		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta  = 0;
-		static constexpr uint Ngamma = 0;
-		
+        // instantiate interaction terms (requires pointers)
+        std::array<Ising_interaction<StateVector>*, 1> interactions = {new Ising_interaction<StateVector>(J)};
+        std::array<OnSite<StateVector, int>*, 0> onsite;
+        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
+
+
 		Ising(double J) : J(J), name("Ising"), obs_e(*this), obs_fx(0), obs_fy(1)
-		{
-			interactions[0] = new Ising_interaction<StateVector>(J); 
-		}
+		{}
 		~Ising() {delete interactions[0];}
-		
-		// instantiate interaction terms (requires pointers)
-		Interaction<StateVector>* interactions[Nalpha];
-		OnSite<StateVector, int>* onsite[Nbeta];
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
-	
+
 		// instantiate and choose observables
 		ScalarMagnetization  obs_m;
 		Energy<Ising>		 obs_e;
 		ScalarMagFTComp      obs_fx;
 		ScalarMagFTComp      obs_fy;
 		IsingGenericVectorValuedObs dummy;
+        decltype(std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy)) observables = {std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy)};
 
-		auto getobs()	{return std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy);}
+// 		auto getobs()	{return std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy);}
 
 
 		// initialize state space
