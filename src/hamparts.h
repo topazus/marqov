@@ -16,7 +16,7 @@ class OnSite
 	public: 
 		CouplingType h;
 		virtual CouplingType get(const StateVector& phi) = 0;
-		virtual ~Onsite(){};
+		virtual ~OnSite(){};
 };
 
 
