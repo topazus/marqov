@@ -95,9 +95,9 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		// prepare
 		int L = nL[j];
 		cout << endl << "L = " << L << endl << endl;
-		
+
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-		
+
 		MARQOV::Config mp(outpath);
 		mp.setnsweeps(10);
 		mp.setncluster(int(L/2));
@@ -547,6 +547,9 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 int main()
 {
+    std::cout<<"MARQOV Copyright (C) 2020-2021, The MARQOV Project contributors"<<std::endl;
+    std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;
+    std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;
 
 	// read config files
 	RegistryDB registry("../src/config", "ini");
@@ -564,6 +567,6 @@ int main()
 
 	makeDir(outbasedir);
 	makeDir(logbasedir);
-	
+
 	selectsim(registry, outbasedir, logbasedir);
 }
