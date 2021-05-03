@@ -16,6 +16,7 @@ class OnSite
 	public: 
 		CouplingType h;
 		virtual CouplingType get(const StateVector& phi) = 0;
+		virtual ~OnSite(){};
 };
 
 
@@ -25,7 +26,7 @@ class FlexTerm
 	public:
 		double k;
 		virtual double get(const StateVector& sv, int svpos, StateSpace s) = 0;
-		
+		virtual ~FlexTerm() {};
 		template <class Lattice>
 		double diff (const int rsite,
 					const StateVector& svold,
