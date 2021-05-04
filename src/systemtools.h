@@ -16,18 +16,16 @@
  * this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <limits>
-//#include <exception>
+#include <sys/stat.h>
+#include <string>
+#include <exception>
 
 // make directory
-inline void makeDir(std::string path)
+inline void makeDir(const std::string path)
 {
-	std::string command = "mkdir -p " + path;
-	if (system( command.c_str() ) != 0)
-	{
-		cout << "\nError: Failed to create folder " << path << endl;
-//		throw exception();
-	}
+    int status = mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	if (status != 0)
+        throw std::runtime_error(std::string("[MARQOV] Failed to create folder") + path);
 }
 
 
