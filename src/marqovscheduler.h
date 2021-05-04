@@ -79,6 +79,10 @@ namespace MARQOV
                                       std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
     }
     
+    /**
+     * sims_helper utility class
+     * A utility class to figure out the actual type of the Marqov class 
+     */
     template<class ... Ts> struct sims_helper {};
     
     template <class H,  class L, class HArgstuple, size_t... S>
@@ -89,7 +93,11 @@ namespace MARQOV
                                                std::declval<typename std::tuple_element<S, HArgstuple>::type>()...
         )) MarqovType;
     };
-    
+
+    /**
+     * sims_helper utility class
+     * A utility class to figure out the actual type of the Marqov class 
+     */    
     template <class ... Ts>
     struct sims_helper2 {};
     
@@ -135,6 +143,12 @@ namespace MARQOV
         }
     };
     
+    /**
+     * The Marqov internal scheduler
+     * It encapsulates the creation of simulations, the parallel tempering
+     * and the distribution across nodes/cores
+     * @tparam Sim a fully specified Marqov type
+     */
     template <class Sim>
     class Scheduler
     {
@@ -347,7 +361,11 @@ namespace MARQOV
         void exchange() {}
     };
 
-    /** A helper class to figure out the type of the scheduler
+    /** A helper class to figure out the type of the scheduler.
+     * @tparam Hamiltonian the type of the Hamiltonian.
+     * @tparam Lattice The type of the lattice
+     * @tparam Parameters The type f the parameters. We instantiate Hamiltonian
+     *                    and probably lattice in Marqov, hence the params.
      */
     template <class Hamiltonian, class Lattice, class Parameters>
     struct GetSchedulerType

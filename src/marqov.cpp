@@ -19,7 +19,7 @@
 #include "cachecontainer.h"
 #include <chrono>
 #include <string>
-#include <unistd.h> // provides usleep
+#include <unistd.h> // provides gethostname
 
 //the following macro seems to be necessary for dumping string defines...
 #define XSTR(x) STR(x)
@@ -31,7 +31,7 @@ namespace MARQOV
     {
         h5loc.setComment("Here we have various parameters of the host system.");
         dumpscalartoH5(h5loc, std::string("Code"), std::string("MARQOV"));
-        dumpscalartoH5(h5loc, std::string("Version"), std::string("branch: ") + std::string(XSTR(GIT_BRANCH)) + ", SHA1: " +std::string( XSTR(GIT_SHA1) ));
+        dumpscalartoH5(h5loc, std::string("Version"), std::string("branch: ") + std::string(XSTR(GIT_BRANCH)) + ", SHA1: " + std::string( XSTR(GIT_SHA1) ));
         dumpscalartoH5(h5loc, std::string("Website"), std::string("marqov.physik.uni-wuerzburg.de"));
         dumpscalartoH5(h5loc, std::string("E-Mail"), std::string("marqov@physik.uni-wuerzburg.de"));
         

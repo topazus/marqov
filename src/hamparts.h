@@ -19,6 +19,11 @@
 #ifndef HAMILTONIANPARTS_H
 #define HAMILTONIANPARTS_H
 
+/**
+ * A generic interface for a two-body interaction.
+ * @tparam StateVector the type of the StateVector that the interaction
+ *                     acts upon.
+ */
 template <class StateVector>
 class Interaction
 {
@@ -28,6 +33,12 @@ class Interaction
 		virtual ~Interaction() {};
 };
 
+/**
+ * A generic interface for an site interaction.
+ * @tparam StateVector the type of the StateVector that the interaction
+ *                     acts upon.
+ * @tparam CouplingType
+ */
 template <class StateVector, typename CouplingType>
 class OnSite
 {
@@ -37,7 +48,13 @@ class OnSite
 		virtual ~OnSite(){};
 };
 
-
+/**
+ * A generic interface for a flexible term.
+ * @tparam StateSpace these terms my act upon the full state space, hence we
+ *                    need its type.
+ * @tparam StateVector the type of the StateVector that the interaction
+ *                     acts upon.
+ */
 template <class StateSpace, class StateVector>
 class FlexTerm
 {
@@ -54,6 +71,4 @@ class FlexTerm
 					Lattice& grid) {return 0;}
 
 };
-
-
 #endif

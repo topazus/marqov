@@ -29,8 +29,10 @@ namespace MARQOV
 {
 /**
  * A class to encapsulate the Metropolis update.
- * Using the power of partial template class specializations it is possible to define moves
- * peculiar to your model.
+ * Using the power of partial template class specializations it is possible to
+ * define moves peculiar to your model.
+ * @tparam Hamiltonian The Hamiltonian used to generate a Metropolis move
+ * @tparam Lattice The lattice used for the neighbourhood relations.
  */
 	template <class Hamiltonian, class Lattice>
 	struct Metropolis
@@ -130,7 +132,7 @@ namespace MARQOV
 			svold = svnew;
 			retval = 1;
 		}
-		else if (rng.real() < exp(-beta*dE))
+		else if (rng.real() < std::exp(-beta*dE))
 		{
 			svold = svnew;
 			retval = 1;

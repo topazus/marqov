@@ -12,6 +12,11 @@
 
 namespace ThreadPool
 {
+    /**
+     * Task Queue
+     * A queue of the tasks that are about to be done and then get distributed
+     * to workers.
+     */
     class Queue
     {
     public:
