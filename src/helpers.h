@@ -4,6 +4,7 @@
 #include <iomanip> 
 #include <vector>
 #include <cmath>
+#include <type_traits>
 #include "registry.h"
 
 std::vector<int> arange(int lower, int upper)
@@ -17,7 +18,9 @@ std::vector<int> arange(int lower, int upper)
 }
 
 
-
+/** The triple,
+ * An extension of std::pair
+ */
 template <class T1, class T2, class T3>
 class Triple
 {
@@ -33,9 +36,6 @@ constexpr auto make_triple( T1&& t, T2&& u, T3&& v)
 {
 	return Triple<typename std::decay<T1>::type, typename std::decay<T2>::type, typename std::decay<T3>::type>(t,u,v);
 }
-
-
-
 
 void write_logfile(RegistryDB& reg, std::vector<double> loopvar)
 {

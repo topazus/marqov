@@ -22,6 +22,11 @@
 #include <vector>
 #include <algorithm>
 
+/**
+ * A helper to create the cartesian product of a set of containers.
+ * @tparam T the head type of the template parameter pack
+ * @tparam Ts the remaining parameters.
+ */
 template <typename T, typename ... Ts>
 struct cartprodhelper
 {
@@ -63,7 +68,7 @@ struct cartprodhelper<T>
 };
 
 /** The creates a cartesian product of an arbitrary number of input containers. 
- *  They need to conform to the basic STL Interface. they should expose value_type and provide iterators.
+ *  They need to conform to the basic STL Interface. They should expose value_type and provide iterators.
  *  @return a vector of tuples. Each tuple contains an entry from the cartesian product.
  * FIXME: unclear what happens if one of the parameters themselves is supposed to be a tuple.
  */
