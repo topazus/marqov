@@ -2,8 +2,8 @@
 #define HELPERS_H
 
 #include <iomanip> 
+#include <vector>
 #include "registry.h"
-
 
 std::vector<int> arange(int lower, int upper)
 {
