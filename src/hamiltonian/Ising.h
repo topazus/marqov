@@ -9,6 +9,7 @@
 #include "../hamparts.h"
 #include "../obsparts.h"
 #include "../metropolis.h"
+#include "termcollection.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
@@ -73,7 +74,8 @@ class Ising
 		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
 
         // instantiate interaction terms (requires pointers)
-        std::array<Ising_interaction<StateVector>*, 1> interactions = {new Ising_interaction<StateVector>(J)};
+        std::array<standard_interaction<StateVector>*, 1> interactions = {new standard_interaction<StateVector>(J)};
+//        std::array<Ising_interaction<StateVector>*, 1> interactions = {new Ising_interaction<StateVector>(J)};
         std::array<OnSite<StateVector, int>*, 0> onsite;
         std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
