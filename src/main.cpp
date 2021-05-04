@@ -430,6 +430,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		}
 
 
+		// Replicas
+		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+
+
 		// Physical parameters
 		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "J");
@@ -477,7 +481,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			sched.start();
 		}
 	}
-	else if (ham == "IrregularIsing1")
+	else if (ham == "IsingCC-ref")
 	{
 		// construct irregular lattice and pass it to MARQOV as a reference
 
@@ -504,14 +508,15 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		// partially apply filter
 		auto f = [&ccl](auto p){return defaultfilter(ccl, p);};
 
-		typedef typename decltype(params)::value_type PPType;
+		// typedefs
+		typedef typename decltype(params)::value_type ParameterPairType;
 		typedef Ising<int> Hamiltonian;
 		typedef ConstantCoordinationLattice<Poissonian> Lattice;
-		typename GetSchedulerType<Hamiltonian, Lattice, PPType>::MarqovScheduler sched(1);
-
-		// schedule simulations
+		typename GetSchedulerType<Hamiltonian, Lattice, ParameterPairType>::MarqovScheduler SchedulerType;
+		
+		// init and feed scheduler
+		SchedulerType sched(1);
 		for (auto p: params) sched.createSimfromParameter(p, f);
-//		Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(params, f);
 
 		// run!
 		sched.start();
