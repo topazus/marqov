@@ -20,7 +20,7 @@
 //#include <exception>
 
 // make directory
-void makeDir(std::string path)
+inline void makeDir(std::string path)
 {
 	std::string command = "mkdir -p " + path;
 	if (system( command.c_str() ) != 0)
@@ -34,7 +34,7 @@ void makeDir(std::string path)
 // cross-platform code to get current date/time
 // format is YYYY-MM-DD HH:mm:ss
 
-const std::string currentDateTime() 
+inline const std::string currentDateTime() 
 {
 	time_t     now = time(0);
 	tm  tstruct;
