@@ -351,31 +351,46 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	else if (startswith(ham, "Gaussian-Ising-EdwardsAnderson"))
 	{
-		const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-		const auto dim 	  = registry.Get<int>("mc.ini", ham, "dim" );
-		      auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
-		const auto nL  	  = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
-        int nthreads = 0;
-        try {
-            nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );            
-            }
-        catch (const Registry_Key_not_found_Exception&) {
-            std::cout<<"threads_per_node not set -> automatic"<<std::endl;
-        }
+		// Parameters
+		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
+		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
+		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
+	
+	
+		// Number of threads
+		int nthreads = 0;
+		try 
+		{
+			nthreads = registry.template Get<int>("mc.ini", "General", "threads_per_node" );
+		}
+		catch (const Registry_Key_not_found_Exception&) 
+		{
+			std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+		}
 
+
+		// Replicas
 		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
 
+		// Physical parameters
+		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
+		auto J    = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "J");
 		auto hp = cart_prod(beta, J);
-		write_logfile(registry, beta);
-        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
-        typedef EdwardsAndersonIsing<int> Hamiltonian;
-        typedef RegularRandomBond<GaussianPDF> Lattice;
-        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
-	
-		// lattice size loop
+        
+
+		// Typedefs
+		typedef EdwardsAndersonIsing<int> Hamiltonian;
+		typedef RegularRandomBond<GaussianPDF> Lattice;
+		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTripleType;
+		typedef typename ParameterTripleType::value_type ParameterType;
+		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
+
+		SchedulerType sched(1);
+
+
+		// Lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
 		{
 			// prepare output
@@ -385,10 +400,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			makeDir(outpath);
 	
 			// Monte Carlo parameters
-        	MARQOV::Config mp(outpath);
-        	mp.setnsweeps(50);
+			MARQOV::Config mp(outpath);
+			mp.setnsweeps(50);
 			mp.setncluster(0);
-			mp.setwarmupsteps(100);
+			mp.setwarmupsteps(200);
 			mp.setgameloopsteps(1000);
 
 			// lattice parameters
@@ -400,7 +415,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 			// schedule simulations
 			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter_triple);
-//		 	Loop< EdwardsAndersonIsing<int>, RegularRandomBond<GaussianPDF>>(rparams, defaultfilter_triple);
 		}
 		sched.start(); // run!
 	}
@@ -512,7 +526,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		typedef typename decltype(params)::value_type ParameterPairType;
 		typedef Ising<int> Hamiltonian;
 		typedef ConstantCoordinationLattice<Poissonian> Lattice;
-		typename GetSchedulerType<Hamiltonian, Lattice, ParameterPairType>::MarqovScheduler SchedulerType;
+		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterPairType>::MarqovScheduler SchedulerType;
 		
 		// init and feed scheduler
 		SchedulerType sched(1);
