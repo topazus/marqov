@@ -1,3 +1,21 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef GRID_H
 #define GRID_H
 
@@ -9,9 +27,9 @@
 #include "regular_lattice.h"
 #include "constantcoordination2D.h"
 
-
-// ---------------- Disordered Grid Base Class ----------------
-
+/**
+ * Disordered Grid Base Class
+ */
 class DisorderType
 {
 	protected:
@@ -33,8 +51,12 @@ class DisorderType
 		inline std::vector<int> termselector(int sublattice){return {-1};}
 };
 
-// ----------------- Constant Coordination --------------------
-
+/**
+ * Constant Coordination Lattice
+ * A class that can create a Constant Coordination lattice on a user defined
+ * point cloud.
+ * @tparam PointCloud The Point Cloud that is used by the user.
+ */
 template <class PointCloud>
 class ConstantCoordinationLattice
 {
@@ -65,11 +87,11 @@ class ConstantCoordinationLattice
 		std::size_t size() const {return npoints;}
 };
 
-
-
-
-// ----------------- Regular Hypercubic --------------------
-
+/**
+ * The Regular Hypercubic lattice class
+ * This class provides routines for encapsulating all neighbour
+ * and coordinate relations for n-dimensional hypercubic lattices.
+ */
 class RegularHypercubic
 {
 	private:
@@ -96,9 +118,9 @@ class RegularHypercubic
 		std::size_t size() const {return npoints;}
 };
 
-
-// ----------------- Simple Bipartite --------------------
-
+/**
+ * Simple Bipartite Lattice
+ */
 class SimpleBipartite
 {
 	private:
@@ -106,7 +128,6 @@ class SimpleBipartite
 
 	public:
 		int len, dim, npoints;
-
 
 		SimpleBipartite(int len, int dim) : len(len), dim(dim), npoints(pow(len,dim)), lattice(len,dim) 
 		{
@@ -147,9 +168,11 @@ class SimpleBipartite
 		std::size_t size() const {return npoints;}
 };
 
-
-// ----------------- "Super Chaos" --------------------
-
+/**
+ * Super Chaos Lattice
+ * @tparam PointCloud the point cloud that we use
+ * @tparam bond_type 
+ */
 template <class PointCloud, typename bond_type>
 class SuperChaos : public DisorderType
 {
@@ -213,12 +236,9 @@ public:
 	}
 };
 
-
-
-
-
-// ----------------- Erdos-Renyj Graph --------------------
-
+/**
+ * Erdos-Renyj Graph
+ */
 class ErdosRenyi : public DisorderType
 {
 	private:
@@ -248,12 +268,9 @@ class ErdosRenyi : public DisorderType
 		}
 };
 
-
-
-
-// ----------------- Random Bond Disorder --------------------
-
-
+/**
+ * A helper class for getting random numbers from a gaussian.
+ */
 class GaussianPDF
 {
 	private:
@@ -267,6 +284,9 @@ class GaussianPDF
 		double draw() {return(d(gen));}
 };
 
+/**
+ * A helper class for getting random numbers from a bimodal distribution.
+ */
 class BimodalPDF
 {
 	private:
@@ -279,7 +299,10 @@ class BimodalPDF
 		int draw() {return(d(gen)-1);}
 };
 
-
+/**
+ * A lattice with bond disorder
+ * @tparam PDFType The type of disorder distribution to use.
+ */
 template <class PDFType>
 class RegularRandomBond :  public DisorderType
 {
