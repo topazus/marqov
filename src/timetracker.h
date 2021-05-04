@@ -20,6 +20,7 @@
 #define TIMETRACKER_H
 
 #include <chrono>
+#include <vector>
 #include <utility>
 #include <unordered_map>
 #include <exception>
@@ -33,19 +34,23 @@ typedef std::chrono::microseconds musec;
 typedef musec timeformat; // internal time resolution
 typedef msec printformat; // time format used for output
 
+/** 
+ * The marqovclock
+ */
 class marqovclock
 {
 	public: 
 		std::string name;
 		std::chrono::system_clock::time_point starttime;
 		std::chrono::system_clock::time_point inittime;
-		decltype(std::chrono::duration_cast<timeformat>(Time::now()-Time::now())) dur = timeformat::zero(); 
+        decltype(timeformat::zero()) dur = timeformat::zero();
 		marqovclock(std::string name) : name(name), inittime(Time::now()) {}
 
 };
 
-
-
+/**
+ * The time tracker
+ */
 class timetracker
 {
 	public:

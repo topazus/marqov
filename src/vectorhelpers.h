@@ -22,7 +22,15 @@
 #include <array>
 #include <type_traits>
 
-// Generate random vector on the SymD-dimensional unit sphere
+/**
+ * A helper class to generate a random vector on an SymD-dimensional unit
+ * sphere
+ * @tparam RNG The rng that is used for drawing random numbers
+ * @tparam valuetype The type of the elements of the vector.
+ * @tparam SymD The dimensionality
+ * @tparam Enable A helper to distinguish cardinal types from floating point
+ *                types and choose a different implementation.
+ */
 template <class RNG, typename valuetype, int SymD, typename Enable = void> 
 struct Rnddir_Helper
 {
