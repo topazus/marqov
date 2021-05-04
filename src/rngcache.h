@@ -30,6 +30,10 @@ SOFTWARE.
 #include <stdexcept>
 #include <random>
 
+/**
+ * A helper to map the C++ RNG classes to portable names
+ * @tparam T the used RNG.
+ */
 template <typename T>
 struct RNGName;
 
@@ -74,6 +78,14 @@ struct RNGName<std::minstd_rand0>
     std::string name;
     RNGName() : name("minstd_rand0") {}
 };
+
+/**
+ * A Cache for generated Random values.
+ * This implements a cache for random values.
+ * If the cache is empty we refill it with new random values from a user
+ * defined RNG.
+ * @tparam RNG The RNG that the user wishes to use.
+ */
 
 template <class RNG>
 class RNGCache
@@ -124,7 +136,7 @@ public:
     {
         return min + (max-min)*(double(integer())/double(RNG::max()));
     }
-    /** The maximum integer that we support
+    /** The maximum integer that we support.
      */
     static constexpr auto max() {return RNG::max();}
     /** Fill the cache. Can also be used to flush the cache,
