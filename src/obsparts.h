@@ -23,9 +23,10 @@
 #include <string>
 #include <vector>
 
-
-// Scalar Magnetization Observable
-// considers only the first component of the state vector
+/**
+ * Scalar Magnetization Observable
+ * Considers only the first component of the state vector.
+ */
 class ScalarMagnetization
 {
 	public:
@@ -44,8 +45,10 @@ class ScalarMagnetization
 		}
 };
 
-// Magnetization
-// Euclidean norm of the sum of state vectors
+/**
+ * Magnetization
+ * Euclidean norm of the sum of state vectors
+ */
 class Magnetization
 {
 	public:
@@ -76,8 +79,10 @@ class Magnetization
 		}
 };
 
-// Vector Magnetization
-// sum of every component of the state vectors
+/**
+ * Vector Magnetization.
+ * Sum of every component of the state vectors
+ */
 class VectorMagnetization
 {
 	public:
@@ -104,8 +109,10 @@ class VectorMagnetization
 		}
 };
 
-// Scalar Magnetization Fourier Component
-// considers only the first component of the state vector
+/**
+ * Scalar Magnetization Fourier Component.
+ * Considers only the first component of the state vector.
+ */
 class ScalarMagFTComp
 {
 	public:
@@ -130,13 +137,12 @@ class ScalarMagFTComp
 
 			return std::pow(std::abs(retval/double(grid.size())), 2);
 		}
-
 };
 
-
-
-
-
+/**
+ * MagFTComp
+ * 
+ */
 class MagFTComp
 {
 	public:
@@ -172,13 +178,10 @@ class MagFTComp
 		}
 };
 
-
-
-
-
-
-
-// Interaction Energy Observable
+/**
+ * Interaction Energy Observable
+ * @tparam Hamiltonian We require the Hamiltonian to be able to calculate energies.
+ */
 template <class Hamiltonian>
 class InteractionEnergy
 {
@@ -224,9 +227,10 @@ class InteractionEnergy
 		}
 };
 
-
-
-// Self Energy Observable
+/**
+ * Self Energy Observable
+ * @tparam Hamiltonian We require the Hamiltonian to be able to calculate energies.
+ */
 template <class Hamiltonian>
 class SelfEnergy
 {
@@ -258,8 +262,10 @@ class SelfEnergy
 		}
 };
 
-
-// Flex Energy Observable
+/**
+ * Flex Energy Observable
+ * @tparam Hamiltonian We require the Hamiltonian to be able to calculate energies.
+ */
 template <class Hamiltonian>
 class FlexEnergy
 {
@@ -282,12 +288,10 @@ class FlexEnergy
 		}
 };
 
-
-
-
-
-
-// Full Energy Observable
+/**
+ * Full Energy Observable
+ * @tparam Hamiltonian We require the Hamiltonian to be able to calculate energies.
+ */
 template <class Hamiltonian>
 class Energy
 {
@@ -308,5 +312,4 @@ class Energy
 			return eint.measure(statespace,grid) + eself.measure(statespace,grid) + eflex.measure(statespace,grid);
 		}
 };
-
 #endif
