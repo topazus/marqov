@@ -25,7 +25,7 @@
 // ------- elementary state vector calculus
 
 template <class StateVector>
-StateVector operator + (StateVector lhs,  StateVector rhs)
+inline StateVector operator + (StateVector lhs,  StateVector rhs)
 {
     StateVector res(lhs);
     for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
@@ -34,7 +34,7 @@ StateVector operator + (StateVector lhs,  StateVector rhs)
 }
 
 template <class StateVector>
-StateVector operator - (StateVector lhs,  StateVector rhs)
+inline StateVector operator - (StateVector lhs,  StateVector rhs)
 {
     StateVector res(lhs);
     for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
@@ -81,9 +81,6 @@ inline StateVector mult(const double& a, const StateVector& b)
 	return retval;
 }
 
-
-
-
 inline double dot(const double& a, const double& b)
 {
     return a*b;
@@ -114,8 +111,6 @@ inline void normalize(Container& a)
 
 	for (decltype(a.size()) i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
 }
-
-
 
 template <class StateVector>
 inline void coutsv(StateVector& vec)
