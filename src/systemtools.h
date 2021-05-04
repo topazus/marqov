@@ -27,20 +27,3 @@ inline void makeDir(const std::string path)
 	if (status != 0)
         throw std::runtime_error(std::string("[MARQOV] Failed to create folder") + path);
 }
-
-
-// cross-platform code to get current date/time
-// format is YYYY-MM-DD HH:mm:ss
-
-inline const std::string currentDateTime() 
-{
-	time_t     now = time(0);
-	tm  tstruct;
-	char       buf[80];
-	tstruct = *localtime(&now);
-	strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
-	
-	return buf;
-}
-
-
