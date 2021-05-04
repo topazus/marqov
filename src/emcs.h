@@ -30,7 +30,7 @@ double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 	const int SymD = std::tuple_size<StateVector>::value;
 
 	// cluster updates
-	marqovtime.switch_clock("cluster");
+	mrqvt.switch_clock("cluster");
 	double avgclustersize = 0;
 	for (int j=0; j < mcfg.ncluster; j++)
 	{
@@ -43,7 +43,7 @@ double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 	}
 
 	// Metropolis sweeps
-	marqovtime.switch_clock("local");
+	mrqvt.switch_clock("local");
 	for (int j=0; j<mcfg.nsweeps; j++)
 	{
 		// loop sites

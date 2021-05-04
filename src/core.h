@@ -264,7 +264,7 @@ class Core : public RefType<Grid>
 		typedef int redStateVector; // reduced StateVector (so far needed only for AT model, improve me!!!)
 		typedef StateVector* StateSpace;
 
-		timetracker marqovtime;
+		marqovtime::timetracker mrqvt;
 
 
 		// Local classes. We gain access to all Types of MARQOV::Core       
@@ -341,12 +341,12 @@ class Core : public RefType<Grid>
 		{
 			hdf5lock.unlock();
 
-			marqovtime.add_clock("cluster");
-			marqovtime.add_clock("local");
-			marqovtime.add_clock("measurements");
-			marqovtime.add_clock("other");
-			//marqovtime.status();
-			marqovtime.run("other");
+			mrqvt.add_clock("cluster");
+			mrqvt.add_clock("local");
+			mrqvt.add_clock("measurements");
+			mrqvt.add_clock("other");
+			//mrqvt.status();
+			mrqvt.run("other");
 
 		}
 
@@ -375,12 +375,12 @@ class Core : public RefType<Grid>
 		{
 			hdf5lock.unlock();
 
-			marqovtime.add_clock("cluster");
-			marqovtime.add_clock("local");
-			marqovtime.add_clock("measurements");
-			marqovtime.add_clock("other");
-			//	marqovtime.status();
-			marqovtime.run("other");
+			mrqvt.add_clock("cluster");
+			mrqvt.add_clock("local");
+			mrqvt.add_clock("measurements");
+			mrqvt.add_clock("other");
+			//	mrqvt.status();
+			mrqvt.run("other");
 
 		}
 
@@ -718,13 +718,13 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 			for (int i=0; i < this->mcfg.gameloopsteps/10; ++i)
 			{
 				avgclustersize += elementaryMCstep();
-				 marqovtime.switch_clock("measurements");
+				 mrqvt.switch_clock("measurements");
 				marqov_measure(obs, statespace, this->grid);
 			}
 		}
-		marqovtime.stop();
+		mrqvt.stop();
 
-		marqovtime.status();
+		mrqvt.status();
 		if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.gameloopsteps << std::endl;
 	}
 	
