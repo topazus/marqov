@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005-2020 by Florian Goth   *
+ *   Copyright (C) 2005-2021 by Florian Goth   *
  *   fgoth@physik.uni-wuerzburg.de   *
  *                                                                         *
  *   Permission is hereby granted, free of charge, to any person obtaining *
