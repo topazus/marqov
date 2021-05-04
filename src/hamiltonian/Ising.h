@@ -85,10 +85,10 @@ class Ising
 		~Ising() {delete interactions[0];}
 
 		// instantiate and choose observables
-		ScalarMagnetization  obs_m;
+		Magnetization  obs_m;
 		Energy<Ising>		 obs_e;
-		ScalarMagFTComp      obs_fx;
-		ScalarMagFTComp      obs_fy;
+		MagFTComp      obs_fx;
+		MagFTComp      obs_fy;
 		IsingGenericVectorValuedObs dummy;
         decltype(std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy)) observables = {std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy)};
 
