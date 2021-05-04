@@ -81,31 +81,46 @@ void Loop(const std::vector<Parameters>& params, Callable filter)
 template <class Hamiltonian, class Params, class Callable>
 void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& hp, Callable filter)
 {
-	const auto name      = reg.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-	      auto nreplicas = reg.Get<std::vector<int>>("mc.ini", name, "rep" );
-	const auto nL  	 = reg.Get<std::vector<int>>("mc.ini", name, "L" );
-	const auto dim 	 = reg.Get<int>("mc.ini", name, "dim" );
-    int nthreads = 0;
-    try {
-        nthreads = reg.template Get<int>("mc.ini", "General", "threads_per_node" );
-    }
-    catch (const Registry_Key_not_found_Exception&) {
-        std::cout<<"threads_per_node not set -> automatic"<<std::endl;
-    }
+	
+	// Typedefs
+	typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) ParameterPairType;
+	typedef typename ParameterPairType::value_type ParameterType;
+	typedef typename GetSchedulerType<Hamiltonian, RegularHypercubic, ParameterType>::MarqovScheduler SchedulerType;
 
-	typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType;
 
-	if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-	std::vector<RegularHypercubic> latts;
-	for (std::size_t j=0; j<nL.size(); j++)
+	// Parameters
+	const auto name = reg.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+	auto nreplicas  = reg.Get<std::vector<int>>("mc.ini", name, "rep" );
+	const auto nL   = reg.Get<std::vector<int>>("mc.ini", name, "L" );
+	const auto dim  = reg.Get<int>("mc.ini", name, "dim" );
+
+
+	// Number of threads
+	int nthreads = 0;
+	try 
 	{
-		// prepare. Extend lifetime of lattices.
-		int L = nL[j];
-        latts.emplace_back(L, dim);
-    }
+		nthreads = reg.template Get<int>("mc.ini", "General", "threads_per_node" );
+	}
+	catch (const Registry_Key_not_found_Exception&) 
+	{
+		std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+	}
+
+
+	// Replicas
+	if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+
+
+	// Prepare Geometry
+	std::vector<RegularHypercubic> latts;
+	for (std::size_t j=0; j<nL.size(); j++) latts.emplace_back(nL[j], dim);
     
-    typename GetSchedulerType<Hamiltonian, RegularHypercubic, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
+
+	// Init Scheduler
+	SchedulerType sched(1, nthreads);
     
+
+
 	for (std::size_t j=0; j<nL.size(); j++)
 	{
 		// prepare
@@ -128,8 +143,9 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		// set up and execute        
 		RegularHypercubic& latt = latts[j];
 		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
-		for(auto p : rparams)
-		sched.createSimfromParameter(p, f);
+
+		// feed the scheduler
+		for(auto p: rparams) sched.createSimfromParameter(p, f);
 	}
 	sched.start();
 }
