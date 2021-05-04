@@ -20,7 +20,7 @@
 #define SVMATH_H
 #include <tuple>
 #include <cmath>
-#include <algorithm>
+#include <numeric>
 
 // ------- elementary state vector calculus
 
