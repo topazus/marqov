@@ -1,6 +1,8 @@
 #ifndef POINTS_H
 #define POINTS_H
 
+#include <vector>
+#include <random>
 
 // implement simple class for "site" which only carries the coordinate
 
@@ -18,7 +20,7 @@ class PointCloud
 
 
 
-		const std::vector<double>& crds(const int i) const { return pccrds[i];	}
+		const std::vector<double>& crds(const int i) const { return pccrds[i];}
 
 		double getx(const int i) const { return pccrds[i][0]; }
 		double gety(const int i) const { return pccrds[i][1]; }
@@ -30,21 +32,19 @@ class PointCloud
 // random Poissonian point cloud
 class Poissonian : public PointCloud
 {
-	private:
-		RND rng;
-
 	public:
-		Poissonian(int npoints, int len, int dim) : PointCloud(npoints, len, dim), rng(0,1)
+		Poissonian(int npoints, int len, int dim) : PointCloud(npoints, len, dim)
 		{
-			rng.seed(time(NULL)+std::random_device{}());
-
+            std::random_device rd;  //Will be used to obtain a seed for the random number engine
+            std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+            std::uniform_real_distribution<> dis(0.0, 1.0);
 			for (int i=0; i<npoints; i++)
 			{
 				std::vector<double> site;
 
 				for (int j=0; j<dim; j++)
 				{
-					site.push_back(rng.d());
+					site.push_back(dis(gen));
 				}
 				pccrds.push_back(site);
 			}

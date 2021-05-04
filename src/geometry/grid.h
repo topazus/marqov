@@ -1,6 +1,8 @@
 #ifndef GRID_H
 #define GRID_H
 
+#include <vector>
+#include <random>
 
 #include "points.h"
 #include "distance.h"
@@ -30,8 +32,6 @@ class DisorderType
 		inline int identify(int i) {return 0;};
 		inline std::vector<int> termselector(int sublattice){return {-1};}
 };
-
-
 
 // ----------------- Constant Coordination --------------------
 
@@ -155,28 +155,25 @@ class SuperChaos : public DisorderType
 {
 private:
 	int symD;
-	RND rng;
-
 public:
 	std::vector<std::vector<std::vector<bond_type>>> bonds;
 
-	SuperChaos(const PointCloud& cloud) : DisorderType(cloud.size()), rng(0,1)
+	SuperChaos(const PointCloud& cloud) : DisorderType(cloud.size())
 	{
 		// prepare neighbour array
 		const int npoints = cloud.size;
 		this->neighbours.resize(npoints);
 		this->bonds.resize(npoints);
-
-		// prepare random number generator
-		rng.seed(time(NULL)+std::random_device{}());	
-		rng.set_integer_range(npoints);
-
+        std::random_device rd;  //Will be used to obtain a seed for the random number engine
+        std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+        std::uniform_real_distribution<> disreal(0.0, 1.0);
+        std::uniform_int_distribution<> disint(0, npoints-1);
 
 		// draw bonds
 		for (int i=0; i<2*npoints; i++) // make me variable
 		{
-			const int j = rng.i();
-			const int k = rng.i();
+			const int j = disint(gen);
+			const int k = disint(gen);
 
 			auto jcoordinates = cloud.crds(j);
 			auto kcoordinates = cloud.crds(k);
@@ -200,7 +197,7 @@ public:
 				bond_type subtemp;
 				for (int n=0; n<sizeof(bond_type); n++)
 				{
-					bond_type[n] = rng.d();
+					bond_type[n] =disreal(gen);
 				}
 				temp.push_back(subtemp);
 			}
@@ -226,16 +223,14 @@ class ErdosRenyi : public DisorderType
 {
 	private:
 		int p;
-		RND rng;
-	
 	public:
-		ErdosRenyi(int npoints, double p) : DisorderType(npoints), p(p), rng(0,1)
+		ErdosRenyi(int npoints, double p) : DisorderType(npoints), p(p)
 		{
+            std::random_device rd;  //Will be used to obtain a seed for the random number engine
+            std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+            std::uniform_real_distribution<> dis(0.0, 1.0);
 			// prepare neighbour array
 			this->neighbours.resize(npoints);
-	
-			// seed random number generator
-			rng.seed(time(NULL)+std::random_device{}());	
 	
 			// the actual implementation
 			// of the Erdos-Renyj Graph
@@ -243,7 +238,7 @@ class ErdosRenyi : public DisorderType
 			{
 				for (int j=i+1; j<npoints; j++)
 				{
-					if (rng.d() < p)
+					if (dis(gen) < p)
 					{
 						this->neighbours[i].push_back(j);
 						this->neighbours[j].push_back(i);
