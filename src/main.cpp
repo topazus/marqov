@@ -187,7 +187,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-	if (startswith(ham, "Ising"))
+	if (ham == "Ising")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
@@ -410,33 +410,46 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	else if (ham == "IsingCC")
 	{
-		const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-		const auto dim 	  = registry.Get<int>("mc.ini", ham, "dim" );
-		      auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
-		const auto nL  	  = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
-        int nthreads = 0;
-        try {
-            nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );            
-            }
-        catch (const Registry_Key_not_found_Exception&) {
-            std::cout<<"threads_per_node not set -> automatic"<<std::endl;
-        }
-		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
+		// Parameters
+		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
+		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
+		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
+	
+	
+		// Number of threads
+		int nthreads = 0;
+		try 
+		{
+			nthreads = registry.template Get<int>("mc.ini", "General", "threads_per_node" );
+		}
+		catch (const Registry_Key_not_found_Exception&) 
+		{
+			std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+		}
+
+
+		// Physical parameters
 		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "J");
-
 		auto hp = cart_prod(beta, J);
-		write_logfile(registry, beta);
         
-        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
-        typedef Ising<int> Hamiltonian;
-        typedef ConstantCoordinationLattice<Poissonian> Lattice;
-        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
 
-		// lattice size loop
+		// Typedefs
+		typedef Ising<int> Hamiltonian;
+		typedef ConstantCoordinationLattice<Poissonian> Lattice;
+		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTripleType;
+		typedef typename ParameterTripleType::value_type ParameterType;
+		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
+
+
+		// Lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
 		{
+			// init scheduler
+			SchedulerType sched(1, nthreads);
+
 			// prepare output
 			int L = nL[j];
 			cout << endl << "L = " << L << endl << endl;
@@ -444,8 +457,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			makeDir(outpath);
 	
 			// Monte Carlo parameters
-        	MARQOV::Config mp(outpath);
-        	mp.setnsweeps(5);
+			MARQOV::Config mp(outpath);
+			mp.setnsweeps(5);
 			mp.setncluster(15);
 			mp.setwarmupsteps(500);
 			mp.setgameloopsteps(1500);
@@ -457,12 +470,12 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			auto params  = finalize_parameter_triple(lp, mp, hp);
 			auto rparams = replicator(params, nreplicas[j]);
 
-            for (auto p: rparams)
-                sched.createSimfromParameter(p, defaultfilter_triple);
-			// perform simulations
-		 	// Loop<Ising<int>, ConstantCoordinationLattice<Poissonian>>(rparams, defaultfilter_triple);
+			// feed scheduler
+			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter_triple);
+
+			// run!
+			sched.start();
 		}
-		sched.start();
 	}
 	else if (ham == "IrregularIsing1")
 	{
