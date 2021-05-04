@@ -342,8 +342,8 @@ class Core : public RefType<Grid>
 			hdf5lock.unlock();
 
 			mrqvt.add_clock("cluster");
-			mrqvt.add_clock("local");
-			mrqvt.add_clock("measurements");
+			mrqvt.add_clock("metrop");
+			mrqvt.add_clock("measure");
 			mrqvt.add_clock("other");
 			//mrqvt.status();
 			mrqvt.run("other");
@@ -376,8 +376,8 @@ class Core : public RefType<Grid>
 			hdf5lock.unlock();
 
 			mrqvt.add_clock("cluster");
-			mrqvt.add_clock("local");
-			mrqvt.add_clock("measurements");
+			mrqvt.add_clock("metrop");
+			mrqvt.add_clock("measure");
 			mrqvt.add_clock("other");
 			//	mrqvt.status();
 			mrqvt.run("other");
@@ -724,8 +724,8 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		}
 		mrqvt.stop();
 
-		mrqvt.status();
-		if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.gameloopsteps << std::endl;
+		if (this->mcfg.id == 0) std::cout << "|\n\n" << "Average cluster size:" << endl << "  "  << avgclustersize/this->mcfg.gameloopsteps << std::endl;
+		if (this->mcfg.id == 0) mrqvt.status();
 	}
 	
 	void wrmploop()

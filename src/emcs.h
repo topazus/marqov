@@ -43,7 +43,7 @@ double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 	}
 
 	// Metropolis sweeps
-	mrqvt.switch_clock("local");
+	mrqvt.switch_clock("metrop");
 	for (int j=0; j<mcfg.nsweeps; j++)
 	{
 		// loop sites

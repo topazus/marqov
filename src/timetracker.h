@@ -1,26 +1,7 @@
-/* This file is part of MARQOV:
- * A modern framework for classical spin models on general topologies
- * Copyright (C) 2020-2021, The MARQOV Project
- *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option)
- * any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along with
- * this program. If not, see <https://www.gnu.org/licenses/>.
- */
-
 #ifndef TIMETRACKER_H
 #define TIMETRACKER_H
 
 #include <chrono>
-#include <vector>
 #include <utility>
 #include <unordered_map>
 #include <exception>
@@ -38,24 +19,20 @@ typedef msec printformat; // time format used for output
 namespace marqovtime
 {
 
-	/** 
-	 * The marqovclock
-	 */
+
 	class marqovclock
 	{
 		public: 
 			std::string name;
 			std::chrono::system_clock::time_point starttime;
 			std::chrono::system_clock::time_point inittime;
-			decltype(timeformat::zero()) dur = timeformat::zero();
+			decltype(std::chrono::duration_cast<timeformat>(Time::now()-Time::now())) dur = timeformat::zero(); 
 			marqovclock(std::string name) : name(name), inittime(Time::now()) {}
 	
 	};
 	
-
-	/**
-	 * The time tracker
-	 */
+	
+	
 	class timetracker
 	{
 		public:
@@ -82,7 +59,8 @@ namespace marqovtime
 				const auto now = Time::now();
 				double sum = 0;
 	
-				cout << endl << endl;
+				std::cout << "Timing: ";
+				cout << endl;
 				for (auto& x: clocks) 
 				{
 					auto dur_print = std::chrono::duration_cast<printformat>(x.dur).count();
@@ -90,24 +68,22 @@ namespace marqovtime
 	
 					if (x.name != active_clock) // list all clocks
 					{
-						std::cout << x.name << ": " << dur_print;
+						std::cout << "  " << x.name << "\t" << dur_print << " msec" << endl;
 					}
 					else
 					{
 						auto diff = std::chrono::duration_cast<printformat>(now-x.starttime).count();
 						sum = sum + diff;
-						std::cout << x.name << ": " << dur_print+diff << "\t (active)";
+						std::cout << x.name << " " << dur_print+diff << "\t (active)";
 					}
-					std::cout << endl;
 				}
 	
 				
 				if (verbose) // print und wallclock
 				{
-					std::cout << "-----" << endl << "sum: " << sum << endl;
 					wallclock.dur = std::chrono::duration_cast<timeformat>(now-wallclock.inittime);
 					auto dur_print = std::chrono::duration_cast<printformat>(wallclock.dur).count();
-					std::cout << "wallclock: " << dur_print << endl;
+					std::cout << "  wallclock     " << dur_print << " msec" << endl;
 				}
 				cout << endl << endl;
 			}
@@ -154,5 +130,4 @@ namespace marqovtime
 	};
 
 }
-
 #endif
