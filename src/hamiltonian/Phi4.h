@@ -124,8 +124,7 @@ class Phi4
 		MagFTComp obs_fx;
 		MagFTComp obs_fy;
 		MagFTComp obs_fz;
-
-		auto getobs() { return std::make_tuple(obs_m, obs_fx, obs_fy, obs_fz);}
+        decltype(std::make_tuple(obs_m, obs_fx, obs_fy, obs_fz)) observables = {std::make_tuple(obs_m, obs_fx, obs_fy, obs_fz)};
 
 
 

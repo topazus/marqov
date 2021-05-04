@@ -90,8 +90,9 @@ class Ising
 		ScalarMagFTComp      obs_fx;
 		ScalarMagFTComp      obs_fy;
 		IsingGenericVectorValuedObs dummy;
+        decltype(std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy)) observables = {std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy)};
 
-		auto getobs()	{return std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy);}
+// 		auto getobs()	{return std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy);}
 
 
 		// initialize state space

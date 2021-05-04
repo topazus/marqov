@@ -1,9 +1,32 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef CARTPROD_H
 #define CARTPROD_H
 #include <tuple>
 #include <vector>
 #include <algorithm>
 
+/**
+ * A helper to create the cartesian product of a set of containers.
+ * @tparam T the head type of the template parameter pack
+ * @tparam Ts the remaining parameters.
+ */
 template <typename T, typename ... Ts>
 struct cartprodhelper
 {
@@ -45,7 +68,7 @@ struct cartprodhelper<T>
 };
 
 /** The creates a cartesian product of an arbitrary number of input containers. 
- *  They need to conform to the basic STL Interface. they should expose value_type and provide iterators.
+ *  They need to conform to the basic STL Interface. They should expose value_type and provide iterators.
  *  @return a vector of tuples. Each tuple contains an entry from the cartesian product.
  * FIXME: unclear what happens if one of the parameters themselves is supposed to be a tuple.
  */

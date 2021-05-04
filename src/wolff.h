@@ -1,9 +1,36 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef WOLFF_H
 #define WOLFF_H
+#include <vector>
+#include <cmath>
 // todo: what about the alpha-loop? currently alpha=0 hard-coded
 
 namespace MARQOV
 {
+    /**
+     * This class serves as an entry poi8nt for easily defining your own
+     * specializations of the Wolff Algorithm of your Hamiltonians.
+     * To that end it has the two prototypical template parameters:
+     * @tparam Hamiltonian The Hamiltonian that the Wolff algo will use.
+     * @tparam Lattice The Lattice, that the Wolff algo should use.
+     */
     template <class Hamiltonian, class Lattice>
     struct Wolff
     {

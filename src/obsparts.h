@@ -1,3 +1,21 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef OBSPARTS_H
 #define OBSPARTS_H
 
@@ -5,9 +23,10 @@
 #include <string>
 #include <vector>
 
-
-// Scalar Magnetization Observable
-// considers only the first component of the state vector
+/**
+ * Scalar Magnetization Observable
+ * Considers only the first component of the state vector.
+ */
 class ScalarMagnetization
 {
 	public:
@@ -26,8 +45,10 @@ class ScalarMagnetization
 		}
 };
 
-// Magnetization
-// Euclidean norm of the sum of state vectors
+/**
+ * Magnetization
+ * Euclidean norm of the sum of state vectors
+ */
 class Magnetization
 {
 	public:
@@ -58,8 +79,10 @@ class Magnetization
 		}
 };
 
-// Vector Magnetization
-// sum of every component of the state vectors
+/**
+ * Vector Magnetization.
+ * Sum of every component of the state vectors
+ */
 class VectorMagnetization
 {
 	public:
@@ -86,8 +109,10 @@ class VectorMagnetization
 		}
 };
 
-// Scalar Magnetization Fourier Component
-// considers only the first component of the state vector
+/**
+ * Scalar Magnetization Fourier Component.
+ * Considers only the first component of the state vector.
+ */
 class ScalarMagFTComp
 {
 	public:
@@ -112,13 +137,12 @@ class ScalarMagFTComp
 
 			return std::pow(std::abs(retval/double(grid.size())), 2);
 		}
-
 };
 
-
-
-
-
+/**
+ * MagFTComp
+ * 
+ */
 class MagFTComp
 {
 	public:
@@ -154,13 +178,10 @@ class MagFTComp
 		}
 };
 
-
-
-
-
-
-
-// Interaction Energy Observable
+/**
+ * Interaction Energy Observable
+ * @tparam Hamiltonian We require the Hamiltonian to be able to calculate energies.
+ */
 template <class Hamiltonian>
 class InteractionEnergy
 {
@@ -206,9 +227,10 @@ class InteractionEnergy
 		}
 };
 
-
-
-// Self Energy Observable
+/**
+ * Self Energy Observable
+ * @tparam Hamiltonian We require the Hamiltonian to be able to calculate energies.
+ */
 template <class Hamiltonian>
 class SelfEnergy
 {
@@ -240,8 +262,10 @@ class SelfEnergy
 		}
 };
 
-
-// Flex Energy Observable
+/**
+ * Flex Energy Observable
+ * @tparam Hamiltonian We require the Hamiltonian to be able to calculate energies.
+ */
 template <class Hamiltonian>
 class FlexEnergy
 {
@@ -264,12 +288,10 @@ class FlexEnergy
 		}
 };
 
-
-
-
-
-
-// Full Energy Observable
+/**
+ * Full Energy Observable
+ * @tparam Hamiltonian We require the Hamiltonian to be able to calculate energies.
+ */
 template <class Hamiltonian>
 class Energy
 {
@@ -290,5 +312,4 @@ class Energy
 			return eint.measure(statespace,grid) + eself.measure(statespace,grid) + eflex.measure(statespace,grid);
 		}
 };
-
 #endif

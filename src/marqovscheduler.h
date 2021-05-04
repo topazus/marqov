@@ -3,7 +3,7 @@
 /*
  * MIT License
  * 
- * Copyright (c) 2020 Florian Goth
+ * Copyright (c) 2020-2021 Florian Goth
  * fgoth@physik.uni-wuerzburg.de
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -79,6 +79,10 @@ namespace MARQOV
                                       std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
     }
     
+    /**
+     * sims_helper utility class
+     * A utility class to figure out the actual type of the Marqov class 
+     */
     template<class ... Ts> struct sims_helper {};
     
     template <class H,  class L, class HArgstuple, size_t... S>
@@ -89,7 +93,11 @@ namespace MARQOV
                                                std::declval<typename std::tuple_element<S, HArgstuple>::type>()...
         )) MarqovType;
     };
-    
+
+    /**
+     * sims_helper utility class
+     * A utility class to figure out the actual type of the Marqov class 
+     */    
     template <class ... Ts>
     struct sims_helper2 {};
     
@@ -135,6 +143,12 @@ namespace MARQOV
         }
     };
     
+    /**
+     * The Marqov internal scheduler
+     * It encapsulates the creation of simulations, the parallel tempering
+     * and the distribution across nodes/cores
+     * @tparam Sim a fully specified Marqov type
+     */
     template <class Sim>
     class Scheduler
     {
@@ -216,9 +230,9 @@ namespace MARQOV
             //      taskqueue.enqueue(master);
         }
         void waitforall() {}
-        Scheduler(int maxptsteps) : maxpt(maxptsteps), masterstop(false), masterwork{},
+        Scheduler(int maxptsteps, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
-        taskqueue(std::thread::hardware_concurrency())
+        taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads))
         {}
         ~Scheduler() {
             if (!nowork() && !masterstop && (taskqueue.tasks_enqueued() > 0) )
@@ -243,7 +257,7 @@ namespace MARQOV
         };
         struct GlobalMutexes
         {
-            std::mutex hdf;//lock for the HDF5 I/O since the library for C++ is not thread-safe
+            std::mutex hdf;//lock for the HDF5 I/O since the library for C++ is not thread-safe.
             std::mutex io;// lock for the rest?
         } mutexes;
         auto findpartner(uint id)
@@ -347,7 +361,11 @@ namespace MARQOV
         void exchange() {}
     };
 
-    /** A helper class to figure out the type of the scheduler
+    /** A helper class to figure out the type of the scheduler.
+     * @tparam Hamiltonian the type of the Hamiltonian.
+     * @tparam Lattice The type of the lattice
+     * @tparam Parameters The type f the parameters. We instantiate Hamiltonian
+     *                    and probably lattice in Marqov, hence the params.
      */
     template <class Hamiltonian, class Lattice, class Parameters>
     struct GetSchedulerType

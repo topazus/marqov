@@ -1,3 +1,21 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef CORE_H
 #define CORE_H
 
@@ -21,12 +39,16 @@
 
 namespace MARQOV
 {
+    /** Marqov Config
+     * We have a global marqov object that collects parameters that are special
+     * for MARQOV. Hamiltonian and lattice parameters are elsewher.
+     */
 	struct Config
 	{
 		/**
-		* The standard constructor. It requires an outpath, the rest of the positional parameters are optional.
+		* The standard constructor. It requires an outpath, the rest of the
+        * positional parameters are optional.
 		*/
-		
 		Config(	std::string op, 
 					int i = 0, 
 					int ri = 0, 
@@ -61,10 +83,10 @@ namespace MARQOV
 		// MC variables
 		int id;
 		int repid;
-		int seed; ///< Doing this correctly opens a whole can of worms... We now dump the RNG state
-		int gli; ///< The unknown gameloop integer
-		int nsteps; ///< The number of elementary Monte Carlo steps
-		int warmupsteps; ///< The number of steps to do for warmups
+		int seed; ///< Doing this correctly opens a whole can of worms... We now dump the RNG state.
+		int gli; ///< The unknown gameloop integer.
+		int nsteps; ///< The number of elementary Monte Carlo steps.
+		int warmupsteps; ///< The number of steps to do for warmups.
 		int gameloopsteps;
 		int ncluster;
 		int nsweeps;
@@ -101,15 +123,28 @@ namespace MARQOV
     */
     void dumpEnvironmenttoHDF5Group(H5::Group& h5loc);
     
+    /**
+     * A generic type sink from C++17.
+     * It consumes a type, and makes it `void`.
+    */
 	template<class> 
-	struct type_sink { typedef void type; }; // consumes a type, and makes it `void`
+	struct type_sink { typedef void type; };
 	
 	template<class T> using type_sink_t = typename type_sink<T>::type;
     
 	namespace detail
 	{
-		template<class> struct type_sink { typedef void type; }; // consumes a type, and makes it `void`
+        /**
+         * A generic type sink from C++17.
+         * It consumes a type, and makes it `void`.
+         */
+		template<class> struct type_sink { typedef void type; };
 		template<class T> using type_sink_t = typename type_sink<T>::type;
+        
+        /**
+         * A helper to figure out whether a type is a lattice:
+         * something has a .nbrs() and a .size() function.
+         */
 		template<class L, class=void, class=void> struct is_Lattice : std::false_type {};
 		
 		template<class Lattice> struct is_Lattice<Lattice,
@@ -117,6 +152,10 @@ namespace MARQOV
 		type_sink_t< decltype( std::declval<Lattice>().size() ) >
 		> : std::true_type {};
 		
+        /**
+         * A base class that gets used if MARQOV::Core gets the lattice by reference
+         * @tparam L the lattice that will be used
+         */
 		template <class L>
 		class Ref
 		{
@@ -126,6 +165,11 @@ namespace MARQOV
 				const L& grid;
 		};
 		
+        /**
+         * A base class that gets used if MARQOV::Core gets the parameters
+         * of the lattice and constructs the lattice by itself.
+         * @tparam L the lattice that will be used
+         */
 		template <class L>
 		class NonRef
 		{
@@ -138,21 +182,34 @@ namespace MARQOV
 				
 				const L grid;
 		};
-		        
-		//A helper to decide whether a Hamiltonian provides an init function
+
+        /**
+         * A helper to decide whether a Hamiltonian provides an init function 
+         * @tparam StateSpace the type of the state space
+         * @tparam H the Hamiltonian type
+         * @tparam L the Lattice type
+         * @tparam R the RNG
+         * @tparam Ts arguments for the Hamiltonian
+         */
 		template<class StateSpace, class H, class L, class R, class=void, class... Ts> struct has_init : std::false_type {};
 		template<class StateSpace, class H, class L, class RNG, class... Ts>
 		struct has_init<StateSpace, H, L, RNG,
 		type_sink_t< decltype( std::declval<H>().template initstatespace<StateSpace, L, RNG, Ts...>(std::declval<StateSpace&>(), std::declval<L&>(), std::declval<RNG&>(), std::declval<Ts>()... ) ) >, Ts... > : std::true_type {};
         
-        //A helper to decide whether a Hamiltonian provides the paramname function
+        /**
+         * A helper to decide whether a Hamiltonian provides the paramname function 
+         * @tparam H The Hamiltonian
+         */
         template<class H, class = void> struct has_paramname : std::false_type {};
         
         template<class H>
 		struct has_paramname<H,
 		type_sink_t<decltype( std::declval<H>().paramname(std::declval<int>()) )> > : std::true_type {};
         
-        //A helper to decide whether an observable provides a description
+        /**
+         * A helper to decide whether an observable provides a description 
+         * @tparam O the observable that we check.
+         */
         template<class O, class = void> struct obs_has_desc : std::false_type {};
         
         template<class O>
@@ -183,8 +240,20 @@ namespace MARQOV
 		return _call(f, obj, t, std::make_index_sequence<size>{});
 	}
 
-// --------------------------- MARQOV::Core CLASS -------------------------------
+// --------------------------- MARQOV::Core class -------------------------------
 
+/**
+ * The Core class.
+ * This class fuses all the parts that the user has specified and calls them to
+ * life if needed. The Hamiltonian and the lattice will be instantiated
+ * and depending on these the respective Monte Carlo moves will be generated.
+ * I/O for the Observables will be generated.
+ * The RNGCache will be initialized.
+ * @tparam Grid the Lattice that we should use
+ * @tparam Hamiltonian The Hamiltonian that we should use.
+ * @tparam RefType used internally to distinguish, whether MARQOV::Core should
+ *                 create the lattice or whether it is user provided.
+ */
 template <class Grid, class Hamiltonian, template<class> class RefType = detail::Ref >
 class Core : public RefType<Grid>
 {
@@ -219,7 +288,7 @@ class Core : public RefType<Grid>
 		    )) RetType;
 		    
 		    static auto getargtuple(H5::Group& h5loc, Tup& t){
-		        return std::tuple_cat( 
+		        return std::tuple_cat(
 		        ObsCacheTupleIter<N-1, Tup>::getargtuple(h5loc, t)
                 , detail::createCArgTuple<N>(h5loc, t));}
 		};
@@ -239,23 +308,20 @@ class Core : public RefType<Grid>
 		{
 		    typedef typename ObsCacheTupleIter<std::tuple_size<Tup>::value-1, Tup>::RetType
 		    RetType;
-		    static auto getargtuple(H5::Group& h5loc, Tup&& t){
+		    static auto getargtuple(H5::Group& h5loc, Tup& t){
 		        return ObsCacheTupleIter<std::tuple_size<Tup>::value - 1, Tup>::getargtuple(h5loc, t);
 		    }
 		};
 
-
-
-	
 	/** ----- The original constructor call -----
 	* First we have the parameters for the MARQOV::Core class, then follows the arbitrary number of
 	* arguments for a particular Hamiltonian.
 	* @param lattice A reference to the instantiated lattice object. You are responsible for managing its lifetime.
-	* @param outfile Where to create the output file
-	* @param mybeta the temperature that governs the Metropolis dynamics
-	* @param args A template parameter pack for the Hamiltonian
+	* @param outfile Where to create the output file.
+	* @param mybeta the temperature that governs the Metropolis dynamics.
+	* @param args A template parameter pack for the Hamiltonian.
 	*/
-	
+
 	template <class ...HArgs>
 	Core(Grid&& lattice, Config mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<Grid>(lattice)),
@@ -268,8 +334,8 @@ class Core : public RefType<Grid>
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
-		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
-		obs(ham.getobs()),
+		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
+		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}()),
 		metro(rngcache)
 		{
@@ -283,8 +349,7 @@ class Core : public RefType<Grid>
 			marqovtime.run("other");
 
 		}
-		
-		
+
 	/** ----- Alternate constructor -----
 	* If you require MARQOV::Core to instantiate and embed the lattice for you.
 	* @param outfile Where to create the output file
@@ -303,8 +368,8 @@ class Core : public RefType<Grid>
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
-		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.getobs())),
-		obs(ham.getobs()),
+		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
+		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}()), 
 		metro(rngcache)
 		{
@@ -638,8 +703,6 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
         hdf5lock.unlock();
 	}
 
-
-
 	// ------------------ update --------------------
 
 	double elementaryMCstep();
@@ -675,10 +738,8 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		}
 		if (this->mcfg.id == 0) std::cout << "|";
 	}
-	
 
 	// -------------- special purpose functions ----------------
-
 
      void full_output_2D(int dim=0)
      {
@@ -698,12 +759,9 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
                os << endl;
           }
      }
-
-
-
-
-    	void debugloop(const int nsteps, const int ncluster, const int nsweeps)
-	{
+     
+     void debugloop(const int nsteps, const int ncluster, const int nsweeps)
+     {
 		this->mcfg.setnsweeps(nsweeps);
 		this->mcfg.setncluster(ncluster);
 
@@ -715,8 +773,6 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		}
 		std::cout << avgclustersize/nsteps << std::endl;
 	}
-
-
 
 	// use carefully, might generate a lot of terminal output
     	void gameloop_liveview(int nframes = 100, int nsweepsbetweenframe = 5)
@@ -736,8 +792,6 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 			visualize_state_2d();
 		}
 	}
-
-
 
 	void visualize_state_2d(int dim=2, double threshold=0.3)
 	{
@@ -763,9 +817,6 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		for(int i = 0; i < this->grid.len; ++i) std::cout << " ‾";
 		std::cout <<"\n\n";
 	}
-
-
-
 	private:
 		inline int metropolisstep(int rsite);
 
@@ -775,18 +826,18 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		template <typename DirType>
 		inline int wolffstep(int rsite, const DirType& rdir);
 
-		double beta; ///< The inverse temperature
-		Hamiltonian ham;
-		Config mcfg;
-		int step; ///< the current step of the simulation. Used for HDF5 paths.
-		StateSpace statespace;
-        std::unique_lock<std::mutex> hdf5lock;
-		H5::H5File dump; ///< The handle for the HDF5 file. must be before the obscaches
-		H5::Group obsgroup; ///< The HDF5 Group of all our observables
-		H5::Group stategroup; ///< The HDF5 Group where to dump the statespace
-		typedef decltype(std::declval<Hamiltonian>().getobs()) ObsTs;
-		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;//The HDF5 caches for each observable
-        ObsTs obs; //the actual observables
+		double beta; ///< The inverse temperature.
+		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.
+		Config mcfg; ///< An instance of all our MARQOV related parameters.
+		int step; ///< The current step of the simulation. Used for HDF5 paths.
+		StateSpace statespace; //The statespace. It holds the current configuration space.
+        std::unique_lock<std::mutex> hdf5lock; // The global lock to synchronize access to the HDF5 *library*.
+		H5::H5File dump; ///< The handle for the HDF5 file. Must be before the obscaches.
+		H5::Group obsgroup; ///< The HDF5 Group of all our observables.
+		H5::Group stategroup; ///< The HDF5 Group where to dump the statespace.
+		typedef decltype(std::declval<Hamiltonian>().observables) ObsTs;
+		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;//The HDF5 caches for each observable.
+        ObsTs& obs; //the actual observables
 
 //		typedef std::ranlux48_base RNGType;
 		typedef std::mt19937_64 RNGType;
@@ -796,8 +847,6 @@ findstep(hid_t loc_id, const char *name, const H5L_info_t *linfo, void *step)
 		//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
 		typename Hamiltonian::template MetroInitializer<RNGCache<RNGType> > metro;//C++11
 };
-
-
 
 
 template <class H, class L, class... LArgs, class... HArgs, size_t... S>

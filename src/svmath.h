@@ -1,13 +1,31 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef SVMATH_H
 #define SVMATH_H
 #include <tuple>
 #include <cmath>
-#include <algorithm>
+#include <numeric>
 
 // ------- elementary state vector calculus
 
 template <class StateVector>
-StateVector operator + (StateVector lhs,  StateVector rhs)
+inline StateVector operator + (StateVector lhs,  StateVector rhs)
 {
     StateVector res(lhs);
     for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
@@ -16,7 +34,7 @@ StateVector operator + (StateVector lhs,  StateVector rhs)
 }
 
 template <class StateVector>
-StateVector operator - (StateVector lhs,  StateVector rhs)
+inline StateVector operator - (StateVector lhs,  StateVector rhs)
 {
     StateVector res(lhs);
     for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
@@ -63,9 +81,6 @@ inline StateVector mult(const double& a, const StateVector& b)
 	return retval;
 }
 
-
-
-
 inline double dot(const double& a, const double& b)
 {
     return a*b;
@@ -96,8 +111,6 @@ inline void normalize(Container& a)
 
 	for (decltype(a.size()) i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
 }
-
-
 
 template <class StateVector>
 inline void coutsv(StateVector& vec)

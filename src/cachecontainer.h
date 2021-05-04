@@ -3,7 +3,7 @@
 /*
 MIT License
 
-Copyright (c) 2020 Florian Goth
+Copyright (c) 2020-2021 Florian Goth
 fgoth@physik.uni-wuerzburg.de
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -67,6 +67,7 @@ template <> struct H5MapperBase<long unsigned int> {
 };
 
 /** This maps a 1D vector/array like structure to a custom HDF5 datatype.
+ * @tparam T the type whose properties we try to infer.
  */
 template <typename T, class Enable = void>
 class H5Mapper
@@ -99,6 +100,7 @@ inline void dumpscalartoH5(H5::Group& h5loc, std::string key, const T& s)
     H5::DataSet dset(h5loc.createDataSet(key.c_str(), H5Mapper<T>::H5Type(), dspace));
     dset.write(&s, H5Mapper<T>::H5Type());
 }
+
 inline void dumpscalartoH5(H5::Group& h5loc, std::string key, std::string value)
 {
     H5::StrType strdatatype(H5::PredType::C_S1, value.size());
@@ -125,6 +127,8 @@ struct CacheContainerArgs
 *  It is associated with a dataspace in an already open HDF5 file. It performs caching
 *  so that not every new data point leads to I/O. C++ stack unwinding takes care of proper
 *  tidy up.
+* @tparam T the type that we put into the contaienr and into the cache
+* @tparam Cont the Container that we use for intermediate storage.
 */
 template <class T, class Cont = std::vector<T> >
 class CacheContainer

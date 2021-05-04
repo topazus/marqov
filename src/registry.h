@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005-2020 by Florian Goth   *
+ *   Copyright (C) 2005-2021 by Florian Goth   *
  *   fgoth@physik.uni-wuerzburg.de   *
  *                                                                         *
  *   Permission is hereby granted, free of charge, to any person obtaining *
@@ -35,7 +35,7 @@
 #include <sstream>
 
 /**
-The basic exception thrown by the registry. It is derived from the STL logic_error exception.
+* The basic exception thrown by the registry. It is derived from the STL logic_error exception.
 */
 class Registry_Exception : public std::logic_error
 {
@@ -45,7 +45,7 @@ private:
 };
 
 /**
-The exception when the desired key is not found.
+* The exception when the desired key is not found.
 */
 class Registry_Key_not_found_Exception : public Registry_Exception
 {
@@ -54,6 +54,9 @@ public:
 private:
 };
 
+/**
+ * The exception when the requested Data in a block is not present.
+ */
 class Registry_Block_Data_not_found_Exception : public Registry_Key_not_found_Exception
 {
 public:
@@ -63,6 +66,9 @@ public:
 private:
 };
 
+/**
+ * The exception when the requested block is not present.
+ */
 class Registry_Block_not_found_Exception : public Registry_Key_not_found_Exception
 {
 public:
@@ -72,6 +78,9 @@ public:
 private:
 };
 
+/**
+ * The exception when the requested config file could not be found.
+ */
 class Registry_cfgfile_not_found_Exception : public Registry_Key_not_found_Exception
 {
 public:
@@ -82,8 +91,8 @@ private:
 };
 
 /**
-This class contains the contents of a [BLOCK] structure in a config file.
-*/
+ * This class contains the contents of a [BLOCK] structure in a config file.
+ */
 class Block
 {
     //In Config Files those [BLOCK] thingies
@@ -125,8 +134,8 @@ public:
 };
 
 /**
-This class contains the contents of a single config file.
-*/
+ * This class contains the contents of a single config file.
+ */
 class cfile
 {
     std::string filename;
@@ -157,8 +166,9 @@ public:
 };
 
 /**
-This holds together all the contents of the configuration directory and provides access via the Get() template
-*/
+ * This holds together all the contents of the configuration directory and
+ * provides access via the Get() template.
+ */
 class RegistryDB
 {
     std::map<std::string , cfile> Reg;
@@ -198,9 +208,9 @@ public:
 };
 
 /**
-the basic template for doing the conversion between strings and the requested type.
-We use the C++ stringstreams thus we benefit from all overloads that are already provided by C++.
-*/
+ * The basic template for doing the conversion between strings and the requested type.
+ * We use the C++ stringstreams thus we benefit from all overloads that are already provided by C++.
+ */
 template < typename A >
 struct GetTrait
 {
@@ -260,10 +270,7 @@ inline unsigned int Block::size(void) const
     return Block_Data.size();
 }
 
-
-
-
-//two examples on how to extend the parsing capabilities of the registry
+//Two examples on how to extend the parsing capabilities of the registry.
 template <typename T>
 struct GetTrait<std::vector<T> >//helper trait to break up a string at various predefined seperators
 {
@@ -297,7 +304,5 @@ struct GetTrait<std::vector<std::string> >//helper trait to break up a string at
         return retval;
     }
 };
-
-
 
 #endif

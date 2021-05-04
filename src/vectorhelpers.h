@@ -1,10 +1,36 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef VECTORHELPERS_H
 #define VECTORHELPERS_H
 #include <cmath>
 #include <array>
 #include <type_traits>
 
-// Generate random vector on the SymD-dimensional unit sphere
+/**
+ * A helper class to generate a random vector on an SymD-dimensional unit
+ * sphere
+ * @tparam RNG The rng that is used for drawing random numbers
+ * @tparam valuetype The type of the elements of the vector.
+ * @tparam SymD The dimensionality
+ * @tparam Enable A helper to distinguish cardinal types from floating point
+ *                types and choose a different implementation.
+ */
 template <class RNG, typename valuetype, int SymD, typename Enable = void> 
 struct Rnddir_Helper
 {

@@ -89,7 +89,7 @@ class BlumeCapelBipartite
         std::array<BlumeCapelBipartite_onsite<StateVector>*, 2> onsite = {new BlumeCapelBipartite_onsite<StateVector>(DA), new BlumeCapelBipartite_onsite<StateVector>(DB)};
         std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 	
-		BlumeCapelBipartite(double J, double DA, double DB) : J(J), DA(DA), DB(DB), name("BlumeCapelBipartite")
+		BlumeCapelBipartite(double J, double DA, double DB) : J(J), DA(DA), DB(DB), name("BlumeCapelBipartite"), observables(obs_m)
 		{
             interactions.push_back(new BlumeCapelBipartite_interaction<StateVector>(J));
 		}
@@ -98,10 +98,7 @@ class BlumeCapelBipartite
 
 		// instantiate and choose observables
 		Magnetization obs_m;
-		auto getobs()
-		{
-			return std::make_tuple(obs_m);
-		}
+        std::tuple<Magnetization> observables;
 
 		// state space initializer
 		template <class StateSpace, class Lattice, class RNG>

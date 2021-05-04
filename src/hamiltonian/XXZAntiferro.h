@@ -194,9 +194,7 @@ class XXZAntiferro
 		
 		XXZAntiferroStaggeredMagZ  obs_mstagz;
 		XXZAntiferroStaggeredMagXY obs_mstagxy;
-
-		auto getobs() { return std::make_tuple(obs_mstagz, obs_mstagxy); }
-		
+        decltype(std::make_tuple(obs_mstagz, obs_mstagxy)) observables = {std::make_tuple(obs_mstagz, obs_mstagxy)};
 
 		// using the Wolff cluster algorithm requires to implement 
 		// the functions 'wolff_coupling' and 'wolff_flip'
