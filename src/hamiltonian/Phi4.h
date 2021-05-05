@@ -61,10 +61,8 @@ class Onsite_Fourth_Minus_One : public OnSite<StateVector, double>
 		{
 	 		this->h = constant;
 		}
-		double get (const StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);}
+		inline double get (const StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);}
 };
-
-
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
@@ -96,7 +94,7 @@ class Phi4
 		Onsite_Quadratic<StateVector> onsite_standard;
 		Onsite_Fourth_Minus_One<StateVector> onsite_fourth_minus_one;
 
-		std::vector<Standard_Interaction<StateVector>*>        interactions;
+		std::array<Standard_Interaction<StateVector>*, 1>        interactions = {new Standard_Interaction<StateVector>(J)};
 		std::vector<OnSite<StateVector, FPType>*>              onsite; 
 		std::array <FlexTerm<StateVector*,  StateVector>*, 0>  multisite;
 
@@ -111,9 +109,11 @@ class Phi4
 												obs_fy(1), 
 												obs_fz(2)
 		{
-			interactions.push_back(&phi4interaction);
 			onsite.push_back(&onsite_standard);
 			onsite.push_back(&onsite_fourth_minus_one);
+            StateVector dummy;
+            onsite_standard.get(dummy);
+            onsite_fourth_minus_one.get(dummy);
 		}
 
 
