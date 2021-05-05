@@ -63,20 +63,6 @@ using std::ofstream;
 
 using namespace MARQOV;
 
-// ---------------------------------------
-
-template <class Hamiltonian, class Lattice, class Parameters, class Callable>
-void Loop(const std::vector<Parameters>& params, Callable filter)
-{
-	typename GetSchedulerType<Hamiltonian, Lattice, Parameters >::MarqovScheduler sched(1);
-	    
-	for(auto p : params)
-	sched.createSimfromParameter(p, filter);
-	sched.start();
-}
-
-// ---------------------------------------
-
 
 template <class Hamiltonian, class Params, class Callable>
 void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& hp, Callable filter)
@@ -151,6 +137,9 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 }
 
 
+
+
+
 // ---------------------------------------
 
 std::string selectsim_startup(RegistryDB& registry)
@@ -173,8 +162,11 @@ std::string selectsim_startup(RegistryDB& registry)
 	return ham;
 }
 
-// ---------------------------------------
 
+
+
+
+// ---------------------------------------
 
 void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbasedir)
 {
@@ -361,7 +353,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		sched.start(); // run!
 	}
 
-//
+
 
 
 	else if (ham == "IsingCC")
@@ -437,6 +429,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			sched.start();
 		}
 	}
+
+
+
+
 	else if (ham == "IsingCC-ref")
 	{
 		// construct irregular lattice and pass it to MARQOV as a reference
@@ -478,76 +474,93 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		sched.start();
 	}
 
+
+
+
+
 	else if (ham == "BlumeCapelBipartite")
 	{
+		// Parameters
+		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
+		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
+		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
+	
+	
+		// Number of threads
+		int nthreads = 0;
+		try 
+		{
+			nthreads = registry.template Get<int>("mc.ini", "General", "threads_per_node" );
+		}
+		catch (const Registry_Key_not_found_Exception&) 
+		{
+			std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+		}
+
+
+		// Replicas
+		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+
+
 		// import parameters
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
 		auto DA   = registry.Get<std::vector<double> >("mc.ini", ham, "DA");
 		auto DB   = registry.Get<std::vector<double> >("mc.ini", ham, "DB");
-		auto parameters = cart_prod(beta, J, DA, DB);
-        int nthreads = 0;
-        try {
-            nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );            
-            }
-        catch (const Registry_Key_not_found_Exception&) {
-            std::cout<<"threads_per_node not set -> automatic"<<std::endl;
-        }
-
-		const auto name      = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-		      auto nreplicas = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
-		const auto nL 	      = registry.Get<std::vector<int>>("mc.ini", name, "L" );
-		const auto dim 	 = registry.Get<int>("mc.ini", name, "dim" );
-
-		write_logfile(registry, beta);
+		auto hp = cart_prod(beta, J, DA, DB);
 		
+		typedef BlumeCapelBipartite<int> Hamiltonian;
+		typedef SimpleBipartite Lattice;
+
+
+		typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) ParameterPairType;
+		typedef typename ParameterPairType::value_type ParameterType;
+		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
+		
+		
+		// Prepare Geometry
 		std::vector<SimpleBipartite> latts;
-        typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), parameters)) PPType;
-        typename GetSchedulerType<BlumeCapelBipartite<int>, SimpleBipartite, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
-		// set up replicas
-		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-		
-		// lattice size loop
-		for (std::size_t j=0; j<nL.size(); j++)
-		{
-			// prepare. Extend lifetime of lattices.
-			int L = nL[j];
-			latts.emplace_back(L, dim);
-		}
-		
-		// lattice size loop
+		for (std::size_t j=0; j<nL.size(); j++) latts.emplace_back(nL[j], dim);
+	    
+	
+		// Init Scheduler
+		SchedulerType sched(1, nthreads);
+	    
+	
+		// Lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
 		{
 			// prepare
 			int L = nL[j];
-
+			cout << endl << "L = " << L << endl << endl;
+	
 			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+	
 			MARQOV::Config mp(outpath);
-			makeDir(mp.outpath);
-
-			mp.setnsweeps(2);
+			mp.setnsweeps(10);
 			mp.setncluster(int(L/2));
-			mp.setwarmupsteps(500);
-			mp.setgameloopsteps(2500);
-
-			// set up parameter space
-			auto params = finalize_parameter_pair(mp, parameters);
+			mp.setwarmupsteps(200);
+			mp.setgameloopsteps(500);
+			
+			makeDir(mp.outpath);
+			
+			auto params = finalize_parameter_pair(mp, hp);
 			auto rparams = replicator_pair(params, nreplicas[j]);
-
-			// lattice
-//			SimpleBipartite latt(L, dim);
-			SimpleBipartite& latt = latts[j]; 
-
-			// partially apply filter
-	 		auto f = [&latt, &outbasedir, L](auto p){return defaultfilter(latt, p);};
-
-			// schedule
-			for(auto p : rparams) sched.createSimfromParameter(p, f);
-//	 		Loop<BlumeCapelBipartite<int>, SimpleBipartite>(rparams, f);
+			
+			// set up and execute        
+			Lattice& latt = latts[j];
+			auto f = [&latt, &outbasedir, L](auto p){return defaultfilter(latt, p);}; //partially apply filter
+	
+			// feed the scheduler
+			for(auto p: rparams) sched.createSimfromParameter(p, f);
 		}
-		sched.start(); // run!
+		sched.start();
 	}
 }
+
+
+
 
 
 
