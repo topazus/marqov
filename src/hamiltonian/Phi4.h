@@ -96,7 +96,7 @@ class Phi4
 		Onsite_Quadratic<StateVector> onsite_standard;
 		Onsite_Fourth_Minus_One<StateVector> onsite_fourth_minus_one;
 
-		std::vector<Interaction<StateVector>*>                 interactions;
+		std::vector<Standard_Interaction<StateVector>*>        interactions;
 		std::vector<OnSite<StateVector, FPType>*>              onsite; 
 		std::array <FlexTerm<StateVector*,  StateVector>*, 0>  multisite;
 
