@@ -96,7 +96,7 @@ class Ising
 		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
 
         // instantiate interaction terms (requires pointers)
-        std::array<standard_interaction<StateVector>*, 1> interactions = {new standard_interaction<StateVector>(J)};
+        std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
 //        std::array<Ising_interaction<StateVector>*, 1> interactions = {new Ising_interaction<StateVector>(J)};
         std::array<OnSite<StateVector, int>*, 0> onsite;
         std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
@@ -121,7 +121,7 @@ class Ising
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
-			for (int i=0; i<grid.size(); i++)
+			for (decltype(grid.size()) i = 0; i < grid.size(); i++)
 			{
 				if (rng.real() > 0.5) statespace[i][0] = 1;
 				else statespace[i][0] = -1;
@@ -144,8 +144,6 @@ class Ising
 		{
 			sv[0] *= -1;
 		}
-
-
 };
 
 

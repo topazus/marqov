@@ -136,7 +136,7 @@ class InternalEnergy /// not working so far!!!!
 					auto nbnds = bnds.size();
 					sum_ij[i].resize(nbnds);
 
-					for (int j=0; j<nbnds; j++) sum_ij[i][j] = 0;
+					for (decltype(nbnds) j=0; j<nbnds; j++) sum_ij[i][j] = 0;
 				}
 			}
 
@@ -157,7 +157,7 @@ class InternalEnergy /// not working so far!!!!
 			{
 				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
-				for (int j=0; j<nbnds; j++) retval += sum_ij[i][j] * bnds[j];
+				for (decltype(nbnds) j=0; j<nbnds; j++) retval += sum_ij[i][j] * bnds[j];
 			}
 			return - norml * retval;
 		}
@@ -332,7 +332,7 @@ class EdwardsAndersonIsing
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
-			for (int i=0; i<grid.size(); i++)
+			for (decltype(grid.size()) i = 0; i < grid.size(); i++)
 			{
 				if (rng.real() > 0.5) statespace[i][0] = 1;
 				else statespace[i][0] = -1;
