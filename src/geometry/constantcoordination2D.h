@@ -78,10 +78,11 @@ void shuffle_vector(std::vector<int>& vec, int seed=1)
 
 inline void updateneighbours(std::vector<std::vector<int>>& neighbours, const int i, const int j, const int i1, const int j1)
 {
-	for (int q=0; q<neighbours[i].size();  q++) if (neighbours[i][q]  == i1) {neighbours[i][q]  = j; continue;}
-	for (int q=0; q<neighbours[i1].size(); q++) if (neighbours[i1][q] == i)  {neighbours[i1][q] = j1; continue;}
-	for (int q=0; q<neighbours[j].size();  q++) if (neighbours[j][q]  == j1) {neighbours[j][q]  = i; continue;}
-	for (int q=0; q<neighbours[j1].size(); q++) if (neighbours[j1][q] == j)  {neighbours[j1][q] = i1; continue;}
+    typedef typename std::vector<int>::size_type IntVecSizeType;
+	for (IntVecSizeType q=0; q<neighbours[i].size();  q++) if (neighbours[i][q]  == i1) {neighbours[i][q]  = j; continue;}
+	for (IntVecSizeType q=0; q<neighbours[i1].size(); q++) if (neighbours[i1][q] == i)  {neighbours[i1][q] = j1; continue;}
+	for (IntVecSizeType q=0; q<neighbours[j].size();  q++) if (neighbours[j][q]  == j1) {neighbours[j][q]  = i; continue;}
+	for (IntVecSizeType q=0; q<neighbours[j1].size(); q++) if (neighbours[j1][q] == j)  {neighbours[j1][q] = i1; continue;}
 }
 
 
@@ -121,7 +122,7 @@ bool force_fixed_neighbours_naive_box(const int K, std::vector< std::vector<int>
      }
 
 	
-	bool duplicate;
+	bool duplicate = false;//silence a compiler warning. The starting value will not matter.
      for (int i=0; i<size; i++)
 	{
 		std::vector<int> local_copy = neighbours[box[i]];
@@ -131,8 +132,6 @@ bool force_fixed_neighbours_naive_box(const int K, std::vector< std::vector<int>
 		duplicate = !(it == local_copy.end());
 		if (duplicate) break;
 	}
-
-
 
 	if (duplicate)
 	{
@@ -232,6 +231,7 @@ int geometric_simulated_annealing_box(const PointCloud& cloud, std::vector<std::
 
 bool constant_coordination_lattice(const PointCloud& cloud, std::vector<std::vector<int>>& neighbours)
 {
+    typedef typename std::vector<int>::size_type IntVecSizeType;
 	// parameters
 	const int K1 = 2;				// coordination number first step
 	const int K2 = 2;				// coordination number second step
@@ -301,17 +301,17 @@ bool constant_coordination_lattice(const PointCloud& cloud, std::vector<std::vec
             
             	workbox.clear();
 
-			for (int i=0; i<boxes[upleft_idx][upleft_idy].size(); i++)       
+			for (IntVecSizeType i=0; i<boxes[upleft_idx][upleft_idy].size(); i++)       
 				workbox.push_back(boxes[upleft_idx][upleft_idy][i]);
-			for (int i=0; i<boxes[downleft_idx][downleft_idy].size(); i++)   
+			for (IntVecSizeType i=0; i<boxes[downleft_idx][downleft_idy].size(); i++)   
 				workbox.push_back(boxes[downleft_idx][downleft_idy][i]);
-			for (int i=0; i<boxes[upright_idx][upright_idy].size(); i++)     
+			for (IntVecSizeType i=0; i<boxes[upright_idx][upright_idy].size(); i++)     
 				workbox.push_back(boxes[upright_idx][upright_idy][i]);
-			for (int i=0; i<boxes[downright_idx][downright_idy].size(); i++) 
+			for (IntVecSizeType i=0; i<boxes[downright_idx][downright_idy].size(); i++) 
 				workbox.push_back(boxes[downright_idx][downright_idy][i]);
 	
 			shuffle_vector(workbox);
-			bool success = force_fixed_neighbours_naive_box(K1, neighbours, workbox, 0);
+			force_fixed_neighbours_naive_box(K1, neighbours, workbox, 0);
 		}
 	}
 
@@ -341,13 +341,13 @@ bool constant_coordination_lattice(const PointCloud& cloud, std::vector<std::vec
 
             	workbox.clear();
 
-			for (int i=0; i<boxes[upleft_idx][upleft_idy].size(); i++)       
+			for (IntVecSizeType i=0; i<boxes[upleft_idx][upleft_idy].size(); i++)       
 				workbox.push_back(boxes[upleft_idx][upleft_idy][i]);
-			for (int i=0; i<boxes[downleft_idx][downleft_idy].size(); i++)   
+			for (IntVecSizeType i=0; i<boxes[downleft_idx][downleft_idy].size(); i++)   
 				workbox.push_back(boxes[downleft_idx][downleft_idy][i]);
-			for (int i=0; i<boxes[upright_idx][upright_idy].size(); i++)     
+			for (IntVecSizeType i=0; i<boxes[upright_idx][upright_idy].size(); i++)     
 				workbox.push_back(boxes[upright_idx][upright_idy][i]);
-			for (int i=0; i<boxes[downright_idx][downright_idy].size(); i++) 
+			for (IntVecSizeType i=0; i<boxes[downright_idx][downright_idy].size(); i++) 
 				workbox.push_back(boxes[downright_idx][downright_idy][i]);
 
 			bool success = false;
@@ -391,16 +391,16 @@ bool constant_coordination_lattice(const PointCloud& cloud, std::vector<std::vec
 				if (upleft_idy    >= nboxes1D_r) upleft_idy    = 0;
 		
 				workbox.clear();
-				for (int i=0; i<boxes_r[upleft_idx][upleft_idy].size(); i++)       
+				for (IntVecSizeType i=0; i<boxes_r[upleft_idx][upleft_idy].size(); i++)       
 					workbox.push_back(boxes_r[upleft_idx][upleft_idy][i]);
-				for (int i=0; i<boxes_r[downleft_idx][downleft_idy].size(); i++)   
+				for (IntVecSizeType i=0; i<boxes_r[downleft_idx][downleft_idy].size(); i++)   
 					workbox.push_back(boxes_r[downleft_idx][downleft_idy][i]);
-				for (int i=0; i<boxes_r[upright_idx][upright_idy].size(); i++)     
+				for (IntVecSizeType i=0; i<boxes_r[upright_idx][upright_idy].size(); i++)     
 					workbox.push_back(boxes_r[upright_idx][upright_idy][i]);
-				for (int i=0; i<boxes_r[downright_idx][downright_idy].size(); i++) 
+				for (IntVecSizeType i=0; i<boxes_r[downright_idx][downright_idy].size(); i++) 
 					workbox.push_back(boxes_r[downright_idx][downright_idy][i]);
 		
-				int ww = geometric_simulated_annealing_box(cloud, neighbours, workbox, K, Nsteps);
+				geometric_simulated_annealing_box(cloud, neighbours, workbox, K, Nsteps);
 			}
 		}
 	}

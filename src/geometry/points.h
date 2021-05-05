@@ -36,7 +36,7 @@ class PointCloud
 		int dim, npoints, len;
 
 		PointCloud(){}
-		PointCloud(int npoints, int len, int dim) : npoints(npoints), len(len), dim(dim) {}
+		PointCloud(int npoints, int len, int dim) : dim(dim), npoints(npoints), len(len) {}
 
 
 

@@ -101,7 +101,7 @@ class RegularHypercubic
 		int len, dim, npoints;
 
 
-		RegularHypercubic(int len, int dim) : len(len), dim(dim), npoints(pow(len,dim)), lattice(len,dim) {};
+		RegularHypercubic(int len, int dim) : lattice(len, dim), len(len), dim(dim), npoints(pow(len, dim)) {}
 
 		// override nbrs
 		std::vector<int> nbrs(const int alpha, const int i) const
@@ -129,10 +129,10 @@ class SimpleBipartite
 	public:
 		int len, dim, npoints;
 
-		SimpleBipartite(int len, int dim) : len(len), dim(dim), npoints(pow(len,dim)), lattice(len,dim) 
+		SimpleBipartite(int len, int dim) : lattice(len,dim), len(len), dim(dim), npoints(pow(len,dim))
 		{
 			if (len%2 != 0) cout << "ERROR: linear lattice size must be even!" << endl;
-		};
+		}
 
 
 		inline int identify(int i) // is this correct?
@@ -140,7 +140,7 @@ class SimpleBipartite
 			auto index = IndexOf(i, dim, len);
 			
 			int quersumme = 0;
-			for (int j=0; j<index.size(); j++) quersumme += index[j];
+			for (decltype(index.size()) j = 0; j < index.size(); j++) quersumme += index[j];
 
 			if (quersumme%2 == 0) return 0;
 			else return 1;
@@ -316,24 +316,24 @@ class RegularRandomBond :  public DisorderType
 		using bond_type = decltype(PDF.draw());
 		std::vector<std::vector<bond_type>> bonds;
 		
-		RegularRandomBond(int len, int dim) : dim(dim), len(len), lattice(len,dim), npoints(pow(len,dim))
+		RegularRandomBond(int len, int dim) : lattice(len,dim), len(len), dim(dim), npoints(pow(len,dim))
 		{
 			// construct bonds
 			bonds.resize(lattice.size());
-			for (int i=0; i<lattice.size(); i++)
+			for (decltype(lattice.size()) i=0; i<lattice.size(); i++)
 			{
-				for (int j=0; j<lattice[i].size(); j++) // why does lattice[i].size even work?
+				for (decltype(lattice[i].size()) j = 0; j < lattice[i].size(); j++) // why does lattice[i].size even work?
 				{
 					bonds[i].push_back(PDF.draw());
 				}
 			}
 
 			// "symmetrize" bonds
-			for (int i=0; i<lattice.size(); i++)
+			for (decltype(lattice.size()) i = 0; i < lattice.size(); i++)
 			{
 				auto lnbrs = lattice.nbrs(1,i);
 
-				for (int j=0; j<lattice[i].size(); j++)
+				for (decltype(lattice[i].size()) j = 0; j < lattice[i].size(); j++)
 				{
 					// find i in bonds[lnbr] and replace its value by bonds[i][j]
 					auto lnbr = lnbrs[j];

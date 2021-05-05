@@ -31,7 +31,7 @@ SOFTWARE.
 #include <random>
 
 /**
- * A helper to map the C++ RNG classes to portable names
+ * A helper to map the C++ RNG classes to portable names.
  * @tparam T the used RNG.
  */
 template <typename T>
@@ -152,7 +152,6 @@ public:
      */
     std::vector<int64_t> dumpstate()
     {
-        typedef typename RNG::result_type IntType;
         std::stringstream rngstate;
         rngstate<<rng;//peculiar to the C++11 RNGs
         std::vector<int64_t> retval;
@@ -163,7 +162,7 @@ public:
     void setstate(std::vector<int64_t>& vec)
     {
         std::string rngstring;
-        for(int i = 0; i < vec.size(); ++i)
+        for(decltype(vec.size()) i = 0; i < vec.size(); ++i)
         {
            rngstring+=std::to_string(vec[i])+" ";
         }
