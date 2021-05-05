@@ -288,68 +288,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-
-	else if (startswith(ham, "Bimodal-Ising-EdwardsAnderson"))
-	{
-		const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-		const auto dim 	  = registry.Get<int>("mc.ini", ham, "dim" );
-		      auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
-		const auto nL  	  = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
-        int nthreads = 0;
-        try {
-            nthreads = registry.Get<int>("mc.ini", "General", "threads_per_node" );            
-            }
-        catch (const Registry_Key_not_found_Exception&) {
-            std::cout<<"threads_per_node not set -> automatic"<<std::endl;
-        }
-
-		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-
-		auto hp = cart_prod(beta, J);
-		write_logfile(registry, beta);
-
-        typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) PPType;
-        typedef EdwardsAndersonIsing<int> Hamiltonian;
-        typedef RegularRandomBond<BimodalPDF> Lattice;
-        typename GetSchedulerType<Hamiltonian, Lattice, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
-
-		// lattice size loop
-		for (std::size_t j=0; j<nL.size(); j++)
-		{
-			// prepare output
-			int L = nL[j];
-			cout << endl << "L = " << L << endl << endl;
-			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-			makeDir(outpath);
-	
-			// Monte Carlo parameters
-	     	MARQOV::Config mp(outpath);
-	     	mp.setnsweeps(15);
-			mp.setncluster(0);
-			mp.setwarmupsteps(300);
-			mp.setgameloopsteps(300);
-
-			// lattice parameters
-			auto lp = std::make_tuple(L,dim);
-
-			// form parameter triple and replicate
-			auto params  = finalize_parameter_triple(lp, mp, hp);
-			auto rparams = replicator(params, nreplicas[j]);
-			// schedule simulations
-			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter_triple);
-//		 	Loop<Hamiltonian, RegularRandomBond<BimodalPDF> >(rparams, defaultfilter_triple);
-		}
-		// run!
-		sched.start();
-	}
-
-
-
-
-	else if (startswith(ham, "Gaussian-Ising-EdwardsAnderson"))
+	else if (startswith(ham, "EdwardsAnderson-Ising"))
 	{
 		// Parameters
 		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
@@ -382,7 +321,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		// Typedefs
 		typedef EdwardsAndersonIsing<int> Hamiltonian;
+
 		typedef RegularRandomBond<GaussianPDF> Lattice;
+        	//typedef RegularRandomBond<BimodalPDF> Lattice;
+
 		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTripleType;
 		typedef typename ParameterTripleType::value_type ParameterType;
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
@@ -419,7 +361,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		sched.start(); // run!
 	}
 
-
+//
 
 
 	else if (ham == "IsingCC")
