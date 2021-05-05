@@ -95,7 +95,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 
 	typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) PPType;
 
-	if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+	if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 	std::vector<RegularHypercubic> latts;
 	for (std::size_t j=0; j<nL.size(); j++)
 	{
@@ -127,7 +127,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		
 		// set up and execute        
 		RegularHypercubic& latt = latts[j];
-		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
+		auto f = [&filter, &latt](auto p){return filter(latt, p);}; //partially apply filter
 		for(auto p : rparams)
 		sched.createSimfromParameter(p, f);
 	}
@@ -287,7 +287,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
             std::cout<<"threads_per_node not set -> automatic"<<std::endl;
         }
 
-		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
@@ -347,7 +347,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
             std::cout<<"threads_per_node not set -> automatic"<<std::endl;
         }
 
-		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
@@ -405,7 +405,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
         catch (const Registry_Key_not_found_Exception&) {
             std::cout<<"threads_per_node not set -> automatic"<<std::endl;
         }
-		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "J");
@@ -515,7 +515,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
         typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), parameters)) PPType;
         typename GetSchedulerType<BlumeCapelBipartite<int>, SimpleBipartite, typename PPType::value_type>::MarqovScheduler sched(1, nthreads);
 		// set up replicas
-		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 		
 		// lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
@@ -549,7 +549,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			SimpleBipartite& latt = latts[j]; 
 
 			// partially apply filter
-	 		auto f = [&latt, &outbasedir, L](auto p){return defaultfilter(latt, p);};
+	 		auto f = [&latt](auto p){return defaultfilter(latt, p);};
 
 			// schedule
 			for(auto p : rparams) sched.createSimfromParameter(p, f);

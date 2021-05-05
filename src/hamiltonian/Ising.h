@@ -1,6 +1,25 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef ISING_H
 #define ISING_H
 #include <array>
+#include <vector>
 #include <tuple>
 #include <string>
 #include <complex>
@@ -21,7 +40,6 @@ class IsingGenericVectorValuedObs
 		template <class StateSpace, class Grid>
 		std::vector<double> measure(const StateSpace& statespace, const Grid& grid)
 		{
-			const int N = grid.size();
 			std::vector<double> retval;
 
 			for (int i=0; i<5; i++) retval.push_back(42+0.1*i);
@@ -60,8 +78,12 @@ class Ising_Initializer
 		};
 };
 
-// ------------------------------ HAMILTONIAN ---------------------------
-
+/**
+ * Ising Hamiltonian
+ * This defines the Ising Hamiltonian. It only consists of a single part,
+ * namely the interaction.
+ * @tparam SpinType the type in which to store the binary magnetization values.
+ */
 template <typename SpinType = int>
 class Ising
 {
@@ -74,7 +96,7 @@ class Ising
 		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
 
         // instantiate interaction terms (requires pointers)
-        std::array<standard_interaction<StateVector>*, 1> interactions = {new standard_interaction<StateVector>(J)};
+        std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
 //        std::array<Ising_interaction<StateVector>*, 1> interactions = {new Ising_interaction<StateVector>(J)};
         std::array<OnSite<StateVector, int>*, 0> onsite;
         std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
@@ -99,7 +121,7 @@ class Ising
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
-			for (int i=0; i<grid.size(); i++)
+			for (decltype(grid.size()) i = 0; i < grid.size(); i++)
 			{
 				if (rng.real() > 0.5) statespace[i][0] = 1;
 				else statespace[i][0] = -1;
@@ -122,8 +144,6 @@ class Ising
 		{
 			sv[0] *= -1;
 		}
-
-
 };
 
 

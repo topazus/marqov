@@ -42,7 +42,7 @@ class Magnetization
 			const/*expr static*/ int SymD = statespace[0].size();
 			std::vector<double> mag(SymD, 0);
 
-			for (int i=0; i<grid.size(); i++) 
+			for (decltype(grid.size()) i = 0; i < grid.size(); i++) 
 			{
 				for (int j=0; j<SymD; j++)
 				{
@@ -148,7 +148,7 @@ class InteractionEnergy
 			double ene = 0.0;
 
 			// interaction part
-			for (int a=0; a<ham.interactions.size(); a++)
+			for (decltype(ham.interactions.size()) a = 0; a < ham.interactions.size(); a++)
 			{
 
 				double enepart = 0.0;
@@ -197,7 +197,7 @@ class SelfEnergy
 			double ene = 0.0;
 
 			// self energy part
-			for (int b=0; b < ham.onsite.size(); b++)
+			for (decltype(ham.onsite.size()) b=0; b < ham.onsite.size(); b++)
 			{
 				double enepart = 0.0;
 
@@ -228,7 +228,7 @@ class FlexEnergy
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			for (int c = 0; c < ham.multisite.size(); c++)
+			for (decltype(ham.multisite.size()) c = 0; c < ham.multisite.size(); c++)
 			{
 //				enepart = ham.multisite[c]->energy();
 //				ene += ham.onsite[c]->k * enepart;
@@ -251,8 +251,7 @@ class Energy
 		FlexEnergy<Hamiltonian> eflex;
 
 	public:
-		Energy (Hamiltonian& ham) : ham(ham), name("e"), eint(ham), eself(ham), eflex(ham)  {};
-
+		Energy (Hamiltonian& ham) : ham(ham), eint(ham), eself(ham), eflex(ham), name("e") {}
 
 		std::string name;
 		template <class StateSpace, class Grid>

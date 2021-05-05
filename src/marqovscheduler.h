@@ -247,6 +247,10 @@ namespace MARQOV
             //         std::cout<<"Deleting Scheduler"<<std::endl;
         }
     private:
+        /**
+         * Simstate helper class
+         * This class encapsulates the parallel tempering state of a single sim.
+         */
         struct Simstate
         {
             Simstate() : id(-1), npt(-100) {}
@@ -255,14 +259,18 @@ namespace MARQOV
             int id;
             int npt;
         };
+        
+        /**
+         * This class collects mutexes that synchronize I/O.
+         */
         struct GlobalMutexes
         {
-            std::mutex hdf;//lock for the HDF5 I/O since the library for C++ is not thread-safe.
-            std::mutex io;// lock for the rest?
+            std::mutex hdf;///< Lock for the HDF5 I/O since the library for C++ is not thread-safe.
+            std::mutex io;///< Lock for the rest?
         } mutexes;
         auto findpartner(uint id)
         {
-            return std::find_if(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == id;});
+            return std::find_if(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == static_cast<int>(id);});
         }
         
         /** Test whether there is work available.
@@ -339,7 +347,7 @@ namespace MARQOV
         uint findnextnpt(int idx, uint curnpt)
         {
             uint retval = curnpt+1;
-            while ((retval < maxpt) && (ptplan[retval].first != idx) && (ptplan[retval].second != idx))
+            while ((retval < static_cast<uint>(maxpt)) && (ptplan[retval].first != idx) && (ptplan[retval].second != idx))
             {
                 ++retval;
             }
