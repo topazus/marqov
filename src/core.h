@@ -396,8 +396,6 @@ auto setupstatespace(int size)
         auto dataspace = stateds.getSpace();
         //read the data... For now we just hope that everything matches...
         int rank = dataspace.getSimpleExtentNdims();
-        hsize_t dims_out[rank], fdims[rank], maxdims[rank], start[rank];
-        int ndims = dataspace.getSimpleExtentDims( dims_out, NULL);
         
         for(int i = 0; i < rank; ++i)
         {
@@ -425,7 +423,7 @@ auto setupstatespace(int size)
             //read the data... For now we just hope that everything matches...
             int rank = dataspace.getSimpleExtentNdims();
             hsize_t dims_out[rank];
-            int ndims = dataspace.getSimpleExtentDims( dims_out, NULL);
+            dataspace.getSimpleExtentDims( dims_out, NULL);
             
             rngstate.resize(dims_out[0]);
             hsize_t maxdims[rank], start[rank];
