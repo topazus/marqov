@@ -396,7 +396,8 @@ auto setupstatespace(int size)
         auto dataspace = stateds.getSpace();
         //read the data... For now we just hope that everything matches...
         int rank = dataspace.getSimpleExtentNdims();
-        
+        hsize_t fdims[rank], maxdims[rank], start[rank];
+
         for(int i = 0; i < rank; ++i)
         {
             fdims[i] = static_cast<hsize_t>(size);
