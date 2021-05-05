@@ -270,7 +270,7 @@ namespace MARQOV
         } mutexes;
         auto findpartner(uint id)
         {
-            return std::find_if(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == id;});
+            return std::find_if(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == static_cast<int>(id);});
         }
         
         /** Test whether there is work available.
