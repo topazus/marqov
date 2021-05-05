@@ -127,7 +127,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		
 		// set up and execute        
 		RegularHypercubic& latt = latts[j];
-		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
+		auto f = [&filter, &latt](auto p){return filter(latt, p);}; //partially apply filter
 		for(auto p : rparams)
 		sched.createSimfromParameter(p, f);
 	}
@@ -549,7 +549,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			SimpleBipartite& latt = latts[j]; 
 
 			// partially apply filter
-	 		auto f = [&latt, &outbasedir, L](auto p){return defaultfilter(latt, p);};
+	 		auto f = [&latt](auto p){return defaultfilter(latt, p);};
 
 			// schedule
 			for(auto p : rparams) sched.createSimfromParameter(p, f);

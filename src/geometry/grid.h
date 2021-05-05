@@ -258,7 +258,7 @@ class ErdosRenyi : public DisorderType
 			{
 				for (int j=i+1; j<npoints; j++)
 				{
-					if (dis(gen) < p)
+					if (dis(gen) < this->p)
 					{
 						this->neighbours[i].push_back(j);
 						this->neighbours[j].push_back(i);
