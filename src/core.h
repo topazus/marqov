@@ -1029,6 +1029,7 @@ class Core : public RefType<Grid>
          * 
          * This function dispatches the call for a metropolis step 
          * to the Metropolis class.
+         * @see metropolis.h
          * @param rsite the randomly chosen site for the update.
          */
 		inline int metropolisstep(int rsite);
