@@ -111,9 +111,12 @@ class Phi4
 		{
 			onsite.push_back(&onsite_standard);
 			onsite.push_back(&onsite_fourth_minus_one);
+#ifdef __PGI
+            //The following three lines are necessary to make PGI-19.10 happy
             StateVector dummy;
             onsite_standard.get(dummy);
             onsite_fourth_minus_one.get(dummy);
+#endif
 		}
 
 
