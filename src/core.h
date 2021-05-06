@@ -154,18 +154,10 @@ namespace MARQOV
     /**  
      * This function gathers information about the environment and dumps it into 
     * the specified HDF5 Group.
+    * @see marqov.cpp
     * @param h5loc the HDF5 group where we generate all the information.
     */
     void dumpEnvironmenttoHDF5Group(H5::Group& h5loc);
-    
-    /**
-     * A generic type sink from C++17.
-     * It consumes any type, and makes it `void`.
-    */
-	template<class> 
-	struct type_sink { typedef void type; };
-	
-	template<class T> using type_sink_t = typename type_sink<T>::type;
     
 	namespace detail
 	{

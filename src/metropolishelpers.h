@@ -33,7 +33,7 @@ namespace MARQOV
 	struct has_bonds : std::false_type {};
 	
 	template<class Lattice> 
-	struct has_bonds<Lattice, MARQOV::type_sink_t< 
+	struct has_bonds<Lattice, MARQOV::detail::type_sink_t< 
 		decltype( std::declval<Lattice>().bnds(std::declval<int>(), std::declval<int>()) ) 
 		>> : std::true_type {};
     
@@ -209,8 +209,8 @@ namespace MARQOV
     
     template <class Cont>
     struct Is_Container<Cont,
-    MARQOV::type_sink_t<decltype(std::declval<Cont>().size())>,
-    MARQOV::type_sink_t<decltype(std::declval<Cont>().operator[](std::declval<std::size_t>()))>
+    MARQOV::detail::type_sink_t<decltype(std::declval<Cont>().size())>,
+    MARQOV::detail::type_sink_t<decltype(std::declval<Cont>().operator[](std::declval<std::size_t>()))>
     >
     {
         static constexpr bool value = true;
