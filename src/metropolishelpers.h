@@ -24,7 +24,8 @@
 namespace MARQOV
 {
     /**
-     * has_bonds utility function
+     * has_bonds utility function.
+     * 
      * This function decays to a bool_type to denote whether a lattice provides
      * the getbond function.
      * @tparam L The lattice that we are querying.
@@ -81,7 +82,8 @@ namespace MARQOV
 	}
 	
 	/**
-     * Promote_Array utility class
+     * Promote_Array utility class.
+     * 
      * This function takes two types and tries to figure out,which one is wider
      * @tparam A the first type.
      * @tparam B the other type.
@@ -122,9 +124,8 @@ namespace MARQOV
 	template <class Grid>
 	std::vector<int> get_terms(const Grid& grid, int idx) {	return get_terms_helper<Grid>(grid, idx, has_terms<Grid>{}); }
 
-	// A helper to check whether the lattice provides a getnbrs method
-	/**
-     * has_nbrs  utility struct
+	/** has_nbrs utility struct
+     * 
      * This struct checks whether the lattice provides a getnbrs method.
      * @tparam Grid the lattice that we query.
      */
@@ -157,8 +158,8 @@ namespace MARQOV
 		return getnbrs_helper<Grid>(grid, fam, idx, has_nbrs<Grid>{}); 
 	}
 
-    /**
-     * has_flexnbrs utility structs
+    /** has_flexnbrs utility struct.
+     * 
      * This utility class checks whether the lattice provides a getflexnbrs
      * method.
      * @tparam Grid The grid that we query.
@@ -193,7 +194,8 @@ namespace MARQOV
 	}
     
     /**
-     * Is_Container utility struct
+     * Is_Container utility struct.
+     * 
      * Helpers to determine if the interactions are container-like.
      * By that we mean whether it has a .size() method and an array access
      * operator.

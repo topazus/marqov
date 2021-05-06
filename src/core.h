@@ -46,20 +46,21 @@ namespace MARQOV
      */
 	struct Config
 	{
-		/**
-		* The standard constructor. It requires an outpath, the rest of the
-        * positional parameters are optional.
-        * 
-        * @param i id
-        * @param ri replica id
-        * @param s random number seed. Will be ignored if restarted
-        * @param ugli unknown game loop integer
-        * @param nst number of steps
-        * @param ws warmup steps
-        * @param gls gameloop steps
-        * @param nc number of cluster updates
-        * @param nsw number of sweeps
-		*/
+        /** Constructs a MARQOV::Config object.
+         * 
+         * The standard constructor. It requires an outpath, the rest of the
+         * positional parameters are optional.
+         * 
+         * @param i id.
+         * @param ri replica id.
+         * @param s random number seed. Will be ignored if restarted
+         * @param ugli unknown game loop integer
+         * @param nst number of steps
+         * @param ws warmup steps
+         * @param gls gameloop steps
+         * @param nc number of cluster updates
+         * @param nsw number of sweeps
+		 */
 		Config(	std::string op, 
 					int i = 0, 
 					int ri = 0, 
@@ -153,10 +154,10 @@ namespace MARQOV
     
     /**  
      * This function gathers information about the environment and dumps it into 
-    * the specified HDF5 Group.
-    * @see marqov.cpp
-    * @param h5loc the HDF5 group where we generate all the information.
-    */
+     * the specified HDF5 Group.
+     * @see marqov.cpp
+     * @param h5loc the HDF5 group where we generate all the information.
+     */
     void dumpEnvironmenttoHDF5Group(H5::Group& h5loc);
     
 	namespace detail
@@ -192,7 +193,7 @@ namespace MARQOV
 			public:
 				template<class... Args>
 				Ref(const L&& l, Args&& ... args) : grid(l) {}
-				const L& grid;
+				const L& grid; ///< A reference to the external lattice. Note that the name is the same as in NonRef.
 		};
 		
         /** Internal base class that is used if MARQOV creates a lattice.
@@ -211,7 +212,7 @@ namespace MARQOV
 				template <class ...Args, size_t... S>
 				NonRef(std::tuple<Args...>&& args, std::index_sequence<S...>) : grid(std::get<S>(std::forward<std::tuple<Args...>>(args))... ) {}
 				
-				const L grid;
+				const L grid;///< The storage of the Lattice. Note that the name is the same as in Ref.
 		};
 
         /** Helper to decide whether a Hamiltonian provides an init function.
@@ -326,11 +327,11 @@ template <class Grid, class Hamiltonian, template<class> class RefType = detail:
 class Core : public RefType<Grid>
 {
 	public:
-        typedef Hamiltonian HamiltonianType;
-        typedef Grid Lattice;
-		typedef typename Hamiltonian::StateVector StateVector;
+        typedef Hamiltonian HamiltonianType; ///< Via HamiltonianType the used Hamiltonian is accessible.
+        typedef Grid Lattice; ///< The Type of the Lattice
+		typedef typename Hamiltonian::StateVector StateVector; ///< The type of the StateVector as retrieved from the Hamiltonian.
 		typedef int redStateVector; // reduced StateVector (so far needed only for AT model, improve me!!!)
-		typedef StateVector* StateSpace;
+		typedef StateVector* StateSpace;///< the type of the state space.
 
 		timetracker marqovtime; ///< The TimeTracker for tracking times.
 
@@ -343,10 +344,9 @@ class Core : public RefType<Grid>
 		template <typename T>
 		struct ObsRetType
 		{
-			// This determines the value that we will pass to the vector from the return type of the measure function of the observable...
 			typedef decltype(
 				std::declval<T>().template measure<StateSpace, Grid>(
-					std::declval<StateSpace>(), std::declval<Grid>() )) RetType;
+					std::declval<StateSpace>(), std::declval<Grid>() )) RetType;///< This determines the value that we will pass to the vector from the return type of the measure function of the observable...
 		};
 
         //The following three class templates help to generate from a tuple of Observables the tuple of ObscacheContainers.
@@ -380,24 +380,28 @@ class Core : public RefType<Grid>
 		{
 		    typedef std::tuple<CacheContainer<
 		    typename ObsRetType<typename std::tuple_element<0, Tup>::type>::RetType
-		    > > RetType;
-		    
+		    > > RetType;///< At recursion end this is an ObsCache with the type of the observable.
+
 		    static auto getargtuple(H5::Group& h5loc, Tup& t){return detail::createCArgTuple<0>(h5loc, t);}
 		};
 
-        /** Map Tuple of Observables to Tuple of ObservableCaches.
+        /** Map tuple of observables to tuple of ObservableCaches.
          * 
          * This template is the entry point to map a tuple of observables
          * to a tuple of ObservableCaches at Compile Time.
          * This starts the recursion.
-         * @tparam Tup A Tuple of observables.
+         * @tparam Tup A tuple of observables.
          */
 		template <typename Tup>
 		struct ObsTupleToObsCacheTuple
 		{
 		    typedef typename ObsCacheTupleIter<std::tuple_size<Tup>::value-1, Tup>::RetType
 		    RetType;///< this holds the type of the tuple of ObservableCaches.
-		    /**
+		    /** Construct the tuple of Observable Caches.
+             * 
+             * @param h5loc the HDF5 group where we store the observables.
+             * @param t the tuple of observables.
+             * @returns the final tuple of observable caches.
              */
 		    static auto getargtuple(H5::Group& h5loc, Tup& t){
 		        return ObsCacheTupleIter<std::tuple_size<Tup>::value - 1, Tup>::getargtuple(h5loc, t);
@@ -479,6 +483,14 @@ class Core : public RefType<Grid>
 			marqovtime.run("other");
 
 		}
+
+		/** Set up and/or reinitialize state space.
+         * 
+         * This sets up the state space.
+         * If a previous step is present we reread that from the files.
+         * @param size the number of statevectors that we want to have.
+         * @returns A pointer to the state space memory.
+         */
 		auto setupstatespace(int size)
         {
             auto retval = new typename Hamiltonian::StateVector[size];
@@ -609,7 +621,14 @@ class Core : public RefType<Grid>
         {
             return ham.paramname(c);
         }
-
+        
+        /** Write hamiltonian parameters to file.
+         * 
+         * @tparam HArgs a template parameter pack with the variables for the Hamiltonian.
+         * 
+         * @param h5loc the HDF5 group where we store these names.
+         * @param hargs the arguments of the hamiltonian.
+         */
         template <class ...HArgs>
         void dumphamparamstoH5(H5::Group& h5loc, HArgs&&... hargs)
         {
@@ -830,11 +849,26 @@ class Core : public RefType<Grid>
         Core& operator=(const Core& rhs) = delete;
         Core(Core&& other) = default;
         Core& operator=(Core&& other) = default;
-
+        
         template<size_t N = 0, typename... Ts, typename S, typename G>
         inline typename std::enable_if_t<N == sizeof...(Ts), void>
         marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid) {}
 
+        /**
+         * Measure observables
+         * 
+         * This functions measures observables and recurses into the observable tuple.
+         * The measured value gets written to HDF5
+         * 
+         * @tparam N the current index of the observable.
+         * @tparam Ts the types of all observables.
+         * @tparam S an index sequence.
+         * @tparam G the type of the lattice.
+         * 
+         * @param t a tuple with all observables
+         * @param s dummy argument for the index sequence
+         * @param grid the actual grid
+         */
         template<size_t N = 0, typename... Ts, typename S, typename G>
         inline typename std::enable_if_t<N < sizeof...(Ts), void>
         marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid)
@@ -1001,6 +1035,8 @@ class Core : public RefType<Grid>
 
         /** A step of the Wolff Cluster Algorithm.
          * 
+         * The plane of reflection for the cluster update does not be aligned
+         * to a coordinate axis, but can be chosen randomly in space.
          * @param rsite The random site where to start the cluster.
          * @param rdir The randomized plane of reflection for the cluster update.
          */
@@ -1011,25 +1047,39 @@ class Core : public RefType<Grid>
 		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.
 		Config mcfg; ///< An instance of all our MARQOV related parameters.
 		int step; ///< The current step of the simulation. Used for HDF5 paths.
-		StateSpace statespace; //The statespace. It holds the current configuration space.
-        std::unique_lock<std::mutex> hdf5lock; // The global lock to synchronize access to the HDF5 *library*.
+		StateSpace statespace; ///< The statespace. It holds the current configuration space.
+        std::unique_lock<std::mutex> hdf5lock; ///< The global lock to synchronize access to the HDF5 *library*.
 		H5::H5File dump; ///< The handle for the HDF5 file. Must be before the obscaches.
 		H5::Group obsgroup; ///< The HDF5 Group of all our observables.
 		H5::Group stategroup; ///< The HDF5 Group where to dump the statespace.
-		typedef decltype(std::declval<Hamiltonian>().observables) ObsTs;
-		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache;//The HDF5 caches for each observable.
-        ObsTs& obs; //the actual observables
+		typedef decltype(std::declval<Hamiltonian>().observables) ObsTs; ///< This type is mostly a tuple of other observables.
+		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache; ///< The HDF5 caches for each observable.
+        ObsTs& obs; ///<the actual observables defined in the hamiltonians.
 
 //		typedef std::ranlux48_base RNGType;
-		typedef std::mt19937_64 RNGType;
+		typedef std::mt19937_64 RNGType; ///< Here the type of the RNG is set.
 		RNGCache<RNGType> rngcache;///< The caching RNG
 
 
 		//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
-		typename Hamiltonian::template MetroInitializer<RNGCache<RNGType> > metro;//C++11
+		typename Hamiltonian::template MetroInitializer<RNGCache<RNGType> > metro;
 };
 
-
+/** Instantiate Core with our own lattice.
+ * 
+ * Internal function to unpack the template parameter pack
+ * 
+ * @tparam H the type of Hamiltonian
+ * @tparam L the type of the lattice
+ * @tparam LArgs The arguments of the lattice.
+ * @tparam HArgs the arguments of the hamiltonian.
+ * @tparam S a parameter pack of integers for unpacking the hamiltonian parameters
+ * 
+ * @param mc the MARQOVConfig object
+ * @param mtx The mutex that synchronizes access to the HDF5 files.
+ * @param largs The lattice arguments
+ * @param hargs The hamiltonian arguments.
+ */
 template <class H, class L, class... LArgs, class... HArgs, size_t... S>
 auto makeCore3(Config& mc, std::mutex&& mtx, std::tuple<LArgs...>&& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
@@ -1037,6 +1087,20 @@ auto makeCore3(Config& mc, std::mutex&& mtx, std::tuple<LArgs...>&& largs, std::
                                         std::get<S>(std::forward<std::tuple<HArgs...>>(hargs))...);
 }
 
+/** Instantiate Core with our own lattice.
+ * 
+ * In this call we get the arguments for the lattice 
+ * and construct it ourselves.
+ * 
+ * @tparam H the type of Hamiltonian
+ * @tparam L the type of the lattice
+ * @tparam LArgs The arguments of the lattice.
+ * @tparam HArgs the arguments of the hamiltonian.
+ * 
+ * @param mc the MARQOVConfig object
+ * @param mtx The mutex that synchronizes access to the HDF5 files.
+ * @param p A pair of lattice arguments and Hamiltonian arguments.
+ */
 template <class H, class L, class... LArgs, class... HArgs>
 auto makeCore(Config mc, std::mutex&& mtx, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> >& p)
 {
@@ -1045,6 +1109,17 @@ auto makeCore(Config mc, std::mutex&& mtx, std::pair<std::tuple<LArgs...>, std::
     );
 }
 
+/** Instantiate Core with a pre-allocated lattice.
+ * 
+ * @tparam H the type of Hamiltonian
+ * @tparam L the type of the lattice
+ * @tparam Args the other arguments.
+ * 
+ * @param latt the lattice
+ * @param mc the MARQOVConfig object
+ * @param mtx The mutex that synchronizes access to the HDF5 files.
+ * @param args the remaining arguments.
+ */
 template <class H, class L, class ...Args>
 auto makeCore2(std::true_type, L&& latt, Config&& mc, std::mutex&& mtx, Args&& ... args)
 {
@@ -1053,6 +1128,19 @@ auto makeCore2(std::true_type, L&& latt, Config&& mc, std::mutex&& mtx, Args&& .
     return Core<L, H, detail::Ref>(latt, mc, mtx, args...);
 }
 
+/** Instantiate the right core class.
+ * 
+ * This function figures out from the function arguments which is the right .
+ * version of MARQOV::Core to take.
+ * @tparam H the type of Hamiltonian
+ * @tparam L the type of the lattice
+ * @tparam Args the other arguments.
+ * 
+ * @param latt the lattice
+ * @param mc the MARQOVConfig object
+ * @param mtx The mutex that synchronizes access to the HDF5 files.
+ * @param args the remaining arguments.
+ */
 template <class H, class L, class ...Args>
 auto makeCore(L&& latt, Config&& mc, std::mutex&& mtx, Args&&... args)
 {
