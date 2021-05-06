@@ -39,15 +39,26 @@
 
 namespace MARQOV
 {
-    /** Marqov Config
+    /** Marqov Config.
+     * 
      * We have a global marqov object that collects parameters that are special
-     * for MARQOV. Hamiltonian and lattice parameters are elsewher.
+     * for MARQOV. Hamiltonian and lattice parameters are elsewhere.
      */
 	struct Config
 	{
 		/**
 		* The standard constructor. It requires an outpath, the rest of the
         * positional parameters are optional.
+        * 
+        * @param i id
+        * @param ri replica id
+        * @param s random number seed. Will be ignored if restarted
+        * @param ugli unknown game loop integer
+        * @param nst number of steps
+        * @param ws warmup steps
+        * @param gls gameloop steps
+        * @param nc number of cluster updates
+        * @param nsw number of sweeps
 		*/
 		Config(	std::string op, 
 					int i = 0, 
@@ -63,6 +74,7 @@ namespace MARQOV
 		  					  	 repid(ri),
 		  					  	 seed(s), 
 		  					  	 gli(ugli), 
+		  					  	 nsteps(nst),
 		  					  	 warmupsteps(ws), 
 		  					  	 gameloopsteps(gls), 
 		  					  	 ncluster(nc), 
@@ -75,33 +87,55 @@ namespace MARQOV
 		
 		
 		// Output
-		std::string outname; // the output filename; is empty but will be specified by a filter!
-		std::string outpath; // the outpath; full filename will be "outpath/outfile.h5"
-		std::string logpath; // the logpath. For lack of a better place it is currently stored here.
+		std::string outname; ///< the output filename; is empty but will be specified by a filter!
+		std::string outpath; ///< the outpath; full filename will be "outpath/outfile.h5"
+		std::string logpath; ///< the logpath. For lack of a better place it is currently stored here.
 		
 
 		// MC variables
-		int id;
-		int repid;
+		int id; ///< id
+		int repid; ///< replica id
 		int seed; ///< Doing this correctly opens a whole can of worms... We now dump the RNG state.
 		int gli; ///< The unknown gameloop integer.
 		int nsteps; ///< The number of elementary Monte Carlo steps.
 		int warmupsteps; ///< The number of steps to do for warmups.
-		int gameloopsteps;
-		int ncluster;
-		int nsweeps;
-		
-		
-		/** A chain of setters to emulate the named parameter idiom.*/
+		int gameloopsteps; ///< gameloop steps.
+		int ncluster; ///< number of cluster updates.
+		int nsweeps; ///< number of sweeps.
+
 		Config& setid(int i) {id = i; return *this;}
+
+		/** Set the replica id.
+         */
 		Config& setrepid(int ri) {repid = ri; return *this;}
+		/** Set the seed.
+         */
 		Config& setseed(int s) {seed = s; return *this;}
+
 		Config& setgli(int c) {gli = c; return *this;}
+		/** Set the number of steps.
+         */
 		Config& setnsteps(int ns) {nsteps = ns; return *this;}
+
+		/** Set the number of warmup steps.
+         */
 		Config& setwarmupsteps(int w) {warmupsteps = w; return *this;}
+
+		/** Set the number of gameloop steps
+         */
 		Config& setgameloopsteps(int g) {gameloopsteps = g; return *this;}
+		/** Set the number of cluster updates.
+         */
 		Config& setncluster(int nc) {ncluster = nc; return *this;}
+
+		/**Set the number of sweeps.
+         */
 		Config& setnsweeps(int ns) {nsweeps = ns; return *this;}
+
+		/** Dump parameters to HDF5 Group.
+         * 
+         * @param mcg the HDF5 group where to store the parameters.
+         */
 		void dumpparamstoH5(H5::Group& mcg) const
         {
             mcg.setComment("Here we store all parameters that are in the MARQOV::Config object. They are mostly method related numbers and strings");
@@ -117,7 +151,8 @@ namespace MARQOV
         };
 	};
     
-    /** This function gathers information about the environment and dumps it into 
+    /**  
+     * This function gathers information about the environment and dumps it into 
     * the specified HDF5 Group.
     * @param h5loc the HDF5 group where we generate all the information.
     */
@@ -125,7 +160,7 @@ namespace MARQOV
     
     /**
      * A generic type sink from C++17.
-     * It consumes a type, and makes it `void`.
+     * It consumes any type, and makes it `void`.
     */
 	template<class> 
 	struct type_sink { typedef void type; };
