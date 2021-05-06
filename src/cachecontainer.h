@@ -65,6 +65,7 @@ template <> struct H5MapperBase<long unsigned int> {
 };
 
 /** This maps a 1D vector/array like structure to a custom HDF5 datatype.
+ * 
  * @tparam T the type whose properties we try to infer.
  */
 template <typename T, class Enable = void>
@@ -86,6 +87,7 @@ class H5Mapper
 
 /**
  * The partial class specialization of the H5Mapper for scalar data types.
+ * 
  * @see H5Mapper
  */
 template <typename T>
@@ -97,7 +99,8 @@ class H5Mapper<T, typename std::enable_if<std::is_scalar<T>::value>::type> : pub
         static constexpr int rank = 1; //< Scalars are vectors(rank=1) of length 1.
 };
 
-/**
+/** Dumps a Scalar into an HDF5 file/group.
+ * 
  * Since it's often needed for config related things, this is a small helper
  * function to dump a single scalar into its own scalar data space in a given
  * group
@@ -115,7 +118,8 @@ inline void dumpscalartoH5(H5::Group& h5loc, std::string key, const T& val)
     dset.write(&val, H5Mapper<T>::H5Type());
 }
 
-/**
+/** Dumps a string into an HDF5 file.
+ * 
  * Since it's often needed for config related things, this is a small
  * helper that dumps a string into a given group. Strings are interpreted in 
  * HDF5 as arrays of characters.
@@ -133,36 +137,48 @@ inline void dumpscalartoH5(H5::Group& h5loc, std::string key, std::string value)
 }
 
 /** A helper structure to encapsulate the arguments of a single CacheContainer.
-*  The rationale was that it was ambiguous to use tuples of tuples. tuple_cat()
-*  would flatten all tuples.
-* @see CacheContainer::CacheContainer
-*/
+ * 
+ *  The rationale was that it was ambiguous to use tuples of tuples. tuple_cat()
+ *  would flatten all tuples.
+ * @see CacheContainer::CacheContainer
+ */
 struct CacheContainerArgs
 {
-    CacheContainerArgs(H5::Group& file, const std::string& n, std::string d = std::string(), std::size_t cs=4194304) :
-    hfile(file), obsname(n), desc(d), cachesize(cs) {}
+    /** Constructor
+     * 
+     * @param file The group where we write data.
+     * @param oname The name of the observable.
+     * @param d An extended description of the observable.
+     * @param cs The size of the memory that the cache should use.
+     */
+    CacheContainerArgs(H5::Group& file, const std::string& oname, std::string d = std::string(), std::size_t cs=4194304) :
+    hfile(file), obsname(oname), desc(d), cachesize(cs) {}
     H5::Group& hfile; ///< The group where we write data.
     const std::string& obsname; ///< The name of the observable.
     const std::string desc; ///< An extended description of the observable.
     std::size_t cachesize; ///< The size of the memory that the cache should use.
 };
 
-/** The CacheContainer.
-*  It is associated with a dataspace in an already open HDF5 file. It performs caching
-*  so that not every new data point leads to I/O. C++ stack unwinding takes care of proper
-*  tidy up.
-* @tparam T the type that we put into the container and into the cache
-* @tparam Cont the Container that we use for intermediate storage.
-*/
+/** 
+ * The CacheContainer.
+ * 
+ *  It is associated with a dataspace in an already open HDF5 file. It performs caching
+ *  so that not every new data point leads to I/O. C++ stack unwinding takes care of proper
+ *  tidy up.
+ * @tparam T the type that we put into the container and into the cache
+ * @tparam Cont the Container that we use for intermediate storage.
+ */
 template <class T, class Cont = std::vector<T> >
 class CacheContainer
 {
 public:
-    /** @param hfile the HDF5 file that we use to dump the data.
-    *   @param name the name of the data set in HDF5.
-    *   @param desc A description of the data.
-    *   @param cachesize the memory size in bytes to use for caching. Will be rounded to integers of datatypes.
-    */
+    /** construct a cache container.
+     * 
+     * @param hfile the HDF5 file that we use to dump the data.
+     * @param name the name of the data set in HDF5.
+     * @param desc A description of the data.
+     * @param cachesize the memory size in bytes to use for caching. Will be rounded to integers of datatypes.
+     */
     CacheContainer(H5::Group& hfile, const std::string& name, std::string desc = std::string(), std::size_t cachesize=4194304) : cachepos(0)
     {
             cachemaxelems = cachesize/sizeof(T);
@@ -186,19 +202,21 @@ public:
             cont.resize(cachemaxelems);//allocate space for 1024 entries
     }
     /** A helper constructor that forwards to the main constructor.
+     * 
      * @see CacheContainerArgs
-    * @param args the Argument helper structure of type CacheContainerArgs
-    */
+     * @param args the Argument helper structure of type CacheContainerArgs
+     */
     CacheContainer(CacheContainerArgs args) : CacheContainer<T, Cont>(args.hfile, args.obsname, args.desc, args.cachesize) {}
     /** Destructor that takes care of flushing the cache.
-    */
+     */
     ~CacheContainer()
     {
         this->writecache();
     }
-    /** pushes data into the cache
-    * @param data the element that we write
-    */
+    /** Pushes data into the cache.
+     * 
+     * @param data the element that we write
+     */
     void push(const T& data) {
             cont[cachepos] = data;
             cachepos = cachepos + 1;
@@ -209,13 +227,14 @@ public:
             }
     }
     /** Convenience function for pushing data.
-     * @param t the element that we write
-     * @returns the modified cache container.
+     * 
+     * @param t The element that we write.
+     * @returns The modified cache container.
      */
     CacheContainer& operator<<(const T& t) {this->push(t); return *this;}
 private:
         /**
-        * Writes out the entire current cache of the observable
+        * Writes out the entire current cache of the observable.
         */
         void writecache ()
         {
@@ -241,38 +260,42 @@ private:
 
 /** A specialization of the CacheContainer for vector.
  * During the caching operation we copy the data to an intermediate linearized version of the time series.
-*  It is associated with a dataspace in an already open HDF5 file. It performs caching
-*  so that not every new data point leads to I/O. C++ stack unwinding takes care of proper
-*  tidy up.
-* @see CacheContainer
-* @tparam T the type of the elements of the vector that we put into the container and into the cache.
-* @tparam Cont the Container that we use for intermediate storage.
-*/
+ *  It is associated with a dataspace in an already open HDF5 file. It performs caching
+ *  so that not every new data point leads to I/O. C++ stack unwinding takes care of proper
+ *  tidy up.
+ * @see CacheContainer
+ * @tparam T the type of the elements of the vector that we put into the container and into the cache.
+ * @tparam Cont the Container that we use for intermediate storage.
+ */
 template <class T, class Cont>
 class CacheContainer<std::vector<T>, Cont>
 {
 public:
-    /** @param hf the HDF5 File that we use to dump the data
-    *   @param n the name of the data set in HDF5
-    *   @param d A description of the data
-    *   @param cs the memory size in bytes to use for caching. Will be rounded to integers of datatypes
-    */
+    /** Construct a container for C++ vectors.
+     * 
+     * @param hf the HDF5 File that we use to dump the data
+     *  @param n the name of the data set in HDF5
+     *  @param d A description of the data
+     *  @param cs the memory size in bytes to use for caching. Will be rounded to integers of datatypes
+     */
     CacheContainer(H5::Group& hf, const std::string& n, std::string d = std::string(), std::size_t cs=4194304) : hfile(hf), dssize(0), cachepos(0), unused(true), cachesize(cs), name(n), desc(d)
     {}
     /** A helper constructor that forwards to the main constructor.
-    * @param args the Argument helper structure
-    */
+     * 
+     * @param args the Argument helper structure
+     */
     CacheContainer(CacheContainerArgs args) : CacheContainer<std::vector<T>, Cont>(args.hfile, args.obsname, args.desc, args.cachesize) {}
     /** Destructor that takes care of flushing the cache.
-    */
+     */
     ~CacheContainer()
     {
         if(!unused)
             this->writecache();
     }
     /** Pushes data into the cache.
-    * @param data the element that we write
-    */
+     * 
+     * @param data the element that we write
+     */
     void push(const std::vector<T>& data) {
         if (unused) //only at the very first push event do we know the size of the array
         {
@@ -295,67 +318,67 @@ public:
     CacheContainer& operator<<(const std::vector<T>& t) {this->push(t); return *this;}
 private:
     /** Init the HDF data space and our internal data structures.
+     * 
      * @see push
      * @param t the vector that we use for initializing the data space. Note that this defines the elements of the data space!
      */
-        void initdataspace(const std::vector<T>& t)
-        {
-            cachemaxelems = cachesize/sizeof(T);
-            constexpr int rank = H5Mapper<T>::rank;
-            std::array<hsize_t, rank> maxdims, chunk_dims;
-            hsize_t fdims[rank] = {0};
-            maxdims.fill(H5S_UNLIMITED);
+    void initdataspace(const std::vector<T>& t)
+    {
+        cachemaxelems = cachesize/sizeof(T);
+        constexpr int rank = H5Mapper<T>::rank;
+        std::array<hsize_t, rank> maxdims, chunk_dims;
+        hsize_t fdims[rank] = {0};
+        maxdims.fill(H5S_UNLIMITED);
+        
+        H5::DataSpace mspace1(rank, fdims, maxdims.data());
+        H5::DSetCreatPropList cparms;
+        auto fv = H5Mapper<T>::fillval;
 
-            H5::DataSpace mspace1(rank, fdims, maxdims.data());
-            H5::DSetCreatPropList cparms;
-            auto fv = H5Mapper<T>::fillval;
-            
-            chunk_dims.fill(4096*1024/H5Mapper<T>::bytecount/t.size());//4MB chunking
-            cparms.setChunk(rank, chunk_dims.data() );
-            cparms.setDeflate(9);//Best (1-9) compression
-            
-            hsize_t dims[1] = {t.size()};
-            arrtype = H5::ArrayType(H5Mapper<T>::H5Type(), rank, dims);
-            cparms.setFillValue(arrtype, &fv);
+        chunk_dims.fill(4096*1024/H5Mapper<T>::bytecount/t.size());//4MB chunking
+        cparms.setChunk(rank, chunk_dims.data() );
+        cparms.setDeflate(9);//Best (1-9) compression
 
-            dataset = hfile.createDataSet(name, arrtype, mspace1, cparms);
-            if(!desc.empty())
-                dataset.setComment(desc.c_str());
-            dssize = 0;
-            cont.resize(cachemaxelems);//allocate space for 1024 entries
-        }
-        /**
-        * Writes out the entire current cache of the observable
-        */
-        void writecache ()
-        {
-            constexpr int rank = H5Mapper<T>::rank;
-            std::array<hsize_t, rank> dims, start, count;
-            arrtype.getArrayDims(&count[0]);//temporarily abuse the count array
-            uint nelems = cachepos/count[0]; // hardcoded 1D array
-            dims.fill(nelems);
-            H5::DataSpace mspace(rank, dims.data(), NULL);
-            start.fill(dssize);
+        hsize_t dims[1] = {t.size()};
+        arrtype = H5::ArrayType(H5Mapper<T>::H5Type(), rank, dims);
+        cparms.setFillValue(arrtype, &fv);
 
-            dssize += nelems;
-            dataset.extend(&dssize);
-            auto filespace = dataset.getSpace();
-            count.fill(nelems);
-            filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data());
-            dataset.write(cont.data(), arrtype, mspace, filespace);
-        }
+        dataset = hfile.createDataSet(name, arrtype, mspace1, cparms);
+        if(!desc.empty())
+            dataset.setComment(desc.c_str());
+        dssize = 0;
+        cont.resize(cachemaxelems);//allocate space for 1024 entries
+    }
+    /**
+     * Writes out the entire current cache of the observable
+     */
+    void writecache ()
+    {
+        constexpr int rank = H5Mapper<T>::rank;
+        std::array<hsize_t, rank> dims, start, count;
+        arrtype.getArrayDims(&count[0]);//temporarily abuse the count array
+        uint nelems = cachepos/count[0]; // hardcoded 1D array
+        dims.fill(nelems);
+        H5::DataSpace mspace(rank, dims.data(), NULL);
+        start.fill(dssize);
+
+        dssize += nelems;
+        dataset.extend(&dssize);
+        auto filespace = dataset.getSpace();
+        count.fill(nelems);
+        filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data());
+        dataset.write(cont.data(), arrtype, mspace, filespace);
+    }
     H5::Group& hfile; ///< The HDF5 Group to which we store the time series.
-    H5::DataSet dataset; ///< The HDF5 dataset
-    H5::ArrayType arrtype; ///< This is used to store the actual type that gets determined for this vector
-    hsize_t dssize; //< the current dataset size
-    std::size_t cachemaxelems; ///< How many elements can the cache hold
-    std::size_t cachepos; ///< the current position of the cache
-    std::vector<T> cont;///< the container where the data is held until it is flushed
+    H5::DataSet dataset; ///< The HDF5 dataset.
+    H5::ArrayType arrtype; ///< This is used to store the actual type that gets determined for this vector.
+    hsize_t dssize; ///< the current dataset size.
+    std::size_t cachemaxelems; ///< How many elements can the cache hold.
+    std::size_t cachepos; ///< the current position of the cache.
+    std::vector<T> cont; ///< the container where the data is held until it is flushed.
     bool unused; ///< a logical value that becomes true after the first write of data.
     uint cachesize; ///< The amount of cache that we use.
-    std::string name;///< The name of the time series.
-    std::string desc;///< The description of the time series.
+    std::string name; ///< The name of the time series.
+    std::string desc; ///< The description of the time series.
 };
-
 
 #endif
