@@ -16,8 +16,11 @@
  * this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef CONSTANTCOORDINATION2D_H
+#define CONSTANTCOORDINATION2D_H
 #include <random>
 #include <cmath>
+#include <vector>
 #include <algorithm>
 #include <stdexcept>
 
@@ -363,3 +366,4 @@ bool constant_coordination_lattice(const PointCloud& cloud, std::vector<std::vec
 
 	return true;
 }
+#endif
