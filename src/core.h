@@ -564,93 +564,108 @@ class Core : public RefType<Grid>
             return 0;
         }
 
-	/** This function sets up the layout of the HDF5 Container.
-     * 
-     * @tparam HArgs The template pack of the Hamiltonian parameters.
-     * 
-     * @param mc. A MARQOV::Config object that we will dump to the respective path.
-     * @param hargs The arguments of the Hamiltonian.
-     * @return An object for the HDF5 File.
-     */
-    template <class ...HArgs>
-    H5::H5File setupHDF5Container(const Config& mc, HArgs&& ...hargs)
-    {
-        std::string filepath = mc.outpath+mc.outname + ".h5";
-        auto flag = H5F_ACC_TRUNC;
-        if (std::ifstream(filepath).good() && H5::H5File::isHdf5(filepath)) flag = H5F_ACC_RDWR;
-        H5::H5File retval(filepath, flag);
-        if (flag == H5F_ACC_RDWR) // abuse flag
-        {// We have to iterate through the root group and find the last step.
-            H5Literate(retval.getId(), H5_INDEX_NAME, H5_ITER_NATIVE, NULL, findstep, &step);
+        /** This function sets up the layout of the HDF5 Container.
+         * 
+         * @tparam HArgs The template pack of the Hamiltonian parameters.
+         * 
+         * @param mc. A MARQOV::Config object that we will dump to the respective path.
+         * @param hargs The arguments of the Hamiltonian.
+         * @return An object for the HDF5 File.
+         */
+        template <class ...HArgs>
+        H5::H5File setupHDF5Container(const Config& mc, HArgs&& ...hargs)
+        {
+            std::string filepath = mc.outpath+mc.outname + ".h5";
+            auto flag = H5F_ACC_TRUNC;
+            if (std::ifstream(filepath).good() && H5::H5File::isHdf5(filepath)) flag = H5F_ACC_RDWR;
+            H5::H5File retval(filepath, flag);
+            if (flag == H5F_ACC_RDWR) // abuse flag
+            {// We have to iterate through the root group and find the last step.
+                H5Literate(retval.getId(), H5_INDEX_NAME, H5_ITER_NATIVE, NULL, findstep, &step);
+            }
+            step = step + 1; // If there is no file we start at 0, else we increment.
+            createstep(retval, step, mc, std::forward<HArgs>(hargs)... );
+            return retval;//hopefully the refcounting of HDF5 works....
         }
-        step = step + 1; // If there is no file we start at 0, else we increment.
-        createstep(retval, step, mc, std::forward<HArgs>(hargs)... );
-        return retval;//hopefully the refcounting of HDF5 works....
-    }
     
-    
-    std::string createparamname(std::false_type, int c)
-    {
-        return "param" + std::to_string(c);
-    }
-    
-    std::string createparamname(std::true_type, int c)
-    {
-        return ham.paramname(c);
-    }
+        /** Create default name for Hamiltonian parameter.
+         * 
+         * Creates strings of the form param0, param1,...
+         * @param c the index of the parameter.
+         * @returns param + c
+         */
+        std::string createparamname(std::false_type, int c)
+        {
+            return "param" + std::to_string(c);
+        }
 
-    template <class ...HArgs>
-    void dumphamparamstoH5(H5::Group& h5loc, HArgs&&... hargs)
-    {
-         H5::StrType strdatatype(H5::PredType::C_S1, ham.name.size());
-         H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
-         H5::DataSet dset(h5loc.createDataSet("Model", strdatatype, dspace));
-         dset.setComment("This is the Model. This should correspond to a class name");
-         dset.write(ham.name.c_str(), strdatatype);
+        /** Use the user supplied for Hamiltonian parameter.
+         * 
+         * asks the hamiltonian for the name of the parameter.
+         * @param c the index of the parameter.
+         * @returns ham.paramname(c).
+         */
+        std::string createparamname(std::true_type, int c)
+        {
+            return ham.paramname(c);
+        }
 
-        h5loc.setComment("These parameters are peculiar to the considered Hamiltonian.");
-        //Let's dump the unknown number of unknown parameters of the Hamiltonian....
-        int paramnr = 0;
-        (void) std::initializer_list<int>{((void) dumpscalartoH5(h5loc,
-            createparamname(typename MARQOV::detail::has_paramname<Hamiltonian>::type(), paramnr++)
-            , hargs), 0)... };
-    }
-    /** This function writes out the parameters of the lattice.
-     * UNIMPLEMENTED
-     * @param h5loc The group where to dump the information.
-     */
-    void dumplatparamstoH5(H5::Group& h5loc)
-    {
-        h5loc.setComment("These parameters are peculiar to the lattice at hand.");
-        dumpscalartoH5(h5loc, "size", this->grid.size());
-        return;
-    }
-    /** This function tries to dump as much useful information about the environment into 
-     *  the container as possible.
-     * @param h5loc The group where to dump the information.
-     */
-    void dumpenvtoH5(H5::Group& h5loc)
-    {
-        dumpEnvironmenttoHDF5Group(h5loc);
-    }
-    
-    /** This creates a single step in the HDF5 File.
-     * @param file the HDF5 file where to create the step
-     * @param s the number of the step
-     * @param mc the parameters of MARQOV::Core
-     * @param hargs the argument tuple of the Hamiltonian
-     */
-    template <class... HArgs>
-    void createstep(H5::H5File& file, int s, const Config& mc, HArgs&& ...hargs)
-    {
-        file.setComment("A calculation is made up by a series of steps. Each step can use as input the previous step.");
-        std::string stepname = "step" + std::to_string(s);
-        H5::Group step(file.createGroup(stepname));
-        step.setComment("A single step encapsulates the initial config, the observable time series and the final state.");
-          H5::Group environment(step.createGroup("environment"));
-          dumpenvtoH5(environment);
+        template <class ...HArgs>
+        void dumphamparamstoH5(H5::Group& h5loc, HArgs&&... hargs)
+        {
+            H5::StrType strdatatype(H5::PredType::C_S1, ham.name.size());
+            H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
+            H5::DataSet dset(h5loc.createDataSet("Model", strdatatype, dspace));
+            dset.setComment("This is the Model. This should correspond to a class name");
+            dset.write(ham.name.c_str(), strdatatype);
 
-          H5::Group config(step.createGroup("config"));
+            h5loc.setComment("These parameters are peculiar to the considered Hamiltonian.");
+            //Let's dump the unknown number of unknown parameters of the Hamiltonian....
+            int paramnr = 0;
+            (void) std::initializer_list<int>{((void) dumpscalartoH5(h5loc,
+                createparamname(typename MARQOV::detail::has_paramname<Hamiltonian>::type(), paramnr++)
+                , hargs), 0)... };
+        }
+        /** Write out the parameters of the lattice.
+         * 
+         * UNIMPLEMENTED
+         * @param h5loc The group where to dump the information.
+         */
+        void dumplatparamstoH5(H5::Group& h5loc)
+        {
+            h5loc.setComment("These parameters are peculiar to the lattice at hand.");
+            dumpscalartoH5(h5loc, "size", this->grid.size());
+            return;
+        }
+        /** This function tries to dump as much useful information about the environment into 
+         *  the container as possible.
+         * @param h5loc The group where to dump the information.
+         */
+        void dumpenvtoH5(H5::Group& h5loc)
+        {
+            dumpEnvironmenttoHDF5Group(h5loc);
+        }
+
+        /** This creates a single step in the HDF5 File.
+         *
+         * @tparam HArgs the argument tuple of the Hamiltonian.
+         * 
+         * @param file the HDF5 file where to create the step
+         * @param s the number of the step
+         * @param mc the parameters of MARQOV::Core
+         * @param hargs the argument tuple of the Hamiltonian
+         */
+        template <class... HArgs>
+        void createstep(H5::H5File& file, int s, const Config& mc, HArgs&& ...hargs)
+        {
+            file.setComment("A calculation is made up by a series of steps. Each step can use as input the previous step.");
+            std::string stepname = "step" + std::to_string(s);
+            H5::Group step(file.createGroup(stepname));
+            step.setComment("A single step encapsulates the initial config, the observable time series and the final state.");
+            H5::Group environment(step.createGroup("environment"));
+            dumpenvtoH5(environment);
+            
+            H5::Group config(step.createGroup("config"));
             config.setComment("Here we have all configuration related parameters that are required to start a simulation.");
             H5::Group marqovconfig(config.createGroup("marqovconfig"));
             dumpscalartoH5(marqovconfig, "beta", beta);
@@ -661,271 +676,333 @@ class Core : public RefType<Grid>
             H5::Group hamconfig(config.createGroup("hamiltonian"));
             dumphamparamstoH5(hamconfig, std::forward<HArgs>(hargs)...);
 
+            H5::Group s1(step.createGroup("state"));
+            H5::Group s2(step.createGroup("observables"));
+        }
 
-          H5::Group s1(step.createGroup("state"));
-          H5::Group s2(step.createGroup("observables"));
-    }
+        /** The default StateSpace initializer.
+         * 
+         * This initializes with random directions.
+         */ 
+        void init_hot()
+        {
+            constexpr int SymD = std::tuple_size<StateVector>::value;
+            for (decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
+            {
+                statespace[i] = rnddir<RNGCache<RNGType>, typename StateVector::value_type, SymD>(rngcache);
+            }
+        }
 
-	// default state space initializer
-	void init_hot()
-	{
-		const int SymD = std::tuple_size<StateVector>::value;
-		for (decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
-		{
-			statespace[i] = rnddir<RNGCache<RNGType>, typename StateVector::value_type, SymD>(rngcache);
-		}
-	}
-		
-	template <typename StateSpace, class Lattice, class H, typename... Ts>
-	auto haminit_helper(std::true_type, StateSpace& statespace, const Lattice& grid, H& ham, Ts&& ... ts)
-	{
-		return ham.initstatespace(statespace, grid, rngcache, std::forward<Ts>(ts) ...);
-	}
+        /** Select the user supplied initializer
+         * 
+         * @tparam StateSpace The type of the statespace
+         * @tparam Lattice The Lattice
+         * @tparam H The Hamiltonian
+         * @tparam Ts optional arguments
+         * 
+         * @param statespace The statespace of MARQOV.
+         * @param ham The Hamiltonian.
+         * @param grid the currently used lattice.
+         * @param ts optional arguments.
+         */
+        template <typename StateSpace, class Lattice, class H, typename... Ts>
+        auto haminit_helper(std::true_type, StateSpace& statespace, const Lattice& grid, H& ham, Ts&& ... ts)
+        {
+            return ham.initstatespace(statespace, grid, rngcache, std::forward<Ts>(ts) ...);
+        }
+
+        /** Initializer if no user supplied initializer.
+         * 
+         * If there's no user defined function we do a random initialization.
+         * @tparam StateSpace The type of the statespace
+         * @tparam Lattice The Lattice
+         * @tparam H The Hamiltonian
+         * @tparam Ts optional arguments
+         * 
+         * @param statespace The statespace of MARQOV
+         * @param ham The Hamiltonian
+         * @param ts optional arguments
+         */
+        template <typename StateSpace, class Lattice, class H, typename... Ts>
+        auto haminit_helper(std::false_type, StateSpace& statespace, const Lattice&, H& ham, Ts&& ... ts) -> void
+        {
+            this->init_hot();
+        }
         
-	// If there's no user defined function we do a random initialization
-	template <typename StateSpace, class Lattice, class H, typename... Ts>
-	auto haminit_helper(std::false_type, StateSpace& statespace, const Lattice&, H& ham, Ts&& ... ts) -> void
-	{
-		this->init_hot();
-	}
-	
-	template <typename... Ts>
-	auto init(Ts&& ... ts)
-	{
-		return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian, Grid, RNGCache<RNGType>, Ts... >::type(), this->statespace, this->grid, this->ham, std::forward<Ts>(ts)...);
-	}
-	
-	void dumprng()
-    {
-        H5::StrType strdatatype(H5::PredType::C_S1, RNGName<RNGType>().name.size());
-        H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
-        H5::DataSet dset(stategroup.createDataSet("RNG", strdatatype, dspace));
-        dset.write(RNGName<RNGType>().name.c_str(), strdatatype);
+        /** Initialize the state space.
+         * 
+         * This initializes the state space.
+         * If the user has supplied his/her own function we use that,
+         * else we use randomized directions.
+         * @tparam Ts optional parameters
+         * 
+         * @param ts optional parameters
+         */
+        template <typename... Ts>
+        auto init(Ts&& ... ts)
+        {
+            return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian, Grid, RNGCache<RNGType>, Ts... >::type(), this->statespace, this->grid, this->ham, std::forward<Ts>(ts)...);
+        }
+
+        /** Dump RNG State to HDF5.
+         * 
+         * This writes out the state of the RNG to the HDF5 group.
+         * We assume that the state is written out as a vector of 64bit integers.
+         */
+        void dumprng()
+        {
+            H5::StrType strdatatype(H5::PredType::C_S1, RNGName<RNGType>().name.size());
+            H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
+            H5::DataSet dset(stategroup.createDataSet("RNG", strdatatype, dspace));
+            dset.write(RNGName<RNGType>().name.c_str(), strdatatype);
         
-        auto rngstate = rngcache.dumpstate();
-        //We interpret the rng state space as a time series of 64bit integers
-        constexpr int rank = 1;
-        auto len = rngstate.size();
-        std::array<hsize_t, 1> fdims, maxdims;
-        fdims.fill(static_cast<hsize_t>(len));
-        maxdims.fill(len);
+            auto rngstate = rngcache.dumpstate();
+            //We interpret the rng state space as a time series of 64bit integers
+            constexpr int rank = 1;
+            auto len = rngstate.size();
+            std::array<hsize_t, 1> fdims, maxdims;
+            fdims.fill(static_cast<hsize_t>(len));
+            maxdims.fill(len);
 
-        H5::DataSpace mspace1(rank, fdims.data(), maxdims.data());
-        H5::DSetCreatPropList cparms;
-        auto fv = H5Mapper<int64_t>::fillval;
+            H5::DataSpace mspace1(rank, fdims.data(), maxdims.data());
+            H5::DSetCreatPropList cparms;
+            auto fv = H5Mapper<int64_t>::fillval;
         
-        //no compression
+            //no compression
+
+            cparms.setFillValue(H5Mapper<int64_t>::H5Type(), &fv);
+            H5::DataSet dataset = stategroup.createDataSet("rngstate", H5Mapper<int64_t>::H5Type(), mspace1, cparms);
+
+            auto filespace = dataset.getSpace();
+            hsize_t start[rank] = {0};//This works for initialization
+            std::array<hsize_t, rank> count;
+            count.fill(static_cast<hsize_t>(len));
+            filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
+            dataset.write(rngstate.data(), H5Mapper<int64_t>::H5Type(), mspace1, filespace);
+        }
+        /** A helper function to dump the entire statespace.
+         * 
+         * The internal data layout is the same as for a time series.
+         */
+        void dumpstatespace()
+        {
+            //We interpret the statespace as a time-series of lattice points
+            constexpr int rank = H5Mapper<StateVector>::rank;
+            std::array<hsize_t, 1> fdims, maxdims, chunk_dims;
+            fdims.fill(static_cast<hsize_t>(this->grid.size()));
+            maxdims.fill(H5S_UNLIMITED);
+
+            H5::DataSpace mspace1(rank, fdims.data(), maxdims.data());
+            H5::DSetCreatPropList cparms;
+            auto fv = H5Mapper<StateVector>::fillval;
+            chunk_dims.fill(4096*1024/H5Mapper<StateVector>::bytecount);//4MB chunking
+
+            cparms.setChunk( rank, chunk_dims.data() );
+            cparms.setDeflate(9);//Best (1-9) compression
+            cparms.setShuffle();
+            cparms.setFillValue(H5Mapper<StateVector>::H5Type(), &fv);
+            H5::DataSet dataset = stategroup.createDataSet("hamiltonianstatespace", H5Mapper<StateVector>::H5Type(), mspace1, cparms);
+
+            auto filespace = dataset.getSpace();
+            hsize_t start[rank] = {0};//This works for initialization
+            std::array<hsize_t, rank> count;
+            count.fill(static_cast<hsize_t>(this->grid.size()));
+            filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
+            dataset.write(statespace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
+        }
+
+        /** Destructor.
+         * 
+         * Uses the HDF5 Mutex to serialize the access to the HDF5 library and hence the output to the library.
+         */
+        ~Core() 
+        {
+            //locking is necessary since the dump functions contain HDF5 calls.
+            hdf5lock.lock();
+            dumprng();
+            dumpstatespace();
+            delete [] statespace;
+            dump.close();
+        }
+
+        //FIXME: Fix assignment and copying...
+        Core(const Core& rhs) = delete;
+        Core& operator=(const Core& rhs) = delete;
+        Core(Core&& other) = default;
+        Core& operator=(Core&& other) = default;
+
+        template<size_t N = 0, typename... Ts, typename S, typename G>
+        inline typename std::enable_if_t<N == sizeof...(Ts), void>
+        marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid) {}
+
+        template<size_t N = 0, typename... Ts, typename S, typename G>
+        inline typename std::enable_if_t<N < sizeof...(Ts), void>
+        marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid)
+        {
+            auto retval = _call(&std::tuple_element<N, 
+                            std::tuple<Ts...> >::type::template measure<StateSpace, G>,
+                            std::get<N>(t), 
+                            std::forward_as_tuple(s, grid) );
+            marqov_measure<N + 1, Ts...>(t, s, grid);
+            hdf5lock.lock();
+            std::get<N>(obscache)<<retval;
+            hdf5lock.unlock();
+        }
+
+        // ------------------ update --------------------
+
+        /** The elementary Monte Carlo step.
+         * 
+         * @returns 
+         */
+        double elementaryMCstep();
         
-        cparms.setFillValue(H5Mapper<int64_t>::H5Type(), &fv);
-        H5::DataSet dataset = stategroup.createDataSet("rngstate", H5Mapper<int64_t>::H5Type(), mspace1, cparms);
+        /** The basic Monte Carlo loop
+         * 
+         * A couple of cycles of updating and measuring.
+         */
+        void gameloop()
+        {
+
+            double avgclustersize = 0;
+            for (int k=0; k < this->mcfg.gli; k++)
+            {
+
+                if (this->mcfg.id == 0) std::cout << "." << std::flush;
+                for (int i=0; i < this->mcfg.gameloopsteps/10; ++i)
+                {
+                    avgclustersize += elementaryMCstep();
+                    marqovtime.switch_clock("measurements");
+                    marqov_measure(obs, statespace, this->grid);
+                }
+            }
+            marqovtime.stop();
+
+            marqovtime.status();
+            if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.gameloopsteps << std::endl;
+        }
+
+        /** Warm up loop
+         * 
+         * We warm up the state space with a couple of cycles.
+         */
+        void wrmploop()
+        {
+            if (this->mcfg.id == 0) std::cout << "|";
+            for (int k=0; k < this->mcfg.gli; k++)
+            {
+                if (this->mcfg.id == 0) std::cout << "." << std::flush;
+                for (int i=0; i < this->mcfg.warmupsteps/10; ++i) elementaryMCstep();
+            }
+            if (this->mcfg.id == 0) std::cout << "|";
+        }
+
+        // -------------- special purpose functions ----------------
         
-        auto filespace = dataset.getSpace();
-        hsize_t start[rank] = {0};//This works for initialization
-        std::array<hsize_t, rank> count;
-        count.fill(static_cast<hsize_t>(len));
-        filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
-        dataset.write(rngstate.data(), H5Mapper<int64_t>::H5Type(), mspace1, filespace);
-    }
-	/** A helper function to dump the entire statespace.
-     */
-	void dumpstatespace()
-    {
-        //We interpret the statespace as a time-series of lattice points
-        constexpr int rank = H5Mapper<StateVector>::rank;
-        std::array<hsize_t, 1> fdims, maxdims, chunk_dims;
-        fdims.fill(static_cast<hsize_t>(this->grid.size()));
-        maxdims.fill(H5S_UNLIMITED);
+        /** Visual output of 2D statespace to a file.
+         * 
+         * @param dim
+         */
+        void full_output_2D(int dim=0)
+        {
+            const int LL = this->grid.length;
 
-        H5::DataSpace mspace1(rank, fdims.data(), maxdims.data());
-        H5::DSetCreatPropList cparms;
-        auto fv = H5Mapper<StateVector>::fillval;
-        chunk_dims.fill(4096*1024/H5Mapper<StateVector>::bytecount);//4MB chunking
-        
-        cparms.setChunk( rank, chunk_dims.data() );
-        cparms.setDeflate(9);//Best (1-9) compression
-        cparms.setShuffle();
-        cparms.setFillValue(H5Mapper<StateVector>::H5Type(), &fv);
-        H5::DataSet dataset = stategroup.createDataSet("hamiltonianstatespace", H5Mapper<StateVector>::H5Type(), mspace1, cparms);
-        
-        
-        auto filespace = dataset.getSpace();
-        hsize_t start[rank] = {0};//This works for initialization
-        std::array<hsize_t, rank> count;
-        count.fill(static_cast<hsize_t>(this->grid.size()));
-        filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
-        dataset.write(statespace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
-    }
-	// Destructor. Uses the HDF5 Mutex to serialize the access to the HDF5 library and hence the output to the library.
-	~Core() 
-	{
-        //locking is necessary since the dump functions contain HDF5 calls.
-        hdf5lock.lock();
-        dumprng();
-        dumpstatespace();
-        delete [] statespace;
-        dump.close();
-	}
+            ofstream os;
+            os.open("../log/fullout-"+std::to_string(LL)+"-"+std::to_string(beta)+".dat");
 
-	//FIXME: Fix assignment and copying...
-	Core(const Core& rhs) = delete;
-	Core& operator=(const Core& rhs) = delete;
-	Core(Core&& other) = default;
-	Core& operator=(Core&& other) = default;
-
-////		For reference: this template is just to cool to forget....
-// 		template<size_t N = 0, typename... Ts, typename... Args>
-// 		inline typename std::enable_if_t<N == sizeof...(Ts), void>
-// 		marqov_measure(std::tuple<Ts...>& t, Args... args) {}
-// 		
-// 		template<size_t N = 0, typename... Ts, typename... Args>
-// 		inline typename std::enable_if_t<N < sizeof...(Ts), void>
-// 		marqov_measure(std::tuple<Ts...>& t, Args... args)
-// 		{
-// 		     auto retval = _call(&std::tuple_element<N, 
-// 							 std::tuple<Ts...> >::type::template measure<Args...>,
-// 							 std::get<N>(t), 
-// 							 std::make_tuple(std::forward<Args>(args)...) );
-// 			marqov_measure<N + 1, Ts...>(t, args...);
-//              std::get<N>(obscache)<<retval;
-// 		}
-
-	template<size_t N = 0, typename... Ts, typename S, typename G>
-	inline typename std::enable_if_t<N == sizeof...(Ts), void>
-	marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid) {}
-	
-	template<size_t N = 0, typename... Ts, typename S, typename G>
-	inline typename std::enable_if_t<N < sizeof...(Ts), void>
-	marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid)
-	{
-	     auto retval = _call(&std::tuple_element<N, 
-						 std::tuple<Ts...> >::type::template measure<StateSpace, G>,
-						 std::get<N>(t), 
-                       		 std::forward_as_tuple(s, grid) );
-		marqov_measure<N + 1, Ts...>(t, s, grid);
-        hdf5lock.lock();
-		std::get<N>(obscache)<<retval;
-        hdf5lock.unlock();
-	}
-
-	// ------------------ update --------------------
-
-	double elementaryMCstep();
-
-	void gameloop()
-	{
-
-		double avgclustersize = 0;
-		for (int k=0; k < this->mcfg.gli; k++)
-		{
-
-			if (this->mcfg.id == 0) std::cout << "." << std::flush;
-			for (int i=0; i < this->mcfg.gameloopsteps/10; ++i)
-			{
-				avgclustersize += elementaryMCstep();
-				 marqovtime.switch_clock("measurements");
-				marqov_measure(obs, statespace, this->grid);
-			}
-		}
-		marqovtime.stop();
-
-		marqovtime.status();
-		if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.gameloopsteps << std::endl;
-	}
-	
-	void wrmploop()
-	{
-		if (this->mcfg.id == 0) std::cout << "|";
-		for (int k=0; k < this->mcfg.gli; k++)
-		{
-			if (this->mcfg.id == 0) std::cout << "." << std::flush;
-			for (int i=0; i < this->mcfg.warmupsteps/10; ++i) elementaryMCstep();
-		}
-		if (this->mcfg.id == 0) std::cout << "|";
-	}
-
-	// -------------- special purpose functions ----------------
-
-     void full_output_2D(int dim=0)
-     {
-          const int LL = this->grid.length;
-
-          ofstream os;
-          os.open("../log/fullout-"+std::to_string(LL)+"-"+std::to_string(beta)+".dat");
-
-          for (int i=0; i<LL; i++)
-          {
-               for (int j=0; j<LL; j++)
-               {
+            for (int i=0; i<LL; i++)
+            {
+                for (int j=0; j<LL; j++)
+                {
                     int curridx = LL*i+j;
                     double current = statespace[curridx][dim];
                     os << current << "\t";
-               }
-               os << endl;
-          }
-     }
-     
-     void debugloop(const int nsteps, const int ncluster, const int nsweeps)
-     {
-		this->mcfg.setnsweeps(nsweeps);
-		this->mcfg.setncluster(ncluster);
+                }
+                os << endl;
+            }
+        }
+
+        /** The Debug loop.
+         * 
+         * @param nsteps The number of steps.
+         * @param ncluster The number of cluster updates.
+         * @param nsweeps The number of sweeps.
+         */
+        void debugloop(const int nsteps, const int ncluster, const int nsweeps)
+        {
+            this->mcfg.setnsweeps(nsweeps);
+            this->mcfg.setncluster(ncluster);
 
 
-		double avgclustersize = 0;
-		for (int i=0; i<nsteps; ++i)
-		{
-			avgclustersize += elementaryMCstep();
-		}
-		std::cout << avgclustersize/nsteps << std::endl;
-	}
-
-	// use carefully, might generate a lot of terminal output
+            double avgclustersize = 0;
+            for (int i=0; i<nsteps; ++i)
+            {
+                avgclustersize += elementaryMCstep();
+            }
+            std::cout << avgclustersize/nsteps << std::endl;
+        }
+        
+        /** Liveview helper function
+         * 
+         * use carefully, might generate a lot of terminal output
+         * @param nframes
+         * @param nsweepsbetweenframe
+         */
     	void gameloop_liveview(int nframes = 100, int nsweepsbetweenframe = 5)
-	{
-		visualize_state_2d();
+        {
+            visualize_state_2d();
 
-		for (int i = 0; i < nframes; ++i)
-		{
+            for (int i = 0; i < nframes; ++i)
+            {
 
-			for (int j=0; j<nsweepsbetweenframe; j++) elementaryMCstep();
-				
-			unsigned int microsec = 20000;
-            std::this_thread::sleep_for(std::chrono::microseconds(microsec));
-//			usleep(microsec);
-			system("tput reset");
-			
-			visualize_state_2d();
-		}
-	}
+                for (int j=0; j<nsweepsbetweenframe; j++) elementaryMCstep();
 
-	void visualize_state_2d(int dim=2, double threshold=0.3)
-	{
-		std::cout << "_";
-		for(int i = 0; i < this->grid.len; ++i) std::cout << " _";
-		std::cout <<"\n";
-		for(int i = 0; i < this->grid.len; ++i)
-		{
-			std::cout << "|";
-			for(int j = 0; j < this->grid.len; ++j)
-			{
-				int curridx = this->grid.len*i+j;
-				double current = statespace[curridx][dim];
+                unsigned int microsec = 20000;
+                std::this_thread::sleep_for(std::chrono::microseconds(microsec));
 
-				if (current > threshold) std::cout << "O ";
-				else if (current < -threshold) std::cout << "  ";
-				else if (current > 0) std::cout << "o ";
-				else if (current < 0) std::cout << ". ";
-			}
-			std::cout << "|\n";
-		}
-		std::cout << "‾";
-		for(int i = 0; i < this->grid.len; ++i) std::cout << " ‾";
-		std::cout <<"\n\n";
-	}
+                system("tput reset");
+                
+                visualize_state_2d();
+            }
+        }
+
+        void visualize_state_2d(int dim=2, double threshold=0.3)
+        {
+            std::cout << "_";
+            for(int i = 0; i < this->grid.len; ++i) std::cout << " _";
+            std::cout <<"\n";
+            for(int i = 0; i < this->grid.len; ++i)
+            {
+                std::cout << "|";
+                for(int j = 0; j < this->grid.len; ++j)
+                {
+                    int curridx = this->grid.len*i+j;
+                    double current = statespace[curridx][dim];
+
+                    if (current > threshold) std::cout << "O ";
+                    else if (current < -threshold) std::cout << "  ";
+                    else if (current > 0) std::cout << "o ";
+                    else if (current < 0) std::cout << ". ";
+                }
+                std::cout << "|\n";
+            }
+            std::cout << "‾";
+            for(int i = 0; i < this->grid.len; ++i) std::cout << " ‾";
+            std::cout <<"\n\n";
+        }
 	private:
 		inline int metropolisstep(int rsite);
 
-		template <typename callable1, typename callable2>
-		inline int metropolisstep(int rsite, callable1 filter_ref, callable2 filter_copy, int comp);
+        /** A Metropolis step.
+         * 
+         * This function dispatches the call for a metropolis step 
+         * to the Metropolis class.
+         * 
+         * @tparam Callable1
+         * @tparam Callable2
+         */
+		template <typename Callable1, typename Callable2>
+		inline int metropolisstep(int rsite, Callable1 filter_ref, Callable2 filter_copy, int comp);
 
 		template <typename DirType>
 		inline int wolffstep(int rsite, const DirType& rdir);
