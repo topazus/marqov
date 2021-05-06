@@ -113,8 +113,6 @@ double avgNeighbours(std::vector<std::vector<int>> neighbours)
 
 int geometric_simulated_annealing_box(const PointCloud& cloud, std::vector<std::vector<int>>& neighbours, const std::vector<int>& box, int K, long int Nsteps, int seed=1)
 {
-    using std::cout;
-    using std::endl;
 	const int nparticles = box.size();
 
 	const bool verbose = false;
@@ -173,8 +171,8 @@ int geometric_simulated_annealing_box(const PointCloud& cloud, std::vector<std::
 	if (verbose)
 	{
 		double sum = double(ifc+elc+llc);
-		cout << endl << ifc/sum <<  "\t" << llc/sum << endl;
-		cout         << ifc     <<  "\t" << llc     << "\t" << conc << endl;
+		std::cout << endl << ifc/sum <<  "\t" << llc/sum << std::endl;
+		std::cout         << ifc     <<  "\t" << llc     << "\t" << conc << std::endl;
 	}
 
 	return ifc;
