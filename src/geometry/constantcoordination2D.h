@@ -16,54 +16,13 @@
  * this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "prng.h"
+#ifndef CONSTANTCOORDINATION2D_H
+#define CONSTANTCOORDINATION2D_H
 #include <random>
 #include <cmath>
+#include <vector>
 #include <algorithm>
 #include <stdexcept>
-
-using std::cout;
-using std::endl;
-
-
-// auxiliary functions
-inline std::size_t myrndnbr(LCG& lcg, int16_t len)
-{
-	if (len < 2) return 0;
-	
-	std::size_t ret = 0;
-	uint mr = lcg.rnd();
-	switch(len)
-	{
-		case 1:
-		ret = 0;
-		break;
-		case 2:
-		ret = mr%2;
-		case 3:
-		ret = mr%3;
-		case 4:
-		ret = mr%4;
-		break;
-		case 5:
-		ret = mr%5;
-		break;
-		case 6:
-		ret = mr%6;
-		break;
-		case 7:
-		ret = mr%7;
-		break;
-		case 8:
-		ret = mr%8;
-		break;
-		default:
-		ret = mr%len;
-		break;
-	}
-	return ret;
-}
-
 
 // shuffle ordinary std::vector
 
@@ -215,8 +174,8 @@ int geometric_simulated_annealing_box(const PointCloud& cloud, std::vector<std::
 	if (verbose)
 	{
 		double sum = double(ifc+elc+llc);
-		cout << endl << ifc/sum <<  "\t" << llc/sum << endl;
-		cout         << ifc     <<  "\t" << llc     << "\t" << conc << endl;
+		std::cout << endl << ifc/sum <<  "\t" << llc/sum << std::endl;
+		std::cout         << ifc     <<  "\t" << llc     << "\t" << conc << std::endl;
 	}
 
 	return ifc;
@@ -407,3 +366,4 @@ bool constant_coordination_lattice(const PointCloud& cloud, std::vector<std::vec
 
 	return true;
 }
+#endif
