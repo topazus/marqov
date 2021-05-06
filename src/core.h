@@ -991,19 +991,19 @@ class Core : public RefType<Grid>
             std::cout <<"\n\n";
         }
 	private:
-		inline int metropolisstep(int rsite);
-
         /** A Metropolis step.
          * 
          * This function dispatches the call for a metropolis step 
          * to the Metropolis class.
-         * 
-         * @tparam Callable1
-         * @tparam Callable2
+         * @param rsite the randomly chosen site for the update.
          */
-		template <typename Callable1, typename Callable2>
-		inline int metropolisstep(int rsite, Callable1 filter_ref, Callable2 filter_copy, int comp);
+		inline int metropolisstep(int rsite);
 
+        /** A step of the Wolff Cluster Algorithm.
+         * 
+         * @param rsite The random site where to start the cluster.
+         * @param rdir The randomized plane of reflection for the cluster update.
+         */
 		template <typename DirType>
 		inline int wolffstep(int rsite, const DirType& rdir);
 
