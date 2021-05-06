@@ -35,38 +35,78 @@ SOFTWARE.
 
 /*some predefined HDF5 helpers --------------------------------*/
 
-/** First we have the POD Type H5 Types
+/** A Class that Maps basic, POD C++ Types to HDF5 types.
  */
 template <class T>
 struct H5MapperBase;
 
+/** A specialization for double.
+ * @see H5MapperBase
+ */
 template <> struct H5MapperBase<double> {
+    /**
+     * @returns the HDF5 Type of double
+     */
     static H5::PredType H5Type(){return H5::PredType::NATIVE_DOUBLE;}
 };
 
+/** A specialization for float.
+ * @see H5MapperBase
+ */
 template <> struct H5MapperBase<float> {
+    /**
+     * @returns the HDF5 type of float
+     */
     static H5::PredType H5Type(){return H5::PredType::NATIVE_FLOAT;}
 };
 
+/** A specialization for int16_t.
+ * @see H5MapperBase
+ */
 template <> struct H5MapperBase<int16_t> {
+    /**
+     * @returns the HDF5 Type of int16_t
+     */
     static H5::PredType H5Type(){return H5::PredType::NATIVE_INT16;}
 };
 
+/** A specialization for int32_t.
+ * @see H5MapperBase
+ */
 template <> struct H5MapperBase<int32_t> {
+    /**
+     * @returns the HDF5 type of int32_t
+     */
     static H5::PredType H5Type(){return H5::PredType::NATIVE_INT32;}
 };
 
+/** A specialization for int64_t.
+ * @see H5MapperBase
+ */
 template <> struct H5MapperBase<int64_t> {
+    /**
+     * @returns the HDF5 type of int64_t
+     */
     static H5::PredType H5Type(){return H5::PredType::NATIVE_INT64;}
 };
 
+/** A specialization for long unsigned int.
+ * @see H5MapperBase
+ */
 template <> struct H5MapperBase<long unsigned int> {
+    /**
+     * @returns the HDF5 type of long unsigned int
+     */
     static H5::PredType H5Type(){return H5::PredType::NATIVE_ULONG;}
 };
 
-/** This maps a 1D vector/array like structure to a custom HDF5 datatype.
+/** This maps C++ Types to HDF5 Types.
  * 
- * @tparam T the type whose properties we try to infer.
+ * This is the generic function valid for tuples, arrays, all 
+ * things that have a known length at compile time.
+ * 
+ * @tparam T The type whose properties we try to infer.
+ * @tparam Enable Internal; for distinguishing Scalars from vectors.
  */
 template <typename T, class Enable = void>
 class H5Mapper
