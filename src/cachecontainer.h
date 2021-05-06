@@ -73,34 +73,59 @@ template <typename T, class Enable = void>
 class H5Mapper
 {
     public:
-        static constexpr auto fillval = H5Mapper<typename T::value_type>::fillval;
-        static constexpr int rank = 1;
-        static constexpr int bytecount = std::tuple_size<T>::value*H5Mapper<typename T::value_type>::bytecount;
-        static H5::ArrayType H5Type(){
+        static constexpr auto fillval = H5Mapper<typename T::value_type>::fillval;///< The initializer value of HDF5. We reuse that from the scalar base.
+        static constexpr int rank = 1;///< This template assumes vectors.
+        static constexpr int bytecount = std::tuple_size<T>::value*H5Mapper<typename T::value_type>::bytecount;//The size of a compile time-array
+        /** Generate the proper HDF5 Array Type.
+         * @return The Corresponding HDF5 Type of the array.
+         */
+        static H5::ArrayType H5Type()
+        {
             hsize_t dims[1] = {std::tuple_size<T>::value};
             return H5::ArrayType(H5Mapper<typename T::value_type>::H5Type(), rank, dims);
         }
 };
 
+/**
+ * The partial class specialization of the H5Mapper for scalar data types.
+ * @see H5Mapper
+ */
 template <typename T>
 class H5Mapper<T, typename std::enable_if<std::is_scalar<T>::value>::type> : public H5MapperBase<T>
 {
     public:
-        static constexpr T fillval = 0;
-        static constexpr int bytecount = sizeof(T);
-        static constexpr int rank = 1;
+        static constexpr T fillval = 0; ///< All scalar types get initialized to 0.
+        static constexpr int bytecount = sizeof(T);///< Their bytecount on the current platform.
+        static constexpr int rank = 1; //< Scalars are vectors(rank=1) of length 1.
 };
 
-//Helper to dump a single key-value pair into its own scalar data space
+/**
+ * Since it's often needed for config related things, this is a small helper
+ * function to dump a single scalar into its own scalar data space in a given
+ * group
+ * @tparam T the type of the scalar.
+ * @param h5loc the HDF5 group / location of the variable.
+ * @param key how to name the value in the HDF5 File.
+ * @param val the value of the scalar. 
+ */
 template <typename T>
-inline void dumpscalartoH5(H5::Group& h5loc, std::string key, const T& s)
+inline void dumpscalartoH5(H5::Group& h5loc, std::string key, const T& val)
 {
     
     H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
     H5::DataSet dset(h5loc.createDataSet(key.c_str(), H5Mapper<T>::H5Type(), dspace));
-    dset.write(&s, H5Mapper<T>::H5Type());
+    dset.write(&val, H5Mapper<T>::H5Type());
 }
 
+/**
+ * Since it's often needed for config related things, this is a small
+ * helper that dumps a string into a given group. Strings are interpreted in 
+ * HDF5 as arrays of characters.
+ * @see dumpscalartoH5
+ * @param h5loc the HDF5 group / location of the variable.
+ * @param key how to name the value in the HDF5 File.
+ * @param value the value of the scalar. 
+ */
 inline void dumpscalartoH5(H5::Group& h5loc, std::string key, std::string value)
 {
     H5::StrType strdatatype(H5::PredType::C_S1, value.size());
