@@ -51,6 +51,7 @@ namespace MARQOV
          * The standard constructor. It requires an outpath, the rest of the
          * positional parameters are optional.
          * 
+         * @param op the output path.
          * @param i id.
          * @param ri replica id.
          * @param s random number seed. Will be ignored if restarted
@@ -472,13 +473,15 @@ class Core : public RefType<Grid>
 		}
 
 	/** Construct MARQOV and let MARQOV create the lattice.
-     * 
+         * 
 	* If you require MARQOV::Core to instantiate and embed the lattice for you.
-    * @tparam HArgs the Arguments of the Hamiltonian.
-    * @tparam LArgs The Arguments of the Lattice.
-	* @param outfile Where to create the output file.
+	* @tparam HArgs the Arguments of the Hamiltonian.
+	* @tparam LArgs The Arguments of the Lattice.
+	*
+	* @param largs the arguments that we forward to the lattice
+	* @param mc The Marqov config object with all configuration.
 	* @param mybeta the temperature that governs the Metropolis dynamics.
-	* @param p A pair containing in the second argument the lattice parameters and in the first the Hamiltonian parameters.
+	* @param hargs the arguemts for the Hamiltonian.
 	*/
 	template <class ...HArgs, class ... LArgs>
 	Core(std::tuple<LArgs...>& largs, Config mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
@@ -604,7 +607,7 @@ class Core : public RefType<Grid>
          * 
          * @tparam HArgs The template pack of the Hamiltonian parameters.
          * 
-         * @param mc. A MARQOV::Config object that we will dump to the respective path.
+         * @param mc A MARQOV::Config object that we will dump to the respective path.
          * @param hargs The arguments of the Hamiltonian.
          * @return An object for the HDF5 File.
          */
@@ -911,7 +914,7 @@ class Core : public RefType<Grid>
 
         /** The elementary Monte Carlo step.
          * 
-         * @returns 
+         * @returns acceptance
          */
         double elementaryMCstep();
         
