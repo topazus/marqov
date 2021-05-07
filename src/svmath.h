@@ -28,7 +28,7 @@ template <class StateVector>
 inline StateVector operator + (StateVector lhs,  StateVector rhs)
 {
     StateVector res(lhs);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
     res[i] += rhs[i];
     return res;
 }
@@ -37,7 +37,7 @@ template <class StateVector>
 inline StateVector operator - (StateVector lhs,  StateVector rhs)
 {
     StateVector res(lhs);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
     res[i] -= rhs[i];
     return res;
 }
@@ -69,7 +69,7 @@ template <class StateVector>
 inline StateVector mult(const int& a, const StateVector& b)
 {
 	StateVector retval(b);
-	for(int i = 0; i < std::tuple_size<StateVector>::value; ++i) retval[i] *= a;
+	for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i) retval[i] *= a;
 	return retval;
 }
 
@@ -77,7 +77,7 @@ template <class StateVector>
 inline StateVector mult(const double& a, const StateVector& b)
 {
 	StateVector retval(b);
-	for(int i = 0; i < std::tuple_size<StateVector>::value; ++i) retval[i] *= a;
+	for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i) retval[i] *= a;
 	return retval;
 }
 

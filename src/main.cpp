@@ -92,12 +92,8 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		std::cout<<"threads_per_node not set -> automatic"<<std::endl;
 	}
 
-
-	// Replicas
-	if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-
-
 	// Prepare Geometry
+	if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 	std::vector<RegularHypercubic> latts;
 	for (std::size_t j=0; j<nL.size(); j++) latts.emplace_back(nL[j], dim);
     
@@ -128,10 +124,9 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		
 		// set up and execute        
 		RegularHypercubic& latt = latts[j];
-		auto f = [&filter, &latt, &outbasedir, L](auto p){return filter(latt, p);}; //partially apply filter
 
-		// feed the scheduler
-		for(auto p: rparams) sched.createSimfromParameter(p, f);
+		auto f = [&filter, &latt](auto p){return filter(latt, p);}; //partially apply filter
+		for(auto p : rparams) sched.createSimfromParameter(p, f);
 	}
 	sched.start();
 }
@@ -300,10 +295,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			std::cout<<"threads_per_node not set -> automatic"<<std::endl;
 		}
 
-
-		// Replicas
-		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-
+		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 		// Physical parameters
 		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
@@ -322,7 +314,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
 		SchedulerType sched(1);
-
 
 		// Lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
@@ -358,7 +349,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	else if (ham == "IsingCC")
 	{
-
 		// Parameters
 		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
 		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
@@ -379,8 +369,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 		// Replicas
-		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-
+		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 		// Physical parameters
 		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
@@ -509,7 +498,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto DA   = registry.Get<std::vector<double> >("mc.ini", ham, "DA");
 		auto DB   = registry.Get<std::vector<double> >("mc.ini", ham, "DB");
 		auto hp = cart_prod(beta, J, DA, DB);
-		
+
 		typedef BlumeCapelBipartite<int> Hamiltonian;
 		typedef SimpleBipartite Lattice;
 
@@ -550,7 +539,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			
 			// set up and execute        
 			Lattice& latt = latts[j];
-			auto f = [&latt, &outbasedir, L](auto p){return defaultfilter(latt, p);}; //partially apply filter
+			auto f = [&latt](auto p){return defaultfilter(latt, p);}; //partially apply filter
 	
 			// feed the scheduler
 			for(auto p: rparams) sched.createSimfromParameter(p, f);

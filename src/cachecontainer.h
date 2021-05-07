@@ -228,7 +228,7 @@ public:
     *   @param d A description of the data
     *   @param cs the memory size in Bytes to use for caching. Will be rounded to integers of datatypes
     */
-    CacheContainer(H5::Group& hf, const std::string& n, std::string d = std::string(), std::size_t cs=4194304) : dssize(0), cachepos(0), hfile(hf), unused(true), cachesize(cs), name(n), desc(d)
+    CacheContainer(H5::Group& hf, const std::string& n, std::string d = std::string(), std::size_t cs=4194304) : hfile(hf), dssize(0), cachepos(0), unused(true), cachesize(cs), name(n), desc(d)
     {}
     /** A helper constructor that forwards to the main constructor
     * @param args the Argument helper structure

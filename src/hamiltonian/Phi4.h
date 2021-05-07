@@ -54,17 +54,15 @@ class Phi4_Initializer
 
 
 template <class StateVector>
-class onsite_fourth_minus_one : public OnSite<StateVector, double> 
+class Onsite_Fourth_Minus_One : public OnSite<StateVector, double> 
 {
 	public:
-		onsite_fourth_minus_one(double constant)
+		Onsite_Fourth_Minus_One(double constant)
 		{
 	 		this->h = constant;
 		}
-		double get (const StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);};
+		inline double get (const StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);}
 };
-
-
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
@@ -77,7 +75,7 @@ class Phi4
 		double beta, lambda, mass;
 		const double J = -1;
 		constexpr static int SymD = 3;
-		const std::string name = "Hello, my name is Phi";
+		const std::string name = "Phi4";
 
 
 
@@ -92,11 +90,11 @@ class Phi4
 
 		//  ----  Hamiltonian terms  ----
 
-		standard_interaction<StateVector> INT;
-		onsite_quadratic<StateVector> ONS1;
-		onsite_fourth_minus_one<StateVector> ONS2;
+		Standard_Interaction<StateVector> phi4interaction;
+		Onsite_Quadratic<StateVector> onsite_standard;
+		Onsite_Fourth_Minus_One<StateVector> onsite_fourth_minus_one;
 
-		std::vector<Interaction<StateVector>*>                 interactions;
+		std::array<Standard_Interaction<StateVector>*, 1>        interactions = {new Standard_Interaction<StateVector>(J)};
 		std::vector<OnSite<StateVector, FPType>*>              onsite; 
 		std::array <FlexTerm<StateVector*,  StateVector>*, 0>  multisite;
 
@@ -104,16 +102,21 @@ class Phi4
 												lambda(lambda), 
 												mass(mass), 
 												name("Phi4"), 
+                                                phi4interaction(J),
+												onsite_standard(mass/beta),
+												onsite_fourth_minus_one(lambda/beta),
 												obs_fx(0), 
 												obs_fy(1), 
-												obs_fz(2), 
-												INT(J),
-												ONS1(mass/beta),
-												ONS2(lambda/beta)
+												obs_fz(2)
 		{
-			interactions.push_back(&INT);
-			onsite.push_back(&ONS1);
-			onsite.push_back(&ONS2);
+			onsite.push_back(&onsite_standard);
+			onsite.push_back(&onsite_fourth_minus_one);
+#ifdef __PGI
+            //The following three lines are necessary to make PGI-19.10 happy
+            StateVector dummy;
+            onsite_standard.get(dummy);
+            onsite_fourth_minus_one.get(dummy);
+#endif
 		}
 
 
