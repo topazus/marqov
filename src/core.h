@@ -415,7 +415,8 @@ class Core : public RefType<Grid>
      * @tparam HArgs The arguments to the Hamiltonian.
      * 
      * @param lattice A reference to the instantiated lattice object. You are responsible for managing its lifetime.
-     * @param outfile Where to create the output file.
+     * @param mc A MARQOV::Config object with all required information.
+     * @param mtx The std::mutex that synchronizes access to the HDF5 library.
      * @param mybeta The temperature that governs the Metropolis dynamics.
      * @param hargs A template parameter pack for the Hamiltonian.
      */
