@@ -61,14 +61,14 @@ static auto rnddir(RNG& rn) -> std::array<valuetype, SymD>
 }
 };
 
-template <class RND, typename inttype>
-struct Rnddir_Helper<RND, inttype, 1, 
-typename std::enable_if<std::is_integral<inttype>::value>::type> // enable only for integers
+template <class RND, typename T>
+struct Rnddir_Helper<RND, T, 1, 
+typename std::enable_if<std::is_arithmetic<T>::value>::type> // enable only for arithmetic types
 {
-static auto rnddir(RND& rn) -> std::array<inttype, 1>
+static auto rnddir(RND& rn) -> std::array<T, 1>
 {
-    std::array<inttype, 1> retval = {1};
-    if (rn.real() < 0.5) retval[0] = -1;
+    std::array<T, 1> retval = {T(1)};
+    if (rn.real() < 0.5) retval[0] = -T(1);
     return retval;
 }
 };
