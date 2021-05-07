@@ -167,7 +167,7 @@ namespace MARQOV
          * A generic type sink from C++17.
          * It consumes a type, and makes it `void`.
          */
-		template<class> struct type_sink { typedef void type; };
+		template<class> struct type_sink { typedef void type;///< convert everything to void. };
 		template<class T> using type_sink_t = typename type_sink<T>::type;
         
         /** Helper to figure out whether a type is a lattice.
@@ -191,8 +191,15 @@ namespace MARQOV
 		class Ref
 		{
 			public:
+				/** The constructor that takes a reference.
+				 *
+				 * @tparam Args the parameter pack with all parameters
+				 *
+				 * @param lattice A reference to a lattice.
+				 * @param args additional arguments that just get eaten.
+				 */
 				template<class... Args>
-				Ref(const L&& l, Args&& ... args) : grid(l) {}
+				Ref(const L&& lattice, Args&& ... args) : grid(lattice) {}
 				const L& grid; ///< A reference to the external lattice. Note that the name is the same as in NonRef.
 		};
 		
@@ -206,9 +213,23 @@ namespace MARQOV
 		class NonRef
 		{
 			public:
+				/** Constructor if we construct the lattice ourselves.
+				 *
+				 * @tparam Args The parameter pack of the lattice parameters.
+				 * 
+				 * @param args the actual lattice Arguments.
+				 */
 				template <class ...Args>
 				NonRef(std::tuple<Args...>&& args ) : NonRef(std::forward<std::tuple<Args...>>(args), 
 				                                                 std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<Args...>>::type>::value>()) {}
+
+				/** Constructor to do the parameter unpacking..
+				 *
+				 * @tparam Args The parameter pack of the lattice parameters.
+				 * @tparam S an integer pack.
+				 * 
+				 * @param args the actual lattice Arguments.
+				 */
 				template <class ...Args, size_t... S>
 				NonRef(std::tuple<Args...>&& args, std::index_sequence<S...>) : grid(std::get<S>(std::forward<std::tuple<Args...>>(args))... ) {}
 				
