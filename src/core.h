@@ -167,7 +167,9 @@ namespace MARQOV
          * A generic type sink from C++17.
          * It consumes a type, and makes it `void`.
          */
-		template<class> struct type_sink { typedef void type;///< convert everything to void. };
+		template<class> struct type_sink {
+		     typedef void type;///< convert everything to void.
+		 };
 		template<class T> using type_sink_t = typename type_sink<T>::type;
         
         /** Helper to figure out whether a type is a lattice.
