@@ -299,12 +299,13 @@ public:
      */
     template < typename T >
     inline T Get(const std::string& file, const std::string& block, const std::string& key) const;
+    /** A function for setting values in the registry.
+     */
     template <typename T>
     inline T set(const std::string& file, const std::string& block, const std::string& key, T val);
 };
 
 /** The helper template for performing string -> type conversions.
- * 
  * 
  * The basic template for doing the conversion between strings and the requested type.
  * We use the C++ stringstreams thus we benefit from all overloads that are already provided by C++.
@@ -322,6 +323,10 @@ struct GetTrait
     }
 };
 
+/** The helper template for performing string -> bool conversion
+ * 
+ * Specialization for boolean(true, false) like strings
+ */
 template <>
 struct GetTrait<bool>
 {
