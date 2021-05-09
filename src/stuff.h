@@ -115,11 +115,6 @@
 		
 		// ----------------- consistency check end ------------------
 
-
-
-
-		double elementaryMCstep();
-	    
         void gameloop()
 		{
 			prepare_consistency_check(checkidxs);
