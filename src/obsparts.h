@@ -30,8 +30,14 @@
 class Magnetization
 {
 	public:
-		std::string name, desc;
+		std::string name; ///< The name of the observable
+        std::string desc; ///< A helpful description that will be used in the HDF5 output files.
 
+        /** Construct a magnetization object
+         * 
+         * @param name How you want to call it.
+         * @param description A helpful description for this observable.
+         */
 		Magnetization(std::string name, std::string description) : name(name), desc(description) {}
 		Magnetization(std::string name) : name(name), desc("magnetization") {}
 		Magnetization() : name("m"), desc("magnetization") {}

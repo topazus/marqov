@@ -35,32 +35,42 @@
 #include <sstream>
 
 /**
-* The basic exception thrown by the registry. It is derived from the STL logic_error exception.
+* The base exception class thrown by the registry. It is derived from the STL logic_error exception.
 */
 class Registry_Exception : public std::logic_error
 {
 public:
-    explicit Registry_Exception(const std::string& what_arg) throw() : std::logic_error(what_arg) {}
+    /** Construct exception with error message.
+     * 
+     * @param err_msg The error message.
+     */
+    explicit Registry_Exception(const std::string& err_msg) throw() : std::logic_error(err_msg) {}
 private:
 };
 
-/**
-* The exception when the desired key is not found.
-*/
+/** The exception when the desired key is not found.
+ */
 class Registry_Key_not_found_Exception : public Registry_Exception
 {
 public:
-    explicit Registry_Key_not_found_Exception(const std::string& what_arg) throw() : Registry_Exception(what_arg) {}
+    /** The Exception when a requested key is not found.
+     * 
+     * @param err_msg The error message of which key is not found.
+     */
+    explicit Registry_Key_not_found_Exception(const std::string& err_msg) throw() : Registry_Exception(err_msg) {}
 private:
 };
 
-/**
- * The exception when the requested Data in a block is not present.
+/** The exception when the requested Data in a block is not present.
  */
 class Registry_Block_Data_not_found_Exception : public Registry_Key_not_found_Exception
 {
 public:
-    const std::string block_key;
+    const std::string block_key; ///< to denote the block where no data was found
+    /** Construct an exception when the data was not found.
+     * 
+     * @param key_value which key was not found.
+     */
     explicit Registry_Block_Data_not_found_Exception(const std::string& key_value) throw() : Registry_Key_not_found_Exception(std::string("Block Key not found: ") + key_value), block_key(key_value) {}
     ~Registry_Block_Data_not_found_Exception() throw() {}
 private:
@@ -72,7 +82,11 @@ private:
 class Registry_Block_not_found_Exception : public Registry_Key_not_found_Exception
 {
 public:
-    const std::string block;
+    const std::string block;///< which block has not been found.
+    /** Construct n exception where a block was not found.
+     * 
+     * @param key_value the block which has not been found.
+     */
     explicit Registry_Block_not_found_Exception(const std::string& key_value) throw() : Registry_Key_not_found_Exception(std::string("Block not found: ") + key_value), block(key_value) {}
     ~Registry_Block_not_found_Exception() throw() {}
 private:
@@ -84,7 +98,11 @@ private:
 class Registry_cfgfile_not_found_Exception : public Registry_Key_not_found_Exception
 {
 public:
-    const std::string cfgfile;
+    const std::string cfgfile; ///< which config file was not found.
+    /** Construct the respective exception when a file was not found.
+     * 
+     * @param key_value Which config file could not be found.
+     */
     explicit Registry_cfgfile_not_found_Exception(const std::string& key_value) throw(): Registry_Key_not_found_Exception(std::string("cfgfile not found: ") + key_value), cfgfile(key_value) {}
     ~Registry_cfgfile_not_found_Exception() throw() {}
 private:
@@ -97,14 +115,33 @@ class Block
 {
     //In Config Files those [BLOCK] thingies
     std::map<std::string , std::string > Block_Data;
-    std::string BlockName;
-    std::vector<std::string> Keys;
-    std::map<std::string , std::string >::size_type NrOfKeys;
-    void push_back_Key(std::string);
+    std::string BlockName; ///< The name of the block
+    std::vector<std::string> Keys; ///< all keys that have been found.
+    std::map<std::string , std::string >::size_type NrOfKeys; ///< the number of key-value pairs that we have.
+    /** Add a key-value pair.
+     * 
+     * @param arg Add this key-value pair.
+     */
+    void push_back_Key(std::string arg);
 public:
+    /** Create an empty block
+     */
     Block() {}
+    /** Create a block from a vector of strings.
+     * 
+     * @param blockname The name of the block.
+     * @param block a vector of strings.
+     */
     Block(std::string blockname , const std::vector<std::string>& block);
+    /** Get the number of keys that we store.
+     * 
+     * @returns the number of keys that we store.
+     */
     inline unsigned int size(void) const;
+    /** Get the list of keys that we store
+     * 
+     * @returns The list of keys that we store.
+     */
     const std::vector<std::string> GetKeys() const
     {
         return Keys;

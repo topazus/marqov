@@ -21,13 +21,14 @@
 #include "metropolis.h"
 #include "wolff.h"
 // Defines the Elementary Monte Carlo Step (EMCS)
+// See main file, core.h, for docs.
 
 namespace MARQOV
 {
 template <class Grid, class Hamiltonian, template<class> class RefType>
 double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 {
-	const int SymD = std::tuple_size<StateVector>::value;
+	constexpr int SymD = std::tuple_size<StateVector>::value;
 
 	// cluster updates
 	marqovtime.switch_clock("cluster");
