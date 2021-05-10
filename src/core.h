@@ -473,16 +473,17 @@ class Core : public RefType<Grid>
 		}
 
 	/** Construct MARQOV and let MARQOV create the lattice.
-         * 
-	* If you require MARQOV::Core to instantiate and embed the lattice for you.
-	* @tparam HArgs the Arguments of the Hamiltonian.
-	* @tparam LArgs The Arguments of the Lattice.
-	*
-	* @param largs the arguments that we forward to the lattice
-	* @param mc The Marqov config object with all configuration.
-	* @param mybeta the temperature that governs the Metropolis dynamics.
-	* @param hargs the arguemts for the Hamiltonian.
-	*/
+     * 
+	 * If you require MARQOV::Core to instantiate and embed the lattice for you.
+	 * @tparam HArgs the Arguments of the Hamiltonian.
+	 * @tparam LArgs The Arguments of the Lattice.
+	 *
+	 * @param largs the arguments that we forward to the lattice
+	 * @param mc The Marqov config object with all configuration.
+     * @param mtx The Mutex for synchronizing access to the HDF5 library.
+	 * @param mybeta the temperature that governs the Metropolis dynamics.
+	 * @param hargs the arguemts for the Hamiltonian.
+	 */
 	template <class ...HArgs, class ... LArgs>
 	Core(std::tuple<LArgs...>& largs, Config mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
