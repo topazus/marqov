@@ -154,7 +154,9 @@ namespace MARQOV
     {
     private:
     public:
-        /** This gives us the parameters of a simulation and we are responsible for setting everything up.
+        /** Create a full simulation from a parameter.
+         * 
+         * This gives us the parameters of a simulation and we are responsible for setting everything up.
          * It has a template parameter, but of course all used parameters have to resolve to the same underlying MarqovType.
          * @param p The full set of parameters that are relevant for your Problem
          * @param filter A filter that can be applied before the actual creation of MARQOV
@@ -169,6 +171,8 @@ namespace MARQOV
         }
         std::vector<Sim*> oursims; ///< Collects the sims that we have created and for which we feel repsonsible.
         /** This registers an already allocated simulation with us.
+         * 
+         * @param sim A reference to the sim that already exists.
          */
         void enqueuesim(Sim& sim)
         {
@@ -187,6 +191,8 @@ namespace MARQOV
                 workqueue.push_back(Simstate(idx));
             });//Put some warmup into the taskqueue
         }
+        /** Start the simulations! GoGoGo...!
+         */
         void start()
         {
             //create dummy data for the ptplan
@@ -230,10 +236,19 @@ namespace MARQOV
             //      taskqueue.enqueue(master);
         }
         void waitforall() {}
+        /** Construct Scheduler
+         * 
+         * @param maxptsteps How many parallel tempering steps do we do
+         * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
+         */
         Scheduler(int maxptsteps, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
         taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads))
         {}
+        /** Tidy up scheduler
+         * 
+         * this frees all resources and waits until all threads have finished.
+         */
         ~Scheduler() {
             if (!nowork() && !masterstop && (taskqueue.tasks_enqueued() > 0) )
             {
@@ -268,17 +283,24 @@ namespace MARQOV
             std::mutex hdf;///< Lock for the HDF5 I/O since the library for C++ is not thread-safe.
             std::mutex io;///< Lock for the rest?
         } mutexes;
+        /** Find the parallel tempering exchange partner of the given id.
+         * 
+         * @param id find the next partner that this id has.
+         */
         auto findpartner(uint id)
         {
             return std::find_if(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == static_cast<int>(id);});
         }
         
         /** Test whether there is work available.
+         * 
          * @return true if no task is working and no work is to be executed by a task and no sim is to moved to the taskqueue.
          */
         bool nowork() {return workqueue.is_empty() && taskqueue.tasks_assigned() == 0 && taskqueue.tasks_enqueued() == 0;}
         
-        /** This function is called when the current simulation is up for a parallel tempering (PT) step.
+        /** Do a parallel tempering step. 
+         * 
+         * This function is called when the current simulation is up for a parallel tempering (PT) step.
          * If its partner is already waiting we do the parallel tempering, if not we got moved into 
          * a queue and wait for a partner
          * @param itm The Sim which is chosen for PT
@@ -308,7 +330,9 @@ namespace MARQOV
                 ptqueue.push_back(itm);
             }
         }
-        /** This determines how many steps have to be done until the next PTstep
+        /** Take simulation and move it to the workqueue.
+         * 
+         * This determines how many steps have to be done until the next PTstep
          * and moves the simulation into the taskqueue where the gameloop is executed.
          * @param itm The simulation that gets further worked on.
          */
@@ -339,7 +363,8 @@ namespace MARQOV
                 [itm, newnpt, gameloop]{gameloop(itm, newnpt);}
             );
         }
-        /** Determine the next PT step
+        /** Determine the next PT step.
+         *
          * @param idx simulation id to check
          * @param curnpt current PT time
          * @return the next PT step where this simulation is selected for PT.
@@ -356,8 +381,8 @@ namespace MARQOV
         
         int maxpt; ///< how many pt steps do we do
         std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
-        std::vector<std::pair<int, int> > ptplan;///< who exchanges with whom in each step
-        bool masterstop;
+        std::vector<std::pair<int, int> > ptplan; ///< who exchanges with whom in each step
+        bool masterstop; ///< A global flag to denote that the master has decided to stop.
         ThreadPool::Semaphore masterwork; ///< The semaphore that triggers the master process
         ThreadPool::ThreadSafeQueue<Simstate> workqueue; ///< this is the queue where threads put their finished work and the master does PT
         std::mutex simvectormutex; ///< A mutex to protect accesses to the simvector which could be invalidated by the use of push_back
@@ -370,6 +395,7 @@ namespace MARQOV
     };
 
     /** A helper class to figure out the type of the scheduler.
+     * 
      * @tparam Hamiltonian the type of the Hamiltonian.
      * @tparam Lattice The type of the lattice
      * @tparam Parameters The type f the parameters. We instantiate Hamiltonian
@@ -378,8 +404,8 @@ namespace MARQOV
     template <class Hamiltonian, class Lattice, class Parameters>
     struct GetSchedulerType
     {
-        typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType;
-        typedef Scheduler<MarqovType> MarqovScheduler;
+        typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType; ///< Holds the Type of the Simulation
+        typedef Scheduler<MarqovType> MarqovScheduler; ///< Holds the type of a scheduler for these simulations.
     };
 };
 #endif
