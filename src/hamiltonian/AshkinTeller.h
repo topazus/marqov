@@ -76,7 +76,7 @@ class AshkinTeller
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
-			for (int i=0; i<grid.size(); i++)
+			for (decltype(grid.size()) i = 0; i < grid.size(); i++)
 			{
 				for (int j=0; j<SymD; j++)
 				{

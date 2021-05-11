@@ -33,7 +33,7 @@ inline std::vector<Params> replicator(std::vector<Params>& params, int nreplicas
 		auto mp = params[i].second;
 		auto hp = params[i].third;
 
-		for (std::size_t j=0; j<nreplicas; ++j)
+		for (int j = 0; j < nreplicas; ++j)
 		{
 			auto mpr(mp);
 			mpr.setrepid(j);
@@ -58,7 +58,7 @@ inline std::vector<Params> replicator_pair(std::vector<Params>& params, int nrep
 		auto mp = params[i].first;
 		auto hp = params[i].second;
 
-		for (std::size_t j=0; j<nreplicas; ++j)
+		for (int j = 0; j < nreplicas; ++j)
 		{
 			auto mpr(mp);
 			mpr.setrepid(j);

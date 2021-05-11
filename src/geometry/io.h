@@ -31,8 +31,6 @@ void save_geometry(Grid& grid, const std::string path)
 	os.open(path.c_str());
 	os << std::fixed << std::setprecision(16);
 
-	const int dim = grid.dim;
-
 	for (int i=0; i<grid.size(); i++)
 	{
 		auto nbrs = grid.nbrs(0,i);
@@ -57,8 +55,6 @@ void save_geometry_deluxe(Grid& grid, const std::string path)
 	std::ofstream os;
 	os.open(path.c_str());
 	os << std::fixed << std::setprecision(16);
-
-	const int dim = grid.dim;
 
 	for (int i=0; i<grid.size(); i++)
 	{

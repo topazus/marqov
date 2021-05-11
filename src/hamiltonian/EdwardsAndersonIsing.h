@@ -1,3 +1,20 @@
+/* MARQOV - A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef EDWARDSANDERSONISING_H
 #define EDWARDSANDERSONISING_H
 #include <array>
@@ -66,7 +83,7 @@ class LinkOverlap /// not working so far!!!!
 					auto nbnds = bnds.size();
 					sum_ij[i].resize(nbnds);
 
-					for (int j=0; j<nbnds; j++) sum_ij[i][j] = 0;
+					for (decltype(nbnds) j=0; j<nbnds; j++) sum_ij[i][j] = 0;
 				}
 			}
 			int nbondstot = 0;
@@ -76,7 +93,7 @@ class LinkOverlap /// not working so far!!!!
 				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
 				nbondstot += nbnds;
-				for (int j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
+				for (decltype(nbnds) j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
 			}
 
 			counter++;
@@ -89,7 +106,7 @@ class LinkOverlap /// not working so far!!!!
 			{
 				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
-				for (int j=0; j<nbnds; j++) retval += pow(sum_ij[i][j],2);
+				for (decltype(nbnds) j=0; j<nbnds; j++) retval += pow(sum_ij[i][j],2);
 			}
 			return norml * retval;
 		}
@@ -119,7 +136,7 @@ class InternalEnergy /// not working so far!!!!
 					auto nbnds = bnds.size();
 					sum_ij[i].resize(nbnds);
 
-					for (int j=0; j<nbnds; j++) sum_ij[i][j] = 0;
+					for (decltype(nbnds) j=0; j<nbnds; j++) sum_ij[i][j] = 0;
 				}
 			}
 
@@ -127,7 +144,7 @@ class InternalEnergy /// not working so far!!!!
 			{
 				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
-				for (int j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
+				for (decltype(nbnds) j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
 			}
 
 			const double norml = 1. / double(counter) / double(size);
@@ -140,7 +157,7 @@ class InternalEnergy /// not working so far!!!!
 			{
 				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
-				for (int j=0; j<nbnds; j++) retval += sum_ij[i][j] * bnds[j];
+				for (decltype(nbnds) j=0; j<nbnds; j++) retval += sum_ij[i][j] * bnds[j];
 			}
 			return - norml * retval;
 		}
@@ -315,7 +332,7 @@ class EdwardsAndersonIsing
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
-			for (int i=0; i<grid.size(); i++)
+			for (decltype(grid.size()) i = 0; i < grid.size(); i++)
 			{
 				if (rng.real() > 0.5) statespace[i][0] = 1;
 				else statespace[i][0] = -1;

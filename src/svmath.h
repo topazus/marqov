@@ -24,38 +24,70 @@
 
 // ------- elementary state vector calculus
 
+/** Add two StateVectors elementwise: c=a+b.
+ * 
+ * @param arg1 a
+ * @param arg2 b
+ * @returns @f[ \vec{c} = \vec{a} + \vec{b} @f]
+ */
 template <class StateVector>
-inline StateVector operator + (StateVector lhs,  StateVector rhs)
+inline StateVector operator + (StateVector arg1,  StateVector arg2)
 {
-    StateVector res(lhs);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
-    res[i] += rhs[i];
+    StateVector res(arg1);
+    for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    res[i] += arg2[i];
     return res;
 }
 
+/** Subtract two StateVectors elementwise: c=a-b.
+ * 
+ * @param arg1 a
+ * @param arg2 b
+* @returns @f[ \vec{c} = \vec{a} - \vec{b} @f]
+ */
 template <class StateVector>
-inline StateVector operator - (StateVector lhs,  StateVector rhs)
+inline StateVector operator - (StateVector arg1,  StateVector arg2)
 {
-    StateVector res(lhs);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
-    res[i] -= rhs[i];
+    StateVector res(arg1);
+    for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    res[i] -= arg2[i];
     return res;
 }
 
-
-// mult is a component-wise multiplication which is used e.g. in the
-// Metropolis algorithm 
-
+/** mult is a component-wise multiplication.
+ * 
+ * This is used e.g. in the Metropolis algorithm.
+ * @see Metropolis
+ * @param a
+ * @param b
+ * @returns @f[ c = a * b @f]
+ */
 inline double mult(const double& a, const double& b)
 {
     return a*b;
 }
 
+/** mult is a component-wise multiplication.
+ * 
+ * This is used e.g. in the Metropolis algorithm.
+ * @see Metropolis
+ * @param a
+ * @param b
+ * @returns @f[ c = a * b @f]
+ */
 inline double mult(const double& a, const int& b)
 {
     return a*double(b);
 }
 
+/** mult is a component-wise multiplication.
+ * 
+ * This is used e.g. in the Metropolis algorithm.
+ * @see Metropolis
+ * @param a
+ * @param b
+ * @returns @f[ c_i = a_i * b_i @f]
+ */
 template <class VecType, class StateVector>
 inline StateVector mult(const VecType& a, const StateVector& b)
 {
@@ -65,45 +97,88 @@ inline StateVector mult(const VecType& a, const StateVector& b)
     return retval;
 }
 
+/** mult is a component-wise multiplication.
+ * 
+ * This is used e.g. in the Metropolis algorithm.
+ * @see Metropolis
+ * @param a
+ * @param b
+ * @returns @f[ c_i = a * b_i @f]
+ */
 template <class StateVector>
 inline StateVector mult(const int& a, const StateVector& b)
 {
 	StateVector retval(b);
-	for(int i = 0; i < std::tuple_size<StateVector>::value; ++i) retval[i] *= a;
+	for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i) retval[i] *= a;
 	return retval;
 }
 
+/** mult is a component-wise multiplication.
+ * 
+ * This is used e.g. in the Metropolis algorithm.
+ * @see Metropolis
+ * @param a
+ * @param b
+ * @returns @f[ c_i = a * b_i @f]
+ */
 template <class StateVector>
 inline StateVector mult(const double& a, const StateVector& b)
 {
 	StateVector retval(b);
-	for(int i = 0; i < std::tuple_size<StateVector>::value; ++i) retval[i] *= a;
+	for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i) retval[i] *= a;
 	return retval;
 }
 
+/** The dot/inner product.
+ * 
+ * @param a
+ * @param b
+ * @returns @f[ c=a*b @f]
+ */
 inline double dot(const double& a, const double& b)
 {
     return a*b;
 }
 
+/** The dot/inner product.
+ * 
+ * @param a
+ * @param b
+ * @returns @f[ c=\sum_i a_i b_i @f]
+ */
 template<class VecType>
 inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 {
-//    typedef typename VecType::value_type FPType;
     return std::inner_product(begin(a), end(a), begin(b), 0.0);
 }
 
-
+/** Reflect a StateVector along a plane.
+ * 
+ * This takes a State vector and a plane defined by its normal vector
+ * and performs a reflection along it
+ * 
+ * @tparam StateVector the Container used for storing the vectors.
+ * @param vec the state vector that should be reflected.
+ * @param mirror The normal vector of the plane used for reflecting.
+ * @returns the modified, reflected vector.
+ */
 template <class StateVector>
 inline void reflect(StateVector& vec, const StateVector mirror)
 {
 	const int SymD = std::tuple_size<StateVector>::value;
 	
-	const double dotp = dot(vec,mirror);
+	const double dotp = dot(vec, mirror);
 
 	for (int i=0; i<SymD; i++) vec[i] -= 2*dotp*mirror[i];
-}	
+}
 
+/** Normalize vector
+ * 
+ * This normalizes a vector such that it has unit length.
+ * 
+ * @tparam Container The Container used for storing the vector.
+ * @param a the vector to normalize
+ */
 template <class Container>
 inline void normalize(Container& a)
 {
@@ -112,13 +187,18 @@ inline void normalize(Container& a)
 	for (decltype(a.size()) i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
 }
 
+/** Dump vector to stdout
+ * 
+* @tparam StateVector the Container used for storing the vector.
+* @param vec the vector that we want to write to the screen.
+ */
 template <class StateVector>
 inline void coutsv(StateVector& vec)
 {
 	const int SymD = std::tuple_size<StateVector>::value;
 	
-	for (int i=0; i<SymD; i++) cout << vec[i] << "\t";
-	cout << endl;
+	for (int i=0; i<SymD; i++) std::cout << vec[i] << "\t";
+	std::cout << std::endl;
 }
 
 #endif

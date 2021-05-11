@@ -55,7 +55,7 @@ class SSHLattice
 					retval.reserve(this->nsites);
 					for(int j = 0; j < i; ++j)
 						retval.push_back(j);
-					for(int j = i+1; j < this->nsites; ++j)
+					for(int j = i+1; j < static_cast<int>(this->nsites); ++j)
 						retval.push_back(j);
 					break;
 			}
@@ -92,7 +92,7 @@ class SSHLattice
 		            retval.reserve(this->nsites);
 		            for(int j = 0; j < i; ++j)
 		            	retval.push_back(1.0/j);
-		            for(int j = i+1; j < this->nsites; ++j)
+		            for(int j = i+1; j < static_cast<int>(this->nsites); ++j)
 		            	retval.push_back(1.0/j);
 		            break;
 		    }

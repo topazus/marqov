@@ -51,7 +51,7 @@ public:
 		std::vector<double> retval(dim,0);
 
 		// transform to double and normalize to unit hypercube
-		for (int i=0; i<retval.size(); i++) 
+		for (decltype(retval.size()) i=0; i<retval.size(); i++) 
 		{ 
 			retval[i] = double(indices[i])/length; 
 			retval[i] += 0.5/length;
