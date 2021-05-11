@@ -22,9 +22,9 @@
 #include <array>
 #include <type_traits>
 
-/**
- * A helper class to generate a random vector on an SymD-dimensional unit
- * sphere
+/** Helper for random directions on an nD unit sphere.
+ * 
+ * A helper class to draw a random vector on an SymD-dimensional unit sphere.
  * @tparam RNG The rng that is used for drawing random numbers
  * @tparam valuetype The type of the elements of the vector.
  * @tparam SymD The dimensionality
@@ -34,33 +34,45 @@
 template <class RNG, typename valuetype, int SymD, typename Enable = void> 
 struct Rnddir_Helper
 {
-static auto rnddir(RNG& rn) -> std::array<valuetype, SymD>
-{
-	// Spherical coordinates according to:
-	// https://sites.math.washington.edu/~morrow/335_12/sphericalCoords.pdf
-    std::array<valuetype, SymD> retval;
-    retval[0] = 1;//beginning of recursion
-    if(SymD > 1) //poor mans constexpr if
+    /** Draw a random directions on an nD unit sphere.
+     * 
+     * Formulas are from this
+     * [external PDF](https://sites.math.washington.edu/~morrow/335_12/sphericalCoords.pdf) with some hints.
+     * @note For the used rng, we assume it behaves like the RNGCache ...
+     * @param rn where to get the random numbers from.
+     */
+    static auto rnddir(RNG& rn) -> std::array<valuetype, SymD>
     {
-        //set up that auxiliary data that might be erased later
-        valuetype angles[SymD-1];
-        for(int i = 0; i < SymD - 1; ++i)
-            angles[i] = 2.0*rn.real();
-        //recursion for the polar(?) angles
-        for(int j = 1; j < SymD - 1; ++j)
-            retval[j] = retval[j-1] * angles[j-1]*(2.0 - angles[j-1]);
-        for(int j = 0; j < SymD - 2; ++j)
-            retval[j] = std::sqrt(retval[j]) * (1.0-angles[j]);
-        retval[SymD - 2] = std::sqrt(retval[SymD - 2]);
-        //fix up the azimuthal angle
-        //note the dependency on retval[SymD-2] here. Hence the order is important
-        retval[SymD - 1] = retval[SymD - 2] * std::cos(M_PI*angles[SymD - 2]);
-        retval[SymD - 2] = retval[SymD - 2] * std::sin(M_PI*angles[SymD - 2]);
+        std::array<valuetype, SymD> retval;
+        retval[0] = 1;//beginning of recursion
+        if(SymD > 1) //poor mans constexpr if
+        {
+            //set up that auxiliary data that might be erased later
+            valuetype angles[SymD-1];
+            for(int i = 0; i < SymD - 1; ++i)
+                angles[i] = 2.0*rn.real();
+            //recursion for the polar(?) angles
+            for(int j = 1; j < SymD - 1; ++j)
+                retval[j] = retval[j-1] * angles[j-1]*(2.0 - angles[j-1]);
+            for(int j = 0; j < SymD - 2; ++j)
+                retval[j] = std::sqrt(retval[j]) * (1.0-angles[j]);
+            retval[SymD - 2] = std::sqrt(retval[SymD - 2]);
+            //fix up the azimuthal angle
+            //note the dependency on retval[SymD-2] here. Hence the order is important
+            retval[SymD - 1] = retval[SymD - 2] * std::cos(M_PI*angles[SymD - 2]);
+            retval[SymD - 2] = retval[SymD - 2] * std::sin(M_PI*angles[SymD - 2]);
+        }
+        return retval;
     }
-    return retval;
-}
 };
 
+/** Specialization for arrays of 1 arithmetic type.
+ * 
+ * If the state space is a scalar, the only directions are +-1.
+ * @see Rnddir_Helper
+ * @tparam RND The rng that is used for drawing random numbers
+
+ */
 template <class RND, typename T>
 struct Rnddir_Helper<RND, T, 1, 
 typename std::enable_if<std::is_arithmetic<T>::value>::type> // enable only for arithmetic types
@@ -73,6 +85,13 @@ static auto rnddir(RND& rn) -> std::array<T, 1>
 }
 };
 
+/** Create a random direction.
+ * 
+ * This creates a random direction in SymD space with proper type.
+ * 
+ * @see Rnddir_Helper
+ * @param rn the RNG to draw the required random numbers from. 
+ */
 template <class RNG, typename valuetype, int SymD> 
 auto rnddir(RNG& rn) -> std::array<valuetype, SymD>
 {
