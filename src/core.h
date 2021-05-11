@@ -355,9 +355,8 @@ class Core : public RefType<Grid>
         typedef Grid Lattice; ///< The Type of the Lattice
 		typedef typename Hamiltonian::StateVector StateVector; ///< The type of the StateVector as retrieved from the Hamiltonian.
 		typedef int redStateVector; // reduced StateVector (so far needed only for AT model, improve me!!!)
-		typedef StateVector* StateSpace;///< the type of the state space.
-
-		timetracker marqovtime; ///< The TimeTracker for tracking times.
+		typedef StateVector* StateSpace; ///< the type of the state space.
+		marqovtime::timetracker mrqvt; ///< The TimeTracker for tracking times.
 
 		// Local classes. We gain access to all Types of MARQOV::Core
 		
@@ -463,12 +462,12 @@ class Core : public RefType<Grid>
 		{
 			hdf5lock.unlock();
 
-			marqovtime.add_clock("cluster");
-			marqovtime.add_clock("local");
-			marqovtime.add_clock("measurements");
-			marqovtime.add_clock("other");
-			//marqovtime.status();
-			marqovtime.run("other");
+			mrqvt.add_clock("cluster");
+			mrqvt.add_clock("metrop");
+			mrqvt.add_clock("measure");
+			mrqvt.add_clock("other");
+			//mrqvt.status();
+			mrqvt.run("other");
 
 		}
 
@@ -503,12 +502,12 @@ class Core : public RefType<Grid>
 		{
 			hdf5lock.unlock();
 
-			marqovtime.add_clock("cluster");
-			marqovtime.add_clock("local");
-			marqovtime.add_clock("measurements");
-			marqovtime.add_clock("other");
-			//	marqovtime.status();
-			marqovtime.run("other");
+			mrqvt.add_clock("cluster");
+			mrqvt.add_clock("metrop");
+			mrqvt.add_clock("measure");
+			mrqvt.add_clock("other");
+			//	mrqvt.status();
+			mrqvt.run("other");
 
 		}
 
@@ -934,14 +933,15 @@ class Core : public RefType<Grid>
                 for (int i=0; i < this->mcfg.gameloopsteps/10; ++i)
                 {
                     avgclustersize += elementaryMCstep();
-                    marqovtime.switch_clock("measurements");
+                    mrqvt.switch_clock("measure");
                     marqov_measure(obs, statespace, this->grid);
                 }
             }
-            marqovtime.stop();
+            mrqvt.stop();
 
-            marqovtime.status();
-            if (this->mcfg.id == 0) std::cout << "|\n" << avgclustersize/this->mcfg.gameloopsteps << std::endl;
+            mrqvt.status();
+		  if (this->mcfg.id == 0) std::cout << "|\n\n" << "Average cluster size:" << endl << "  "  << avgclustersize/this->mcfg.gameloopsteps << std::endl; 
+		  if (this->mcfg.id == 0) mrqvt.status();
         }
 
         /** Warm up loop
