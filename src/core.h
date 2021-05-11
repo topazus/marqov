@@ -356,7 +356,7 @@ class Core : public RefType<Grid>
 		typedef typename Hamiltonian::StateVector StateVector; ///< The type of the StateVector as retrieved from the Hamiltonian.
 		typedef int redStateVector; // reduced StateVector (so far needed only for AT model, improve me!!!)
 		typedef StateVector* StateSpace; ///< the type of the state space.
-		timetracker marqovtime; ///< The TimeTracker for tracking times.
+		marqovtime::timetracker mrqvt; ///< The TimeTracker for tracking times.
 
 		// Local classes. We gain access to all Types of MARQOV::Core
 		
@@ -939,7 +939,7 @@ class Core : public RefType<Grid>
             }
             mrqvt.stop();
 
-            marqovtime.status();
+            mrqvt.status();
 		  if (this->mcfg.id == 0) std::cout << "|\n\n" << "Average cluster size:" << endl << "  "  << avgclustersize/this->mcfg.gameloopsteps << std::endl; 
 		  if (this->mcfg.id == 0) mrqvt.status();
         }
