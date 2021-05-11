@@ -18,7 +18,7 @@
 class AshkinTellerMag
 {
 	public:
-		std::string name;
+		std::string name, desc;
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
@@ -37,7 +37,7 @@ class AshkinTellerMag
 
 			return (std::abs(mag1)+std::abs(mag2)+std::abs(mag3))/double(3*N);
 		}
-		AshkinTellerMag() : name("m") {}
+		AshkinTellerMag() : name("m"), desc("desc") {}
 };
 
 
@@ -61,7 +61,6 @@ class AshkinTeller
 		constexpr static int SymD = 3;
 		const std::string name;
 		typedef std::array<SpinType, SymD> StateVector;
-		typedef AshkinTeller<int> myHamiltonian;
 		template <typename RNG>
 		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
 
@@ -70,7 +69,8 @@ class AshkinTeller
 	
 		// instantiate and choose observables
 		AshkinTellerMag       obs_m;
-        std::tuple<AshkinTellerMag> observables;
+		decltype(std::make_tuple(obs_m)) observables = {std::make_tuple(obs_m)};
+	
 
 		// init
 		template <class StateSpace, class Lattice, class RNG>
@@ -111,10 +111,11 @@ namespace MARQOV
 			{
 				switch (color)
 				{
-					case 0: retval = ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
-					case 1: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
-					case 2: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
-					default: throw std::invalid_argument("invalid color!");
+					case 0: retval = ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]); break;
+					case 1: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]); break;
+					case 2: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]); break;
+					default: cout << "invalid color!" << color << endl;
+//					default: throw std::invalid_argument("invalid color!"); // catch me!
 				}
 			}
 			return retval;
@@ -205,10 +206,11 @@ namespace MARQOV
 			double retval = 0.0;
 			switch (color)
 			{
-				case 0: retval = ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
-				case 1: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
-				case 2: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
-				default: throw std::invalid_argument("invalid color!");
+				case 0: retval = ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]); break;
+				case 1: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]); break;
+				case 2: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]); break;
+				default: cout << "invalid color!" << color << endl;
+//				default: throw std::invalid_argument("invalid color!"); // catch me!
 			}
 			return retval;
 		}
@@ -235,6 +237,7 @@ namespace MARQOV
 		static inline int move(AshkinTeller<int>& ham, Lattice& grid, StateSpace& statespace, 
 						   M& metro, RNG& rng, double beta, int rsite)
 		{
+
 
 
 			int retval = 0;
