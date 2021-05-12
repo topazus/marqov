@@ -1,20 +1,27 @@
+
+/**
+ * @file AshkinTeller.h
+ * @brief Three-Color Ashkin-Teller Hamiltonian.
+ *
+ * numerically, this model is treated as embedded Ising models
+ *
+ * the Wolff algorithm can only be used for K=<0.5!
+ *
+ * compare Zhu et. al, PRB 91, 224201 (2015) for more details
+ *
+ * 
+ * Note: This Hamiltonian presents an "extrem" use case of MARQOV, where the generic term structure is not used at all! Therefore the general Metropolis and Wolff update algorithms can not be used! Instead the interactions of the model are explicitely coded in the specialized update algorithms below
+ */
+
+
 #ifndef ASHKINTELLER_H
 #define ASHKINTELLER_H
 #include <array>
 #include <tuple>
 #include <string>
 #include <functional>
-//#include "../hamparts.h"
+//#include "../hamparts.h" // not needed, see above
 #include "../metropolis.h"
-
-// the Three-color Ashkin-Teller model
-
-// compare Zhu et. al, PRB 91, 224201 (2015)
-
-// numerically, this model is treated as embedded Ising models
-// the Wolff algorithm can only be used for K=<0.5!
-
-// note that this Hamiltonian presents an "extrem" use case of MARQOV, where the generic Hamiltonian structure is not used! Therefore the general Metropolis and Wolff update algorithms can not be used here! Instead the interactions of the model are explicitely coded in the specialized update algorithms below
 
 
 
