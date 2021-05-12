@@ -450,9 +450,9 @@ class Core : public RefType<Grid>
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
 		step(-1),
-		statespace(setupstatespace(lattice.size())),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
+		statespace(setupstatespace(lattice.size())),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
@@ -490,9 +490,9 @@ class Core : public RefType<Grid>
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
 		step(0),
-		statespace(setupstatespace(this->grid.size())),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
+		statespace(setupstatespace(this->grid.size())),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
@@ -614,7 +614,7 @@ class Core : public RefType<Grid>
         template <class ...HArgs>
         H5::H5File setupHDF5Container(const Config& mc, HArgs&& ...hargs)
         {
-            std::string filepath = mc.outpath+mc.outname + ".h5";
+            std::string filepath = mc.outpath + mc.outname + ".h5";
             auto flag = H5F_ACC_TRUNC;
             if (std::ifstream(filepath).good() && H5::H5File::isHdf5(filepath)) flag = H5F_ACC_RDWR;
             H5::H5File retval(filepath, flag);
@@ -1076,9 +1076,9 @@ class Core : public RefType<Grid>
 		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.
 		Config mcfg; ///< An instance of all our MARQOV related parameters.
 		int step; ///< The current step of the simulation. Used for HDF5 paths.
-		StateSpace statespace; ///< The statespace. It holds the current configuration space.
         std::unique_lock<std::mutex> hdf5lock; ///< The global lock to synchronize access to the HDF5 *library*.
-		H5::H5File dump; ///< The handle for the HDF5 file. Must be before the obscaches.
+		H5::H5File dump; ///< The handle for the HDF5 file. Must be before the obscaches and the statespace.
+		StateSpace statespace; ///< The statespace. It holds the current configuration space.
 		H5::Group obsgroup; ///< The HDF5 Group of all our observables.
 		H5::Group stategroup; ///< The HDF5 Group where to dump the statespace.
 		typedef decltype(std::declval<Hamiltonian>().observables) ObsTs; ///< This type is mostly a tuple of other observables.
