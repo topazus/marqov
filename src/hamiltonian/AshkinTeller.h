@@ -27,11 +27,23 @@
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-// Magnetization
+/**
+* @brief Magnetization of the Three-Color Ashkin-Teller model
+*/
 class AshkinTellerMag
 {
 	public:
 		std::string name, desc;
+		/**
+		* @brief Perform a measurement of the Magnetization
+		*
+		* @tparam StateSpace	the type of the state space 
+		* @tparam Grid the type of the lattice
+		* @param statespace the statespace
+		* @param grid the lattice
+		*
+		* @return A scalar value, the magnetization per site
+		*/
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
@@ -50,17 +62,32 @@ class AshkinTellerMag
 
 			return (std::abs(mag1)+std::abs(mag2)+std::abs(mag3))/double(3*N);
 		}
+		/**
+		* @brief Constructor of the Ashkin-Teller magnetization
+		*/
 		AshkinTellerMag() : name("m"), desc("Magnetization of the Three-color Ashkin-Teller model") {}
 };
 
 
 // ----------------------------------------------------------------------
 
+/** Dummy function which prints an error if one attempts to use the general Metropolis algorithm.
+ *
+ * @todo Find a way that this function is not needed in the first place
+ *
+ * @tparam StateVector the type of the state vector
+ * @tparam RNG the type of the random number generator
+ */
 template <class StateVector, class RNG>
 class AshkinTeller_Initializer
 {
 	public:
+		/** Constructor */
 		AshkinTeller_Initializer(RNG&) {}
+
+		/** Usually specifies how a random new state vector is generated. 
+		  * In this model it is just a place holder and will not be needed! 
+		  */
 		StateVector newsv(const StateVector& svold) 	
 		{
 			cout << "This should not have happened!" << endl;
@@ -102,6 +129,11 @@ class AshkinTeller
 		template <typename RNG>
 		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
 
+		/** Constructor
+		 *  
+		 * @param J the Ising interaction
+		 * @param K the Four-spin interaction
+		 */
 		AshkinTeller(double J, double K) : J(J), K(K), name("ThreeColorAshkinTeller"), observables(obs_m) {}
 		
 
@@ -116,6 +148,15 @@ class AshkinTeller
 
 		//  ----  Initializer  ----
 
+		/** Specifies how the state space is initialized
+		*
+		* @tparam StateSpace 	the type of the state space
+		* @tparam Lattice 		the type of the latticie
+		* @tparam RNG				the type of the random number generator
+		* @param statespace		the state space
+		* @param grid				the lattice
+		* @param rng				the random number generator
+		*/
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
@@ -139,7 +180,11 @@ class AshkinTeller
 namespace MARQOV 
 {
 
-	// Wolff
+	/** Specialized Wolff algorithm for the Ashkin-Teller Hamiltonian
+	* 
+	*
+	* @tparam Lattice the type of the lattice
+	*/
 	template <class Lattice>
 	struct Wolff<AshkinTeller<int>, Lattice>
 	{
@@ -240,7 +285,10 @@ namespace MARQOV
 	
 	
 	
-	// Metropolis
+	/** Specialized Metropolis algorithm for the Ashkin-Teller Hamiltonian
+	 *
+	 * @tparam Lattice type of the lattice
+	 */
 	template <class Lattice>
 	struct Metropolis<AshkinTeller<int>, Lattice>
 	{
