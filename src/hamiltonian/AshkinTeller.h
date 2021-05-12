@@ -4,12 +4,18 @@
 #include <tuple>
 #include <string>
 #include <functional>
-#include "../hamparts.h"
+//#include "../hamparts.h"
 #include "../metropolis.h"
 
-// the 3-color Ashkin-Teller model
+// the Three-color Ashkin-Teller model
 
-// numerically treated as embedded Ising models (compare Zhu et. al 2015)
+// compare Zhu et. al, PRB 91, 224201 (2015)
+
+// numerically, this model is treated as embedded Ising models
+// the Wolff algorithm can only be used for K=<0.5!
+
+// note that this Hamiltonian presents an "extrem" use case of MARQOV, where the generic Hamiltonian structure is not used! Therefore the general Metropolis and Wolff update algorithms can not be used here! Instead the interactions of the model are explicitely coded in the specialized update algorithms below
+
 
 
 // ------------------------------ OBSERVABLES ---------------------------
@@ -22,7 +28,7 @@ class AshkinTellerMag
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			const int N = grid.size();
+			const auto N = grid.size();
 
 			double mag1 = 0.0;
 			double mag2 = 0.0;
@@ -37,7 +43,7 @@ class AshkinTellerMag
 
 			return (std::abs(mag1)+std::abs(mag2)+std::abs(mag3))/double(3*N);
 		}
-		AshkinTellerMag() : name("m"), desc("desc") {}
+		AshkinTellerMag() : name("m"), desc("Magnetization of the Three-color Ashkin-Teller model") {}
 };
 
 
@@ -48,31 +54,61 @@ class AshkinTeller_Initializer
 {
 	public:
 		AshkinTeller_Initializer(RNG&) {}
-		StateVector newsv(const StateVector& svold) 	{cout << "This should not have happened!" << endl;};
+		StateVector newsv(const StateVector& svold) 	
+		{
+			cout << "This should not have happened!" << endl;
+			cout << "This Hamiltonian is not supposed to work with the generic Metropolis algorithm." << endl;
+			cout << "Use a specialized implementation instead!" << endl;
+		};
 };
 
+
+
+
 // ------------------------------ HAMILTONIAN ---------------------------
+
+
+/**
+ * Three-Color Ashkin-Teller Hamiltonian
+ *
+ * @tparam SpinType the type in which to store the binary magnetization values.
+ */
 
 template <typename SpinType = int>
 class AshkinTeller
 {
 	public:
-		double J, K;
-		constexpr static int SymD = 3;
+
+		//  ----  Parameters  ----
+
+		double J; ///< Ising interaction strength
+		double K; ///< Four-spin interaction strength
+
+		constexpr static int SymD = 3; ///< use SymD to encode the three colors of the model
 		const std::string name;
+
+
+
+		//  ---- Definitions  -----
+
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
 
-		AshkinTeller(double J, double K) : J(J), K(K), name("AshkinTeller"), observables(obs_m) {}
+		AshkinTeller(double J, double K) : J(J), K(K), name("ThreeColorAshkinTeller"), observables(obs_m) {}
 		
+
 	
-		// instantiate and choose observables
+		//  ----  Observables ----
+
 		AshkinTellerMag       obs_m;
 		decltype(std::make_tuple(obs_m)) observables = {std::make_tuple(obs_m)};
 	
 
-		// init
+
+
+		//  ----  Initializer  ----
+
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
@@ -89,7 +125,9 @@ class AshkinTeller
 };
 
 
+
 // ----------------------- UPDATE SPECIALIZATIONS ----------------------
+
 
 namespace MARQOV 
 {
@@ -127,8 +165,13 @@ namespace MARQOV
 	
 		// The actual Wolff step
 		template <class DirType, class RNG, class StateSpace>
-		static inline int move(AshkinTeller<int>& ham, Lattice& grid, StateSpace& statespace, 
-						   RNG& rng, double beta, int rsite, const DirType&)
+		static inline int move(AshkinTeller<int>& ham, 
+						   Lattice& grid, 
+						   StateSpace& statespace, 
+						   RNG& rng, 
+						   double beta, 
+						   int rsite, 
+						   const DirType&)
 		{
 			const int ncolors = 3;
 			int clustersize_sum = 0;
@@ -234,12 +277,14 @@ namespace MARQOV
 	
 		// the actual Metropolis move attempt
 		template <class StateSpace, class M, class RNG>
-		static inline int move(AshkinTeller<int>& ham, Lattice& grid, StateSpace& statespace, 
-						   M& metro, RNG& rng, double beta, int rsite)
+		static inline int move(AshkinTeller<int>& ham, 
+						   Lattice& grid, 
+						   StateSpace& statespace, 
+						   M& metro, 
+						   RNG& rng, 
+						   double beta, 
+						   int rsite)
 		{
-
-
-
 			int retval = 0;
 			for (int color=0; color<3; color++) // better select a random color
 			{
