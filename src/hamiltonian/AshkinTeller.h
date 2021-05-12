@@ -58,7 +58,7 @@ class AshkinTeller
 {
 	public:
 		double J, K;
-		constexpr static int SymD = 3;
+		static constexpr int SymD = 3;
 		const std::string name;
 		typedef std::array<SpinType, SymD> StateVector;
 		typedef AshkinTeller<int> myHamiltonian;
