@@ -111,9 +111,9 @@ namespace MARQOV
 			{
 				switch (color)
 				{
-					case 0: retval = ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]); break;
-					case 1: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]); break;
-					case 2: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]); break;
+					case 0: retval = ham.J - ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]); break;
+					case 1: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]); break;
+					case 2: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]); break;
 					default: cout << "invalid color!" << color << endl;
 //					default: throw std::invalid_argument("invalid color!"); // catch me!
 				}
@@ -206,9 +206,9 @@ namespace MARQOV
 			double retval = 0.0;
 			switch (color)
 			{
-				case 0: retval = ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]); break;
-				case 1: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]); break;
-				case 2: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]); break;
+				case 0: retval = ham.J - ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]); break;
+				case 1: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]); break;
+				case 2: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]); break;
 				default: cout << "invalid color!" << color << endl;
 //				default: throw std::invalid_argument("invalid color!"); // catch me!
 			}
