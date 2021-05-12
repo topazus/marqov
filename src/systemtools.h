@@ -19,11 +19,20 @@
 #include <sys/stat.h>
 #include <string>
 #include <exception>
+#include <cerrno>
 
-// make directory
+/** Create Directory.
+ * 
+ * This creates a directory. If the path exists nothing happens.
+ * @param path the path of the directory that should be created.
+ * @throws std::runtime_error If an unrecoverable error occurs. If the path exists nothing happens.
+ */
 inline void makeDir(const std::string path)
 {
     int status = mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-	if (status != 0)
-        throw std::runtime_error(std::string("[MARQOV] Failed to create folder") + path);
+    if (status != 0)
+    {
+        if (errno != EEXIST)
+            throw std::runtime_error(std::string("[MARQOV] Failed to create folder ") + path);
+    }
 }
