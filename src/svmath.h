@@ -21,8 +21,11 @@
 #include <tuple>
 #include <cmath>
 #include <numeric>
+#include <array>
 
-// ------- elementary state vector calculus
+/** @file svmath.h
+ * Elementary state vector calculus
+ */
 
 /** Add two StateVectors elementwise: c=a+b.
  * 

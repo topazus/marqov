@@ -37,6 +37,11 @@
 #include "rngcache.h"
 #include "timetracker.h"
 
+/** The MARQOV namespace.
+ *
+ * This namespace collects all things that are related to MARQOV.
+ *
+ */
 namespace MARQOV
 {
     /** Marqov Config.
