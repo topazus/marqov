@@ -752,7 +752,7 @@ class Core : public RefType<Grid>
          * @param ts optional arguments.
          */
         template <typename StateSpace, class Lattice, class H, typename... Ts>
-        auto haminit_helper(std::true_type, StateSpace& statespace, const Lattice& grid, H& ham, Ts&& ... ts)
+        void haminit_helper(std::true_type, StateSpace& statespace, const Lattice& grid, H& ham, Ts&& ... ts)
         {
             return ham.initstatespace(statespace, grid, rngcache, std::forward<Ts>(ts) ...);
         }
@@ -770,7 +770,7 @@ class Core : public RefType<Grid>
          * @param ts optional arguments
          */
         template <typename StateSpace, class Lattice, class H, typename... Ts>
-        auto haminit_helper(std::false_type, StateSpace& statespace, const Lattice&, H& ham, Ts&& ... ts) -> void
+        void haminit_helper(std::false_type, StateSpace& statespace, const Lattice&, H& ham, Ts&& ... ts)
         {
             this->init_hot();
         }
@@ -785,9 +785,10 @@ class Core : public RefType<Grid>
          * @param ts optional parameters
          */
         template <typename... Ts>
-        auto init(Ts&& ... ts)
+        void init(Ts&& ... ts)
         {
-            return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian, Grid, RNGCache<RNGType>, Ts... >::type(), this->statespace, this->grid, this->ham, std::forward<Ts>(ts)...);
+            if (step < 1)
+                haminit_helper(typename detail::has_init<StateSpace, Hamiltonian, Grid, RNGCache<RNGType>, Ts... >::type(), this->statespace, this->grid, this->ham, std::forward<Ts>(ts)...);
         }
 
         /** Dump RNG State to HDF5.
