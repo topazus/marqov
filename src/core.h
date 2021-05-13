@@ -354,7 +354,6 @@ class Core : public RefType<Grid>
         typedef Hamiltonian HamiltonianType; ///< Via HamiltonianType the used Hamiltonian is accessible.
         typedef Grid Lattice; ///< The Type of the Lattice
 		typedef typename Hamiltonian::StateVector StateVector; ///< The type of the StateVector as retrieved from the Hamiltonian.
-		typedef int redStateVector; // reduced StateVector (so far needed only for AT model, improve me!!!)
 		typedef StateVector* StateSpace; ///< the type of the state space.
 		marqovtime::timetracker mrqvt; ///< The TimeTracker for tracking times.
 
