@@ -814,19 +814,19 @@ class Core : public RefType<Grid>
 
             H5::DataSpace mspace1(rank, fdims.data(), maxdims.data());
             H5::DSetCreatPropList cparms;
-            auto fv = H5Mapper<int64_t>::fillval;
+            auto fv = H5Mapper<u_int64_t>::fillval;
         
             //no compression
 
-            cparms.setFillValue(H5Mapper<int64_t>::H5Type(), &fv);
-            H5::DataSet dataset = stategroup.createDataSet("rngstate", H5Mapper<int64_t>::H5Type(), mspace1, cparms);
+            cparms.setFillValue(H5Mapper<u_int64_t>::H5Type(), &fv);
+            H5::DataSet dataset = stategroup.createDataSet("rngstate", H5Mapper<u_int64_t>::H5Type(), mspace1, cparms);
 
             auto filespace = dataset.getSpace();
             hsize_t start[rank] = {0};//This works for initialization
             std::array<hsize_t, rank> count;
             count.fill(static_cast<hsize_t>(len));
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
-            dataset.write(rngstate.data(), H5Mapper<int64_t>::H5Type(), mspace1, filespace);
+            dataset.write(rngstate.data(), H5Mapper<u_int64_t>::H5Type(), mspace1, filespace);
         }
         /** A helper function to dump the entire statespace.
          * 
