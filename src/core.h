@@ -489,7 +489,7 @@ class Core : public RefType<Grid>
 		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
-		step(0),
+		step(-1),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
 		statespace(setupstatespace(this->grid.size())),
@@ -525,12 +525,15 @@ class Core : public RefType<Grid>
             {
                 std::cout<<"Previous data found! Continuing simulation at step "<<step<<std::endl;
                 //read in the state space
+                auto prevstepstate = dump.openGroup("/step" + std::to_string(step-1) + "/state");
                 {
-                    auto stateds = stategroup.openDataSet("hamiltonianstatespace");
+                    std::cout<<"current step "<<step<<std::endl;
+                    auto stateds = prevstepstate.openDataSet("hamiltonianstatespace");
                     auto dataspace = stateds.getSpace();
                     //read the data... For now we just hope that everything matches...
                     int rank = dataspace.getSimpleExtentNdims();
-                    hsize_t fdims[rank], maxdims[rank], start[rank];
+                    hsize_t fdims[rank], maxdims[rank], start[rank], dims_out[rank];
+                    dataspace.getSimpleExtentDims( dims_out, NULL);
 
                     for(int i = 0; i < rank; ++i)
                     {
@@ -538,22 +541,23 @@ class Core : public RefType<Grid>
                         maxdims[i] = H5S_UNLIMITED;
                         start[i] = 0;
                     }
+                    std::cout<<rank<<" "<<fdims[0]<<" "<<dims_out[0]<<std::endl;
 
                     H5::DataSpace mspace1(rank, fdims, maxdims);
                     dataspace.selectHyperslab(H5S_SELECT_SET, fdims, start);//We have no separate count array since fdims contains identical information
-                    stateds.read(statespace, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
+                    stateds.read(retval, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
                 }
         
                 //compare the used RNGs
                 {
-                    auto stateds = stategroup.openDataSet("RNG");
+                    auto stateds = prevstepstate.openDataSet("RNG");
                     auto dataspace = stateds.getSpace();
                     //FIXME: proper reading of strings...
                 }
         
                 std::vector<int64_t> rngstate;
                 {
-                    auto stateds = stategroup.openDataSet("rngstate");
+                    auto stateds = prevstepstate.openDataSet("rngstate");
                     auto dataspace = stateds.getSpace();
                     //read the data... For now we just hope that everything matches...
                     int rank = dataspace.getSimpleExtentNdims();
@@ -823,6 +827,7 @@ class Core : public RefType<Grid>
             hsize_t start[rank] = {0};//This works for initialization
             std::array<hsize_t, rank> count;
             count.fill(static_cast<hsize_t>(len));
+            std::cout<<"Length of RNG state "<<len<<std::endl;
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
             dataset.write(rngstate.data(), H5Mapper<int64_t>::H5Type(), mspace1, filespace);
         }
