@@ -162,29 +162,34 @@ public:
         for(int i = 0; i < nelems; ++i)
             data[i] = rng(); //We follow the C++11 convention that operator() advances the state of the RNG
     }
+    
     /** Dump the internal state of the RNG in a manner that it can be fully constructed from it.
      * 
      * We assume that the RNG supports the same operations as those from the STL.
-     * @return a vector of 64bit Integers that contain the state.
+     * @return a vector of unsigned 64bit Integers that contain the state.
      */
-    std::vector<int64_t> dumpstate()
+    std::vector<u_int64_t> dumpstate()
     {
         std::stringstream rngstate;
         rngstate<<rng;//peculiar to the C++11 RNGs
-        std::vector<int64_t> retval;
-        int64_t t;
-        while (rngstate>>t) retval.push_back(t);
+        std::vector<u_int64_t> retval;
+        u_int64_t t;
+        while (rngstate>>t) 
+        {
+            retval.push_back(t);
+        }
         return retval;
     }
+
     /** Set the state of the RNG.
      * 
      * This sets the internal state of the RNG.
-     * The C++11 STL RNGs dump their state as a sequence of 64bit integers.
+     * The C++11 STL RNGs dump their state as a sequence of unsigned 64bit integers.
      * We assume that we get this state as a vector.
      * 
      * @param vec A vector containing a sequence of ints for the internal state of the RNG.
      */
-    void setstate(std::vector<int64_t>& vec)
+    void setstate(std::vector<u_int64_t>& vec)
     {
         std::string rngstring;
         for(decltype(vec.size()) i = 0; i < vec.size(); ++i)
@@ -195,7 +200,7 @@ public:
         ss>>rng;
     }
 private:
-    static constexpr int pagesize = 4096;///< The Pagesize of the OS. Common value.
+    static constexpr int pagesize = 4096;///< The pagesize of the OS. A common value.
     static constexpr int nrpages = 2; ///< how many memory pages we use.
     typedef decltype(std::declval<RNG>().operator()()) result_type;///< the Type that the RNG returns
     static constexpr int nelems = pagesize*nrpages/sizeof(result_type); ///< How many elements we store in the cache.

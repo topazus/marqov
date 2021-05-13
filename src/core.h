@@ -526,7 +526,6 @@ class Core : public RefType<Grid>
                 //read in the state space
                 auto prevstepstate = dump.openGroup("/step" + std::to_string(step-1) + "/state");
                 {
-                    std::cout<<"current step "<<step<<std::endl;
                     auto stateds = prevstepstate.openDataSet("hamiltonianstatespace");
                     auto dataspace = stateds.getSpace();
                     //read the data... For now we just hope that everything matches...
@@ -540,7 +539,6 @@ class Core : public RefType<Grid>
                         maxdims[i] = H5S_UNLIMITED;
                         start[i] = 0;
                     }
-                    std::cout<<rank<<" "<<fdims[0]<<" "<<dims_out[0]<<std::endl;
 
                     H5::DataSpace mspace1(rank, fdims, maxdims);
                     dataspace.selectHyperslab(H5S_SELECT_SET, fdims, start);//We have no separate count array since fdims contains identical information
@@ -554,15 +552,14 @@ class Core : public RefType<Grid>
                     //FIXME: proper reading of strings...
                 }
         
-                std::vector<int64_t> rngstate;
+                std::vector<u_int64_t> rngstate;
                 {
-                    auto stateds = prevstepstate.openDataSet("rngstate");
+                    H5::DataSet stateds = prevstepstate.openDataSet("rngstate");
                     auto dataspace = stateds.getSpace();
                     //read the data... For now we just hope that everything matches...
                     int rank = dataspace.getSimpleExtentNdims();
                     hsize_t dims_out[rank];
                     dataspace.getSimpleExtentDims( dims_out, NULL);
-
                     rngstate.resize(dims_out[0]);
                     hsize_t maxdims[rank], start[rank];
                     for(int i = 0; i < rank; ++i)
@@ -574,7 +571,7 @@ class Core : public RefType<Grid>
                     H5::DataSpace mspace1(rank, dims_out, maxdims);
 
                     dataspace.selectHyperslab(H5S_SELECT_SET, dims_out, start);
-                    stateds.read(rngstate.data(), H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
+                    stateds.read(rngstate.data(), H5Mapper<u_int64_t>::H5Type(), mspace1, dataspace);
                 }
                 rngcache.setstate(rngstate);
             }
@@ -826,7 +823,6 @@ class Core : public RefType<Grid>
             hsize_t start[rank] = {0};//This works for initialization
             std::array<hsize_t, rank> count;
             count.fill(static_cast<hsize_t>(len));
-            std::cout<<"Length of RNG state "<<len<<std::endl;
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
             dataset.write(rngstate.data(), H5Mapper<int64_t>::H5Type(), mspace1, filespace);
         }
