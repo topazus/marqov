@@ -950,13 +950,16 @@ class Core : public RefType<Grid>
          */
         void wrmploop()
         {
-            if (this->mcfg.id == 0) std::cout << "|";
-            for (int k=0; k < this->mcfg.gli; k++)
+            if(step < 1)
             {
-                if (this->mcfg.id == 0) std::cout << "." << std::flush;
-                for (int i=0; i < this->mcfg.warmupsteps/10; ++i) elementaryMCstep();
+                if (this->mcfg.id == 0) std::cout << "|";
+                for (int k=0; k < this->mcfg.gli; k++)
+                {
+                    if (this->mcfg.id == 0) std::cout << "." << std::flush;
+                    for (int i=0; i < this->mcfg.warmupsteps/10; ++i) elementaryMCstep();
+                }
+                if (this->mcfg.id == 0) std::cout << "|";
             }
-            if (this->mcfg.id == 0) std::cout << "|";
         }
 
         // -------------- special purpose functions ----------------
