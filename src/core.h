@@ -449,9 +449,9 @@ class Core : public RefType<Grid>
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
 		step(-1),
-		statespace(setupstatespace(lattice.size())),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
+		statespace(setupstatespace(lattice.size())),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
@@ -488,10 +488,10 @@ class Core : public RefType<Grid>
 		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
-		step(0),
-		statespace(setupstatespace(this->grid.size())),
+		step(-1),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
+		statespace(setupstatespace(this->grid.size())),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
@@ -524,12 +524,14 @@ class Core : public RefType<Grid>
             {
                 std::cout<<"Previous data found! Continuing simulation at step "<<step<<std::endl;
                 //read in the state space
+                auto prevstepstate = dump.openGroup("/step" + std::to_string(step-1) + "/state");
                 {
-                    auto stateds = stategroup.openDataSet("hamiltonianstatespace");
+                    auto stateds = prevstepstate.openDataSet("hamiltonianstatespace");
                     auto dataspace = stateds.getSpace();
                     //read the data... For now we just hope that everything matches...
                     int rank = dataspace.getSimpleExtentNdims();
-                    hsize_t fdims[rank], maxdims[rank], start[rank];
+                    hsize_t fdims[rank], maxdims[rank], start[rank], dims_out[rank];
+                    dataspace.getSimpleExtentDims( dims_out, NULL);
 
                     for(int i = 0; i < rank; ++i)
                     {
@@ -540,25 +542,24 @@ class Core : public RefType<Grid>
 
                     H5::DataSpace mspace1(rank, fdims, maxdims);
                     dataspace.selectHyperslab(H5S_SELECT_SET, fdims, start);//We have no separate count array since fdims contains identical information
-                    stateds.read(statespace, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
+                    stateds.read(retval, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
                 }
         
                 //compare the used RNGs
                 {
-                    auto stateds = stategroup.openDataSet("RNG");
+                    auto stateds = prevstepstate.openDataSet("RNG");
                     auto dataspace = stateds.getSpace();
                     //FIXME: proper reading of strings...
                 }
         
-                std::vector<int64_t> rngstate;
+                std::vector<u_int64_t> rngstate;
                 {
-                    auto stateds = stategroup.openDataSet("rngstate");
+                    H5::DataSet stateds = prevstepstate.openDataSet("rngstate");
                     auto dataspace = stateds.getSpace();
                     //read the data... For now we just hope that everything matches...
                     int rank = dataspace.getSimpleExtentNdims();
                     hsize_t dims_out[rank];
                     dataspace.getSimpleExtentDims( dims_out, NULL);
-
                     rngstate.resize(dims_out[0]);
                     hsize_t maxdims[rank], start[rank];
                     for(int i = 0; i < rank; ++i)
@@ -570,7 +571,7 @@ class Core : public RefType<Grid>
                     H5::DataSpace mspace1(rank, dims_out, maxdims);
 
                     dataspace.selectHyperslab(H5S_SELECT_SET, dims_out, start);
-                    stateds.read(rngstate.data(), H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
+                    stateds.read(rngstate.data(), H5Mapper<u_int64_t>::H5Type(), mspace1, dataspace);
                 }
                 rngcache.setstate(rngstate);
             }
@@ -613,7 +614,7 @@ class Core : public RefType<Grid>
         template <class ...HArgs>
         H5::H5File setupHDF5Container(const Config& mc, HArgs&& ...hargs)
         {
-            std::string filepath = mc.outpath+mc.outname + ".h5";
+            std::string filepath = mc.outpath + mc.outname + ".h5";
             auto flag = H5F_ACC_TRUNC;
             if (std::ifstream(filepath).good() && H5::H5File::isHdf5(filepath)) flag = H5F_ACC_RDWR;
             H5::H5File retval(filepath, flag);
@@ -751,7 +752,7 @@ class Core : public RefType<Grid>
          * @param ts optional arguments.
          */
         template <typename StateSpace, class Lattice, class H, typename... Ts>
-        auto haminit_helper(std::true_type, StateSpace& statespace, const Lattice& grid, H& ham, Ts&& ... ts)
+        void haminit_helper(std::true_type, StateSpace& statespace, const Lattice& grid, H& ham, Ts&& ... ts)
         {
             return ham.initstatespace(statespace, grid, rngcache, std::forward<Ts>(ts) ...);
         }
@@ -769,7 +770,7 @@ class Core : public RefType<Grid>
          * @param ts optional arguments
          */
         template <typename StateSpace, class Lattice, class H, typename... Ts>
-        auto haminit_helper(std::false_type, StateSpace& statespace, const Lattice&, H& ham, Ts&& ... ts) -> void
+        void haminit_helper(std::false_type, StateSpace& statespace, const Lattice&, H& ham, Ts&& ... ts)
         {
             this->init_hot();
         }
@@ -784,9 +785,10 @@ class Core : public RefType<Grid>
          * @param ts optional parameters
          */
         template <typename... Ts>
-        auto init(Ts&& ... ts)
+        void init(Ts&& ... ts)
         {
-            return haminit_helper(typename detail::has_init<StateSpace, Hamiltonian, Grid, RNGCache<RNGType>, Ts... >::type(), this->statespace, this->grid, this->ham, std::forward<Ts>(ts)...);
+            if (step < 1)
+                haminit_helper(typename detail::has_init<StateSpace, Hamiltonian, Grid, RNGCache<RNGType>, Ts... >::type(), this->statespace, this->grid, this->ham, std::forward<Ts>(ts)...);
         }
 
         /** Dump RNG State to HDF5.
@@ -811,19 +813,19 @@ class Core : public RefType<Grid>
 
             H5::DataSpace mspace1(rank, fdims.data(), maxdims.data());
             H5::DSetCreatPropList cparms;
-            auto fv = H5Mapper<int64_t>::fillval;
+            auto fv = H5Mapper<u_int64_t>::fillval;
         
             //no compression
 
-            cparms.setFillValue(H5Mapper<int64_t>::H5Type(), &fv);
-            H5::DataSet dataset = stategroup.createDataSet("rngstate", H5Mapper<int64_t>::H5Type(), mspace1, cparms);
+            cparms.setFillValue(H5Mapper<u_int64_t>::H5Type(), &fv);
+            H5::DataSet dataset = stategroup.createDataSet("rngstate", H5Mapper<u_int64_t>::H5Type(), mspace1, cparms);
 
             auto filespace = dataset.getSpace();
             hsize_t start[rank] = {0};//This works for initialization
             std::array<hsize_t, rank> count;
             count.fill(static_cast<hsize_t>(len));
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
-            dataset.write(rngstate.data(), H5Mapper<int64_t>::H5Type(), mspace1, filespace);
+            dataset.write(rngstate.data(), H5Mapper<u_int64_t>::H5Type(), mspace1, filespace);
         }
         /** A helper function to dump the entire statespace.
          * 
@@ -949,13 +951,16 @@ class Core : public RefType<Grid>
          */
         void wrmploop()
         {
-            if (this->mcfg.id == 0) std::cout << "|";
-            for (int k=0; k < this->mcfg.gli; k++)
+            if(step < 1)
             {
-                if (this->mcfg.id == 0) std::cout << "." << std::flush;
-                for (int i=0; i < this->mcfg.warmupsteps/10; ++i) elementaryMCstep();
+                if (this->mcfg.id == 0) std::cout << "|";
+                for (int k=0; k < this->mcfg.gli; k++)
+                {
+                    if (this->mcfg.id == 0) std::cout << "." << std::flush;
+                    for (int i=0; i < this->mcfg.warmupsteps/10; ++i) elementaryMCstep();
+                }
+                if (this->mcfg.id == 0) std::cout << "|";
             }
-            if (this->mcfg.id == 0) std::cout << "|";
         }
 
         // -------------- special purpose functions ----------------
@@ -1075,9 +1080,9 @@ class Core : public RefType<Grid>
 		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.
 		Config mcfg; ///< An instance of all our MARQOV related parameters.
 		int step; ///< The current step of the simulation. Used for HDF5 paths.
-		StateSpace statespace; ///< The statespace. It holds the current configuration space.
         std::unique_lock<std::mutex> hdf5lock; ///< The global lock to synchronize access to the HDF5 *library*.
-		H5::H5File dump; ///< The handle for the HDF5 file. Must be before the obscaches.
+		H5::H5File dump; ///< The handle for the HDF5 file. Must be before the obscaches and the statespace.
+		StateSpace statespace; ///< The statespace. It holds the current configuration space.
 		H5::Group obsgroup; ///< The HDF5 Group of all our observables.
 		H5::Group stategroup; ///< The HDF5 Group where to dump the statespace.
 		typedef decltype(std::declval<Hamiltonian>().observables) ObsTs; ///< This type is mostly a tuple of other observables.
