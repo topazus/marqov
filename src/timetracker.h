@@ -12,12 +12,13 @@ typedef std::chrono::seconds sec;
 typedef std::chrono::milliseconds msec;
 typedef std::chrono::microseconds musec;
 
-typedef musec timeformat; // internal time resolution, do not change
+typedef musec timeformat; ///< internal time resolution, do not change
 
 
 namespace marqovtime
 {
-	// marqovclock object
+	/** A clock which can be used to measure certain elements of the code
+     */
 	class marqovclock
 	{
 		public: 
@@ -25,13 +26,20 @@ namespace marqovtime
 			std::chrono::system_clock::time_point starttime;
 			std::chrono::system_clock::time_point inittime;
 			decltype(std::chrono::duration_cast<timeformat>(Time::now()-Time::now())) dur = timeformat::zero(); 
+
+			/** Construct a clock object
+			*
+			* @param tag short name for this clock (should only be very few characters)
+			* @param name longer clock name or description
+			*/
 			marqovclock(std::string tag, std::string name) : tag(tag), name(name), inittime(Time::now()) {}
 			marqovclock(std::string name) : name(name), inittime(Time::now()) { tag = name.at(0);}
 	};
 	
 	
 	
-	// timetracker class
+	/** The timetracker class which manages the clocks
+	*/
 	class timetracker
 	{
 		public:
@@ -41,14 +49,19 @@ namespace marqovtime
 			std::unordered_map<std::string, int> clockmap; // recreate the functionality of a Python dictionary
 			std::string active_clock = "None"; // there can only be one active clock at a time
 	
-			// constructor
+			/* Construct a timetracker object
+			*/
 			timetracker()
 			{
 				wallclock.starttime = Time::now();
 			}
 	
 
-			// add clock to the timetracker
+			/** Add clock to the timetracker
+			*
+			* @param tag short name for this clock (should only be very few characters)
+			* @param name longer clock name or description
+			*/
 			void add_clock(std::string name)
 			{
 				auto mapentry = std::pair<std::string,int>(name,clocks.size());
@@ -64,7 +77,11 @@ namespace marqovtime
 
 
 
-			// print current durations of all clocks
+			/** Print current durations of all clocks
+			*
+			* @param minimal if true (default), timing results are printed as a one-liner
+			* @param verbose if true (default), the sum of all clock timings is printed as well
+			*/
 			void status(bool minimal=true, bool verbose=true)
 			{
 				const auto now = Time::now();
@@ -146,46 +163,53 @@ namespace marqovtime
 		}
 	
 	
-			void run(std::string name)
+			
+		/** Run a clock 
+		* only one clock can be running simultaneously
+		*
+		* @param name specify name of the clock the be run
+		*/
+		void run(std::string name)
+		{
+			if (active_clock != "None") 
 			{
-				if (active_clock != "None") 
-				{
-					throw std::invalid_argument("There is already a clock running; This may result in unwanted behaviour; use the switch function...."); // todo: catch this exception
-				}
-				active_clock = name;
-				clocks[clockmap[active_clock]].starttime = Time::now();
+				throw std::invalid_argument("There is already a clock running; This may result in unwanted behaviour; use the switch function...."); // todo: catch this exception
 			}
+			active_clock = name;
+			clocks[clockmap[active_clock]].starttime = Time::now();
+		}
 	
 	
-			// stop the active clock
-			void stop()
-			{
-				auto now = Time::now();
-				auto clockidx = clockmap[active_clock];
-				auto& previous_clock = clocks[clockidx];
-				previous_clock.dur += std::chrono::duration_cast<timeformat>(now-previous_clock.starttime);
-				active_clock = "None";
-			}
+		/** Stop the currently active clock */
+		void stop()
+		{
+			auto now = Time::now();
+			auto clockidx = clockmap[active_clock];
+			auto& previous_clock = clocks[clockidx];
+			previous_clock.dur += std::chrono::duration_cast<timeformat>(now-previous_clock.starttime);
+			active_clock = "None";
+		}
 	
 	
-			// stop current clock and start another one
-			void switch_clock(std::string target)
-			{
-				auto now = Time::now();
+		/** Switch clocks, that menas stop current clock and start another one
+		*
+		* @param target name of the clock to be switched to
+		*/
+		void switch_clock(std::string target)
+		{
+			auto now = Time::now();
 	
+			auto clockidx = clockmap[active_clock];
+			auto& previous_clock = clocks[clockidx];
 	
-				auto clockidx = clockmap[active_clock];
-				auto& previous_clock = clocks[clockidx];
+			previous_clock.dur += std::chrono::duration_cast<timeformat>(now-previous_clock.starttime);
 	
-				previous_clock.dur += std::chrono::duration_cast<timeformat>(now-previous_clock.starttime);
+			auto& target_clock = clocks[clockmap[target]];
+			target_clock.starttime = now; 
 	
-				auto& target_clock = clocks[clockmap[target]];
-				target_clock.starttime = now; 
-	
-				active_clock = target;
-			}
-				
+			active_clock = target;
+		}
 	};
-
 }
+
 #endif
