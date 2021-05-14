@@ -37,11 +37,11 @@ double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 	{
 		const int rsite = rngcache.integer(this->grid.size());
 
-		// Heisenberg; random direction
 		const auto rdir = rnddir<RNGCache<RNGType>, typename StateVector::value_type, SymD>(rngcache);
 
 		avgclustersize += wolffstep(rsite, rdir);
 	}
+
 
 	// Metropolis sweeps
 	mrqvt.switch_clock("metrop");

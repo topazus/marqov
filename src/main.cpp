@@ -61,6 +61,7 @@ using std::ofstream;
 #include "hamiltonian/EdwardsAndersonIsing.h"
 //#include "hamiltonian/Ssh.h" // seperate branch
 #include "hamiltonian/BlumeCapelBipartite.h"
+#include "hamiltonian/AshkinTeller.h"
 
 using namespace MARQOV;
 
@@ -114,6 +115,16 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	}
 
 
+	else if (ham == "AshkinTeller")
+	{
+		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+		auto K    = registry.Get<std::vector<double> >("mc.ini", ham, "K");
+		auto parameters = cart_prod(beta, J, K);
+
+		write_logfile(registry, beta);
+		RegularLatticeLoop<AshkinTeller<int> >(registry, outbasedir, parameters, defaultfilter);
+	}
 
 
 	else if (ham == "Heisenberg")
