@@ -83,7 +83,7 @@ inline double mult(const double& a, const int& b)
     return a*double(b);
 }
 
-/** mult is a component-wise multiplication.
+/** @brief mult is a component-wise multiplication.
  * 
  * This is used e.g. in the Metropolis algorithm.
  * @see Metropolis
