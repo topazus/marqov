@@ -13,7 +13,6 @@ typedef std::chrono::milliseconds msec;
 typedef std::chrono::microseconds musec;
 
 typedef musec timeformat; // internal time resolution
-typedef msec printformat; // time format used for output
 
 
 namespace marqovtime
@@ -23,12 +22,12 @@ namespace marqovtime
 	class marqovclock
 	{
 		public: 
-			std::string name;
+			std::string tag, name;
 			std::chrono::system_clock::time_point starttime;
 			std::chrono::system_clock::time_point inittime;
 			decltype(std::chrono::duration_cast<timeformat>(Time::now()-Time::now())) dur = timeformat::zero(); 
-			marqovclock(std::string name) : name(name), inittime(Time::now()) {}
-	
+			marqovclock(std::string tag, std::string name) : tag(tag), name(name), inittime(Time::now()) {}
+			marqovclock(std::string name) : name(name), inittime(Time::now()) { tag = name.at(0);}
 	};
 	
 	
@@ -53,39 +52,78 @@ namespace marqovtime
 				clockmap.insert(mapentry);
 				clocks.push_back(marqovclock(name));
 			}
-	
-			void status(bool verbose=true)
+
+
+
+			void status(bool minimal=false, bool verbose=true)
 			{
 				const auto now = Time::now();
+
+				// sum up contributions
 				double sum = 0;
-	
-				std::cout << "Timing: ";
-				cout << endl;
-				for (auto& x: clocks) 
+				for (auto& x: clocks) sum = sum + std::chrono::duration_cast<timeformat>(x.dur).count();
+
+
+				std::cout << std::setprecision(1) << std::fixed;
+
+				// find suitable time format 
+				double print_mult = 1.0;
+				std::string print_unit = "mus";
+
+				const double kilo = 1000;
+
+				if (sum > 10*kilo)
 				{
-					auto dur_print = std::chrono::duration_cast<printformat>(x.dur).count();
-					sum = sum + dur_print;
-	
-					if (x.name != active_clock) // list all clocks
-					{
-						std::cout << "  " << x.name << "\t" << dur_print << " msec" << endl;
-					}
-					else
-					{
-						auto diff = std::chrono::duration_cast<printformat>(now-x.starttime).count();
-						sum = sum + diff;
-						std::cout << x.name << " " << dur_print+diff << "\t (active)";
-					}
+					print_mult = 1./kilo;
+					print_unit = "ms";
 				}
+				if (sum > 10*kilo*kilo)
+				{
+					print_mult = 1./kilo/kilo;
+					print_unit = "s";
+				}
+				if (sum > 10*kilo*kilo*60)
+				{
+					print_mult = 1./kilo/kilo/60.;
+					print_unit = "min";
+				}
+
+
+
+
+				if (minimal)
+				{
+
+				}
+				else
+				{
+	
+					for (auto& x: clocks) 
+					{
+						auto dur_print = std::chrono::duration_cast<timeformat>(x.dur).count();
+						sum = sum + dur_print;
+	
+						if (x.name != active_clock) // list all clocks
+						{
+							std::cout << "  " << x.name << "\t" << dur_print*print_mult << print_unit << endl;
+						}
+						else
+						{
+							auto diff = std::chrono::duration_cast<timeformat>(now-x.starttime).count();
+							sum = sum + diff;
+							std::cout << x.name << " " << dur_print+diff << "\t (active)";
+						}
+					}
 	
 				
-				if (verbose) // print und wallclock
-				{
-					wallclock.dur = std::chrono::duration_cast<timeformat>(now-wallclock.inittime);
-					auto dur_print = std::chrono::duration_cast<printformat>(wallclock.dur).count();
-					std::cout << "  wallclock     " << dur_print << " msec" << endl;
+					if (verbose) // print wallclock
+					{
+//						wallclock.dur = std::chrono::duration_cast<timeformat>(now-wallclock.inittime);
+//						auto dur_print = std::chrono::duration_cast<timeformat>(wallclock.dur).count();
+//						std::cout << "  wallclock     " << dur_print << " msec" << endl;
+					}
+					cout << endl << endl;
 				}
-				cout << endl << endl;
 			}
 	
 	
