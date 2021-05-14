@@ -12,13 +12,12 @@ typedef std::chrono::seconds sec;
 typedef std::chrono::milliseconds msec;
 typedef std::chrono::microseconds musec;
 
-typedef musec timeformat; // internal time resolution
+typedef musec timeformat; // internal time resolution, do not change
 
 
 namespace marqovtime
 {
-
-
+	// marqovclock object
 	class marqovclock
 	{
 		public: 
@@ -32,6 +31,7 @@ namespace marqovtime
 	
 	
 	
+	// timetracker class
 	class timetracker
 	{
 		public:
@@ -41,21 +41,31 @@ namespace marqovtime
 			std::unordered_map<std::string, int> clockmap; // recreate the functionality of a Python dictionary
 			std::string active_clock = "None"; // there can only be one active clock at a time
 	
+			// constructor
 			timetracker()
 			{
 				wallclock.starttime = Time::now();
 			}
 	
+
+			// add clock to the timetracker
 			void add_clock(std::string name)
 			{
 				auto mapentry = std::pair<std::string,int>(name,clocks.size());
 				clockmap.insert(mapentry);
 				clocks.push_back(marqovclock(name));
 			}
+			void add_clock(std::string tag, std::string name)
+			{
+				auto mapentry = std::pair<std::string,int>(name,clocks.size());
+				clockmap.insert(mapentry);
+				clocks.push_back(marqovclock(tag, name));
+			}
 
 
 
-			void status(bool minimal=false, bool verbose=true)
+			// print current durations of all clocks
+			void status(bool minimal=true, bool verbose=true)
 			{
 				const auto now = Time::now();
 
@@ -63,41 +73,49 @@ namespace marqovtime
 				double sum = 0;
 				for (auto& x: clocks) sum = sum + std::chrono::duration_cast<timeformat>(x.dur).count();
 
-
-				std::cout << std::setprecision(1) << std::fixed;
-
 				// find suitable time format 
 				double print_mult = 1.0;
 				std::string print_unit = "mus";
+				std::cout << std::setprecision(1) << std::fixed;
 
 				const double kilo = 1000;
 
-				if (sum > 10*kilo)
+				if (sum > 10*kilo) // milliseconds
 				{
 					print_mult = 1./kilo;
 					print_unit = "ms";
 				}
-				if (sum > 10*kilo*kilo)
+				if (sum > 10*kilo*kilo) // seconds
 				{
 					print_mult = 1./kilo/kilo;
 					print_unit = "s";
 				}
-				if (sum > 10*kilo*kilo*60)
+				if (sum > 10*kilo*kilo*60) // minutes
 				{
 					print_mult = 1./kilo/kilo/60.;
 					print_unit = "min";
 				}
+				if (sum > 10*kilo*kilo*60*60) // hours
+				{
+					print_mult = 1./kilo/kilo/3600.;
+					print_unit = "h";
+				}
 
 
-
-
+				// print timing results as a one-liner using only the clock tags
 				if (minimal)
 				{
-
+					std::cout << "Timing results (in " << print_unit << "): ";
+					for (auto& c: clocks)
+					{
+						auto dur_print = std::chrono::duration_cast<timeformat>(c.dur).count();
+						std::cout << c.tag << " " << dur_print*print_mult << " | ";
+					}
 				}
+				// print timing results in a more verbose way using the full clock names
 				else
 				{
-	
+					std::cout << "Timing results:" << endl;
 					for (auto& x: clocks) 
 					{
 						auto dur_print = std::chrono::duration_cast<timeformat>(x.dur).count();
@@ -105,7 +123,7 @@ namespace marqovtime
 	
 						if (x.name != active_clock) // list all clocks
 						{
-							std::cout << "  " << x.name << "\t" << dur_print*print_mult << print_unit << endl;
+							std::cout << "  " << x.name << "\t" << dur_print*print_mult << " " << print_unit << endl;
 						}
 						else
 						{
@@ -114,17 +132,18 @@ namespace marqovtime
 							std::cout << x.name << " " << dur_print+diff << "\t (active)";
 						}
 					}
+				}
 	
 				
-					if (verbose) // print wallclock
-					{
-//						wallclock.dur = std::chrono::duration_cast<timeformat>(now-wallclock.inittime);
-//						auto dur_print = std::chrono::duration_cast<timeformat>(wallclock.dur).count();
-//						std::cout << "  wallclock     " << dur_print << " msec" << endl;
-					}
-					cout << endl << endl;
+				if (verbose) // print wallclock
+				{
+					wallclock.dur = std::chrono::duration_cast<timeformat>(now-wallclock.inittime);
+					auto dur_print = std::chrono::duration_cast<timeformat>(wallclock.dur).count();
+
+					if (minimal) std::cout << "wall " << dur_print*print_mult << std::endl;
+					else std::cout << "  wallclock     " << dur_print*print_mult << " " << print_unit << endl << endl;
 				}
-			}
+		}
 	
 	
 			void run(std::string name)
@@ -149,6 +168,7 @@ namespace marqovtime
 			}
 	
 	
+			// stop current clock and start another one
 			void switch_clock(std::string target)
 			{
 				auto now = Time::now();
