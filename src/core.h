@@ -461,11 +461,11 @@ class Core : public RefType<Grid>
 		{
 			hdf5lock.unlock();
 
+			// init clocks
 			mrqvt.add_clock("cluster");
 			mrqvt.add_clock("metrop");
 			mrqvt.add_clock("measure");
-			mrqvt.add_clock("other");
-			//mrqvt.status();
+			mrqvt.add_clock("others");
 			mrqvt.run("other");
 
 		}
@@ -940,8 +940,8 @@ class Core : public RefType<Grid>
             }
             mrqvt.stop();
 
-            mrqvt.status();
-		  if (this->mcfg.id == 0) std::cout << "|\n\n" << "Average cluster size:" << endl << "  "  << avgclustersize/this->mcfg.gameloopsteps << std::endl; 
+//            mrqvt.status();
+		  if (this->mcfg.id == 0) std::cout << "|\n\n" << "Average cluster size: "  << avgclustersize/this->mcfg.gameloopsteps << std::endl; 
 		  if (this->mcfg.id == 0) mrqvt.status();
         }
 
