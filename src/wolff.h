@@ -45,10 +45,14 @@ namespace MARQOV
         typedef typename Hamiltonian::StateVector StateVector;
         // prepare stack
         std::vector<int> cstack(grid.size(), 0);
+
+        const double global_coupling = ham.interactions[a]->J;
         
         // add initial site and flip it
         int q = 0;
         cstack[q] = rsite;
+
+		ham.wolff_embedd_init(); // the random direction/color whatever is stored in the Hamiltonian! this function resets it
         
         ham.wolff_flip(statespace[rsite], rdir);
         int clustersize = 1;
@@ -64,7 +68,15 @@ namespace MARQOV
             // get its neighbours
             int a = 0; // to be replaced by loop over Nalpha
             const auto nbrs = grid.nbrs(a, currentidx);
-            
+            const auto bnds = grid.bnds(a, currentidx); // important: specify what to do if function is not there
+
+            const auto cpl1 = ham.wolff_coupling(currentsv, nbrs); 
+			// rdir is implicitely stored in the Hamiltonian! (actually this function should be named "wolff_embedding")
+            const auto cpl2 = ham.wolff_scalarize(grid.nbrs(a, currentidx)); 
+			// specifiy what to do with the bond strength; 
+			// in practice has to communicate with wolff_coupling via rdir which is stored in the lattice
+			// todo: if function is not there, return array of 1's
+
             // loop over neighbours
             for (std::size_t i = 0; i < nbrs.size(); ++i)
             {
@@ -72,24 +84,7 @@ namespace MARQOV
                 const auto currentnbr = nbrs[i];
                 StateVector& candidate = statespace[currentnbr];
                 
-                // compute 'Wolff coupling'
-                const double global_coupling = ham.interactions[a]->J;
-                const auto   local_coupling  = 1;
-                
-                /* under construction
-                 *			const auto   local_coupling  = grid.bnds(a, currentnbr)[0];
-                 * 
-                 *			// !!!  Wolff and Swendsen-Wang cluster algorithms are only valid if 
-                 *			// !!!  all interactions are ferromagnetic, i.e., if all J_ij > 0 (Zhu et. al 2015)
-                 * 
-                 * 
-                 *			// even more general would be somthing like that:
-                 *			// const auto   local_coupling  = ham.wolff_scalarize(grid.bnds(a, currentnbr));
-                 *			// overkill, or even necessary?
-                 */
-                
-                const double wolff_coupling  = ham.wolff_coupling(currentsv, candidate, rdir);
-                const double coupling = global_coupling * local_coupling * wolff_coupling;
+                const double coupling = global_coupling * cpl1[i] * cpl2[i];
                 
                 // test whether site is added to the cluster
                 if (coupling > 0)
@@ -114,4 +109,36 @@ namespace MARQOV
         return Wolff<Hamiltonian, Grid>::move(this->ham, this->grid, this->statespace, this->rngcache, this->beta, rsite, rdir);
     }
 };
+
+
+template <class Hamiltonian, class = void>
+struct has_wolff_embedding : std::false_type{};
+
+template <class Hamiltonian, class = void>
+struct has_wolff_embedding<Hamiltonian, MARQOV::detail::type_sink_<
+	decltype( ...
+	>> : std::true_type{};
+
+
+template <class Hamilonian, class BondType>
+auto wolff_embedding_helper(Hamiltonian& ham, BondType bond, std::true_type)
+{
+	return ham.wolff_embedding(bond);
+}
+
+
+template <class Hamilonian, class BondType>
+auto wolff_embedding_helper(Hamiltonian& ham, BondType bond, std::false)
+{
+	return bond[0];
+}
+
+
+template <class Hamilonian, class BondType>
+auto wolff_embedding(Hamiltonian& ham, BondType bond)
+{
+	return wolff_embedding_helper(ham, bond, has_wolff_embedding<Hamiltonian>{});
+}
+
+
 #endif
