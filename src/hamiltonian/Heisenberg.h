@@ -113,25 +113,28 @@ class Heisenberg
 		// using the Wolff cluster algorithm requires to implement 
 		// the functions 'wolff_coupling' and 'wolff_flip'
 
+		double randomnumber;
+
 
 		template <class RNG>
 		void wolff_init(RNG& rng) const
 		{
 			auto rdir = rnddir<RNG, double, SymD>(rng);
+//			this->randomnumber = 0.1;
 		}
 
 		template <class StateVector, class NeighbourType, class StateSpace>
 		auto wolff_embedding(StateVector sv, NeighbourType nbrs, StateSpace& statespace)
 		{
-			/*
+
+			double rdir = 1;
+
 			std::vector<double> retval;
 			for (int i=0; i<nbrs.size(); i++) 
 			{
-				retval.push_back(dot(sv,rdir) * dot(statespace[nbrs[i]],rdir);
+				retval.push_back(dot(sv,rdir) * dot(statespace[nbrs[i]],rdir));
 			}
 			return retval;
-			*/
-			return 2;
 		}
 
 
