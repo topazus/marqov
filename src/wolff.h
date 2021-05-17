@@ -54,7 +54,7 @@ auto wolff_embedding_helper(Hamiltonian ham, StateVector sv, NeighbourType nbrs,
 template <class Hamiltonian, class StateVector, class NeighbourType>
 auto wolff_embedding_helper(Hamiltonian ham, StateVector sv, NeighbourType nbrs, std::false_type)
 {
-	cout << "true";
+	cout << "false";
 	return 0;
 }
 
@@ -62,8 +62,8 @@ auto wolff_embedding_helper(Hamiltonian ham, StateVector sv, NeighbourType nbrs,
 template <class Hamiltonian, class StateVector, class NeighbourType>
 auto wolff_embedding(Hamiltonian ham, StateVector sv, NeighbourType nbrs)
 {
-	return wolff_embedding_helper(ham, sv, nbrs, std::false_type{});
-//	return wolff_embedding_helper(ham, sv, nbrs, has_wolff_embedding<Hamiltonian, StateVector, NeighbourType>{});
+//	return wolff_embedding_helper(ham, sv, nbrs, std::false_type{});
+	return wolff_embedding_helper(ham, sv, nbrs, has_wolff_embedding<Hamiltonian, StateVector, NeighbourType>{});
 }
 
 
@@ -112,7 +112,7 @@ auto wolff_embedding(Hamiltonian ham, StateVector sv, NeighbourType nbrs)
             const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,std::vector<int>>(ham, currentsv, nbrs); 
 //            const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,decltype(std::vector<int>())>(ham, currentsv, nbrs); 
 
-			cout << "cpl1" << endl;
+			cout << "I am here" << endl;
 
 			// rdir is implicitely stored in the Hamiltonian! (actually this function should be named "wolff_embedding")
 //            const auto cpl2 = ham.wolff_scalarize(currentsv, bnds); 

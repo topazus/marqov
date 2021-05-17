@@ -90,7 +90,7 @@ class Heisenberg
         {
             interactions.push_back(new Heisenberg_interaction<StateVector>(J));
         }
-		~Heisenberg() {delete interactions[0];}
+//		~Heisenberg() {delete interactions[0];} // fixme
 		
 
 		// instantiate and choose observables
@@ -108,8 +108,21 @@ class Heisenberg
 		}
 		
 
+
+
+
+
 		// using the Wolff cluster algorithm requires to implement 
 		// the functions 'wolff_coupling' and 'wolff_flip'
+
+
+		template <class StateVector, class NeighbourType>
+		auto wolff_embedding(StateVector sv, NeighbourType nbrs)
+		{
+			// do someting
+			return 2;
+		}
+
 
 		template <class A> 
 		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a) const
