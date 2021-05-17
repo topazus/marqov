@@ -454,6 +454,18 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 int main()
 {
+
+
+
+	Heisenberg<double, double> ham = Heisenberg<double, double>(1);
+	std::array<double, 3> arr = {1,2,3};
+	std::vector<int> nbrs = {11,111,1111};
+	auto k = wolff_embedding<Heisenberg<double, double>, std::array<double, 3>, std::vector<int>>(ham, arr, nbrs);
+	cout << "here0" << endl;
+
+
+
+
     std::cout<<"MARQOV Copyright (C) 2020-2021, The MARQOV Project contributors"<<std::endl;
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;
     std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;
@@ -475,17 +487,6 @@ int main()
 	makeDir(outbasedir);
 	makeDir(logbasedir);
 
-
-
-
-	Heisenberg<double, double> ham = Heisenberg<double, double>(1);
-	std::array<double, 3> arr = {1,2,3};
-	std::vector<int> nbrs = {11,111,1111};
-
-	wolff_embedding<Heisenberg<double, double>, std::array<double, 3>, std::vector<int>>(ham, arr, nbrs);
-
-
-	cout << "here0" << endl;
 
 
 

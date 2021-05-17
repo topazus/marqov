@@ -38,7 +38,7 @@ struct has_wolff_embedding : std::false_type{};
 template <class Hamiltonian, class StateVector, class NeighbourType>
 struct has_wolff_embedding<Hamiltonian, StateVector, NeighbourType,
 	MARQOV::detail::type_sink_t< decltype( std::declval<Hamiltonian>().template wolff_embedding<StateVector,NeighbourType>(
-		std::declval<StateVector>(), std::declval<NeighbourType>()) )
+		std::declval<StateVector>(), std::declval<NeighbourType&>()) )
 	>> : std::true_type{};
 
 
@@ -62,7 +62,8 @@ auto wolff_embedding_helper(Hamiltonian ham, StateVector sv, NeighbourType nbrs,
 template <class Hamiltonian, class StateVector, class NeighbourType>
 auto wolff_embedding(Hamiltonian ham, StateVector sv, NeighbourType nbrs)
 {
-	return wolff_embedding_helper(ham, sv, nbrs, has_wolff_embedding<Hamiltonian, StateVector, NeighbourType>{});
+	return wolff_embedding_helper(ham, sv, nbrs, std::false_type{});
+//	return wolff_embedding_helper(ham, sv, nbrs, has_wolff_embedding<Hamiltonian, StateVector, NeighbourType>{});
 }
 
 
@@ -108,7 +109,8 @@ auto wolff_embedding(Hamiltonian ham, StateVector sv, NeighbourType nbrs)
             const auto nbrs = grid.nbrs(a, currentidx);
 //            const auto bnds = grid.bnds(a, currentidx); // important: specify what to do if function is not there
 
-            const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,decltype(std::vector<int>())>(ham, currentsv, nbrs); 
+            const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,std::vector<int>>(ham, currentsv, nbrs); 
+//            const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,decltype(std::vector<int>())>(ham, currentsv, nbrs); 
 
 			cout << "cpl1" << endl;
 
