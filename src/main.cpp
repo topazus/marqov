@@ -457,13 +457,12 @@ int main()
 
 
 
-	Heisenberg<double, double> ham = Heisenberg<double, double>(1);
-	std::array<double, 3> arr = {1,2,3};
-	std::vector<int> nbrs = {11,111,1111};
-	auto k = wolff_embedding<Heisenberg<double, double>, std::array<double, 3>, std::vector<int>>(ham, arr, nbrs);
-	cout << "here0" << endl;
-
-
+//	Heisenberg<double, double> ham = Heisenberg<double, double>(1);
+//	std::array<double, 3> arr = {1,2,3};
+//	std::vector<int> nbrs = {11,111,1111};
+//	auto k = wolff_embedding<Heisenberg<double, double>, std::array<double, 3>, std::vector<int>>(ham, arr, nbrs);
+//	cout << k << endl;
+//	exit(0);
 
 
     std::cout<<"MARQOV Copyright (C) 2020-2021, The MARQOV Project contributors"<<std::endl;
