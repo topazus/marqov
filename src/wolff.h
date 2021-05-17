@@ -32,39 +32,35 @@ namespace MARQOV
      * @tparam Lattice The Lattice, that the Wolff algo should use.
      */
 
-template <class Hamiltonian, class StateVector, class NeighbourType, class = void>
-struct has_wolff_embedding : std::false_type{};
-
-template <class Hamiltonian, class StateVector, class NeighbourType>
-struct has_wolff_embedding<Hamiltonian, StateVector, NeighbourType,
-	MARQOV::detail::type_sink_t< decltype( std::declval<Hamiltonian>().template wolff_embedding<StateVector,NeighbourType>(
-		std::declval<StateVector>(), std::declval<NeighbourType&>()) )
-	>> : std::true_type{};
-
-
-template <class Hamiltonian, class StateVector, class NeighbourType>
-auto wolff_embedding_helper(Hamiltonian ham, StateVector sv, NeighbourType nbrs, std::true_type)
-{
-	cout << "true";
-	return 1;
-//	return ham.wolff_embedding(sv, nbrs);
-}
-
-
-template <class Hamiltonian, class StateVector, class NeighbourType>
-auto wolff_embedding_helper(Hamiltonian ham, StateVector sv, NeighbourType nbrs, std::false_type)
-{
-	cout << "false";
-	return 0;
-}
-
-
-template <class Hamiltonian, class StateVector, class NeighbourType>
-auto wolff_embedding(Hamiltonian ham, StateVector sv, NeighbourType nbrs)
-{
-//	return wolff_embedding_helper(ham, sv, nbrs, std::false_type{});
-	return wolff_embedding_helper(ham, sv, nbrs, has_wolff_embedding<Hamiltonian, StateVector, NeighbourType>{});
-}
+	template <class Hamiltonian, class StateVector, class NeighbourType, class RNG, class = void>
+	struct has_wolff_embedding : std::false_type{};
+	
+	template <class Hamiltonian, class StateVector, class NeighbourType, class RNG>
+	struct has_wolff_embedding<Hamiltonian, StateVector, NeighbourType, RNG, 
+		MARQOV::detail::type_sink_t< decltype( std::declval<Hamiltonian>().template wolff_embedding<StateVector,NeighbourType,RNG>(
+			std::declval<StateVector>(), std::declval<NeighbourType>()), std::declval<RNG>() )
+		>> : std::true_type{};
+	
+	
+	template <class Hamiltonian, class StateVector, class NeighbourType, class RNG>
+	auto wolff_embedding_helper(Hamiltonian ham, StateVector sv, NeighbourType nbrs, RNG& rng, std::true_type)
+	{
+		return ham.wolff_embedding(sv, nbrs, rng);
+	}
+	
+	
+	template <class Hamiltonian, class StateVector, class NeighbourType, class RNG>
+	auto wolff_embedding_helper(Hamiltonian ham, StateVector sv, NeighbourType nbrs, RNG& rng, std::false_type)
+	{
+		return 0;
+	}
+	
+	
+	template <class Hamiltonian, class StateVector, class NeighbourType, class RNG>
+	auto wolff_embedding(Hamiltonian ham, StateVector sv, NeighbourType nbrs, RNG& rng)
+	{
+		return wolff_embedding_helper(ham, sv, nbrs, rng, has_wolff_embedding<Hamiltonian, StateVector, NeighbourType, RNG>{});
+	}
 
 
 
@@ -106,10 +102,10 @@ auto wolff_embedding(Hamiltonian ham, StateVector sv, NeighbourType nbrs)
             // get its neighbours
             int a = 0; // to be replaced by loop over Nalpha
         	const double global_coupling = ham.interactions[a]->J;
-            const auto nbrs = grid.nbrs(a, currentidx);
+            auto nbrs = grid.nbrs(a, currentidx);
 //            const auto bnds = grid.bnds(a, currentidx); // important: specify what to do if function is not there
 
-            const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,std::vector<int>>(ham, currentsv, nbrs); 
+            const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,decltype(grid.nbrs(a,currentidx)),RNG&>(ham, currentsv, nbrs, rng); 
 //            const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,decltype(std::vector<int>())>(ham, currentsv, nbrs); 
 
 			cout << "I am here" << endl;

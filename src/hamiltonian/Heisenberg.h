@@ -110,8 +110,6 @@ class Heisenberg
 
 
 
-
-
 		// using the Wolff cluster algorithm requires to implement 
 		// the functions 'wolff_coupling' and 'wolff_flip'
 
