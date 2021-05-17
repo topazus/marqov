@@ -114,10 +114,23 @@ class Heisenberg
 		// the functions 'wolff_coupling' and 'wolff_flip'
 
 
-		template <class StateVector, class NeighbourType>
-		auto wolff_embedding(StateVector sv, NeighbourType nbrs)
+		template <class RNG>
+		void wolff_init(RNG& rng) const
 		{
-			// do someting
+			auto rdir = rnddir<RNG, double, SymD>(rng);
+		}
+
+		template <class StateVector, class NeighbourType, class StateSpace>
+		auto wolff_embedding(StateVector sv, NeighbourType nbrs, StateSpace& statespace)
+		{
+			/*
+			std::vector<double> retval;
+			for (int i=0; i<nbrs.size(); i++) 
+			{
+				retval.push_back(dot(sv,rdir) * dot(statespace[nbrs[i]],rdir);
+			}
+			return retval;
+			*/
 			return 2;
 		}
 
