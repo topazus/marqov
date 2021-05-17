@@ -128,6 +128,7 @@ class Heisenberg
 
 };
 
+/* comment out for debug
 namespace MARQOV
 {
     template <class Lattice, class SpinType, class FPType>
@@ -180,4 +181,5 @@ namespace MARQOV
         }
     };
 }
+*/
 #endif
