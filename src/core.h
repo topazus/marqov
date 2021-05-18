@@ -1073,8 +1073,7 @@ class Core : public RefType<Grid>
          * @param rsite The random site where to start the cluster.
          * @param rdir The randomized plane of reflection for the cluster update.
          */
-		template <typename DirType>
-		inline int wolffstep(int rsite, const DirType& rdir);
+		inline int wolffstep(int rsite);
 
 		double beta; ///< The inverse temperature.
 		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.

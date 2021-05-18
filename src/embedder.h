@@ -28,6 +28,8 @@ class Embedder
 		const Hamiltonian& ham; // why const?
 
 	public:
+
+		typedef typename Hamiltonian::StateVector StateVector;
 		Embedder(const Hamiltonian& ham) : ham(ham) {};
 
 		template <class RNG>
@@ -37,13 +39,12 @@ class Embedder
 		}
 
 
-		template <class StateVector, class StateSpace, class NeighbourType>
-		double coupling(StateVector& currentsv, NeighbourType& nbrs, StateSpace& statespace)
+		double coupling(StateVector& currentsv, StateVector& candidate)
 		{
 			return ham.J;
 		}
 
-		template <class StateVector>
+
 		void flip(StateVector& sv)
 		{
 			sv[0] = -sv[0];
