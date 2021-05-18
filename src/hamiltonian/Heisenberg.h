@@ -90,7 +90,7 @@ class Heisenberg
         {
             interactions.push_back(new Heisenberg_interaction<StateVector>(J));
         }
-//		~Heisenberg() {delete interactions[0];} // fixme
+		~Heisenberg() {delete interactions[0];} // fixme
 		
 
 		// instantiate and choose observables
@@ -106,43 +106,6 @@ class Heisenberg
 				statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
 			}
 		}
-		
-
-
-
-		// using the Wolff cluster algorithm requires to implement 
-		// the functions 'wolff_coupling' and 'wolff_flip'
-
-//		template <class StateVector, class NeighbourType, class StateSpace>
-//		auto wolff_embedding(StateVector sv, NeighbourType nbrs, StateSpace& statespace)
-//		{
-//
-//			double rdir = 1;
-//
-//			std::vector<double> retval;
-//			for (int i=0; i<nbrs.size(); i++) 
-//			{
-//				retval.push_back(dot(sv,rdir) * dot(statespace[nbrs[i]],rdir));
-//			}
-//			return retval;
-//		}
-
-
-		template <class A> 
-		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a) const
-		{
-			return dot(sv1, a) * dot(sv2, a);
-		}
-
-		template <class A>
-		inline void wolff_flip(StateVector& sv, const A a) const
-		{
-			const double dotp = dot(sv, a);
-			for (int i=0; i<SymD; i++) sv[i] -= 2*dotp*a[i];
-
-			normalize(sv);  // necessary?
-		}
-
 };
 
 
@@ -150,14 +113,54 @@ class Heisenberg
 
 
 
-/* comment out for debug
 namespace MARQOV
 {
+
+	template <class SpinType, class FPType>
+	class Embedder<Heisenberg<SpinType,FPType>>
+	{
+		private:
+			typedef Heisenberg<SpinType,FPType> Hamiltonian;
+			typedef typename Hamiltonian::StateVector StateVector;
+			constexpr static int SymD = Hamiltonian::SymD;
+
+			const Hamiltonian& ham; // why const?
+			std::array<double,SymD> rdir;
+
+		public:
+			Embedder(const Hamiltonian& ham) : ham(ham) {};
+
+			template <class RNG>
+			void draw(RNG& rng)
+			{
+				rdir = rnddir<RNG, double, SymD>(rng);
+			}
+
+
+			double coupling(StateVector& currentsv, StateVector& candidate)
+			{
+				dot(currentsv, rdir) * dot(candidate, rdir);
+			}
+
+
+			void flip(StateVector& sv)
+			{
+				const double dotp = dot(sv, rdir);
+				for (int i=0; i<SymD; i++) sv[i] -= 2*dotp*rdir[i];
+				normalize(sv);  // necessary?
+			}
+	};
+
+
+
+
+			/* update me
+
     template <class Lattice, class SpinType, class FPType>
     struct Wolff<Heisenberg<SpinType, FPType>, Lattice>
     {
-        template <class DirType, class RNG, class StateSpace>
-        static inline int move(const Heisenberg<SpinType, FPType>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite, const DirType& rdir)
+        template <class RNG, class StateSpace>
+        static inline int move(const Heisenberg<SpinType, FPType>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
         {
             typedef typename Heisenberg<SpinType, FPType>::StateVector StateVector;
             std::vector<int> cstack(grid.size(), 0);
@@ -173,35 +176,35 @@ namespace MARQOV
                 current = cstack[q];
                 q--;
 
-		// plain Heisenberg model has only one interaction term
-		auto coupling = ham.interactions[0]->J; 
-		const auto proj1 = coupling*dot(statespace[current], rdir);
+				// plain Heisenberg model has only one interaction term
+				auto coupling = ham.interactions[0]->J; 
+				const auto proj1 = coupling*dot(statespace[current], rdir);
 
-		const auto nbrs = grid.nbrs(0, current);
-		for (std::size_t i = 0; i < nbrs.size(); ++i)
-		{
-			const auto currentidx = nbrs[i];
-			StateVector& candidate = statespace[currentidx];
-
-			const auto proj2 = dot(candidate, rdir);
-
-			if (proj1*proj2 > 0)
-			{
-				const auto prob = -std::expm1(-2.0*beta*proj1*proj2);
-
-				if (rng.real() < prob)
+				const auto nbrs = grid.nbrs(0, current);
+				for (std::size_t i = 0; i < nbrs.size(); ++i)
 				{
-					q++;
-					cstack[q] = currentidx;
-					clustersize++;
-					ham.wolff_flip(candidate, rdir);
+					const auto currentidx = nbrs[i];
+					StateVector& candidate = statespace[currentidx];
+
+					const auto proj2 = dot(candidate, rdir);
+
+					if (proj1*proj2 > 0)
+					{
+						const auto prob = -std::expm1(-2.0*beta*proj1*proj2);
+
+						if (rng.real() < prob)
+						{
+							q++;
+							cstack[q] = currentidx;
+							clustersize++;
+							ham.wolff_flip(candidate, rdir);
+						}
+					}
 				}
 			}
-		}
-	}
-	return clustersize;
+			return clustersize;
         }
     };
-}
 */
+}
 #endif
