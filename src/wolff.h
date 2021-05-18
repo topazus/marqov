@@ -74,10 +74,18 @@ namespace MARQOV
         static inline int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite, const DirType& rdir);
     };
     
+
+
     template <class Hamiltonian, class Lattice>
     template <class DirType, class RNG, class StateSpace>
     int Wolff<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite, const DirType& rdir)
     {
+
+
+		Embedder<Hamiltonian> embd(ham);
+		embd.draw(rng);
+//		embd.flip(currentsv);
+
         typedef typename Hamiltonian::StateVector StateVector;
         // prepare stack
         std::vector<int> cstack(grid.size(), 0);
@@ -86,9 +94,9 @@ namespace MARQOV
         int q = 0;
         cstack[q] = rsite;
 
-		ham.wolff_init(rng); // the random direction/color whatever is stored in the Hamiltonian! this function resets it
         
-        ham.wolff_flip(statespace[rsite], rdir); // remove rdir, it is implicit now!
+//        ham.wolff_flip(statespace[rsite], rdir); // remove rdir, it is implicit now!
+		embd.flip(statespace[rsite]);
         int clustersize = 1;
         
         // loop over stack as long as non-empty
@@ -103,9 +111,12 @@ namespace MARQOV
             int a = 0; // to be replaced by loop over Nalpha
         	const double global_coupling = ham.interactions[a]->J;
             auto nbrs = grid.nbrs(a, currentidx);
+		
+		double cpl = embd.coupling(currentsv, nbrs, statespace);
+
 //            const auto bnds = grid.bnds(a, currentidx); // important: specify what to do if function is not there
 
-            const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,decltype(grid.nbrs(a,currentidx))>(ham, currentsv, nbrs, statespace); 
+//            const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,decltype(grid.nbrs(a,currentidx))>(ham, currentsv, nbrs, statespace); 
 //            const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,decltype(std::vector<int>())>(ham, currentsv, nbrs); 
 
 
