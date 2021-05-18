@@ -20,6 +20,8 @@
 #define EMBEDDER_H
 
 
+namespace MARQOV 
+{
 
 template <class Hamiltonian>
 class Embedder
@@ -30,12 +32,12 @@ class Embedder
 	public:
 
 		typedef typename Hamiltonian::StateVector StateVector;
+
 		Embedder(const Hamiltonian& ham) : ham(ham) {};
 
 		template <class RNG>
 		void draw(RNG& rng)
 		{
-			
 		}
 
 
@@ -50,5 +52,5 @@ class Embedder
 			sv[0] = -sv[0];
 		}
 };
-
+}
 #endif
