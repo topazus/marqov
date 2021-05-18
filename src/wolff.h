@@ -70,34 +70,29 @@ namespace MARQOV
     template <class Hamiltonian, class Lattice>
     struct Wolff
     {
-        template <class DirType, class RNG, class StateSpace>
-        static inline int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite, const DirType& rdir);
+        template <class RNG, class StateSpace>
+        static inline int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite);
     };
     
 
 
     template <class Hamiltonian, class Lattice>
-    template <class DirType, class RNG, class StateSpace>
-    int Wolff<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite, const DirType& rdir)
+    template <class RNG, class StateSpace>
+    int Wolff<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
     {
-
-
+		// set up embedder
 		Embedder<Hamiltonian> embd(ham);
 		embd.draw(rng);
-//		embd.flip(currentsv);
 
-        typedef typename Hamiltonian::StateVector StateVector;
         // prepare stack
+        typedef typename Hamiltonian::StateVector StateVector;
         std::vector<int> cstack(grid.size(), 0);
 
-        // add initial site and flip it
+        // add cluster seed and flip it
         int q = 0;
         cstack[q] = rsite;
-
-        
-//        ham.wolff_flip(statespace[rsite], rdir); // remove rdir, it is implicit now!
-		embd.flip(statespace[rsite]);
         int clustersize = 1;
+		embd.flip(statespace[rsite]);
         
         // loop over stack as long as non-empty
         while (q>=0)
@@ -108,33 +103,24 @@ namespace MARQOV
             q--;
             
             // get its neighbours
-            int a = 0; // to be replaced by loop over Nalpha
-        	const double global_coupling = ham.interactions[a]->J;
+            int a = 0; // to be replaced by loop over Nalpha // TODO
+        	const double gcpl = ham.interactions[a]->J;
             auto nbrs = grid.nbrs(a, currentidx);
 		
-		double cpl = embd.coupling(currentsv, nbrs, statespace);
 
 //            const auto bnds = grid.bnds(a, currentidx); // important: specify what to do if function is not there
-
-//            const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,decltype(grid.nbrs(a,currentidx))>(ham, currentsv, nbrs, statespace); 
-//            const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,decltype(std::vector<int>())>(ham, currentsv, nbrs); 
-
-
-			// rdir is implicitely stored in the Hamiltonian! (actually this function should be named "wolff_embedding")
-//            const auto cpl2 = ham.wolff_scalarize(currentsv, bnds); 
-			// specifiy what to do with the bond strength; 
-			// in practice has to communicate with wolff_coupling via rdir which is stored in the lattice
-			// todo: if function is not there, return array of 1's
+//            const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,decltype(grid.nbrs(a,currentidx))>
+//									(ham, currentsv, nbrs, statespace); 
 
             // loop over neighbours
-			/*
             for (std::size_t i = 0; i < nbrs.size(); ++i)
             {
                 // extract corresponding sv
                 const auto currentnbr = nbrs[i];
                 StateVector& candidate = statespace[currentnbr];
                 
-                const double coupling = global_coupling * cpl1[i] * cpl2[i];
+				const double cpl = embd.coupling(currentsv, candidate);
+                const double coupling = gcpl * cpl;
                 
                 // test whether site is added to the cluster
                 if (coupling > 0)
@@ -144,20 +130,18 @@ namespace MARQOV
                         q++;
                         cstack[q] = currentnbr;
                         clustersize++;
-                        ham.wolff_flip(candidate, rdir);
+                        embd.flip(candidate);
                     }
                 }
             }
-			*/
         }
         return clustersize;
     }
     
     template <class Grid, class Hamiltonian, template<class> class RefType>
-    template <class DirType>
-    inline int Core<Grid, Hamiltonian, RefType>::wolffstep(int rsite, const DirType& rdir)
+    inline int Core<Grid, Hamiltonian, RefType>::wolffstep(int rsite)
     {
-        return Wolff<Hamiltonian, Grid>::move(this->ham, this->grid, this->statespace, this->rngcache, this->beta, rsite, rdir);
+        return Wolff<Hamiltonian, Grid>::move(this->ham, this->grid, this->statespace, this->rngcache, this->beta, rsite);
     }
 };
 
