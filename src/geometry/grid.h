@@ -1,15 +1,35 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef GRID_H
 #define GRID_H
 
+#include <vector>
+#include <random>
 
 #include "points.h"
 #include "distance.h"
 #include "regular_lattice.h"
 #include "constantcoordination2D.h"
 
-
-// ---------------- Disordered Grid Base Class ----------------
-
+/**
+ * Disordered Grid Base Class
+ */
 class DisorderType
 {
 	protected:
@@ -18,11 +38,11 @@ class DisorderType
 		DisorderType(int npoints) : npoints(npoints) {}
 
 	public:
-		std::vector<std::vector<int>> nbrs;
+		std::vector<std::vector<int>> neighbours;
 
-		std::vector<int> getnbrs(const int a, const int i)
+		std::vector<int> nbrs(const int a, const int i)
 		{
-			return nbrs[i];
+			return neighbours[i];
 		}
 
 		std::size_t size() const {return npoints;}
@@ -31,10 +51,12 @@ class DisorderType
 		inline std::vector<int> termselector(int sublattice){return {-1};}
 };
 
-
-
-// ----------------- Constant Coordination --------------------
-
+/**
+ * Constant Coordination Lattice
+ * A class that can create a Constant Coordination lattice on a user defined
+ * point cloud.
+ * @tparam PointCloud The Point Cloud that is used by the user.
+ */
 template <class PointCloud>
 class ConstantCoordinationLattice
 {
@@ -45,31 +67,31 @@ class ConstantCoordinationLattice
 		int counter = 0; // only for test, remove me later
 
 		int npoints, len, dim;
-		std::vector<std::vector<int>> nbrs;
+		std::vector<std::vector<int>> neighbours;
 		ConstantCoordinationLattice(const int len, const int dim) : cloud(len*len, len, dim), npoints(pow(len,dim)), len(len), dim(dim)
 		{
 			if (dim > 2) throw std::invalid_argument("The CC lattice is currently not implemented for d="+std::to_string(dim));
-			constant_coordination_lattice(cloud, nbrs);
+			constant_coordination_lattice(cloud, neighbours);
 		}
 
-		std::vector<int> getnbrs(const int a, const int i) const
+		std::vector<int> nbrs(const int a, const int i) const
 		{
-			return nbrs[i];
+			return neighbours[i];
 		}
-		// implement getcrds
-		std::vector<double> getcrds(const int i) const
+		// implement crds
+		std::vector<double> crds(const int i) const
 		{
-			return cloud.getcrds(i);
+			return cloud.crds(i);
 		}
 
 		std::size_t size() const {return npoints;}
 };
 
-
-
-
-// ----------------- Regular Hypercubic --------------------
-
+/**
+ * The Regular Hypercubic lattice class
+ * This class provides routines for encapsulating all neighbour
+ * and coordinate relations for n-dimensional hypercubic lattices.
+ */
 class RegularHypercubic
 {
 	private:
@@ -79,26 +101,26 @@ class RegularHypercubic
 		int len, dim, npoints;
 
 
-		RegularHypercubic(int len, int dim) : len(len), dim(dim), npoints(pow(len,dim)), lattice(len,dim) {};
+		RegularHypercubic(int len, int dim) : lattice(len, dim), len(len), dim(dim), npoints(pow(len, dim)) {}
 
-		// override getnbrs
-		std::vector<int> getnbrs(const int alpha, const int i) const
+		// override nbrs
+		std::vector<int> nbrs(const int alpha, const int i) const
 		{
-			return lattice.getnbrs(alpha, i);
+			return lattice.nbrs(alpha, i);
 		}
 
-		// implement getcrds
-		std::vector<double> getcrds(const int i) const
+		// implement crds
+		std::vector<double> crds(const int i) const
 		{
-			return lattice.getcrds(i);
+			return lattice.crds(i);
 		}
 
 		std::size_t size() const {return npoints;}
 };
 
-
-// ----------------- Simple Bipartite --------------------
-
+/**
+ * Simple Bipartite Lattice
+ */
 class SimpleBipartite
 {
 	private:
@@ -107,11 +129,10 @@ class SimpleBipartite
 	public:
 		int len, dim, npoints;
 
-
-		SimpleBipartite(int len, int dim) : len(len), dim(dim), npoints(pow(len,dim)), lattice(len,dim) 
+		SimpleBipartite(int len, int dim) : lattice(len,dim), len(len), dim(dim), npoints(pow(len,dim))
 		{
 			if (len%2 != 0) cout << "ERROR: linear lattice size must be even!" << endl;
-		};
+		}
 
 
 		inline int identify(int i) // is this correct?
@@ -119,7 +140,7 @@ class SimpleBipartite
 			auto index = IndexOf(i, dim, len);
 			
 			int quersumme = 0;
-			for (int j=0; j<index.size(); j++) quersumme += index[j];
+			for (decltype(index.size()) j = 0; j < index.size(); j++) quersumme += index[j];
 
 			if (quersumme%2 == 0) return 0;
 			else return 1;
@@ -132,60 +153,59 @@ class SimpleBipartite
 		}
 
 
-		// override getnbrs
-		std::vector<int> getnbrs(const int alpha, const int i) const
+		// override nbrs
+		std::vector<int> nbrs(const int alpha, const int i) const
 		{
-			return lattice.getnbrs(alpha, i);
+			return lattice.nbrs(alpha, i);
 		}
 
-		// implement getcrds
-		std::vector<double> getcrds(const int i) const
+		// implement crds
+		std::vector<double> crds(const int i) const
 		{
-			return lattice.getcrds(i);
+			return lattice.crds(i);
 		}
 
 		std::size_t size() const {return npoints;}
 };
 
-
-// ----------------- "Super Chaos" --------------------
-
+/**
+ * Super Chaos Lattice
+ * @tparam PointCloud the point cloud that we use
+ * @tparam bond_type 
+ */
 template <class PointCloud, typename bond_type>
 class SuperChaos : public DisorderType
 {
 private:
 	int symD;
-	RND rng;
-
 public:
-	std::vector<std::vector<std::vector<bond_type>>> bnds;
+	std::vector<std::vector<std::vector<bond_type>>> bonds;
 
-	SuperChaos(const PointCloud& cloud) : DisorderType(cloud.size()), rng(0,1)
+	SuperChaos(const PointCloud& cloud) : DisorderType(cloud.size())
 	{
 		// prepare neighbour array
 		const int npoints = cloud.size;
-		this->nbrs.resize(npoints);
-		this->bnds.resize(npoints);
-
-		// prepare random number generator
-		rng.seed(time(NULL)+std::random_device{}());	
-		rng.set_integer_range(npoints);
-
+		this->neighbours.resize(npoints);
+		this->bonds.resize(npoints);
+        std::random_device rd;  //Will be used to obtain a seed for the random number engine
+        std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+        std::uniform_real_distribution<> disreal(0.0, 1.0);
+        std::uniform_int_distribution<> disint(0, npoints-1);
 
 		// draw bonds
 		for (int i=0; i<2*npoints; i++) // make me variable
 		{
-			const int j = rng.i();
-			const int k = rng.i();
+			const int j = disint(gen);
+			const int k = disint(gen);
 
-			auto jcrds = cloud.getcrds(j);
-			auto kcrds = cloud.getcrds(k);
+			auto jcoordinates = cloud.crds(j);
+			auto kcoordinates = cloud.crds(k);
 
-			if (i!=k && distancePBSQ_nD(jcrds,kcrds) < 0.1) // make me 1/L dependent
+			if (i!=k && distancePBSQ_nD(jcoordinates,kcoordinates) < 0.1) // make me 1/L dependent
 			// improve me: make sure bond does not already exist!
 			{
-				this->nbrs[j].push_back(k);
-				this->nbrs[k].push_back(j);
+				this->neighbours[j].push_back(k);
+				this->neighbours[k].push_back(j);
 			}
 		}
 
@@ -200,42 +220,37 @@ public:
 				bond_type subtemp;
 				for (int n=0; n<sizeof(bond_type); n++)
 				{
-					bond_type[n] = rng.d();
+					bond_type[n] =disreal(gen);
 				}
 				temp.push_back(subtemp);
 			}
-			bnds[k] = temp;
+			bonds[k] = temp;
 		}
 				*/
 	}
 
-	// override getbnds
-	std::vector<bond_type> getbnds(const int i)
+	// override bnds
+	std::vector<bond_type> bnds(const int i)
 	{
-		return bnds[i];
+		return bonds[i];
 	}
 };
 
-
-
-
-
-// ----------------- Erdos-Renyj Graph --------------------
-
+/**
+ * Erdos-Renyj Graph
+ */
 class ErdosRenyi : public DisorderType
 {
 	private:
 		int p;
-		RND rng;
-	
 	public:
-		ErdosRenyi(int npoints, double p) : DisorderType(npoints), p(p), rng(0,1)
+		ErdosRenyi(int npoints, double p) : DisorderType(npoints), p(p)
 		{
+            std::random_device rd;  //Will be used to obtain a seed for the random number engine
+            std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+            std::uniform_real_distribution<> dis(0.0, 1.0);
 			// prepare neighbour array
-			this->nbrs.resize(npoints);
-	
-			// seed random number generator
-			rng.seed(time(NULL)+std::random_device{}());	
+			this->neighbours.resize(npoints);
 	
 			// the actual implementation
 			// of the Erdos-Renyj Graph
@@ -243,22 +258,19 @@ class ErdosRenyi : public DisorderType
 			{
 				for (int j=i+1; j<npoints; j++)
 				{
-					if (rng.d() < p)
+					if (dis(gen) < this->p)
 					{
-						this->nbrs[i].push_back(j);
-						this->nbrs[j].push_back(i);
+						this->neighbours[i].push_back(j);
+						this->neighbours[j].push_back(i);
 					}
 				}
 			}
 		}
 };
 
-
-
-
-// ----------------- Random Bond Disorder --------------------
-
-
+/**
+ * A helper class for getting random numbers from a gaussian.
+ */
 class GaussianPDF
 {
 	private:
@@ -272,6 +284,9 @@ class GaussianPDF
 		double draw() {return(d(gen));}
 };
 
+/**
+ * A helper class for getting random numbers from a bimodal distribution.
+ */
 class BimodalPDF
 {
 	private:
@@ -284,7 +299,10 @@ class BimodalPDF
 		int draw() {return(d(gen)-1);}
 };
 
-
+/**
+ * A lattice with bond disorder
+ * @tparam PDFType The type of disorder distribution to use.
+ */
 template <class PDFType>
 class RegularRandomBond :  public DisorderType
 {
@@ -296,55 +314,55 @@ class RegularRandomBond :  public DisorderType
 		int len, dim, npoints;
 
 		using bond_type = decltype(PDF.draw());
-		std::vector<std::vector<bond_type>> bnds;
+		std::vector<std::vector<bond_type>> bonds;
 		
-		RegularRandomBond(int len, int dim) : dim(dim), len(len), lattice(len,dim), npoints(pow(len,dim))
+		RegularRandomBond(int len, int dim) : lattice(len,dim), len(len), dim(dim), npoints(pow(len,dim))
 		{
 			// construct bonds
-			bnds.resize(lattice.size());
-			for (int i=0; i<lattice.size(); i++)
+			bonds.resize(lattice.size());
+			for (decltype(lattice.size()) i=0; i<lattice.size(); i++)
 			{
-				for (int j=0; j<lattice[i].size(); j++) // why does lattice[i].size even work?
+				for (decltype(lattice[i].size()) j = 0; j < lattice[i].size(); j++) // why does lattice[i].size even work?
 				{
-					bnds[i].push_back(PDF.draw());
+					bonds[i].push_back(PDF.draw());
 				}
 			}
 
 			// "symmetrize" bonds
-			for (int i=0; i<lattice.size(); i++)
+			for (decltype(lattice.size()) i = 0; i < lattice.size(); i++)
 			{
-				auto lnbrs = lattice.getnbrs(1,i);
+				auto lnbrs = lattice.nbrs(1,i);
 
-				for (int j=0; j<lattice[i].size(); j++)
+				for (decltype(lattice[i].size()) j = 0; j < lattice[i].size(); j++)
 				{
-					// find i in bnds[lnbr] and replace its value by bnds[i][j]
+					// find i in bonds[lnbr] and replace its value by bonds[i][j]
 					auto lnbr = lnbrs[j];
-					auto nbrs_temp = lattice.getnbrs(1, lnbr);
+					auto nbrs_temp = lattice.nbrs(1, lnbr);
 
 					auto it  = std::find(nbrs_temp.begin(), nbrs_temp.end(), i);
 					auto idx = std::distance(nbrs_temp.begin(), it);
 
-					bnds[lnbr][idx] = bnds[i][j];
+					bonds[lnbr][idx] = bonds[i][j];
 				}
 			}
 		}
 
-		// override getnbrs
-		std::vector<int> getnbrs(const int alpha, const int i) const
+		// override nbrs
+		std::vector<int> nbrs(const int alpha, const int i) const
 		{
-			return lattice.getnbrs(alpha, i);
+			return lattice.nbrs(alpha, i);
 		}
 
-		// implement getbnds
-		std::vector<bond_type> getbnds(const int alpha, const int i) const
+		// implement bnds
+		std::vector<bond_type> bnds(const int alpha, const int i) const
 		{
-			return bnds[i];
+			return bonds[i];
 		}
 
-		// implement getcrds
-		std::vector<double> getcrds(const int i) const
+		// implement crds
+		std::vector<double> crds(const int i) const
 		{
-			return lattice.getcrds(i);
+			return lattice.crds(i);
 		}
 
 		std::size_t size() const {return npoints;}

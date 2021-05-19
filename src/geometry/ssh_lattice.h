@@ -1,5 +1,26 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef SSHLATTE_H
 #define SSHLATTE_H
+
+#include <vector>
+#include <cmath>
 
 class SSHLattice
 {
@@ -13,7 +34,7 @@ class SSHLattice
 		
 		SSHLattice(int l, int ltau, int d) : len(l), lentime(ltau), dim(d)
 		{
-		    nsites = pow(len, dim-1);
+		    nsites = std::pow(len, dim-1);
 		    nsites = nsites * lentime;
 		}
 		
@@ -34,7 +55,7 @@ class SSHLattice
 					retval.reserve(this->nsites);
 					for(int j = 0; j < i; ++j)
 						retval.push_back(j);
-					for(int j = i+1; j < this->nsites; ++j)
+					for(int j = i+1; j < static_cast<int>(this->nsites); ++j)
 						retval.push_back(j);
 					break;
 			}
@@ -71,7 +92,7 @@ class SSHLattice
 		            retval.reserve(this->nsites);
 		            for(int j = 0; j < i; ++j)
 		            	retval.push_back(1.0/j);
-		            for(int j = i+1; j < this->nsites; ++j)
+		            for(int j = i+1; j < static_cast<int>(this->nsites); ++j)
 		            	retval.push_back(1.0/j);
 		            break;
 		    }

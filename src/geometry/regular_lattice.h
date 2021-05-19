@@ -1,5 +1,25 @@
-#ifndef REGULARLATTE_H
-#define REGULARLATTE_H
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+#ifndef REGULAR_LATTICE_H
+#define REGULAR_LATTICE_H
+
+#include <vector>
 
 class RegularLattice
 {
@@ -22,16 +42,16 @@ public:
     }
 
 
-    value_type getnbrs(int a, int i) const {return this->operator[](i);}
+    value_type nbrs(int a, int i) const {return this->operator[](i);}
 
-    std::vector<double> getcrds(int k) const 
+    std::vector<double> crds(int k) const 
     {
 		// transform one-dimensional index to n-d coordinates
     		std::vector<int> indices = IndexOf(k, dim, length);
 		std::vector<double> retval(dim,0);
 
 		// transform to double and normalize to unit hypercube
-		for (int i=0; i<retval.size(); i++) 
+		for (decltype(retval.size()) i=0; i<retval.size(); i++) 
 		{ 
 			retval[i] = double(indices[i])/length; 
 			retval[i] += 0.5/length;

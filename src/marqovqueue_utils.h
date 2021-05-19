@@ -74,6 +74,7 @@ namespace ThreadPool
     
     /** A class that wraps all access to a queue
      * with locks so that it is thread safe.
+     * @tparam T the type of the content of the queue.
      */
     template <class T>
     class ThreadSafeQueue

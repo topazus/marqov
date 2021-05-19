@@ -2,94 +2,11 @@
 #define PHI4_H
 #include <array>
 #include <cmath>
+#include <vector>
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
-
-
-// ------------------------------ OBSERVABLES ---------------------------
-
-class Phi4Mag // normalized
-{
-     public:
-          std::string name;
-          template <class StateSpace, class Grid>
-          double measure(const StateSpace& statespace, const Grid& grid)
-          {
-               constexpr static int SymD = 3;     // improve me
-               const     int N = grid.size();
-
-               std::vector<double> mag(SymD,0) ;
-
-               for (int i=0; i<N; i++)
-               {
-                    for (int j=0; j<SymD; j++)
-                    {
-                         mag[j] += statespace[i][j];
-                    }
-               }
-
-               double retval = 0;
-               for (int j=0; j<SymD; j++)
-               {
-                    retval += mag[j]*mag[j];
-               }
-               return sqrt(retval)/double(N);
-          }
-          Phi4Mag() : name("m") {}
-};
-
-
-class Phi4MagFTComp
-{
-	public:
-		int dir;
-		std::string name;
-
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			constexpr static int SymD = 3;     // improve me
-
-			const int N = grid.size();
-//			const int L = grid.len;
-
-			std::vector<std::complex<double>> magFTcomp(SymD,0);
-			std::complex<double> jj(0,1);
-
-			for (int i=0; i<N; i++)
-			{
-				double x = grid.getcrds(i)[dir];
-//				double x = 0;  // debug
-
-				for (int j=0; j<SymD; j++)
-				{
-					magFTcomp[j] += double(statespace[i][j]) * std::exp(2.0*M_PI*x*jj);
-				}
-			}
-
-			// normalize (per spin)
-			for (int j=0; j<SymD; j++)
-			{
-				magFTcomp[j] /= double(N); 
-			}
-
-			// dot product of complex vector
-			double retval = 0;
-			for (int j=0; j<SymD; j++)
-			{
-//				retval += std::real(magFTcomp[j]*std::conj(magFTcomp[j])); 
-				retval += std::norm(magFTcomp[j]);
-			}
-
-			return retval;
-
-		}
-
-	Phi4MagFTComp(int dir=0) : dir(dir), name("x"+std::to_string(dir)) {}
-};
-
-
-
+#include "../obsparts.h"
+#include "termcollection.h" 
 
 // ----------------------------------------------------------------------
 
@@ -127,59 +44,25 @@ class Phi4_Initializer
 			auto newdir = rnddir<RNG, double, SymD>(rng);
 			auto nsv = osv + mult(amp,newdir);
 			return nsv;
-
-
-		  	/* old (and wrong)
-
-            	double amp = 0.05;
-            	double r = rng.real(-1.0, 1.0);
-            	double oldlen = std::sqrt(dot(osv, osv));
-            	double newlen = oldlen + amp*r;
-            	auto newdir = rnddir<RNG, double, SymD>(rng);
-            	for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
-            	    newdir[i] *= newlen;
-		  	   return newdir;
-		  	*/
 		};
 
 	private:
 		RNG& rng;
 };
 
-template <class StateVector>
-class Phi4_interaction : public Interaction<StateVector>
-{
-	public:
-		Phi4_interaction()
-		{
-	 		this->J = -1;	
-		}
-		StateVector get (const StateVector& phi) {return phi;};
-};
+
+
 
 template <class StateVector>
-class Phi4_onsitesquare : public OnSite<StateVector, double> 
+class Onsite_Fourth_Minus_One : public OnSite<StateVector, double> 
 {
 	public:
-		Phi4_onsitesquare(double mass, double beta)
+		Onsite_Fourth_Minus_One(double constant)
 		{
-	 		this->h = mass/beta;
+	 		this->h = constant;
 		}
-		double get (const StateVector& phi) {return dot(phi,phi);};
+		inline double get (const StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);}
 };
-
-template <class StateVector>
-class Phi4_onsitefour : public OnSite<StateVector, double> 
-{
-	public:
-		Phi4_onsitefour(double lambda, double beta)
-		{
-	 		this->h = lambda/beta;
-		}
-		double get (const StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);};
-};
-
-
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
@@ -187,43 +70,84 @@ template <typename SpinType, typename MyFPType>
 class Phi4
 {
 	public:
-		double beta, lambda, mass;
+		//  ----  Parameters  ----
 
+		double beta, lambda, mass;
+		const double J = -1;
 		constexpr static int SymD = 3;
-		const std::string name;
+		const std::string name = "Phi4";
+
+
+
+		//  ---- Definitions  -----
+
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
-
 		template <typename RNG>
 		using MetroInitializer =  Phi4_Initializer<StateVector, RNG>; 
-		// this construction allows to specify a number of template arguments
-		// while leaving others open (C++11 feature)
 
-		
-		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta  = 2;
-		static constexpr uint Ngamma = 0;
 
-		// requires pointers
-		Interaction<StateVector>* interactions[Nalpha];
-		OnSite<StateVector, FPType>* onsite[Nbeta]; //Todo: External fields not yet supported
-		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
 
-		Phi4(double beta, double lambda, double mass) : beta(beta), lambda(lambda), mass(mass), name("Phi4"), obs_fx(0), obs_fy(1), obs_fz(2)
+		//  ----  Hamiltonian terms  ----
+
+		Standard_Interaction<StateVector> phi4interaction;
+		Onsite_Quadratic<StateVector> onsite_standard;
+		Onsite_Fourth_Minus_One<StateVector> onsite_fourth_minus_one;
+
+		std::array<Standard_Interaction<StateVector>*, 1>        interactions = {new Standard_Interaction<StateVector>(J)};
+		std::vector<OnSite<StateVector, FPType>*>              onsite; 
+		std::array <FlexTerm<StateVector*,  StateVector>*, 0>  multisite;
+
+		Phi4(double beta, double lambda, double mass) : beta(beta), 
+												lambda(lambda), 
+												mass(mass), 
+												name("Phi4"), 
+                                                phi4interaction(J),
+												onsite_standard(mass/beta),
+												onsite_fourth_minus_one(lambda/beta),
+												obs_fx(0), 
+												obs_fy(1), 
+												obs_fz(2)
 		{
-			interactions[0] = new Phi4_interaction<StateVector>();
-			onsite[0]       = new Phi4_onsitesquare<StateVector>(mass, beta);
-			onsite[1]       = new Phi4_onsitefour<StateVector>(lambda, beta);
+			onsite.push_back(&onsite_standard);
+			onsite.push_back(&onsite_fourth_minus_one);
+#ifdef __PGI
+            //The following three lines are necessary to make PGI-19.10 happy
+            StateVector dummy;
+            onsite_standard.get(dummy);
+            onsite_fourth_minus_one.get(dummy);
+#endif
 		}
 
-		Phi4Mag obs_m;
-		Phi4MagFTComp obs_fx;
-		Phi4MagFTComp obs_fy;
-		Phi4MagFTComp obs_fz;
-		auto getobs() { return std::make_tuple(obs_m, obs_fx, obs_fy, obs_fz);}
 
 
-		// --- Wolff ---
+		//  ----  Observables  ----
+
+		Magnetization obs_m;
+		MagFTComp obs_fx;
+		MagFTComp obs_fy;
+		MagFTComp obs_fz;
+        decltype(std::make_tuple(obs_m, obs_fx, obs_fy, obs_fz)) observables = {std::make_tuple(obs_m, obs_fx, obs_fy, obs_fz)};
+
+
+
+		// Provide names for the parameters
+
+		std::string paramname(int i)
+		{
+			std::string name;
+			switch (i)
+			{
+				case (0): name = "beta"; break;
+				case (1): name = "lambda"; break;
+				case (2): name = "mass"; break;
+				default: break;
+			}
+			return name;
+		}
+
+
+		//  ----  Wolff  ----
 
 		template <class A>
 		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a) const 
@@ -237,7 +161,5 @@ class Phi4
 			const double dotp = dot(sv, a);
 			for (int i=0; i<SymD; i++) sv[i] -= 2*dotp*a[i];
 		}
-
-		
 };
 #endif

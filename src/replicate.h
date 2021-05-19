@@ -1,10 +1,28 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef REPLICATE_H
 #define REPLICATE_H
-
-#include "helpers.h" 
+#include <vector>
+#include "helpers.h"
 
 template <class Params>
-std::vector<Params> replicator(std::vector<Params>& params, int nreplicas, int sortmode=0)
+inline std::vector<Params> replicator(std::vector<Params>& params, int nreplicas, int sortmode=0)
 {
 	std::vector<Params> newparams;
 
@@ -15,7 +33,7 @@ std::vector<Params> replicator(std::vector<Params>& params, int nreplicas, int s
 		auto mp = params[i].second;
 		auto hp = params[i].third;
 
-		for (std::size_t j=0; j<nreplicas; ++j)
+		for (int j = 0; j < nreplicas; ++j)
 		{
 			auto mpr(mp);
 			mpr.setrepid(j);
@@ -30,7 +48,7 @@ std::vector<Params> replicator(std::vector<Params>& params, int nreplicas, int s
 
 
 template <class Params>
-std::vector<Params> replicator_pair(std::vector<Params>& params, int nreplicas, int sortmode=0)
+inline std::vector<Params> replicator_pair(std::vector<Params>& params, int nreplicas, int sortmode=0)
 {
 	std::vector<Params> newparams;
 
@@ -40,7 +58,7 @@ std::vector<Params> replicator_pair(std::vector<Params>& params, int nreplicas, 
 		auto mp = params[i].first;
 		auto hp = params[i].second;
 
-		for (std::size_t j=0; j<nreplicas; ++j)
+		for (int j = 0; j < nreplicas; ++j)
 		{
 			auto mpr(mp);
 			mpr.setrepid(j);
@@ -56,7 +74,7 @@ std::vector<Params> replicator_pair(std::vector<Params>& params, int nreplicas, 
 
 
 template <class LArgs, class MArgs, class HArgs>
-auto finalize_parameter_triple(const LArgs& lp, const MArgs& mp, const std::vector<HArgs>& hp)
+inline auto finalize_parameter_triple(const LArgs& lp, const MArgs& mp, const std::vector<HArgs>& hp)
 {
 	std::vector<Triple<LArgs, MArgs, HArgs>> params;
 
@@ -70,7 +88,7 @@ auto finalize_parameter_triple(const LArgs& lp, const MArgs& mp, const std::vect
 
 
 template <class MArgs, class HArgs>
-auto finalize_parameter_pair(const MArgs& mp, const std::vector<HArgs>& hp)
+inline auto finalize_parameter_pair(const MArgs& mp, const std::vector<HArgs>& hp)
 {
 	std::vector<std::pair<MArgs, HArgs>> params;
 

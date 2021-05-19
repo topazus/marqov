@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005-2020 by Florian Goth   *
+ *   Copyright (C) 2005-2021 by Florian Goth   *
  *   fgoth@physik.uni-wuerzburg.de   *
  *                                                                         *
  *   Permission is hereby granted, free of charge, to any person obtaining *
@@ -35,115 +35,203 @@
 #include <sstream>
 
 /**
-The basic Exception thrown by the registry. It is derived from the STL logic_error exception
+* The base exception class thrown by the registry. It is derived from the STL logic_error exception.
 */
 class Registry_Exception : public std::logic_error
 {
 public:
-    explicit Registry_Exception(const std::string& what_arg) throw() : std::logic_error(what_arg) {}
+    /** Construct exception with error message.
+     * 
+     * @param err_msg The error message.
+     */
+    explicit Registry_Exception(const std::string& err_msg) throw() : std::logic_error(err_msg) {}
 private:
 };
 
-/**
-The Exception when the desired key is not found
-*/
+/** The exception when the desired key is not found.
+ */
 class Registry_Key_not_found_Exception : public Registry_Exception
 {
 public:
-    explicit Registry_Key_not_found_Exception(const std::string& what_arg) throw() : Registry_Exception(what_arg) {}
+    /** The Exception when a requested key is not found.
+     * 
+     * @param err_msg The error message of which key is not found.
+     */
+    explicit Registry_Key_not_found_Exception(const std::string& err_msg) throw() : Registry_Exception(err_msg) {}
 private:
 };
 
+/** The exception when the requested Data in a block is not present.
+ */
 class Registry_Block_Data_not_found_Exception : public Registry_Key_not_found_Exception
 {
 public:
-    const std::string block_key;
+    const std::string block_key; ///< to denote the block where no data was found
+    /** Construct an exception when the data was not found.
+     * 
+     * @param key_value which key was not found.
+     */
     explicit Registry_Block_Data_not_found_Exception(const std::string& key_value) throw() : Registry_Key_not_found_Exception(std::string("Block Key not found: ") + key_value), block_key(key_value) {}
     ~Registry_Block_Data_not_found_Exception() throw() {}
 private:
 };
 
+/**
+ * The exception when the requested block is not present.
+ */
 class Registry_Block_not_found_Exception : public Registry_Key_not_found_Exception
 {
 public:
-    const std::string block;
+    const std::string block;///< which block has not been found.
+    /** Construct an exception where a block was not found.
+     * 
+     * @param key_value the block which has not been found.
+     */
     explicit Registry_Block_not_found_Exception(const std::string& key_value) throw() : Registry_Key_not_found_Exception(std::string("Block not found: ") + key_value), block(key_value) {}
     ~Registry_Block_not_found_Exception() throw() {}
 private:
 };
 
+/**
+ * The exception when the requested config file could not be found.
+ */
 class Registry_cfgfile_not_found_Exception : public Registry_Key_not_found_Exception
 {
 public:
-    const std::string cfgfile;
+    const std::string cfgfile; ///< which config file was not found.
+    /** Construct the respective exception when a file was not found.
+     * 
+     * @param key_value Which config file could not be found.
+     */
     explicit Registry_cfgfile_not_found_Exception(const std::string& key_value) throw(): Registry_Key_not_found_Exception(std::string("cfgfile not found: ") + key_value), cfgfile(key_value) {}
     ~Registry_cfgfile_not_found_Exception() throw() {}
 private:
 };
 
 /**
-this class contains the contents of a [BLOCK] structure in a config file.
-*/
+ * This class contains the contents of a [BLOCK] structure in a config file.
+ * 
+ * In Config Files those [BLOCK] thingies
+ */
 class Block
 {
-    //In Config Files those [BLOCK] thingies
-    std::map<std::string , std::string > Block_Data;
-    std::string BlockName;
-    std::vector<std::string> Keys;
-    std::map<std::string , std::string >::size_type NrOfKeys;
-    void push_back_Key(std::string);
+    std::map<std::string , std::string > Block_Data;///< A map between the keys and their values.
+    std::string BlockName; ///< The name of the block
+    std::vector<std::string> Keys; ///< all keys that have been found.
+    std::map<std::string , std::string >::size_type NrOfKeys; ///< the number of key-value pairs that we have.
+    /** Add a key-value pair.
+     * 
+     * @param arg Add this key-value pair.
+     */
+    void push_back_Key(std::string arg);
 public:
+    /** Create an empty block
+     */
     Block() {}
+    /** Create a block from a vector of strings.
+     * 
+     * @param blockname The name of the block.
+     * @param block a vector of strings.
+     */
     Block(std::string blockname , const std::vector<std::string>& block);
+    /** Get the number of keys that we store.
+     * 
+     * @returns the number of keys that we store.
+     */
     inline unsigned int size(void) const;
+    /** Get the list of keys that we store
+     * 
+     * @returns The list of keys that we store.
+     */
     const std::vector<std::string> GetKeys() const
     {
         return Keys;
     }
-    /**
-    get access to the contents of a block
-    */
-    std::string& operator[](const std::string& Bn)
+    /** Get access to the contents of a block.
+     * 
+     * This distinguishes itself from find() by doing no checks.
+     * @param key the key for which to look.
+     * @returns the value of the key.
+     */
+    std::string& operator[](const std::string& key)
     {
-        return Block_Data[Bn];
+        return Block_Data[key];
     }
+    /** Get access to the contents of a block.
+     * 
+     * non-const version.
+     * In contrast to operator[] this perform checking.
+     * @param key the key for which to look.
+     * @returns the value of the key.
+     * @throws Registry_Block_Data_not_found_Exception If the key was not found
+     */
     std::string& find(const std::string& key)
     {
         std::map<std::string , std::string >::iterator it = Block_Data.find(key);
         if (it == Block_Data.end()) throw(Registry_Block_Data_not_found_Exception(key));
         return it->second;
     }
+    /** Get access to the contents of a block.
+     * 
+     * constified version.
+     * In contrast to operator[] this perform checking.
+     * @param key the key for which to look.
+     * @returns the value of the key.
+     * @throws Registry_Block_Data_not_found_Exception If the key was not found
+     */
     const std::string& find(const std::string& key) const
     {
         std::map<std::string , std::string >::const_iterator it = Block_Data.find(key);
         if (it == Block_Data.end()) throw(Registry_Block_Data_not_found_Exception(key));
         return it->second;
     }
+    /** Clean up a block.
+     */
     ~Block()
-    {
-    }
+    {}
 };
 
 /**
-this class contains the contents of a single config file
-*/
+ * This class contains the contents of a single config file.
+ */
 class cfile
 {
-    std::string filename;
-    std::map<std::string , Block> cfgfile;
+    std::string filename; ///< the filename
+    std::map<std::string , Block> cfgfile; ///< The map between files and their internal blocks.
 public:
-    cfile()
-    {}
-    Block& operator[](std::string a )
+    /** Default constructor.
+     */
+    cfile() {}
+    /** Get access to the contents of a file.
+     * 
+     * This distinguishes itself from find() by doing no checks.
+     * @param a the block for which to look.
+     * @returns A block that can be queried further.
+     */
+    Block& operator[](std::string a)
     {
         return cfgfile[a];
     }
+    /** Get access to the contents of a file.
+     * 
+     * non-const version.
+     * In contrast to operator[] this perform checking.
+     * @param key the file for which to look.
+     * @returns the blocks of the file.
+     */
     Block& find(const std::string& key)
     {
         std::map<std::string , Block>::iterator it = cfgfile.find(key);
         if ( it == cfgfile.end()) throw(Registry_Block_not_found_Exception(key));
         return it->second;
     }
+    /** Get access to the contents of a file.
+     * 
+     * const version.
+     * In contrast to operator[] this perform checking.
+     * @param key the file for which to look.
+     * @returns the blocks of the file.
+     */
     const Block& find(const std::string& key) const
     {
         std::map<std::string , Block>::const_iterator it = cfgfile.find(key);
@@ -151,54 +239,78 @@ public:
         return it->second;
     }
     /**
-    constructor that initializes this with the contents of a Config-File
-    */
+     * Constructor that initializes this with the contents of a config-file.
+     * 
+     * @param file The file that we should parse.
+     */
     cfile(std::string& file);
 };
 
 /**
-this holds together all the contents of the Configuration Directory and provides access via the Get() template
-*/
+ * This holds together all the contents of the configuration directory and
+ * provides access via the Get() template.
+ */
 class RegistryDB
 {
-    std::map<std::string , cfile> Reg;
+    std::map<std::string , cfile> Reg; ///< The map containing all config files.
 private:
 public:
-    /**
-    this initializes the registry
-    @param arg the Directory that contains all the files the registry should contain
-    */
-    int Init(const std::string& cfgDir);
-    /**
-    this is the constructor for the registry
-    @param arg the Directory that contains all the files the registry should contain
-    */
-    RegistryDB(const std::string& arg);
+    /** Initialize registry.
+     * 
+     * This initializes the registry via a separate function call.
+     * @param cfgDir the directory that contains all the files the registry should contain
+     * @param pat a suffix to select only certain files, e.g. : .ini
+     */
+    int init(const std::string& cfgDir, const std::string pat = "");
+    /** construct the registry.
+     * 
+     * This is the constructor for the registry.
+     * @param arg the directory that contains all the files the registry should contain
+     * @param pat a suffix to select only certain files, e.g. : .ini
+     */
+    RegistryDB(const std::string& arg, const std::string pat = "");
+    /** Empty default constructor.
+     */
     RegistryDB()
     {}
+    /** Tidy up everything.
+     */
     ~RegistryDB()
     {}
+    /** Get a particular block in a file of the Registry.
+     * 
+     * @param file the file in which to look.
+     * @param bloc the bloc we require.
+     * @returns the requested block.
+     */
     Block GetBlock(std::string file , std::string bloc)
     {
         return Reg[file][bloc];
     }
-    /**
-    function to get a value from the registry. The template parameter determines to which type to convert the key.
-    @param file the file in which to look
-    @param block under which block is the value
-    @param key for which key to look
-    @return the requested key
-    */
+    /** Function to get a value from the registry.
+     *
+     * The template parameter determines to which type to convert the key.
+     * @tparam T to which type do we convert.
+     * 
+     * @param file the file in which to look
+     * @param block under which block is the value
+     * @param key for which key to look
+     * @return the requested key
+     */
     template < typename T >
     inline T Get(const std::string& file, const std::string& block, const std::string& key) const;
+    /** A function for setting values in the registry.
+     */
     template <typename T>
     inline T set(const std::string& file, const std::string& block, const std::string& key, T val);
 };
 
-/**
-the basic template for doing the conversion between strings and the requested type
-We use the C++ stringstreams thus we benefit from all overloads that are already provided by C++
-*/
+/** The helper template for performing string -> type conversions.
+ * 
+ * The basic template for doing the conversion between strings and the requested type.
+ * We use the C++ stringstreams thus we benefit from all overloads that are already provided by C++.
+ * @tparam A to which type do we want to convert.
+ */
 template < typename A >
 struct GetTrait
 {
@@ -211,6 +323,10 @@ struct GetTrait
     }
 };
 
+/** The helper template for performing string -> bool conversion
+ * 
+ * Specialization for boolean(true, false) like strings
+ */
 template <>
 struct GetTrait<bool>
 {
@@ -258,10 +374,7 @@ inline unsigned int Block::size(void) const
     return Block_Data.size();
 }
 
-
-
-
-//two examples on how to extend the parsing capabilities of the registry
+//Two examples on how to extend the parsing capabilities of the registry.
 template <typename T>
 struct GetTrait<std::vector<T> >//helper trait to break up a string at various predefined seperators
 {
@@ -295,7 +408,5 @@ struct GetTrait<std::vector<std::string> >//helper trait to break up a string at
         return retval;
     }
 };
-
-
 
 #endif
