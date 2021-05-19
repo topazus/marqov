@@ -146,7 +146,9 @@ namespace MARQOV
 		public:
 			/** Constructs a Heisenberg embedding object.
 			*
-			* @param ham the corresponding Hamiltonian
+			* @param ham The corresponding Hamiltonian
+			* @param lat The corresponding lattice
+			* @param statespace The statespace of the simulation
 			*/
 			Embedder(const Hamiltonian& ham, const Lattice& lat, StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
 
@@ -167,10 +169,10 @@ namespace MARQOV
 			}
 
 
-			/** Comntatespace[pos1], rdir) * dot(statespace[pos2], rdir);te the Wolff coupling when attempting to add a spin to the cluster
+			/** Computes the Wolff coupling when attempting to add a spin to the cluster
 			*
-			* @param currentsv the current state vector (which is already in the cluster)
-			* @param candidate its neighbour being checked whether it will become part of the cluster as well
+			* @param pos1 The position (index) of the current state vector (which is already in the cluster)
+			* @param pos2 The position (index) of a neighbour being checked whether it will become part of the cluster as well
 			*
 			* @return The scalar Wolff coupling (a double)
 			*/
