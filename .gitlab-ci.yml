@@ -141,7 +141,6 @@ marqov_Bullseye-Intel-21:
 
 marqov_Buster_doxygen:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gxx
-    stage: docs
     script:
       - apt-get update && apt-get install -y doxygen
       - cd docs
