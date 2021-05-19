@@ -18,7 +18,7 @@
 
 #ifndef SVMATH_H
 #define SVMATH_H
-#include <tuple>
+#include <ostream>
 #include <cmath>
 #include <numeric>
 #include <array>
@@ -166,11 +166,9 @@ inline T dot(const std::array<T, N>& a, const std::array<T, N>& b)
 template <class StateVector>
 inline void reflect(StateVector& vec, const StateVector mirror)
 {
-	const int SymD = std::tuple_size<StateVector>::value;
-	
-	const double dotp = dot(vec, mirror);
+	const auto dotp = dot(vec, mirror);
 
-	for (int i=0; i<SymD; i++) vec[i] -= 2*dotp*mirror[i];
+	for (std::size_t i = 0; i < vec.size(); i++) vec[i] -= 2*dotp*mirror[i];
 }
 
 /** Normalize vector
@@ -183,7 +181,7 @@ inline void reflect(StateVector& vec, const StateVector mirror)
 template <class Container>
 inline void normalize(Container& a)
 {
-	typename Container::value_type tmp_abs=std::sqrt(dot(a, a));
+	typename Container::value_type tmp_abs = std::sqrt(dot(a, a));
 
 	for (decltype(a.size()) i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
 }
