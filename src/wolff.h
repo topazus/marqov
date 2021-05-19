@@ -93,11 +93,11 @@ namespace MARQOV
         cstack[q] = rsite;
         int clustersize = 1;
 		embd.flip(statespace[rsite]);
-        
+
         // loop over stack as long as non-empty
         while (q>=0)
         {
-			cout << q << endl;
+			
             // extract last sv in stack
             const int currentidx = cstack[q];
             StateVector& currentsv = statespace[currentidx];
@@ -116,8 +116,9 @@ namespace MARQOV
                 const auto currentnbr = nbrs[i];
                 StateVector& candidate = statespace[currentnbr];
                 
-				const double lcpl = embd.coupling(rsite, currentnbr);
+				const double lcpl = embd.coupling(currentidx, currentnbr);
 				const double cpl = gcpl*lcpl;
+
 				
                 // test whether site is added to the cluster
                 if (cpl > 0)

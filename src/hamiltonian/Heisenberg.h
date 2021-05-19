@@ -138,7 +138,7 @@ namespace MARQOV
 
 			const Hamiltonian& ham; // why const?
 			const Lattice& lat;
-			const StateSpace& statespace;
+			StateSpace& statespace;
 
 			std::array<double,SymD> rdir;
 //			std::array<SpinType,SymD> rdir;
@@ -148,7 +148,7 @@ namespace MARQOV
 			*
 			* @param ham the corresponding Hamiltonian
 			*/
-			Embedder(const Hamiltonian& ham, const Lattice& lat, const StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
+			Embedder(const Hamiltonian& ham, const Lattice& lat, StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
 
 
 			/** Set new embedding variable.
@@ -167,7 +167,7 @@ namespace MARQOV
 			}
 
 
-			/** Compute the Wolff coupling when attempting to add a spin to the cluster
+			/** Comntatespace[pos1], rdir) * dot(statespace[pos2], rdir);te the Wolff coupling when attempting to add a spin to the cluster
 			*
 			* @param currentsv the current state vector (which is already in the cluster)
 			* @param candidate its neighbour being checked whether it will become part of the cluster as well
@@ -196,8 +196,6 @@ namespace MARQOV
 
 
 
-//	
-
     template <class Lattice, class SpinType, class CouplingType>
     struct Wolff<Heisenberg<SpinType, CouplingType>, Lattice>
     {
@@ -210,10 +208,10 @@ namespace MARQOV
 
             std::vector<int> cstack(grid.size(), 0);
             int q = 0;
-            auto seed = statespace[rsite];
+            auto& seed = statespace[rsite];
             cstack[q] = rsite;
 
-			int rdir = rng.integer(SymD);
+			int rdir = rng.integer(SymD); // random Cartesian direction
 			seed[rdir] *= -1;
             
             int clustersize = 1;
@@ -221,7 +219,7 @@ namespace MARQOV
 				
 			// plain Heisenberg model has only one interaction term
 			const auto gcpl = ham.interactions[0]->J; 
-            
+
             while (q>=0)
             {
                 current = cstack[q];
@@ -233,7 +231,7 @@ namespace MARQOV
 					const auto currentnbr = nbrs[i];
 					StateVector& candidate = statespace[currentnbr];
 
-					const auto lcpl = statespace[rsite][rdir] * candidate[rdir];
+					const auto lcpl = statespace[current][rdir] * candidate[rdir];
 					const auto cpl  = gcpl*lcpl;
 
 					if (cpl > 0)
@@ -251,6 +249,5 @@ namespace MARQOV
 			return clustersize;
         }
     };
-//*/
 }
 #endif
