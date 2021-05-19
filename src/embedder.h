@@ -33,14 +33,14 @@ class Embedder
 	private:
 		const Hamiltonian& ham; // why const?
 		const Lattice& lat;
-		const StateSpace& statespace;
+		StateSpace& statespace;
 
 	public:
 
 		int randomvar = 0;
 
 
-		Embedder(const Hamiltonian& ham, const Lattice& lat, const StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
+		Embedder(const Hamiltonian& ham, const Lattice& lat, StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
 
 		template <class RNG>
 		void draw(RNG& rng)
@@ -59,7 +59,8 @@ class Embedder
 		void flip(StateVector& sv)
 		{
 			sv[randomvar] = -sv[randomvar];
+			normalize(sv);
 		}
-};
+	};
 }
 #endif

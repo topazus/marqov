@@ -59,7 +59,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		mp.setncluster(int(L/2));
 		mp.setwarmupsteps(200);
 		mp.setgameloopsteps(1000);
-		
+
 		makeDir(mp.outpath);
 		
 		auto params = finalize_parameter_pair(mp, hp);
