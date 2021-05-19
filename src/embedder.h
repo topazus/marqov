@@ -23,7 +23,7 @@
 namespace MARQOV 
 {
 
-template <class Hamiltonian>
+template <class Hamiltonian, class Lattice>
 class Embedder
 {
 	private:

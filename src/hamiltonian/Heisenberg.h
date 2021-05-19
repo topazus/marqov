@@ -122,7 +122,7 @@ namespace MARQOV
 	* @tparam FPType
 	*/
 	template <class SpinType, class FPType>
-	class Embedder<Heisenberg<SpinType,FPType>>
+	class Embedder<Heisenberg<SpinType,FPType>,RegularHypercubic>
 	{
 		private:
 			typedef Heisenberg<SpinType,FPType> Hamiltonian;
