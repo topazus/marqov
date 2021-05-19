@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005-2020 by Florian Goth   *
+ *   Copyright (C) 2005-2021 by Florian Goth   *
  *   fgoth@physik.uni-wuerzburg.de   *
  *                                                                         *
  *   Permission is hereby granted, free of charge, to any person obtaining *
@@ -181,18 +181,17 @@ inline int scandir(const char* dirname, struct dirent *(*namelist[]), int (*sele
 #endif
 #endif
 
-static int
-IsFile (const dirent *used)
+static int IsFile (const dirent *used)
 {
-    string A(used->d_name);
-    if ( ( A == "." ) || ( A == ".." ) ) //Don't use these
+    string tmp(used->d_name);
+    if ( ( tmp == "." ) || ( tmp == ".." ) ) //Don't use these
         return 0;
     return 1;
 }
 
 RegistryDB::RegistryDB( const std::string& arg, const std::string pat)
 {
-    init(arg,pat);
+    init(arg, pat);
     return;
 }
 

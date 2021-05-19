@@ -83,6 +83,10 @@ namespace MARQOV
                                       std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
     }
     
+    /**
+     * sims_helper utility class
+     * A utility class to figure out the actual type of the Marqov class 
+     */
     template<class ... Ts> struct sims_helper {};
     
     template <class H,  class L, class HArgstuple, size_t... S>
@@ -93,7 +97,11 @@ namespace MARQOV
                                                std::declval<typename std::tuple_element<S, HArgstuple>::type>()...
         )) MarqovType;
     };
-    
+
+    /**
+     * sims_helper utility class
+     * A utility class to figure out the actual type of the Marqov class 
+     */    
     template <class ... Ts>
     struct sims_helper2 {};
     
@@ -139,11 +147,19 @@ namespace MARQOV
         }
     };
     
+    /**
+     * The Marqov internal scheduler
+     * It encapsulates the creation of simulations, the parallel tempering
+     * and the distribution across nodes/cores
+     * @tparam Sim a fully specified Marqov type
+     */
     template <class Sim>
     class CXX11Scheduler
     {
     public:
-        /** This gives us the parameters of a simulation and we are responsible for setting everything up.
+        /** Create a full simulation from a parameter.
+         * 
+         * This gives us the parameters of a simulation and we are responsible for setting everything up.
          * It has a template parameter, but of course all used parameters have to resolve to the same underlying MarqovType.
          * @param p The full set of parameters that are relevant for your Problem
          * @param filter A filter that can be applied before the actual creation of MARQOV
@@ -158,6 +174,8 @@ namespace MARQOV
         }
         std::vector<Sim*> oursims; ///< Collects the sims that we have created and for which we feel repsonsible.
         /** This registers an already allocated simulation with us.
+         * 
+         * @param sim A reference to the sim that already exists.
          */
         void enqueuesim(Sim& sim)
         {
@@ -176,6 +194,8 @@ namespace MARQOV
                 workqueue.push_back(Simstate(idx));
             });//Put some warmup into the taskqueue
         }
+        /** Start the simulations! GoGoGo...!
+         */
         void start()
         {
             //create dummy data for the ptplan
@@ -219,9 +239,14 @@ namespace MARQOV
             //      taskqueue.enqueue(master);
         }
         void waitforall() {}
-        CXX11Scheduler(int maxptsteps) : maxpt(maxptsteps), masterstop(false), masterwork{},
+        /** Construct Scheduler
+         * 
+         * @param maxptsteps How many parallel tempering steps do we do
+         * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
+         */
+        CXX11Scheduler(int maxptsteps, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
-        taskqueue(/*std::thread::hardware_concurrency()*/ 2)
+        taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads))
         {}
         ~CXX11Scheduler() {
             if (!nowork() && !masterstop && (taskqueue.tasks_enqueued() > 0) )
@@ -236,6 +261,10 @@ namespace MARQOV
             //         std::cout<<"Deleting Scheduler"<<std::endl;
         }
     private:
+        /**
+         * Simstate helper class
+         * This class encapsulates the parallel tempering state of a single sim.
+         */
         struct Simstate
         {
             Simstate() : id(-1), npt(-100) {}
@@ -244,22 +273,33 @@ namespace MARQOV
             int id;
             int npt;
         };
+        
+        /**
+         * This class collects mutexes that synchronize I/O.
+         */
         struct GlobalMutexes
         {
-            std::mutex hdf;//lock for the HDF5 I/O since the library for C++ is not thread-safe
-            std::mutex io;// lock for the rest?
+            std::mutex hdf;///< Lock for the HDF5 I/O since the library for C++ is not thread-safe.
+            std::mutex io;///< Lock for the rest?
         } mutexes;
+        /** Find the parallel tempering exchange partner of the given id.
+         * 
+         * @param id find the next partner that this id has.
+         */
         auto findpartner(uint id)
         {
-            return std::find_if(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == id;});
+            return std::find_if(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == static_cast<int>(id);});
         }
         
         /** Test whether there is work available.
+         * 
          * @return true if no task is working and no work is to be executed by a task and no sim is to moved to the taskqueue.
          */
         bool nowork() {return workqueue.is_empty() && taskqueue.tasks_assigned() == 0 && taskqueue.tasks_enqueued() == 0;}
         
-        /** This function is called when the current simulation is up for a parallel tempering (PT) step.
+        /** Do a parallel tempering step. 
+         * 
+         * This function is called when the current simulation is up for a parallel tempering (PT) step.
          * If its partner is already waiting we do the parallel tempering, if not we got moved into 
          * a queue and wait for a partner
          * @param itm The Sim which is chosen for PT
@@ -289,7 +329,9 @@ namespace MARQOV
                 ptqueue.push_back(itm);
             }
         }
-        /** This determines how many steps have to be done until the next PTstep
+        /** Take simulation and move it to the workqueue.
+         * 
+         * This determines how many steps have to be done until the next PTstep
          * and moves the simulation into the taskqueue where the gameloop is executed.
          * @param itm The simulation that gets further worked on.
          */
@@ -320,7 +362,8 @@ namespace MARQOV
                 [itm, newnpt, gameloop]{gameloop(itm, newnpt);}
             );
         }
-        /** Determine the next PT step
+        /** Determine the next PT step.
+         *
          * @param idx simulation id to check
          * @param curnpt current PT time
          * @return the next PT step where this simulation is selected for PT.
@@ -328,7 +371,7 @@ namespace MARQOV
         uint findnextnpt(int idx, uint curnpt)
         {
             uint retval = curnpt+1;
-            while ((retval < maxpt) && (ptplan[retval].first != idx) && (ptplan[retval].second != idx))
+            while ((retval < static_cast<uint>(maxpt)) && (ptplan[retval].first != idx) && (ptplan[retval].second != idx))
             {
                 ++retval;
             }
@@ -337,8 +380,8 @@ namespace MARQOV
         
         int maxpt; ///< how many pt steps do we do
         std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
-        std::vector<std::pair<int, int> > ptplan;///< who exchanges with whom in each step
-        bool masterstop;
+        std::vector<std::pair<int, int> > ptplan; ///< who exchanges with whom in each step
+        bool masterstop; ///< A global flag to denote that the master has decided to stop.
         ThreadPool::Semaphore masterwork; ///< The semaphore that triggers the master process
         ThreadPool::ThreadSafeQueue<Simstate> workqueue; ///< this is the queue where threads put their finished work and the master does PT
         std::mutex simvectormutex; ///< A mutex to protect accesses to the simvector which could be invalidated by the use of push_back
@@ -390,9 +433,13 @@ namespace MARQOV
             myScheduler.start();
         }
         void waitforall() {}
-        /** - We expect MPI to be initialized before hand. The user should feel that he is writing MPI code.
+        /** Construct MPI Scheduler.
+         * 
+         * We expect MPI to be initialized beforehand. The user should feel that he is writing MPI code.
+         * @param maxptsteps How many parallel tempering steps do we do
+         * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
          */
-        MPIScheduler(int maxptsteps) : rrctr(0), maxpt(maxptsteps), myScheduler(maxptsteps)
+        MPIScheduler(int maxptsteps, uint nthreads = 0) : rrctr(0), maxpt(maxptsteps), myScheduler(maxptsteps, nthreads)
         {
             int mpi_inited;
             MPI_Initialized(&mpi_inited);
@@ -418,14 +465,18 @@ namespace MARQOV
     template <class MarqovType>
     using Scheduler = MPIScheduler<MarqovType>;
 #endif
-
-    /** A helper class to figure out the type of the scheduler
+    /** A helper class to figure out the type of the scheduler.
+     * 
+     * @tparam Hamiltonian the type of the Hamiltonian.
+     * @tparam Lattice The type of the lattice
+     * @tparam Parameters The type f the parameters. We instantiate Hamiltonian
+     *                    and probably lattice in Marqov, hence the params.
      */
     template <class Hamiltonian, class Lattice, class Parameters>
     struct GetSchedulerType
     {
-        typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType;
-        typedef Scheduler<MarqovType> MarqovScheduler;
+        typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType; ///< Holds the Type of the Simulation
+        typedef Scheduler<MarqovType> MarqovScheduler; ///< Holds the type of a scheduler for these simulations.
     };
 };
 #endif

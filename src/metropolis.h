@@ -1,5 +1,25 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef METROPOLIS_H
 #define METROPOLIS_H
+#include <type_traits>
+#include <cmath>
 #include "rngcache.h"
 #include "metropolishelpers.h"
 
@@ -7,7 +27,13 @@
 
 namespace MARQOV
 {
-
+/**
+ * A class to encapsulate the Metropolis update.
+ * Using the power of partial template class specializations it is possible to
+ * define moves peculiar to your model.
+ * @tparam Hamiltonian The Hamiltonian used to generate a Metropolis move
+ * @tparam Lattice The lattice used for the neighbourhood relations.
+ */
 	template <class Hamiltonian, class Lattice>
 	struct Metropolis
 	{
@@ -21,10 +47,6 @@ namespace MARQOV
 						int rsite);
 	};
 
-
-
-    
-    
     template <class Hamiltonian, class Lattice>
     template <class StateSpace, class M, class RNGType>
     int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, 
@@ -34,6 +56,9 @@ namespace MARQOV
 										double beta, 
 										int rsite)
     {
+        static_assert(Is_Container<decltype(std::declval<Hamiltonian>().interactions)>::value, "[MARQOV::Metropolis] COMPILATION FAILED: interactions are not a container.");
+        static_assert(Is_Container<decltype(std::declval<Hamiltonian>().onsite)>::value, "[MARQOV::Metropolis] COMPILATION FAILED: onsite terms are not a container.");
+        static_assert(Is_Container<decltype(std::declval<Hamiltonian>().multisite)>::value, "[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
 		typedef typename Hamiltonian::StateVector StateVector;
         
 		// old state vector at rsite
@@ -43,7 +68,7 @@ namespace MARQOV
 		        
 		// interaction part
 		double interactionenergydiff = 0;
-		for (typename std::remove_cv<decltype(ham.Nalpha)>::type a=0; a<ham.Nalpha; ++a)
+		for (typename std::remove_cv<decltype(ham.interactions.size())>::type a=0; a < ham.interactions.size(); ++a)
 		{
 			typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
 			typedef decltype(callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
@@ -72,10 +97,10 @@ namespace MARQOV
         
 		// onsite energy part
 		auto terms = get_terms<Lattice>(grid, rsite);
-		if (terms[0] == -1) terms = arange(0, ham.Nbeta);
+		if (terms[0] == -1) terms = arange(0, ham.onsite.size());
 		
 		double onsiteenergydiff = 0;
-		for (typename std::remove_cv<decltype(ham.Nbeta)>::type b=0; b<terms.size(); ++b)
+		for (typename std::remove_cv<decltype(ham.onsite.size())>::type b=0; b < terms.size(); ++b)
 		{
 			// select on-site term
 			const int tidx = terms[b]; 
@@ -89,7 +114,7 @@ namespace MARQOV
         
 		// flex term energy
 		double flexenergydiff = 0;
-		for (typename std::remove_cv<decltype(ham.Ngamma)>::type c=0; c<ham.Ngamma; ++c)
+		for (typename std::remove_cv<decltype(ham.multisite.size())>::type c = 0; c < ham.multisite.size(); ++c)
 		{
 			auto nbrs = getflexnbrs<Lattice>(grid, c, rsite);
 			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace, grid);
@@ -107,7 +132,7 @@ namespace MARQOV
 			svold = svnew;
 			retval = 1;
 		}
-		else if (rng.real() < exp(-beta*dE))
+		else if (rng.real() < std::exp(-beta*dE))
 		{
 			svold = svnew;
 			retval = 1;
@@ -115,9 +140,6 @@ namespace MARQOV
 		return retval;
 	}
     
-
-
-
 	// Single Metropolis update step statevectors on a lattice
 	// returns an integer which encodes whether the flip attempt was successful (1) or not (0)
 	template <class Grid, class Hamiltonian, template<class> class RefType>

@@ -1,9 +1,29 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef HEISENBERG_H
 #define HEISENBERG_H
 #include <array>
 #include <cmath>
 #include <string>
 #include <functional>
+#include <array>
+#include <vector>
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
 #include "../obsparts.h"
@@ -35,16 +55,13 @@ class Heisenberg_Initializer
 
 
 template <class StateVector>
-class Heisenberg_interaction : public Interaction<StateVector> 
+class Heisenberg_interaction
 {
 	public:
-		Heisenberg_interaction(double J)
-		{
-	 		this->J = -J;
-		}
+		Heisenberg_interaction(const double myJ) : J(-myJ) {}
 		StateVector get (const StateVector& phi) {return phi;};
+        const double J;
 };
-
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
@@ -59,35 +76,32 @@ class Heisenberg
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
 		
+        // the next construction allows to specify a number of template arguments
+		// while leaving others open (C++11 feature)
 		template <typename RNG>
 		using MetroInitializer =  Heisenberg_Initializer<StateVector, RNG>; 
-		// this construction allows to specify a number of template arguments
-		// while leaving others open (C++11 feature)
-
-		
-		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta = 0;
-		static constexpr uint Ngamma = 0;
 
 		// requires pointers
-		Interaction<StateVector>* interactions[Nalpha];
-		OnSite<StateVector, FPType>* onsite[Nbeta];
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
+        std::vector<Heisenberg_interaction<StateVector>*> interactions;
+        std::array<OnSite<StateVector, FPType>*, 0> onsite;
+        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
-		Heisenberg(double J) : J(J), name("Heisenberg") {interactions[0] = new Heisenberg_interaction<StateVector>(J);}
+		Heisenberg(double J) : J(J), name("Heisenberg"), observables(obs_m)
+        {
+            interactions.push_back(new Heisenberg_interaction<StateVector>(J));
+        }
 		~Heisenberg() {delete interactions[0];}
 		
 
 		// instantiate and choose observables
 		Magnetization obs_m;
-		auto getobs() { return std::make_tuple(obs_m); }
-		
+        std::tuple<Magnetization> observables;
 
 		// state space initializer
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
-			for(int i=0; i<grid.size(); ++i)
+			for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
 			{
 				statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
 			}

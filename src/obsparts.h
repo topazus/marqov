@@ -1,36 +1,43 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef OBSPARTS_H
 #define OBSPARTS_H
 
 #include <complex>
+#include <string>
+#include <vector>
 
-
-// Scalar Magnetization Observable
-// considers only the first component of the state vector
-class ScalarMagnetization
-{
-	public:
-		std::string name, desc;
-
-		ScalarMagnetization(std::string name, std::string description) : name(name), desc(description) {}
-		ScalarMagnetization(std::string name) : name(name), desc("scalar magnetization") {}
-		ScalarMagnetization() : name("mx"), desc("scalar magnetization") {}
-
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			double retval = 0.0;
-			for (int i=0; i<grid.size(); i++) retval += statespace[i][0];
-			return std::abs(retval)/double(grid.size());
-		}
-};
-
-// Magnetization
-// Euclidean norm of the sum of state vectors
+/**
+ * Magnetization
+ * Euclidean norm of the sum of state vectors
+ */
 class Magnetization
 {
 	public:
-		std::string name, desc;
+		std::string name; ///< The name of the observable
+        std::string desc; ///< A helpful description that will be used in the HDF5 output files.
 
+        /** Construct a magnetization object
+         * 
+         * @param name How you want to call it.
+         * @param description A helpful description for this observable.
+         */
 		Magnetization(std::string name, std::string description) : name(name), desc(description) {}
 		Magnetization(std::string name) : name(name), desc("magnetization") {}
 		Magnetization() : name("m"), desc("magnetization") {}
@@ -41,7 +48,7 @@ class Magnetization
 			const/*expr static*/ int SymD = statespace[0].size();
 			std::vector<double> mag(SymD, 0);
 
-			for (int i=0; i<grid.size(); i++) 
+			for (decltype(grid.size()) i = 0; i < grid.size(); i++) 
 			{
 				for (int j=0; j<SymD; j++)
 				{
@@ -56,8 +63,10 @@ class Magnetization
 		}
 };
 
-// Vector Magnetization
-// sum of every component of the state vectors
+/**
+ * Vector Magnetization.
+ * Sum of every component of the state vectors
+ */
 class VectorMagnetization
 {
 	public:
@@ -84,39 +93,11 @@ class VectorMagnetization
 		}
 };
 
-// Scalar Magnetization Fourier Component
-// considers only the first component of the state vector
-class ScalarMagFTComp
-{
-	public:
-		int dir;
-		std::string name, desc;
 
-		ScalarMagFTComp(int dir, std::string name, std::string description) : dir(dir), name(name), desc(description) {}
-		ScalarMagFTComp(int dir, std::string name) : dir(dir), name(name), desc("Fourier Component of Magnetization") {}
-		ScalarMagFTComp(int dir) : dir(dir), name("scalarmagft"+std::to_string(dir)), desc("Fourier Component of Magnetization") {}
-
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			std::complex<double> retval = 0.0;
-			std::complex<double> jj(0,1);
-
-			for (int i=0; i<grid.size(); i++)
-			{
-				const double x = grid.crds(i)[dir];
-				retval += double(statespace[i][0]) * std::exp(2.0*M_PI*x*jj);
-			}
-
-			return std::pow(std::abs(retval/double(grid.size())), 2);
-		}
-
-};
-
-
-
-
-
+/**
+ * MagFTComp
+ * 
+ */
 class MagFTComp
 {
 	public:
@@ -152,13 +133,10 @@ class MagFTComp
 		}
 };
 
-
-
-
-
-
-
-// Interaction Energy Observable
+/**
+ * Interaction Energy Observable
+ * @tparam Hamiltonian We require the Hamiltonian to be able to calculate energies.
+ */
 template <class Hamiltonian>
 class InteractionEnergy
 {
@@ -176,7 +154,7 @@ class InteractionEnergy
 			double ene = 0.0;
 
 			// interaction part
-			for (int a=0; a<ham.Nalpha; a++)
+			for (decltype(ham.interactions.size()) a = 0; a < ham.interactions.size(); a++)
 			{
 
 				double enepart = 0.0;
@@ -204,9 +182,10 @@ class InteractionEnergy
 		}
 };
 
-
-
-// Self Energy Observable
+/**
+ * Self Energy Observable
+ * @tparam Hamiltonian We require the Hamiltonian to be able to calculate energies.
+ */
 template <class Hamiltonian>
 class SelfEnergy
 {
@@ -224,7 +203,7 @@ class SelfEnergy
 			double ene = 0.0;
 
 			// self energy part
-			for (int b=0; b<ham.Nbeta; b++)
+			for (decltype(ham.onsite.size()) b=0; b < ham.onsite.size(); b++)
 			{
 				double enepart = 0.0;
 
@@ -238,8 +217,10 @@ class SelfEnergy
 		}
 };
 
-
-// Flex Energy Observable
+/**
+ * Flex Energy Observable
+ * @tparam Hamiltonian We require the Hamiltonian to be able to calculate energies.
+ */
 template <class Hamiltonian>
 class FlexEnergy
 {
@@ -253,7 +234,7 @@ class FlexEnergy
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			for (int c=0; c<ham.Ngamma; c++)
+			for (decltype(ham.multisite.size()) c = 0; c < ham.multisite.size(); c++)
 			{
 //				enepart = ham.multisite[c]->energy();
 //				ene += ham.onsite[c]->k * enepart;
@@ -262,12 +243,10 @@ class FlexEnergy
 		}
 };
 
-
-
-
-
-
-// Full Energy Observable
+/**
+ * Full Energy Observable
+ * @tparam Hamiltonian We require the Hamiltonian to be able to calculate energies.
+ */
 template <class Hamiltonian>
 class Energy
 {
@@ -278,8 +257,7 @@ class Energy
 		FlexEnergy<Hamiltonian> eflex;
 
 	public:
-		Energy (Hamiltonian& ham) : ham(ham), name("e"), eint(ham), eself(ham), eflex(ham)  {};
-
+		Energy (Hamiltonian& ham) : ham(ham), eint(ham), eself(ham), eflex(ham), name("e") {}
 
 		std::string name;
 		template <class StateSpace, class Grid>
@@ -288,5 +266,4 @@ class Energy
 			return eint.measure(statespace,grid) + eself.measure(statespace,grid) + eflex.measure(statespace,grid);
 		}
 };
-
 #endif

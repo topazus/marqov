@@ -1,3 +1,20 @@
+/* MARQOV - A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef EDWARDSANDERSONISING_H
 #define EDWARDSANDERSONISING_H
 #include <array>
@@ -66,7 +83,7 @@ class LinkOverlap /// not working so far!!!!
 					auto nbnds = bnds.size();
 					sum_ij[i].resize(nbnds);
 
-					for (int j=0; j<nbnds; j++) sum_ij[i][j] = 0;
+					for (decltype(nbnds) j=0; j<nbnds; j++) sum_ij[i][j] = 0;
 				}
 			}
 			int nbondstot = 0;
@@ -76,7 +93,7 @@ class LinkOverlap /// not working so far!!!!
 				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
 				nbondstot += nbnds;
-				for (int j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
+				for (decltype(nbnds) j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
 			}
 
 			counter++;
@@ -89,7 +106,7 @@ class LinkOverlap /// not working so far!!!!
 			{
 				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
-				for (int j=0; j<nbnds; j++) retval += pow(sum_ij[i][j],2);
+				for (decltype(nbnds) j=0; j<nbnds; j++) retval += pow(sum_ij[i][j],2);
 			}
 			return norml * retval;
 		}
@@ -119,7 +136,7 @@ class InternalEnergy /// not working so far!!!!
 					auto nbnds = bnds.size();
 					sum_ij[i].resize(nbnds);
 
-					for (int j=0; j<nbnds; j++) sum_ij[i][j] = 0;
+					for (decltype(nbnds) j=0; j<nbnds; j++) sum_ij[i][j] = 0;
 				}
 			}
 
@@ -127,7 +144,7 @@ class InternalEnergy /// not working so far!!!!
 			{
 				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
-				for (int j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
+				for (decltype(nbnds) j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
 			}
 
 			const double norml = 1. / double(counter) / double(size);
@@ -140,7 +157,7 @@ class InternalEnergy /// not working so far!!!!
 			{
 				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
-				for (int j=0; j<nbnds; j++) retval += sum_ij[i][j] * bnds[j];
+				for (decltype(nbnds) j=0; j<nbnds; j++) retval += sum_ij[i][j] * bnds[j];
 			}
 			return - norml * retval;
 		}
@@ -255,13 +272,11 @@ class ScalarOverlap
 // ----------------------------------------------------------------------
 
 template <class StateVector>
-class EdwardsAndersonIsing_interaction : public Interaction<StateVector> 
+class EdwardsAndersonIsing_interaction
 {
 public:
-	EdwardsAndersonIsing_interaction(double J)
-	{
-		this->J = J;
-	}
+    const double& J;
+	EdwardsAndersonIsing_interaction(const double& myJ) : J(myJ) {}
 	StateVector get (const StateVector& phi) {return phi;};
 };
 
@@ -296,19 +311,13 @@ class EdwardsAndersonIsing
 		template <typename RNG>
 		using MetroInitializer = EdwardsAndersonIsing_Initializer<StateVector, RNG>;
 
-		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta = 0;
-		static constexpr uint Ngamma = 0;
-		
-		EdwardsAndersonIsing(double J) : J(J), name("EdwardsAndersonIsing"), obs_chi(0, "chi") , obs_chiKmin(2.0*M_PI, "chiKmin")
-		{
-			interactions[0] = new EdwardsAndersonIsing_interaction<StateVector>(J); 
-		}
+		EdwardsAndersonIsing(double J) : J(J), name("EdwardsAndersonIsing"), obs_chi(0, "chi") , obs_chiKmin(2.0*M_PI, "chiKmin") {}
+		~EdwardsAndersonIsing() {delete interactions[0];}
 		
 		// instantiate interaction terms (requires pointers)
-		Interaction<StateVector>* interactions[Nalpha];
-		OnSite<StateVector, int>* onsite[Nbeta];
-		FlexTerm<StateVector*,  StateVector>* multisite[Ngamma];
+		std::array<EdwardsAndersonIsing_interaction<StateVector>*, 1> interactions = {new EdwardsAndersonIsing_interaction<StateVector>(J)};
+        std::array<OnSite<StateVector, int>*, 0> onsite;
+        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 	
 		// instantiate and choose observables
 		EdwardsAndersonOrderParameter      obs_qEA;
@@ -317,14 +326,13 @@ class EdwardsAndersonIsing
 		Susceptibility					obs_chiKmin;
 		InternalEnergy					obs_U;
 		LinkOverlap					obs_ql;
-		auto getobs()	{return std::make_tuple(obs_qEA, obs_chi, obs_chiKmin, obs_U, obs_ql);}
-
+        decltype(std::make_tuple(obs_qEA, obs_chi, obs_chiKmin, obs_U, obs_ql)) observables = {std::make_tuple(obs_qEA, obs_chi, obs_chiKmin, obs_U, obs_ql)};
 
 		// initialize state space
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
-			for (int i=0; i<grid.size(); i++)
+			for (decltype(grid.size()) i = 0; i < grid.size(); i++)
 			{
 				if (rng.real() > 0.5) statespace[i][0] = 1;
 				else statespace[i][0] = -1;
@@ -376,7 +384,7 @@ namespace MARQOV {
 			
 			// interaction part
 			double interactionenergydiff = 0;
-			for(typename std::remove_cv<decltype(ham.Nalpha)> ::type a = 0; a < ham.Nalpha; ++a)
+			for(std::size_t a = 0; a < ham.interactions.size(); ++a)
 			{
 				auto nbrs = grid.nbrs(a, rsite);
 				typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;

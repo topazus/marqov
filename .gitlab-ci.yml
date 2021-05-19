@@ -61,9 +61,13 @@ MARQOV_Buster:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gxx
     <<: *build_definition
 
+MARQOV_Bullseye:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gxx
+    <<: *build_definition
+
 mpiMARQOV_Ubuntu_bionic:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack
-    stage: build
+    stage: buildMPI
     <<: *src_except_definition
     script:
       - apt-get update && apt-get install -y g++ cmake libhdf5-dev libopenmpi-dev
@@ -91,6 +95,16 @@ marqov_Buster_clang:
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang++ ..
       - make MARQOV VERBOSE=1
 
+marqov_Bullseye_clang:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-clang
+    stage: build
+    <<: *src_except_definition
+    script:
+      - cmake -E make_directory build
+      - cd build
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang++ ..
+      - make MARQOV VERBOSE=1
+
 marqov_Buster_pgi:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-pgi1910-cmake
     stage: build
@@ -100,6 +114,29 @@ marqov_Buster_pgi:
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="/opt/pgi/linux86-64/2019/bin/pgc++" ..
+      - make MARQOV VERBOSE=1
+
+marqov_Bullseye-PGI-21-03:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-pgi-21-03
+    stage: build
+    <<: *src_except_definition
+    script:
+      - apt-get update && apt-get install -y libhdf5-dev cmake
+      - cmake -E make_directory build
+      - cd build
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="pgc++" ..
+      - make MARQOV VERBOSE=1
+
+marqov_Bullseye-Intel-21:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-intel-oneapi-icpc
+    stage: build
+    <<: *src_except_definition
+    script:
+      - apt-get update && apt-get install -y libhdf5-dev cmake
+      - . /opt/intel/oneapi/setvars.sh
+      - cmake -E make_directory build
+      - cd build
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="icpc" ..
       - make MARQOV VERBOSE=1
 
 marqov_create_doc:
