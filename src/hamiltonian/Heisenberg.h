@@ -116,6 +116,11 @@ class Heisenberg
 namespace MARQOV
 {
 
+	/** Specialization of the Embedding class for the Heisenberg model
+	*
+	* @tparam SpinType the type in which to store the magnetization values.
+	* @tparam FPType
+	*/
 	template <class SpinType, class FPType>
 	class Embedder<Heisenberg<SpinType,FPType>>
 	{
@@ -125,11 +130,25 @@ namespace MARQOV
 			constexpr static int SymD = Hamiltonian::SymD;
 
 			const Hamiltonian& ham; // why const?
-			std::array<double,SymD> rdir;
+			std::array<SpinType,SymD> rdir;
 
 		public:
+			/** Constructs a Heisenberg embedding object.
+			*
+			* @param ham the corresponding Hamiltonian
+			*/
 			Embedder(const Hamiltonian& ham) : ham(ham) {};
 
+
+			/** Set new embedding variable.
+			*
+			* Typically, this function is executed once before every cluster update. The random variable
+			* can be drawn randomly (for which an RNG is provided), but of course can also follow some
+			* sequential scheme.
+			*
+			* @tparam RNG the type of the random number generator
+			* @param rng reference to the random number generator
+			*/
 			template <class RNG>
 			void draw(RNG& rng)
 			{
@@ -137,12 +156,24 @@ namespace MARQOV
 			}
 
 
+			/** Compute the Wolff coupling when attempting to add a spin to the cluster
+			*
+			* @param currentsv the current state vector (which is already in the cluster)
+			* @param candidate its neighbour being checked whether it will become part of the cluster as well
+			*
+			* @return The scalar Wolff coupling (a double)
+			*/
 			double coupling(StateVector& currentsv, StateVector& candidate)
 			{
 				dot(currentsv, rdir) * dot(candidate, rdir);
 			}
 
 
+
+			/** Specifies how a spin flip in the embedded (reduced) model is performed
+			*
+			* @param sv the spin to flipped
+			*/
 			void flip(StateVector& sv)
 			{
 				const double dotp = dot(sv, rdir);
