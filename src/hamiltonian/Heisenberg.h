@@ -120,10 +120,15 @@ namespace MARQOV
 	* @tparam SpinType the type in which to store the magnetization values.
 	* @tparam CouplingType the type of the coupling of the on-site term (in case there is one)
 	*/
-	template <class SpinType>
-	class Embedder<Heisenberg<SpinType>,RegularHypercubic>
+
+
+//	template <class SpinType, class CouplingType>
+//	class Embedder<Heisenberg<SpinType,CouplingType>,RegularHypercubic>
+	template <>
+	class Embedder<Heisenberg<double,double>,RegularHypercubic>
 	{
-			typedef Heisenberg<SpinType> Hamiltonian;
+			typedef Heisenberg<double,double> Hamiltonian;
+//			typedef Heisenberg<SpinType,CouplingType> Hamiltonian;
 			typedef RegularHypercubic Lattice;
 			typedef typename Hamiltonian::StateVector StateVector;
 			typedef StateVector* StateSpace;
@@ -135,7 +140,8 @@ namespace MARQOV
 			const Lattice& lat;
 			const StateSpace& statespace;
 
-			std::array<SpinType,SymD> rdir;
+			std::array<double,SymD> rdir;
+//			std::array<SpinType,SymD> rdir;
 
 		public:
 			/** Constructs a Heisenberg embedding object.
@@ -168,9 +174,9 @@ namespace MARQOV
 			*
 			* @return The scalar Wolff coupling (a double)
 			*/
-			double coupling(StateVector& currentsv, StateVector& candidate)
+			double coupling(int pos1, int pos2)
 			{
-				dot(currentsv, rdir) * dot(candidate, rdir);
+				return dot(statespace[pos1], rdir) * dot(statespace[pos2], rdir);
 			}
 
 
