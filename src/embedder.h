@@ -23,12 +23,15 @@
 namespace MARQOV 
 {
 
+// the default embedder
+// projects the model onto one of the SymD Cartesian dimensions
 template <class Hamiltonian, class Lattice>
 class Embedder
 {
-		typedef typename Hamiltonian::StateVector StateVector;
-		typedef StateVector* StateSpace;
-		constexpr static int SymD = Hamiltonian::SymD;
+	// definitions
+	typedef typename Hamiltonian::StateVector StateVector;
+	typedef StateVector* StateSpace;
+	constexpr static int SymD = Hamiltonian::SymD;
 
 	private:
 		const Hamiltonian& ham; // why const?
@@ -37,28 +40,26 @@ class Embedder
 
 	public:
 
-		int randomvar = 0;
-
+		int rdir; // encodes the random direction
 
 		Embedder(const Hamiltonian& ham, const Lattice& lat, StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
 
 		template <class RNG>
 		void draw(RNG& rng)
 		{
-			randomvar = rng.integer(SymD);
+			rdir = rng.integer(SymD);
 		}
 
 
 		double coupling(int pos1, int pos2)
 		{
-			
-			return statespace[pos1][randomvar] * statespace[pos2][randomvar];
+			return statespace[pos1][rdir] * statespace[pos2][rdir];
 		}
 
 
 		void flip(StateVector& sv)
 		{
-			sv[randomvar] = -sv[randomvar];
+			sv[rdir] = -sv[rdir];
 			normalize(sv);
 		}
 	};
