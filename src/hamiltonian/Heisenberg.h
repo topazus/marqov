@@ -196,50 +196,54 @@ namespace MARQOV
 
 
 
-			/* update me
+//	
 
-    template <class Lattice, class SpinType, class FPType>
-    struct Wolff<Heisenberg<SpinType, FPType>, Lattice>
+    template <class Lattice, class SpinType, class CouplingType>
+    struct Wolff<Heisenberg<SpinType, CouplingType>, Lattice>
     {
         template <class RNG, class StateSpace>
-        static inline int move(const Heisenberg<SpinType, FPType>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
+        static inline int move(const Heisenberg<SpinType, CouplingType>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
         {
-            typedef typename Heisenberg<SpinType, FPType>::StateVector StateVector;
+			typedef Heisenberg<SpinType, CouplingType> Hamiltonian;
+            typedef typename Hamiltonian::StateVector StateVector;
+			constexpr static int SymD = Hamiltonian::SymD;
+
             std::vector<int> cstack(grid.size(), 0);
             int q = 0;
-            ham.wolff_flip(statespace[rsite], rdir);
+            auto seed = statespace[rsite];
             cstack[q] = rsite;
+
+			int rdir = rng.integer(SymD);
+			seed[rdir] *= -1;
             
             int clustersize = 1;
             int current = 0;
+				
+			// plain Heisenberg model has only one interaction term
+			const auto gcpl = ham.interactions[0]->J; 
             
             while (q>=0)
             {
                 current = cstack[q];
                 q--;
 
-				// plain Heisenberg model has only one interaction term
-				auto coupling = ham.interactions[0]->J; 
-				const auto proj1 = coupling*dot(statespace[current], rdir);
-
 				const auto nbrs = grid.nbrs(0, current);
 				for (std::size_t i = 0; i < nbrs.size(); ++i)
 				{
-					const auto currentidx = nbrs[i];
-					StateVector& candidate = statespace[currentidx];
+					const auto currentnbr = nbrs[i];
+					StateVector& candidate = statespace[currentnbr];
 
-					const auto proj2 = dot(candidate, rdir);
+					const auto lcpl = statespace[rsite][rdir] * candidate[rdir];
+					const auto cpl  = gcpl*lcpl;
 
-					if (proj1*proj2 > 0)
+					if (cpl > 0)
 					{
-						const auto prob = -std::expm1(-2.0*beta*proj1*proj2);
-
-						if (rng.real() < prob)
+						if (rng.real() < -std::expm1(-2.0*beta*cpl))
 						{
 							q++;
-							cstack[q] = currentidx;
+							cstack[q] = currentnbr;
 							clustersize++;
-							ham.wolff_flip(candidate, rdir);
+							candidate[rdir] *= -1;
 						}
 					}
 				}
@@ -247,6 +251,6 @@ namespace MARQOV
 			return clustersize;
         }
     };
-*/
+//*/
 }
 #endif
