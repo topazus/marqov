@@ -26,14 +26,18 @@ namespace MARQOV
 template <class Hamiltonian, class Lattice>
 class Embedder
 {
+		typedef typename Hamiltonian::StateVector StateVector;
+		typedef StateVector* StateSpace;
+
 	private:
 		const Hamiltonian& ham; // why const?
+		const Lattice& lat;
+		const StateSpace& statespace;
 
 	public:
 
-		typedef typename Hamiltonian::StateVector StateVector;
 
-		Embedder(const Hamiltonian& ham) : ham(ham) {};
+		Embedder(const Hamiltonian& ham, const Lattice& lat, const StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
 
 		template <class RNG>
 		void draw(RNG& rng)
@@ -41,7 +45,7 @@ class Embedder
 		}
 
 
-		double coupling(StateVector& currentsv, StateVector& candidate)
+		double coupling(int pos1, int pos2)
 		{
 			return ham.J;
 		}

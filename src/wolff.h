@@ -81,7 +81,7 @@ namespace MARQOV
     int Wolff<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
     {
 		// set up embedder
-		Embedder<Hamiltonian,Lattice> embd(ham);
+		Embedder<Hamiltonian,Lattice> embd(ham,grid,statespace);
 		embd.draw(rng);
 
         // prepare stack
@@ -108,10 +108,6 @@ namespace MARQOV
             auto nbrs = grid.nbrs(a, currentidx);
 		
 
-//            const auto bnds = grid.bnds(a, currentidx); // important: specify what to do if function is not there
-//            const auto cpl1 = wolff_embedding<Hamiltonian,StateVector,decltype(grid.nbrs(a,currentidx))>
-//									(ham, currentsv, nbrs, statespace); 
-
             // loop over neighbours
             for (std::size_t i = 0; i < nbrs.size(); ++i)
             {
@@ -119,13 +115,13 @@ namespace MARQOV
                 const auto currentnbr = nbrs[i];
                 StateVector& candidate = statespace[currentnbr];
                 
-				const double cpl = embd.coupling(currentsv, candidate);
-                const double coupling = gcpl * cpl;
+				const double lcpl = embd.coupling(rsite, currentnbr);
+				const double cpl = gcpl*lcpl;
                 
                 // test whether site is added to the cluster
-                if (coupling > 0)
+                if (cpl > 0)
                 {
-                    if (rng.real() < -std::expm1(-2.0*beta*coupling))
+                    if (rng.real() < -std::expm1(-2.0*beta*cpl))
                     {
                         q++;
                         cstack[q] = currentnbr;
