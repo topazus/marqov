@@ -168,18 +168,13 @@ class XXZAntiferroSingleAniso_Initializer
 		RNG& rng;
 };
 
-
-
 template <class StateVector>
-class XXZAntiferroSingleAniso_interaction : public Interaction<StateVector> 
+class XXZAntiferroSingleAniso_interaction
 {
 	public:
-		double Delta; // uniaxial exchange anisotropy
-
-		XXZAntiferroSingleAniso_interaction(double myDelta) : Delta(myDelta)
-		{
-	 		this->J = 1;
-		}
+		const double& Delta; // uniaxial exchange anisotropy
+		static constexpr double J = 1;
+		XXZAntiferroSingleAniso_interaction(const double& myDelta) : Delta(myDelta) {}
 		StateVector get (const StateVector& phi) 
 		{
 			StateVector retval;
@@ -226,30 +221,31 @@ template <typename SpinType, typename MyFPType>
 class XXZAntiferroSingleAniso
 {
 	public:
-        	double Delta, H, D;
+        double Delta, H, D;
 		constexpr static int SymD = 3;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer =  XXZAntiferroSingleAniso_Initializer<StateVector, RNG>; 
-		
-		static constexpr uint Nalpha = 1;
-		static constexpr uint Nbeta  = 2;
-		static constexpr uint Ngamma = 0;
+
 		const std::string name;
 
-		// instantiate interaction terms (requires pointers) 
-		Interaction<StateVector>* interactions[Nalpha];
-		OnSite<StateVector, FPType>* onsite[Nbeta];
-		MultiSite<StateVector*,  StateVector>* multisite[Ngamma];
+		// instantiate interaction terms (requires pointers)
+        std::array<XXZAntiferroSingleAniso_interaction<StateVector>*, 1> interactions = {new XXZAntiferroSingleAniso_interaction<StateVector>(Delta)};
+        std::vector<OnSite<StateVector, FPType>*> onsite;
+        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
 		XXZAntiferroSingleAniso(double myH, double myDelta, double myD) : Delta(myDelta), H(myH), D(myD), name("XXZAntiferroSingleAniso")
 		{
-			interactions[0] = new XXZAntiferroSingleAniso_interaction<StateVector>(Delta); 
-			onsite[0]       = new XXZAntiferroSingleAniso_extfield<StateVector>(H);
-			onsite[1]       = new XXZAntiferroSingleAniso_onsiteaniso<StateVector>(D);
+            onsite.push_back(new XXZAntiferroSingleAniso_extfield<StateVector>(H));
+            onsite.push_back(new XXZAntiferroSingleAniso_onsiteaniso<StateVector>(D));
 		}
-		
+
+		~XXZAntiferroSingleAniso()
+        {
+            delete onsite[1]; delete onsite[0]; delete interactions[0];
+        }
+
 		std::string paramname(int i) {//A helper function to have nice names for the I/O
             std::string retval;
             switch(i)
@@ -265,9 +261,7 @@ class XXZAntiferroSingleAniso
 		// instantiate and choose observables
 		XXZAntiferroSingleAnisoStaggeredMagZ  obs_mstagz;
 		XXZAntiferroSingleAnisoStaggeredMagXY obs_mstagxy;
-		auto getobs() { return std::make_tuple(obs_mstagz, obs_mstagxy); }
-
-
+        decltype(std::make_tuple(obs_mstagz, obs_mstagxy)) observables = {std::make_tuple(obs_mstagz, obs_mstagxy)};
 
 		// using the Wolff cluster algorithm requires to implement 
 		// the functions 'wolff_coupling' and 'wolff_flip'

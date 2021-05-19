@@ -1,9 +1,36 @@
+/* This file is part of MARQOV:
+ * A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef WOLFF_H
 #define WOLFF_H
+#include <vector>
+#include <cmath>
 // todo: what about the alpha-loop? currently alpha=0 hard-coded
 
 namespace MARQOV
 {
+    /**
+     * This class serves as an entry poi8nt for easily defining your own
+     * specializations of the Wolff Algorithm of your Hamiltonians.
+     * To that end it has the two prototypical template parameters:
+     * @tparam Hamiltonian The Hamiltonian that the Wolff algo will use.
+     * @tparam Lattice The Lattice, that the Wolff algo should use.
+     */
     template <class Hamiltonian, class Lattice>
     struct Wolff
     {
@@ -36,7 +63,7 @@ namespace MARQOV
             
             // get its neighbours
             int a = 0; // to be replaced by loop over Nalpha
-            const auto nbrs = grid.getnbrs(a, currentidx);
+            const auto nbrs = grid.nbrs(a, currentidx);
             
             // loop over neighbours
             for (std::size_t i = 0; i < nbrs.size(); ++i)
@@ -50,14 +77,14 @@ namespace MARQOV
                 const auto   local_coupling  = 1;
                 
                 /* under construction
-                 *			const auto   local_coupling  = grid.getbnds(a, currentnbr)[0];
+                 *			const auto   local_coupling  = grid.bnds(a, currentnbr)[0];
                  * 
                  *			// !!!  Wolff and Swendsen-Wang cluster algorithms are only valid if 
                  *			// !!!  all interactions are ferromagnetic, i.e., if all J_ij > 0 (Zhu et. al 2015)
                  * 
                  * 
                  *			// even more general would be somthing like that:
-                 *			// const auto   local_coupling  = ham.wolff_scalarize(grid.getbnds(a, currentnbr));
+                 *			// const auto   local_coupling  = ham.wolff_scalarize(grid.bnds(a, currentnbr));
                  *			// overkill, or even necessary?
                  */
                 

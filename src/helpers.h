@@ -2,8 +2,10 @@
 #define HELPERS_H
 
 #include <iomanip> 
+#include <vector>
+#include <cmath>
+#include <type_traits>
 #include "registry.h"
-
 
 std::vector<int> arange(int lower, int upper)
 {
@@ -16,7 +18,9 @@ std::vector<int> arange(int lower, int upper)
 }
 
 
-
+/** The triple,
+ * An extension of std::pair
+ */
 template <class T1, class T2, class T3>
 class Triple
 {
@@ -33,13 +37,10 @@ constexpr auto make_triple( T1&& t, T2&& u, T3&& v)
 	return Triple<typename std::decay<T1>::type, typename std::decay<T2>::type, typename std::decay<T3>::type>(t,u,v);
 }
 
-
-
-
 void write_logfile(RegistryDB& reg, std::vector<double> loopvar)
 {
-	std::string logdir  = reg.Get<std::string>("mc", "IO", "logdir" );
-	std::string logfile = reg.Get<std::string>("mc", "IO", "logfile" );
+	std::string logdir  = reg.Get<std::string>("mc.ini", "IO", "logdir" );
+	std::string logfile = reg.Get<std::string>("mc.ini", "IO", "logfile" );
 	std::ofstream os(logdir+"/"+logfile);
 	os << std::setprecision(7);
 	for (std::size_t i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;
@@ -107,7 +108,7 @@ std::vector<int> IndexOf(int k, int nDim, int nBin)
 
 	for (int i=0; i<nDim; i++)
 	{
-		double index = std::fmod( double(k)/pow(nBin,i), nBin);
+		double index = std::fmod( double(k)/std::pow(nBin,i), nBin);
 		indices.push_back(int(index));
 		k -= index * pow(nBin,i);
 	}

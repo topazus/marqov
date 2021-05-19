@@ -16,23 +16,32 @@
  * this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <sys/stat.h>
-#include <string>
-#include <exception>
-#include <cerrno>
+#ifndef TERMCOLLECTION_H
+#define TERMCOLLECTION_H
 
-/** Create Directory.
- * 
- * This creates a directory. If the path exists nothing happens.
- * @param path the path of the directory that should be created.
- * @throws std::runtime_error If an unrecoverable error occurs. If the path exists nothing happens.
- */
-inline void makeDir(const std::string path)
+#include "../hamparts.h"
+
+template <class StateVector, typename CouplingType = double>
+class Standard_Interaction : public Interaction<StateVector>
 {
-    int status = mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    if (status != 0)
-    {
-        if (errno != EEXIST)
-            throw std::runtime_error(std::string("[MARQOV] Failed to create folder ") + path);
-    }
-}
+	public:
+		const CouplingType& J;
+		Standard_Interaction(const CouplingType &J) : J(J) {}
+		StateVector get (const StateVector& phi) {return phi;}
+
+		// todo: rename J to something more generic, like "constant"
+		
+};
+
+template <class StateVector, typename CouplingType = double>
+class Onsite_Quadratic : public OnSite<StateVector, CouplingType> 
+{
+	public:
+		Onsite_Quadratic(CouplingType constant)
+		{
+			this->h = constant;
+		}
+		CouplingType get (const StateVector& phi) {return dot(phi,phi);}
+};
+
+#endif

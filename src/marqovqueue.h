@@ -12,6 +12,11 @@
 
 namespace ThreadPool
 {
+    /**
+     * Task Queue
+     * A queue of the tasks that are about to be done and then get distributed
+     * to workers.
+     */
     class Queue
     {
     public:
@@ -19,7 +24,7 @@ namespace ThreadPool
         /** Construct the work queue
          * @param initc number of threads. defaults to the number of hardware threads
          */
-        Queue(const uint initc = std::thread::hardware_concurrency()) : workers(initc), semaphores{}, queue(semaphores.work)
+        Queue(const uint initc = std::thread::hardware_concurrency()) : semaphores{}, queue(semaphores.work), workers(initc)
         {
             resize(initc);
         }
@@ -71,6 +76,11 @@ namespace ThreadPool
     private:
         using auint = std::atomic<uint>;
         using toggle = std::atomic<bool>;
+        struct Semaphores//The signals
+        {
+            Semaphore work;// This signals that the threads may begin processing
+            Semaphore sync;// This signals that the threads should finish
+        } semaphores;
         ThreadSafeQueue<Task> queue;//the actual task queue
         struct Flags
         {
@@ -78,12 +88,6 @@ namespace ThreadPool
             toggle prune;
             Flags() : stop(false), prune(false) {}
         } flags;
-        
-        struct Semaphores//The signals
-        {
-            Semaphore work;// This signals that the threads may begin processing
-            Semaphore sync;// This signals that the threads should finish
-        } semaphores;
         
         struct Stats// A helper structure for various statistics
         {
@@ -124,8 +128,8 @@ namespace ThreadPool
                 {
                     Task task;//This will be the place holder of the actual work item
                     // let's do the set up of the book keeping structures
-                    uint count(++workers.count);
-                    //                std::cout<<"\tWorker "<< count<< " in thread "<< std::this_thread::get_id()<< " ready"<<std::endl;
+                    ++workers.count;
+                    //                std::cout<<"\tWorker "<< workers.count<< " in thread "<< std::this_thread::get_id()<< " ready"<<std::endl;
                     {
                         std::lock_guard<std::mutex> lk(workers.busy_mtx);
                         workers.busy.emplace(std::this_thread::get_id(), true);
