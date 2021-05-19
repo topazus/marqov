@@ -123,12 +123,18 @@ namespace MARQOV
 	template <class SpinType>
 	class Embedder<Heisenberg<SpinType>,RegularHypercubic>
 	{
-		private:
 			typedef Heisenberg<SpinType> Hamiltonian;
+			typedef RegularHypercubic Lattice;
 			typedef typename Hamiltonian::StateVector StateVector;
+			typedef StateVector* StateSpace;
 			constexpr static int SymD = Hamiltonian::SymD;
 
+		private:
+
 			const Hamiltonian& ham; // why const?
+			const Lattice& lat;
+			const StateSpace& statespace;
+
 			std::array<SpinType,SymD> rdir;
 
 		public:
@@ -136,7 +142,7 @@ namespace MARQOV
 			*
 			* @param ham the corresponding Hamiltonian
 			*/
-			Embedder(const Hamiltonian& ham) : ham(ham) {};
+			Embedder(const Hamiltonian& ham, const Lattice& lat, const StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
 
 
 			/** Set new embedding variable.
