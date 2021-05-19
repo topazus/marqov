@@ -55,6 +55,6 @@ html_theme = 'classic'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-breathe_projects = { "Marqov": "/home/sifff/Development/marqov/docs/doxygen/xml" }
+breathe_projects = { "Marqov": "../doxygen/xml" }
 
 breathe_default_project = "Marqov"
