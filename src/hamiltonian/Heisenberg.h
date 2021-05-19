@@ -65,7 +65,7 @@ class Heisenberg_interaction
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
-template <typename SpinType, typename MyFPType>
+template <typename SpinType, typename CouplingType=double>
 class Heisenberg
 {
 	public:
@@ -73,7 +73,6 @@ class Heisenberg
 		double J;
 		constexpr static int SymD = 3;
 		const std::string name;
-		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
 		
         // the next construction allows to specify a number of template arguments
@@ -83,7 +82,7 @@ class Heisenberg
 
 		// requires pointers
         std::vector<Heisenberg_interaction<StateVector>*> interactions;
-        std::array<OnSite<StateVector, FPType>*, 0> onsite;
+        std::array<OnSite<StateVector, CouplingType>*, 0> onsite;
         std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
 		Heisenberg(double J) : J(J), name("Heisenberg"), observables(obs_m)
@@ -119,13 +118,13 @@ namespace MARQOV
 	/** Specialization of the Embedding class for the Heisenberg model
 	*
 	* @tparam SpinType the type in which to store the magnetization values.
-	* @tparam FPType
+	* @tparam CouplingType the type of the coupling of the on-site term (in case there is one)
 	*/
-	template <class SpinType, class FPType>
-	class Embedder<Heisenberg<SpinType,FPType>,RegularHypercubic>
+	template <class SpinType>
+	class Embedder<Heisenberg<SpinType>,RegularHypercubic>
 	{
 		private:
-			typedef Heisenberg<SpinType,FPType> Hamiltonian;
+			typedef Heisenberg<SpinType> Hamiltonian;
 			typedef typename Hamiltonian::StateVector StateVector;
 			constexpr static int SymD = Hamiltonian::SymD;
 
