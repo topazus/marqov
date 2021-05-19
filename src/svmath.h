@@ -18,9 +18,10 @@
 
 #ifndef SVMATH_H
 #define SVMATH_H
-#include <tuple>
+#include <ostream>
 #include <cmath>
 #include <numeric>
+#include <array>
 
 // ------- elementary state vector calculus
 
@@ -30,11 +31,11 @@
  * @param arg2 b
  * @returns @f[ \vec{c} = \vec{a} + \vec{b} @f]
  */
-template <class StateVector>
-inline StateVector operator + (StateVector arg1,  StateVector arg2)
+template <class T, std::size_t N>
+inline std::array<T, N> operator + (std::array<T, N> arg1, std::array<T, N> arg2)
 {
-    StateVector res(arg1);
-    for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    std::array<T, N> res(arg1);
+    for(std::size_t i = 0; i < N; ++i)
     res[i] += arg2[i];
     return res;
 }
@@ -45,11 +46,11 @@ inline StateVector operator + (StateVector arg1,  StateVector arg2)
  * @param arg2 b
 * @returns @f[ \vec{c} = \vec{a} - \vec{b} @f]
  */
-template <class StateVector>
-inline StateVector operator - (StateVector arg1,  StateVector arg2)
+template <class T, std::size_t N>
+inline std::array<T, N> operator - (std::array<T, N> arg1, std::array<T, N> arg2)
 {
-    StateVector res(arg1);
-    for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    std::array<T, N> res(arg1);
+    for(std::size_t i = 0; i < N; ++i)
     res[i] -= arg2[i];
     return res;
 }
@@ -88,11 +89,11 @@ inline double mult(const double& a, const int& b)
  * @param b
  * @returns @f[ c_i = a_i * b_i @f]
  */
-template <class VecType, class StateVector>
-inline StateVector mult(const VecType& a, const StateVector& b)
+template <class VecType, class T, std::size_t N>
+inline std::array<T, N> mult(const VecType& a, const std::array<T, N>& b)
 {
-    StateVector retval(b);
-    for(int i = 0; i < std::tuple_size<StateVector>::value; ++i)
+    std::array<T, N> retval(b);
+    for(int i = 0; i < N; ++i)
     retval[i] *= a[i];
     return retval;
 }
@@ -105,11 +106,11 @@ inline StateVector mult(const VecType& a, const StateVector& b)
  * @param b
  * @returns @f[ c_i = a * b_i @f]
  */
-template <class StateVector>
-inline StateVector mult(const int& a, const StateVector& b)
+template <class T, std::size_t N>
+inline std::array<T, N> mult(const int& a, const std::array<T, N>& b)
 {
-	StateVector retval(b);
-	for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i) retval[i] *= a;
+	std::array<T, N> retval(b);
+	for(std::size_t i = 0; i < N; ++i) retval[i] *= a;
 	return retval;
 }
 
@@ -121,11 +122,11 @@ inline StateVector mult(const int& a, const StateVector& b)
  * @param b
  * @returns @f[ c_i = a * b_i @f]
  */
-template <class StateVector>
-inline StateVector mult(const double& a, const StateVector& b)
+template <class T, std::size_t N>
+inline std::array<T, N> mult(const double& a, const std::array<T, N>& b)
 {
-	StateVector retval(b);
-	for(std::size_t i = 0; i < std::tuple_size<StateVector>::value; ++i) retval[i] *= a;
+	std::array<T, N> retval(b);
+	for(std::size_t i = 0; i < N; ++i) retval[i] *= a;
 	return retval;
 }
 
@@ -146,8 +147,8 @@ inline double dot(const double& a, const double& b)
  * @param b
  * @returns @f[ c=\sum_i a_i b_i @f]
  */
-template<class VecType>
-inline typename VecType::value_type dot(const VecType& a, const VecType& b)
+template<class T, std::size_t N>
+inline T dot(const std::array<T, N>& a, const std::array<T, N>& b)
 {
     return std::inner_product(begin(a), end(a), begin(b), 0.0);
 }
@@ -165,11 +166,9 @@ inline typename VecType::value_type dot(const VecType& a, const VecType& b)
 template <class StateVector>
 inline void reflect(StateVector& vec, const StateVector mirror)
 {
-	const int SymD = std::tuple_size<StateVector>::value;
-	
-	const double dotp = dot(vec, mirror);
+	const auto dotp = dot(vec, mirror);
 
-	for (int i=0; i<SymD; i++) vec[i] -= 2*dotp*mirror[i];
+	for (std::size_t i = 0; i < vec.size(); i++) vec[i] -= 2*dotp*mirror[i];
 }
 
 /** Normalize vector
@@ -182,23 +181,25 @@ inline void reflect(StateVector& vec, const StateVector mirror)
 template <class Container>
 inline void normalize(Container& a)
 {
-	typename Container::value_type tmp_abs=std::sqrt(dot(a, a));
+	typename Container::value_type tmp_abs = std::sqrt(dot(a, a));
 
 	for (decltype(a.size()) i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
 }
 
-/** Dump vector to stdout
+/** Dump array to stream.
  * 
-* @tparam StateVector the Container used for storing the vector.
-* @param vec the vector that we want to write to the screen.
+ * @tparam T the type of the array elements.
+ * @tparam N the length of the array.
+ * 
+ * @param os the ouput stream
+ * @param vec the array that we want to write to the screen.
+ * @return A stream that now contains a textual representation of the array.
  */
-template <class StateVector>
-inline void coutsv(StateVector& vec)
+template <typename T, std::size_t N>
+std::ostream& operator<<(std::ostream& os, const std::array<T, N>& vec)
 {
-	const int SymD = std::tuple_size<StateVector>::value;
-	
-	for (int i=0; i<SymD; i++) std::cout << vec[i] << "\t";
-	std::cout << std::endl;
+    for (std::size_t i = 0; i < N; i++) os << vec[i] << "\t";
+    return os;
 }
 
 #endif
