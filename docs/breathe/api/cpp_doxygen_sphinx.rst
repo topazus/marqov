@@ -10,8 +10,8 @@ Registry
    :project: Marqov
 
 Hamiltonians
-===========
-We do serve a couple of Example Hamiltonians:
+============
+We do serve a couple of example Hamiltonians:
 
 .. doxygenfile:: AshkinTeller.h
    :project: Marqov
