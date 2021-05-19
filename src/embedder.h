@@ -28,6 +28,7 @@ class Embedder
 {
 		typedef typename Hamiltonian::StateVector StateVector;
 		typedef StateVector* StateSpace;
+		constexpr static int SymD = Hamiltonian::SymD;
 
 	private:
 		const Hamiltonian& ham; // why const?
@@ -36,24 +37,28 @@ class Embedder
 
 	public:
 
+		int randomvar = 0;
+
 
 		Embedder(const Hamiltonian& ham, const Lattice& lat, const StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
 
 		template <class RNG>
 		void draw(RNG& rng)
 		{
+			randomvar = rng.integer(SymD);
 		}
 
 
 		double coupling(int pos1, int pos2)
 		{
-			return ham.J;
+			
+			return statespace[pos1][randomvar] * statespace[pos2][randomvar];
 		}
 
 
 		void flip(StateVector& sv)
 		{
-			sv[0] = -sv[0];
+			sv[randomvar] = -sv[randomvar];
 		}
 };
 }
