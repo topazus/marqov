@@ -2,6 +2,7 @@ stages:
   - build
   - buildMPI
   - test
+  - docs
 
 .src_except_template: &src_except_definition
   except:
@@ -150,7 +151,7 @@ marqov_Bullseye_doxygen:
 
 marqov_Bullseye_breathe:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-clang
-    stage: build
+    stage: docs
     needs: ["marqov_Bullseye_doxygen"]
     script:
       - apt-get update && apt-get install -y doxygen graphviz pdf2svg python3-breathe python3-sphinx
