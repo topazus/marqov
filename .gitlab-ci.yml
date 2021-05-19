@@ -139,6 +139,15 @@ marqov_Bullseye-Intel-21:
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="icpc" ..
       - make MARQOV VERBOSE=1
 
+marqov_Buster_doxygen:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gxx
+    stage: docs
+    script:
+      - apt-get update && apt-get install -y doxygen
+      - cd docs
+      - cmake -E make_directory doxygen
+      - doxygen Doxyfile-marqov.cfg
+      
 marqov_create_doc:
   image: aergus/latex
   stage: build
