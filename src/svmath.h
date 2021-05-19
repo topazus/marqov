@@ -188,18 +188,20 @@ inline void normalize(Container& a)
 	for (decltype(a.size()) i = 0; i < a.size(); ++i) a[i] /= tmp_abs;
 }
 
-/** Dump vector to stdout
+/** Dump array to stream.
  * 
-* @tparam StateVector the Container used for storing the vector.
-* @param vec the vector that we want to write to the screen.
+ * @tparam T the type of the array elements.
+ * @tparam N the length of the array.
+ * 
+ * @param os the ouput stream
+ * @param vec the array that we want to write to the screen.
+ * @return A stream that now contains a textual representation of the array.
  */
-template <class StateVector>
-inline void coutsv(StateVector& vec)
+template <typename T, std::size_t N>
+std::ostream& operator<<(std::ostream& os, const std::array<T, N>& vec)
 {
-	const int SymD = std::tuple_size<StateVector>::value;
-	
-	for (int i=0; i<SymD; i++) std::cout << vec[i] << "\t";
-	std::cout << std::endl;
+    for (std::size_t i = 0; i < N; i++) os << vec[i] << "\t";
+    return os;
 }
 
 #endif
