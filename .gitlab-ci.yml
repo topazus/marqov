@@ -140,11 +140,11 @@ marqov_Bullseye-Intel-21:
       - make MARQOV VERBOSE=1
 
 marqov_Bullseye_doxygen:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gxx
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-clang
     stage: build
     needs: []
     script:
-      - apt-get update && apt-get install -y doxygen
+      - apt-get update && apt-get install -y doxygen graphviz pdf2svg
       - cd docs
       - cmake -E make_directory doxygen
       - doxygen Doxyfile-marqov.cfg
