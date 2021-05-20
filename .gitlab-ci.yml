@@ -155,19 +155,8 @@ marqov_Bullseye_breathe:
     needs: ["marqov_Bullseye_doxygen"]
     script:
       - apt-get update && apt-get install -y doxygen graphviz pdf2svg python3-breathe python3-sphinx
-      - cd docs/
+      - cd doc/
       - doxygen Doxyfile-marqov-breathe.cfg
-      - cd breathe
-      - make html
-
-marqov_Bullseye_exhale:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-clang
-    stage: docs
-    needs: ["marqov_Bullseye_doxygen"]
-    script:
-      - apt-get update && apt-get install -y doxygen graphviz pdf2svg python3-breathe python3-sphinx python3-pip
-      - cd docs/exhale
-      - pip install exhale
       - make html
 
 marqov_create_doc:
