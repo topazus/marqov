@@ -24,7 +24,7 @@
 #include <array>
 
 /** @file svmath.h
- * Elementary state vector calculus
+ * Elementary state vector calculus.
  */
 
 /** Add two StateVectors elementwise: c=a+b.

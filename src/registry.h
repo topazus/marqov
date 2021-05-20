@@ -24,9 +24,13 @@
 #ifndef REGISTRY_H
 #define REGISTRY_H
 
-/**
-@author Florian Goth
-*/
+/** @file Registry include header.
+ *
+ * This includes the entry point, the exception types and some auxiliary
+ * functions.
+ * @author Florian Goth.
+ *
+ */
 #include <algorithm>
 #include <map>
 #include <string>
@@ -34,9 +38,10 @@
 #include <stdexcept>
 #include <sstream>
 
-/**
-* The base exception class thrown by the registry. It is derived from the STL logic_error exception.
-*/
+/** The base exception class thrown by the registry.
+ *
+ * It is derived from the STL logic_error exception.
+ */
 class Registry_Exception : public std::logic_error
 {
 public:
