@@ -20,7 +20,6 @@
 #define WOLFF_H
 #include <vector>
 #include <cmath>
-// todo: what about the alpha-loop? currently alpha=0 hard-coded
 
 namespace MARQOV
 {
@@ -31,40 +30,6 @@ namespace MARQOV
      * @tparam Hamiltonian The Hamiltonian that the Wolff algo will use.
      * @tparam Lattice The Lattice, that the Wolff algo should use.
      */
-
-	template <class Hamiltonian, class StateVector, class NeighbourType, class StateSpace, class = void>
-	struct has_wolff_embedding : std::false_type{};
-	
-	template <class Hamiltonian, class StateVector, class NeighbourType, class StateSpace>
-	struct has_wolff_embedding<Hamiltonian, StateVector, NeighbourType, StateSpace, 
-		MARQOV::detail::type_sink_t< decltype( std::declval<Hamiltonian>().template wolff_embedding<StateVector,NeighbourType,StateSpace>(
-			std::declval<StateVector>(), std::declval<NeighbourType>(), std::declval<StateSpace>()))
-		>> : std::true_type{};
-	
-	
-	template <class Hamiltonian, class StateVector, class NeighbourType, class StateSpace>
-	auto wolff_embedding_helper(Hamiltonian ham, StateVector sv, NeighbourType nbrs, StateSpace& statespace, std::true_type)
-	{
-		return ham.wolff_embedding(sv, nbrs, statespace);
-	}
-	
-	
-	template <class Hamiltonian, class StateVector, class NeighbourType, class StateSpace>
-	auto wolff_embedding_helper(Hamiltonian ham, StateVector sv, NeighbourType nbrs, StateSpace& statespace, std::false_type)
-	{
-		return 0;
-	}
-	
-	
-	template <class Hamiltonian, class StateVector, class NeighbourType, class StateSpace>
-	auto wolff_embedding(Hamiltonian ham, StateVector sv, NeighbourType nbrs, StateSpace& statespace)
-	{
-		return wolff_embedding_helper(ham, sv, nbrs, statespace, has_wolff_embedding<Hamiltonian, StateVector, NeighbourType, StateSpace>{});
-	}
-
-
-
-
 
 
     template <class Hamiltonian, class Lattice>
@@ -97,40 +62,40 @@ namespace MARQOV
         // loop over stack as long as non-empty
         while (q>=0)
         {
-			
             // extract last sv in stack
             const int currentidx = cstack[q];
             StateVector& currentsv = statespace[currentidx];
             q--;
             
             // get its neighbours
-            int a = 0; // to be replaced by loop over Nalpha // TODO
-        	const double gcpl = ham.interactions[a]->J;
-            auto nbrs = grid.nbrs(a, currentidx);
-		
+			for (int a=0; a<ham.interactions.size(); a++)
+			{
+        		const double gcpl = ham.interactions[a]->J;
+            	auto nbrs = grid.nbrs(a, currentidx);
 
-            // loop over neighbours
-            for (std::size_t i = 0; i < nbrs.size(); ++i)
-            {
-                // extract corresponding sv
-                const auto currentnbr = nbrs[i];
-                StateVector& candidate = statespace[currentnbr];
-                
-				const double lcpl = embd.coupling(currentidx, currentnbr);
-				const double cpl = gcpl*lcpl;
+            	// loop over neighbours
+            	for (std::size_t i = 0; i < nbrs.size(); ++i)
+            	{
+            	    // extract corresponding sv
+            	    const auto currentnbr = nbrs[i];
+            	    StateVector& candidate = statespace[currentnbr];
+            	    
+					const auto lcpl = embd.coupling(currentidx, currentnbr);
+					const double cpl = gcpl*lcpl;
 
-				
-                // test whether site is added to the cluster
-                if (cpl > 0)
-                {
-                    if (rng.real() < -std::expm1(-2.0*beta*cpl))
-                    {
-                        q++;
-                        cstack[q] = currentnbr;
-                        clustersize++;
-                        embd.flip(candidate);
-                    }
-                }
+					
+            	    // test whether site is added to the cluster
+            	    if (cpl > 0)
+            	    {
+            	        if (rng.real() < -std::expm1(-2.0*beta*cpl))
+            	        {
+            	            q++;
+            	            cstack[q] = currentnbr;
+            	            clustersize++;
+            	            embd.flip(candidate);
+            	        }
+            	    }
+            	}
             }
         }
         return clustersize;
