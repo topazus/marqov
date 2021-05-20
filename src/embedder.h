@@ -34,15 +34,15 @@ class Embedder
 	constexpr static int SymD = Hamiltonian::SymD;
 
 	private:
-		const Hamiltonian& ham; // why const?
+		const Hamiltonian& ham;
 		const Lattice& lat;
-		StateSpace& statespace;
+		const StateSpace& statespace;
 
 	public:
 
 		int rdir; // encodes the random direction
 
-		Embedder(const Hamiltonian& ham, const Lattice& lat, StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
+		Embedder(const Hamiltonian& ham, const Lattice& lat, const StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
 
 		template <class RNG>
 		void draw(RNG& rng)
@@ -51,7 +51,7 @@ class Embedder
 		}
 
 
-		double coupling(int pos1, int pos2)
+		auto coupling(int pos1, int pos2)
 		{
 			return statespace[pos1][rdir] * statespace[pos2][rdir];
 		}

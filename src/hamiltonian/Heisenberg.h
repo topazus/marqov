@@ -122,26 +122,21 @@ namespace MARQOV
 	*/
 
 
-//	template <class SpinType, class CouplingType>
-//	class Embedder<Heisenberg<SpinType,CouplingType>,RegularHypercubic>
-	template <>
-	class Embedder<Heisenberg<double,double>,RegularHypercubic>
+	template <class SpinType, class CouplingType, class Lattice>
+	class Embedder<Heisenberg<SpinType,CouplingType>,Lattice>
 	{
-			typedef Heisenberg<double,double> Hamiltonian;
-//			typedef Heisenberg<SpinType,CouplingType> Hamiltonian;
-			typedef RegularHypercubic Lattice;
-			typedef typename Hamiltonian::StateVector StateVector;
-			typedef StateVector* StateSpace;
-			constexpr static int SymD = Hamiltonian::SymD;
+		typedef Heisenberg<SpinType,CouplingType> Hamiltonian;
+		typedef typename Hamiltonian::StateVector StateVector;
+		typedef StateVector* StateSpace;
+		constexpr static int SymD = Hamiltonian::SymD;
 
 		private:
 
-			const Hamiltonian& ham; // why const?
+			const Hamiltonian& ham;
 			const Lattice& lat;
 			StateSpace& statespace;
 
-			std::array<double,SymD> rdir;
-//			std::array<SpinType,SymD> rdir;
+			std::array<SpinType,SymD> rdir;
 
 		public:
 			/** Constructs a Heisenberg embedding object.
