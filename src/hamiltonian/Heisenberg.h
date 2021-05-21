@@ -36,7 +36,7 @@ class Heisenberg_Initializer
 {
 	public:
 		// provide the spin dimension as a compile-time constant expression
-		constexpr static int SymD = std::tuple_size<StateVector>::value;
+		static constexpr int SymD = std::tuple_size<StateVector>::value;
 
 		// constructors
 		Heisenberg_Initializer()   {}
@@ -71,7 +71,7 @@ class Heisenberg
 	public:
 
 		double J;
-		constexpr static int SymD = 3;
+		static constexpr int SymD = 3;
 		const std::string name;
 		typedef std::array<SpinType, SymD> StateVector;
 		

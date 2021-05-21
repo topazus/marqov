@@ -174,7 +174,7 @@ class XXZAntiferro
 {
 	public:
         double Delta, H;
-		constexpr static int SymD = 3;
+		static constexpr int SymD = 3;
 		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
 		
