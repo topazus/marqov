@@ -20,7 +20,7 @@ endif()
 
 option(DEBIASINTEGERS "This controls whether to employ debiasing for small integers. Not for PGI." OFF)
 check_type_size("__uint128_t" UINT128LEN LANGUAGE CXX)
-if(DEBIASINTEGERS AND (${UINT128LEN} EQUAL ""))
+if(DEBIASINTEGERS AND NOT HAVE_UINT128LEN)
     message(FATAL_ERROR "Debiasing of integers requires a 128bit data type")
 endif()
 
