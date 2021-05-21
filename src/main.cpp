@@ -105,15 +105,15 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-//	if (ham == "Ising")
-//	{
-//		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-//		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-//		auto parameters = cart_prod(beta, J);
-//
-//		write_logfile(registry, beta);
-// 		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
-//	}
+	if (ham == "Ising")
+	{
+		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+		auto parameters = cart_prod(beta, J);
+
+		write_logfile(registry, beta);
+ 		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
+	}
 //
 //
 //	else if (ham == "AshkinTeller")
@@ -128,7 +128,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 //	}
 //
 //
-//	else if (ham == "Heisenberg")
+	else if (ham == "Heisenberg")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
