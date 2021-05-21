@@ -116,7 +116,7 @@ public:
     {
         free(data);
     }
-    /** Get a random uniform Integer from [0, range].
+    /** Get a random uniform integer from [0, range].
      * 
      * @param range
      * @return a random integer
@@ -141,7 +141,7 @@ public:
         }
         return m >> 64;
         
-        return integer()%range;
+//        return integer()%range;
     }
     /** Get a random uniform Integer from [0, max()].
      * 
