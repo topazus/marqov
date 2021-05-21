@@ -74,7 +74,7 @@ class Phi4
 
 		double beta, lambda, mass;
 		const double J = -1;
-		constexpr static int SymD = 3;
+		static constexpr int SymD = 3;
 		const std::string name = "Phi4";
 
 
