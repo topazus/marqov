@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 project(marqov CXX)
+INCLUDE (CheckTypeSize)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 include(GetGitRevisionDescription)
@@ -15,6 +16,12 @@ execute_process(
 string(STRIP "${GIT_BRANCH}" GIT_BRANCH)
 else()
 set(GIT_BRANCH, "N/A")
+endif()
+
+option(DEBIASINTEGERS "This controls whether to employ debiasing for small integers. Not for PGI." OFF)
+check_type_size("__uint128_t" UINT128LEN LANGUAGE CXX)
+if(DEBIASINTEGERS AND NOT (${UINT128LEN} EQUAL 16))
+    message(FATAL_ERROR "Debiasing of integers requires a 128bit data type")
 endif()
 
 add_subdirectory(src)

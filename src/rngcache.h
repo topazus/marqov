@@ -118,11 +118,16 @@ public:
     }
     /** Get a random uniform integer from [0, range].
      * 
+     * By a cmake switch the debiasing of integers can be enabled.
+     * <https://arxiv.org/abs/1805.10941>
      * @param range
      * @return a random integer
      */
     inline uint64_t integer(uint64_t range) noexcept
-    {//From here: https://github.com/imneme/bounded-rands/blob/master/bounded64.cpp
+    {
+#ifdef DEBIASINTEGERS
+        //From here: https://github.com/imneme/bounded-rands/blob/master/bounded64.cpp
+        // which takes inspiration from here: https://arxiv.org/abs/1805.10941
         uint64_t x = integer();
         __uint128_t m = __uint128_t(x) * __uint128_t(range);
         uint64_t l = uint64_t(m);
@@ -130,7 +135,7 @@ public:
             uint64_t t = -range;
             if (t >= range) {
                 t -= range;
-                if (t >= range) 
+                if (t >= range)
                     t %= range;
             }
             while (l < t) {
@@ -140,8 +145,9 @@ public:
             }
         }
         return m >> 64;
-        
-//        return integer()%range;
+#else
+        return integer()%range;
+#endif
     }
     /** Get a random uniform Integer from [0, max()].
      * 
