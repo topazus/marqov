@@ -253,7 +253,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		typedef typename ParameterTripleType::value_type ParameterType;
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
-		SchedulerType sched(1);
+		SchedulerType sched(1, nthreads);
 
 		// Lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
