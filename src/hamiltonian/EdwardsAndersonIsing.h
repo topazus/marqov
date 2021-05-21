@@ -305,7 +305,7 @@ class EdwardsAndersonIsing
 {
 	public:
 		double J;
-		constexpr static int SymD = 1;
+		static constexpr int SymD = 1;
 		const std::string name;
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
