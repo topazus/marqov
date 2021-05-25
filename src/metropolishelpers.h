@@ -23,8 +23,7 @@
 
 namespace MARQOV
 {
-    /**
-     * has_bonds utility function.
+    /** has_bonds utility function.
      * 
      * This function decays to a bool_type to denote whether a lattice provides
      * the getbond function.
@@ -84,7 +83,7 @@ namespace MARQOV
 	/**
      * Promote_Array utility class.
      * 
-     * This function takes two types and tries to figure out,which one is wider
+     * This function takes two types and tries to figure out,which one is wider.
      * @tparam A the first type.
      * @tparam B the other type.
      */
@@ -121,6 +120,8 @@ namespace MARQOV
 	template <class Grid>
 	std::vector<int> get_terms_helper(const Grid& grid, int idx, std::true_type) {return grid.termselector(idx);}
 	
+	/** A helper to detect if the Hamiltonian has a has_terms function.
+     */
 	template <class Grid>
 	std::vector<int> get_terms(const Grid& grid, int idx) {	return get_terms_helper<Grid>(grid, idx, has_terms<Grid>{}); }
 
@@ -152,6 +153,10 @@ namespace MARQOV
 		return grid.nbrs(fam,idx); 
 	}
 	
+	/** A helper to detect if the lattice has a getnbrs function.
+     * 
+     * @tparam Grid the type of the lattice.
+     */
 	template <class Grid>
 	auto getnbrs(const Grid& grid, int fam, int idx)
 	{
@@ -187,6 +192,10 @@ namespace MARQOV
 		return grid.getflexnbrs(fam,idx); 
 	}
 	
+	/** A helper to detect if the lattice has a getflexnbrs function.
+     * 
+     * @tparam Grid the type of the lattice.
+     */
 	template <class Grid>
 	auto getflexnbrs(const Grid& grid, int fam, int idx) 
 	{
