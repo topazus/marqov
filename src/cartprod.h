@@ -31,7 +31,14 @@ template <typename T, typename ... Ts>
 struct cartprodhelper
 {
     typedef decltype(std::tuple_cat(std::make_tuple(std::declval<typename T::value_type>()),
-                                    std::declval<typename cartprodhelper<Ts...>::RetType>())) RetType;
+                                    std::declval<typename cartprodhelper<Ts...>::RetType>())) RetType;///< A tuple consisting of our element and recursively collected elements.
+
+    /** Recursively build up a vector of all possible combinations.
+     * 
+     * @param t A container of elements.
+     * @param ts The remaining containers
+     * @return a vector of the cartesian product of t with all elements in ts
+     */
     static auto call(const T& t, Ts ... ts)
     {
     /* Plan: First we recurse into the remaining template parameters and obtain the resulting vector.
@@ -52,11 +59,21 @@ struct cartprodhelper
     }
 };
 
-/** End of recursion: Just a single list. */
+/** End of recursion: Just a single list.
+ * 
+ * @tparam T the container of the last argument in cart_prod.
+ */
 template <typename T>
 struct cartprodhelper<T>
 {
-    typedef decltype(std::make_tuple(std::declval<typename T::value_type>())) RetType;
+    typedef decltype(std::make_tuple(std::declval<typename T::value_type>())) RetType; ///< the type of the elements in the last container.
+    
+    /** The end of the recursion.
+     * 
+     * Builds a vector of one element tuples.
+     * @param inp A container of elements.
+     * @return a vector of one-element tuples.
+     */
     static auto call(const T& inp)
     {
         typedef std::tuple<typename T::value_type> VecElemType;
@@ -67,9 +84,13 @@ struct cartprodhelper<T>
     }
 };
 
-/** The creates a cartesian product of an arbitrary number of input containers. 
+/** This creates a cartesian product of an arbitrary number of input containers. 
+ * 
  *  They need to conform to the basic STL Interface. They should expose value_type and provide iterators.
- *  @return a vector of tuples. Each tuple contains an entry from the cartesian product.
+ *  @tparam Ts The template pack for the arbitry containers.
+ * 
+ *  @param vals The pack of containers.
+ *  @return A vector of tuples. Each tuple contains an entry from the cartesian product.
  * FIXME: unclear what happens if one of the parameters themselves is supposed to be a tuple.
  */
 template <typename ... Ts>
