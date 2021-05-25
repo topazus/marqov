@@ -29,7 +29,7 @@ class Standard_Interaction : public Interaction<StateVector>
 		Standard_Interaction(const CouplingType &J) : J(J) {}
 		StateVector get (const StateVector& phi) {return phi;}
 
-		// todo: rename J to something more generic, like "constant"
+		// TODO: rename J to something more generic, like "constant"
 		
 };
 

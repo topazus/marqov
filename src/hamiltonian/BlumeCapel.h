@@ -25,26 +25,29 @@
 #include "../hamparts.h"
 #include "termcollection.h"
 
+// ------------------------------ OBSERVABLES ---------------------------
+
+// ...
+
+
+
+// ------------------------------ INITIALIZER ---------------------------
 
 template <class StateVector, class RNG>
 class BlumeCapel_Initializer
 {
 	public:
-		BlumeCapel_Initializer()   {}
 		BlumeCapel_Initializer(RNG& rn) : rng(rn) {}
 
-		// specifies how a random new state vector is generated
-		// in this case a simple spin flip
 		StateVector newsv(const StateVector& svold) 
 		{
 			StateVector retval(svold); 
-
 			int state = retval[0];
 
 			if (state == 0)
 			{
-				if (rng.real() < 0.5)  state = -1;
-				else				state = +1;
+				if (rng.real() < 0.5) state = -1;
+				else state = +1;
 			}
 			else // +1/-1
 			{
@@ -53,7 +56,6 @@ class BlumeCapel_Initializer
 			}
 
 			retval[0] = state;
-
 			return retval;
 		};
 
@@ -112,25 +114,5 @@ class BlumeCapel
 				else statespace[i][0] = -1;
 			}
 		}
-
-
-
-		//  ----  Wolff  ----
-
-		template <class A = bool>
-		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a=0) const
-		{
-			if (sv1[0] == 0) return 0.0;
-			if (sv1[0] == sv2[0]) return 0.0;
-			else return -1.0;
-		}
-
-
-		template <class A = bool>
-		inline void wolff_flip(StateVector& sv, const A a=0) const
-		{
-			sv[0] *= -static_cast<SpinType>(1.0);
-		}
-
 };
 #endif
