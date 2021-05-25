@@ -82,14 +82,17 @@ namespace ThreadPool
     public:
     private:
         std::atomic_flag lockflag = ATOMIC_FLAG_INIT;
-        Semaphore& s; // the semaphore that we use for notifications
+        Semaphore& s; ///< the semaphore that we use for notifications
         std::deque<T> queue;
     public:
         /** Construct the queue.
+         * 
          * @param _s We take the semaphore as argument that we will use to notify waiting threads about changes to the queue.
          */
         ThreadSafeQueue(Semaphore& _s) : s(_s) {}
-        /** Add something to the end of the queue
+        /** Add something to the end of the queue.
+         * 
+         * @param t the new item that we put into the queue.
          */
         void push_back(const T& t)
         {
@@ -97,7 +100,10 @@ namespace ThreadPool
             queue.push_back(t);
             s.notify_one();
         }
-        /** Get something from the front of the queue
+        /** Get something from the front of the queue.
+         * 
+         * @param t the location into which we store the received content.
+         * @return false if the queue is empty, else true.
          */
         bool pop_front(T& t)
         {
@@ -108,14 +114,19 @@ namespace ThreadPool
             return true;
         }
         /** Checks whether the queue is empty.
-         * @return true if the queue is empty, else false
+         * 
+         * @return true if the queue is empty, else false.
          */
         bool is_empty()
         {
             SpinLock lk(lockflag);
             return queue.empty();
         }
-        /** create something at the end of the queue
+        /** Create something at the end of the queue.
+         * 
+         * @tparam Args the parameter pack of arguments
+         * 
+         * @param args the arguments of the thing we want to construct.
          */
         template <typename ... Args>
         void emplace(Args&& ... args)
@@ -124,7 +135,7 @@ namespace ThreadPool
             queue.emplace_back(std::forward<Args>(args)...);
             s.notify_one();
         }
-        /** Clear the queue
+        /** Clear the queue.
          */
         void clear()
         {
