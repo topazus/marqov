@@ -291,11 +291,11 @@ private:
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data());
             dataset.write(cont.data(), H5Mapper<T>::H5Type(), mspace, filespace);
         }
-    H5::DataSet dataset; ///< The HDF5 dataset
-    hsize_t dssize; //< the current dataset size
-    std::size_t cachemaxelems; ///< How many elements can the cache hold
-    std::size_t cachepos; ///< the current position of the cache
-    Cont cont;///< the container where the data is held until it is flushed
+    H5::DataSet dataset; ///< The HDF5 dataset.
+    hsize_t dssize; ///< the current dataset size.
+    std::size_t cachemaxelems; ///< How many elements can the cache hold.
+    std::size_t cachepos; ///< the current position of the cache.
+    Cont cont;///< the container where the data is held until it is flushed.
 };
 
 /** A specialization of the CacheContainer for vector.
