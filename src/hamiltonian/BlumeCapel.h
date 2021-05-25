@@ -72,7 +72,7 @@ class BlumeCapel
 		//  ----  Parameters  ----
 
 		double J, D;
-		constexpr static int SymD = 1;
+		static constexpr int SymD = 1;
 		const std::string name;
 
 

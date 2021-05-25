@@ -24,9 +24,13 @@
 #ifndef REGISTRY_H
 #define REGISTRY_H
 
-/**
-@author Florian Goth
-*/
+/** @file Registry include header.
+ *
+ * This includes the entry point class, the exception types and some auxiliary
+ * functions.
+ * @author Florian Goth.
+ *
+ */
 #include <algorithm>
 #include <map>
 #include <string>
@@ -34,9 +38,10 @@
 #include <stdexcept>
 #include <sstream>
 
-/**
-* The base exception class thrown by the registry. It is derived from the STL logic_error exception.
-*/
+/** The base exception class thrown by the registry.
+ *
+ * It is derived from the STL logic_error exception.
+ */
 class Registry_Exception : public std::logic_error
 {
 public:
@@ -61,7 +66,7 @@ public:
 private:
 };
 
-/** The exception when the requested Data in a block is not present.
+/** The exception when the requested data in a block is not present.
  */
 class Registry_Block_Data_not_found_Exception : public Registry_Key_not_found_Exception
 {
@@ -76,8 +81,7 @@ public:
 private:
 };
 
-/**
- * The exception when the requested block is not present.
+/** The exception when the requested block is not present.
  */
 class Registry_Block_not_found_Exception : public Registry_Key_not_found_Exception
 {
@@ -92,8 +96,7 @@ public:
 private:
 };
 
-/**
- * The exception when the requested config file could not be found.
+/** The exception when the requested config file could not be found.
  */
 class Registry_cfgfile_not_found_Exception : public Registry_Key_not_found_Exception
 {
@@ -111,7 +114,7 @@ private:
 /**
  * This class contains the contents of a [BLOCK] structure in a config file.
  * 
- * In Config Files those [BLOCK] thingies
+ * In Config Files those [BLOCK] thingies.
  */
 class Block
 {
@@ -314,6 +317,10 @@ public:
 template < typename A >
 struct GetTrait
 {
+    /** Helper function to convert from a string to the requested type.
+     * @param arg a string that should represent something.
+     * @return Hopefully, the successfully converted object.
+     */
     static inline A Convert(std::string arg)
     {
         A ret;
@@ -330,18 +337,32 @@ struct GetTrait
 template <>
 struct GetTrait<bool>
 {
+    /** Helper function to convert from a string to a boolean value
+     * 
+     * Every occurence of uppercase/lowercase mixing of TRUE is interpreted as true,
+     * everything else is false.
+     * @return boolean true, if the string was [Tt][Rr][Uu][Ee]
+     */
     static bool Convert(std::string arg)
     {
-        std::transform ( arg.begin() , arg.end() , arg.begin() , ::toupper );
+        std::transform ( arg.begin(), arg.end(), arg.begin(), ::toupper );
         if ( arg == "TRUE")
             return true;
         return false;
     }
 };
 
+/** A helper template to set values in the registry.
+ * 
+ * @tparam A the type of the value.
+ */
 template < typename A >
 struct SetTrait
 {
+    /** Which type to convert.
+     * @param arg. The value we want to write.
+     * @return a textual representation of arg.
+     */
     static std::string convert(A arg)
     {
         std::stringstream ss;
@@ -375,9 +396,20 @@ inline unsigned int Block::size(void) const
 }
 
 //Two examples on how to extend the parsing capabilities of the registry.
+
+/** A helper trait for reading vectors of values with a predefined separator.
+ * 
+ * The predefined separator is currently hard-coded to ";" or ",".
+ * @tparam T the type of the elements in the vector.
+ */
 template <typename T>
-struct GetTrait<std::vector<T> >//helper trait to break up a string at various predefined seperators
+struct GetTrait<std::vector<T> >
 {
+    /** Implementation function for the conversion.
+     * 
+     * @param arg the string that we intend to break up.
+     * @return the converted values stored in a C++ std::vector .
+     */
     static std::vector<T> Convert(std::string& arg)
     {
         const std::string delim("; ,");
@@ -392,9 +424,19 @@ struct GetTrait<std::vector<T> >//helper trait to break up a string at various p
     }
 };
 
+/** A helper trait for reading vectors of strings with a predefined separator.
+ * 
+ * The predefined separator is currently hard-coded to ";" or ",".
+ * @tparam T the type of the elements in the vector.
+ */
 template <>
-struct GetTrait<std::vector<std::string> >//helper trait to break up a string at various predefined seperators
+struct GetTrait<std::vector<std::string> >
 {
+    /** Implementation function for the conversion.
+     * 
+     * @param arg the string that we intend to break up.
+     * @return the strings stored in a C++ std::vector .
+     */
     static std::vector<std::string> Convert(std::string arg)
     {
         const std::string delim("; ,");

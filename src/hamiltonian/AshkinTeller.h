@@ -112,13 +112,12 @@ template <typename SpinType = int>
 class AshkinTeller
 {
 	public:
-
 		//  ----  Parameters  ----
 
 		double J; ///< Ising interaction strength
 		double K; ///< Four-spin interaction strength
 
-		constexpr static int SymD = 3; ///< use SymD to encode the three colors of the model
+		static constexpr int SymD = 3; ///< use SymD to encode the three colors of the model
 		const std::string name;
 
 
@@ -390,7 +389,4 @@ namespace MARQOV
 		}
 	};	
 }
-
-
-
 #endif
