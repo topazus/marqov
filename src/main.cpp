@@ -141,23 +141,23 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-//	else if (ham == "Phi4")
-//	{
-//		auto beta   = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-//		auto lambda = registry.Get<std::vector<double> >("mc.ini", ham, "lambda");
-//		auto mass   = registry.Get<std::vector<double> >("mc.ini", ham, "mass");
-//		
-//		// we need "beta" as an explicit parameter in the Hamiltonian
-//		// this requires some gymnastics ...
-//		std::vector<double> dummy = {0.0};
-//		auto parameters = cart_prod(beta, dummy, lambda, mass);
-//		for (std::size_t i=0; i<parameters.size(); i++) std::get<1>(parameters[i]) = std::get<0>(parameters[i]);
-//		
-//		write_logfile(registry, beta);
-//		RegularLatticeLoop<Phi4<double, double> >(registry, outbasedir, parameters, defaultfilter);
-//	}
-//
-//
+	else if (ham == "Phi4")
+	{
+		auto beta   = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+		auto lambda = registry.Get<std::vector<double> >("mc.ini", ham, "lambda");
+		auto mass   = registry.Get<std::vector<double> >("mc.ini", ham, "mass");
+		
+		// we need "beta" as an explicit parameter in the Hamiltonian
+		// this requires some gymnastics ...
+		std::vector<double> dummy = {0.0};
+		auto parameters = cart_prod(beta, dummy, lambda, mass);
+		for (std::size_t i=0; i<parameters.size(); i++) std::get<1>(parameters[i]) = std::get<0>(parameters[i]);
+		
+		write_logfile(registry, beta);
+		RegularLatticeLoop<Phi4<double, double> >(registry, outbasedir, parameters, defaultfilter);
+	}
+
+
 //
 //
 //	else if (ham == "BlumeCapel")

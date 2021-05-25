@@ -27,7 +27,6 @@
 #include <array>
 #include "../hamparts.h"
 #include "../obsparts.h"
-//#include "../metropolis.h"
 #include "termcollection.h"
 
 
@@ -139,12 +138,14 @@ class Ising
 
 // ------------------------------ SPECIALIZATIONS ---------------------------
 
-namespace MARQOV {
+namespace MARQOV 
+{
 
-    //Work around GCC Bug for specializations of things in namespaces:
-    //https://gcc.gnu.org/bugzilla/show_bug.cgi?id=56480
-    // still occurs on 6.4.0
 
+	/** Specialization of the Metropolis algorithm for the Ising model.
+	* The principle structure is identical to the general version of the algorithm
+	* See metropolis.h for details
+	*/
 	template <class Lattice>
 	struct Metropolis<Ising<int>, Lattice>
 	{
@@ -195,6 +196,10 @@ namespace MARQOV {
 	};
 
 
+	/** Specialization of the Wolff algorithm for the Ising model.
+	* The principle structure is identical to the general version of the algorithm
+	* See wolff.h for details
+	*/
 	template <class Lattice>
 	struct Wolff<Ising<int>, Lattice>
 	{

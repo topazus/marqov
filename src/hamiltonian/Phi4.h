@@ -8,39 +8,29 @@
 #include "../obsparts.h"
 #include "termcollection.h" 
 
-// ----------------------------------------------------------------------
 
+// ------------------------------ OBSERVABLES ---------------------------
+
+// ...
+
+
+// ------------------------------ INITIALIZER ---------------------------
+// here we have two different choices of initializers
 
 template <class StateVector, class RNG>
-class Phi4_Initializer
+class Phi4_Initializer_Radial
 {
 	public:
-		// provide the spin dimension as a compile-time constant expression
 		constexpr static int SymD = std::tuple_size<StateVector>::value;
 
 		// constructors
-		Phi4_Initializer()   {}
-		Phi4_Initializer(RNG& rn) : rng(rn) {}
+		Phi4_Initializer_Radial(RNG& rn) : rng(rn) {}
 
 		// generate new statevector
 		StateVector newsv(const StateVector& osv) 
 		{
+			double amp = 0.5; // Amplitude (TODO: make me a class parameter)
 
-			/* Francesco version (component-wise)
-			const int comp =	rng.integer(3);
-			double amp = 0.5;
-			double r = rng.real(-1.0, 1.0);
-			double oldval = osv[comp];
-			double newval = oldval + amp*r;
-			
-			auto nsv = osv;
-			nsv[comp] = newval;
-			return nsv;
-			*/
-
-
-
-			double amp = 0.5;
 			auto newdir = rnddir<RNG, double, SymD>(rng);
 			auto nsv = osv + mult(amp,newdir);
 			return nsv;
@@ -51,8 +41,42 @@ class Phi4_Initializer
 };
 
 
+template <class StateVector, class RNG>
+class Phi4_Initializer_Cartesian
+{
+	public:
+		constexpr static int SymD = std::tuple_size<StateVector>::value;
+
+		// constructors
+		Phi4_Initializer_Cartesian(RNG& rn) : rng(rn) {}
+
+		// generate new statevector
+		StateVector newsv(const StateVector& osv) 
+		{
+			double amp = 0.5; // Amplitude (TODO: make me a class parameter)
+
+			const int comp =	rng.integer(SymD);
+			double r = rng.real(-1.0, 1.0);
+			double oldval = osv[comp];
+			double newval = oldval + amp*r;
+			
+			auto nsv = osv;
+			nsv[comp] = newval;
+			return nsv;
+		};
+
+	private:
+		RNG& rng;
+};
 
 
+// ------------------------------ HAMILTONIAN --------------------------
+
+/** A possible implementation of a fourth-power on-site term.
+* This is specific to the Phi4 model
+*
+* @tparam StateVector the type of the state vector
+*/
 template <class StateVector>
 class Onsite_Fourth_Minus_One : public OnSite<StateVector, double> 
 {
@@ -64,9 +88,15 @@ class Onsite_Fourth_Minus_One : public OnSite<StateVector, double>
 		inline double get (const StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);}
 };
 
-// ------------------------------ HAMILTONIAN ---------------------------
 
-template <typename SpinType, typename MyFPType>
+
+
+/** Phi4 Hamiltonian.
+ * This defines a O(N) Hamiltonian with additional mass and fourth-order term
+ * @tparam SpinType the type in which to store the magnetization values.
+ * @tparam CouplingType the type in which to store the coupling constants of the on-site terms
+ */
+template <typename SpinType, typename CouplingType=double>
 class Phi4
 {
 	public:
@@ -78,13 +108,12 @@ class Phi4
 		const std::string name = "Phi4";
 
 
-
 		//  ---- Definitions  -----
 
-		typedef MyFPType FPType;
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
-		using MetroInitializer =  Phi4_Initializer<StateVector, RNG>; 
+		using MetroInitializer =  Phi4_Initializer_Radial<StateVector, RNG>; 
+		//using MetroInitializer =  Phi4_Initializer_Cartesian<StateVector, RNG>; 
 
 
 
@@ -94,8 +123,8 @@ class Phi4
 		Onsite_Quadratic<StateVector> onsite_standard;
 		Onsite_Fourth_Minus_One<StateVector> onsite_fourth_minus_one;
 
-		std::array<Standard_Interaction<StateVector>*, 1>        interactions = {new Standard_Interaction<StateVector>(J)};
-		std::vector<OnSite<StateVector, FPType>*>              onsite; 
+		std::array<Standard_Interaction<StateVector>*, 1>      interactions = {new Standard_Interaction<StateVector>(J)};
+		std::vector<OnSite<StateVector, CouplingType>*>        onsite; // empty here, to be filled in the constructor!
 		std::array <FlexTerm<StateVector*,  StateVector>*, 0>  multisite;
 
 		Phi4(double beta, double lambda, double mass) : beta(beta), 
@@ -111,12 +140,14 @@ class Phi4
 		{
 			onsite.push_back(&onsite_standard);
 			onsite.push_back(&onsite_fourth_minus_one);
-#ifdef __PGI
-            //The following three lines are necessary to make PGI-19.10 happy
-            StateVector dummy;
-            onsite_standard.get(dummy);
-            onsite_fourth_minus_one.get(dummy);
-#endif
+
+
+			#ifdef __PGI
+            	//The following three lines are necessary to make PGI-19.10 happy
+            	StateVector dummy;
+            	onsite_standard.get(dummy);
+            	onsite_fourth_minus_one.get(dummy);
+			#endif
 		}
 
 
@@ -131,7 +162,7 @@ class Phi4
 
 
 
-		// Provide names for the parameters
+		//  ---- Parameter Names ----
 
 		std::string paramname(int i)
 		{
@@ -144,22 +175,6 @@ class Phi4
 				default: break;
 			}
 			return name;
-		}
-
-
-		//  ----  Wolff  ----
-
-		template <class A>
-		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a) const 
-		{
-			return dot(sv1, a) * dot(sv2, a);
-		}
-
-		template <class A>
-		inline void wolff_flip(StateVector& sv, const A a) const
-		{
-			const double dotp = dot(sv, a);
-			for (int i=0; i<SymD; i++) sv[i] -= 2*dotp*a[i];
 		}
 };
 #endif
