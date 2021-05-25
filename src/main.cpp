@@ -169,20 +169,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-
-//	else if (startswith(ham, "AshkinTeller"))
-//	{
-//		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-//		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-//		auto K    = registry.Get<std::vector<double> >("mc.ini", ham, "K");
-//		auto parameters = cart_prod(beta, J, K);
-//		
-//		RegularLatticeLoop<AshkinTeller<int>>(registry, outbasedir, parameters, defaultfilter);
-//	}
-
-
-
-
 	else if (ham == "XXZAntiferro")
 	{
 		auto beta     = registry.Get<std::vector<double>>("mc.ini", ham, "beta");
@@ -196,17 +182,17 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-//	else if (ham == "XXZAntiferroSingleAniso")
-//	{
-//		auto beta        = registry.Get<std::vector<double>>("mc.ini", ham, "beta");
-//		auto extfield    = registry.Get<std::vector<double>>("mc.ini", ham, "extfield");
-//		auto aniso       = registry.Get<std::vector<double>>("mc.ini", ham, "aniso");
-//		auto singleaniso = registry.Get<std::vector<double>>("mc.ini", ham, "singleaniso");
-//		auto parameters = cart_prod(beta, extfield, aniso, singleaniso);
-//
-//		RegularLatticeLoop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
-//	}
-//
+	else if (ham == "XXZAntiferroSingleAniso")
+	{
+		auto beta        = registry.Get<std::vector<double>>("mc.ini", ham, "beta");
+		auto extfield    = registry.Get<std::vector<double>>("mc.ini", ham, "extfield");
+		auto aniso       = registry.Get<std::vector<double>>("mc.ini", ham, "aniso");
+		auto singleaniso = registry.Get<std::vector<double>>("mc.ini", ham, "singleaniso");
+		auto parameters = cart_prod(beta, extfield, aniso, singleaniso);
+
+		RegularLatticeLoop<XXZAntiferroSingleAniso<double>>(registry, outbasedir, parameters, xxzfilter);
+	}
+
 //
 //
 //	else if (startswith(ham, "EdwardsAnderson-Ising"))
