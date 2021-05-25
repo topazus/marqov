@@ -96,12 +96,22 @@ template <typename SpinType = int>
 class BlumeCapelBipartite
 {
 	public:
+
+		//  ----  Parameter  ----
+
 		double J, DA, DB;
 		static constexpr int SymD = 1;
 		const std::string name;
+
+
+		//  ----  Definitions  ----
+
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = BlumeCapelBipartite_Initializer<StateVector, RNG>;
+
+
+		//  ----  Hamiltonian terms  ----
         
         std::vector<BlumeCapelBipartite_interaction<StateVector>*> interactions;
         std::array<BlumeCapelBipartite_onsite<StateVector>*, 2> onsite = {new BlumeCapelBipartite_onsite<StateVector>(DA), new BlumeCapelBipartite_onsite<StateVector>(DB)};
@@ -114,11 +124,15 @@ class BlumeCapelBipartite
 		
 		~BlumeCapelBipartite(){delete interactions[0]; delete onsite[0]; delete onsite[1];}
 
-		// instantiate and choose observables
+
+		//  ----  Observables ----
+
 		Magnetization obs_m;
         std::tuple<Magnetization> observables;
 
-		// state space initializer
+
+		//  ----  Initializer  ----
+
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
@@ -127,24 +141,6 @@ class BlumeCapelBipartite
 				if (rng.real() > 0.5) statespace[i][0] = 1;
 				else statespace[i][0] = -1;
 			}
-		}
-
-		// using the Wolff cluster algorithm requires to implement
-		// the functions 'wolff_coupling' and 'wolff_flip'
-
-		template <class A = bool>
-		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a=0) const
-		{
-			if (sv1[0] == 0) return 0.0;
-			if (sv1[0] == sv2[0]) return 0.0;
-			else return -1.0;
-		}
-
-
-		template <class A = bool>
-		inline void wolff_flip(StateVector& sv, const A a=0) const
-		{
-			sv[0] *= -static_cast<SpinType>(1.0);
 		}
 
 };
