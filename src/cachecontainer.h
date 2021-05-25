@@ -95,14 +95,14 @@ template <> struct H5MapperBase<int64_t> {
  */
 template <> struct H5MapperBase<long unsigned int> {
     /**
-     * @returns the HDF5 type of long unsigned int
+     * @returns the HDF5 type of long unsigned int.
      */
     static H5::PredType H5Type(){return H5::PredType::NATIVE_ULONG;}
 };
 
 /** This maps C++ Types to HDF5 Types.
  * 
- * This is the generic function valid for tuples, arrays, all 
+ * This is the generic function, valid for tuples, arrays, all 
  * things that have a known length at compile time.
  * 
  * @tparam T The type whose properties we try to infer.
@@ -136,7 +136,7 @@ class H5Mapper<T, typename std::enable_if<std::is_scalar<T>::value>::type> : pub
     public:
         static constexpr T fillval = 0; ///< All scalar types get initialized to 0.
         static constexpr int bytecount = sizeof(T);///< Their bytecount on the current platform.
-        static constexpr int rank = 1; //< Scalars are vectors(rank=1) of length 1.
+        static constexpr int rank = 1; ///< Scalars are vectors(rank=1) of length 1.
 };
 
 /** Dumps a Scalar into an HDF5 file/group.
