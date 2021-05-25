@@ -40,6 +40,7 @@ struct Rnddir_Helper
      * [external PDF](https://sites.math.washington.edu/~morrow/335_12/sphericalCoords.pdf) with some hints.
      * @note For the used rng, we assume it behaves like the RNGCache ...
      * @param rn where to get the random numbers from.
+     * @return a random direction uniformly distributed on the unit sphere.
      */
     static auto rnddir(RNG& rn) -> std::array<valuetype, SymD>
     {
@@ -77,12 +78,19 @@ template <class RND, typename T>
 struct Rnddir_Helper<RND, T, 1, 
 typename std::enable_if<std::is_arithmetic<T>::value>::type> // enable only for arithmetic types
 {
-static auto rnddir(RND& rn) -> std::array<T, 1>
-{
-    std::array<T, 1> retval = {T(1)};
-    if (rn.real() < 0.5) retval[0] = -T(1);
-    return retval;
-}
+    /** Draw a random 1D direction.
+     * 
+     * So effectively fot all arithmetic types, this is either +1 or -1.
+     * @note For the used rng, we assume it behaves like the RNGCache ...
+     * @param rn where to get the random numbers from.
+     * @return Either +1 or -1, chosen randomly.
+     */
+    static auto rnddir(RND& rn) -> std::array<T, 1>
+    {
+        std::array<T, 1> retval = {T(1)};
+        if (rn.real() < 0.5) retval[0] = -T(1);
+        return retval;
+    }
 };
 
 /** Create a random direction.
@@ -90,7 +98,8 @@ static auto rnddir(RND& rn) -> std::array<T, 1>
  * This creates a random direction in SymD space with proper type.
  * 
  * @see Rnddir_Helper
- * @param rn the RNG to draw the required random numbers from. 
+ * @param rn the RNG to draw the required random numbers from.
+ * @return the random direction in the respective space.
  */
 template <class RNG, typename valuetype, int SymD> 
 auto rnddir(RNG& rn) -> std::array<valuetype, SymD>
