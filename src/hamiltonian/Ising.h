@@ -27,7 +27,7 @@
 #include <array>
 #include "../hamparts.h"
 #include "../obsparts.h"
-#include "../metropolis.h"
+//#include "../metropolis.h"
 #include "termcollection.h"
 
 
@@ -51,6 +51,8 @@ class IsingGenericVectorValuedObs
 
 
 
+// ------------------------------ INITIALIZER ---------------------------
+
 template <class StateVector, class RNG>
 class Ising_Initializer
 {
@@ -67,6 +69,9 @@ class Ising_Initializer
 			return retval;
 		};
 };
+
+
+// ------------------------------ HAMILTONIAN ---------------------------
 
 /**
  * Ising Hamiltonian
@@ -132,6 +137,7 @@ class Ising
 
 
 
+// ------------------------------ SPECIALIZATIONS ---------------------------
 
 namespace MARQOV {
 

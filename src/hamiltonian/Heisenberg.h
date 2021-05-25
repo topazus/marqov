@@ -27,9 +27,16 @@
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
 #include "../obsparts.h"
+#include "termcollection.h"
 
 
-// ----------------------------------------------------------------------
+// ------------------------------ OBSERVABLES ---------------------------
+
+// ...
+
+
+
+// ------------------------------ INITIALIZER ---------------------------
 
 template <class StateVector, class RNG>
 class Heisenberg_Initializer
@@ -54,6 +61,9 @@ class Heisenberg_Initializer
 
 
 
+// ------------------------------ HAMILTONIAN ---------------------------
+
+
 template <class StateVector>
 class Heisenberg_interaction
 {
@@ -63,24 +73,35 @@ class Heisenberg_interaction
         const double J;
 };
 
-// ------------------------------ HAMILTONIAN ---------------------------
 
+/** Heisenberg Hamiltonian.
+* This defines the Heisenberg Hamiltonian. It only consists of a single part,
+* namely the standard interaction.
+*
+* @tparam SpinType the type in which to store the vector-valued magnetization values.
+* @tparam CouplingType the type in which the coupling of the on-site term would be stored (if there was one)
+*/
 template <typename SpinType, typename CouplingType=double>
 class Heisenberg
 {
 	public:
 
+		//  ----  Parameters  ----
+
 		double J;
 		static constexpr int SymD = 3;
 		const std::string name;
+
+
+		//  ---- Definitions  -----
+
 		typedef std::array<SpinType, SymD> StateVector;
-		
-        // the next construction allows to specify a number of template arguments
-		// while leaving others open (C++11 feature)
 		template <typename RNG>
 		using MetroInitializer =  Heisenberg_Initializer<StateVector, RNG>; 
 
-		// requires pointers
+
+		//  ----  Hamiltonian terms  ----
+
         std::vector<Heisenberg_interaction<StateVector>*> interactions;
         std::array<OnSite<StateVector, CouplingType>*, 0> onsite;
         std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
@@ -89,14 +110,17 @@ class Heisenberg
         {
             interactions.push_back(new Heisenberg_interaction<StateVector>(J));
         }
-		~Heisenberg() {delete interactions[0];} // fixme
+		~Heisenberg() {delete interactions[0];}
 		
 
-		// instantiate and choose observables
+		//  ----  Observables ----
+
 		Magnetization obs_m;
         std::tuple<Magnetization> observables;
 
-		// state space initializer
+
+		//  ----  Initializer  ----
+
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
@@ -110,6 +134,7 @@ class Heisenberg
 
 
 
+// ------------------------------ SPECIALIZATIONS ---------------------------
 
 
 namespace MARQOV
