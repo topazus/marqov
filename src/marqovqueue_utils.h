@@ -35,7 +35,14 @@ namespace ThreadPool
         /** Spin until WE can lock the flag.
          */
         void lock() noexcept {
-            while (locked.test_and_set(std::memory_order_acquire)) { ; }
+            while (locked.test_and_set(std::memory_order_acquire)) {
+#if defined(__cpp_lib_atomic_flag_test)
+                //C++20 feature from cppreference.com
+                while (lock.test(std::memory_order_relaxed))// test lock
+#endif
+                ;//spin
+                
+            }
         }
         /** Unlock the spinning lock.
          */
