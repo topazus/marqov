@@ -87,10 +87,20 @@ namespace MARQOV
 		  					  	 ncluster(nc), 
 		  					  	 nsweeps(nsw) {}
 		
+		/** Default Copy Constructor of Config.
+         */
 		Config(const Config& rhs) = default; // < FIXME: Think about wether we can get rid of it.
+		/** The deleted assignment operator of Config.
+         * 
+         * The Configuration cannot be copied.
+         */
 		Config& operator=(const Config& rhs) = delete;
+        /** Default Move constructor of Config.
+         */
 		Config(Config&& other) = default;
-		Config& operator=(Config&& other) = default;
+        /** The deleted assignment move operator of Config.
+         */
+		Config& operator=(Config&& other) = delete;
 		
 		
 		// Output
@@ -892,10 +902,27 @@ class Core : public RefType<Grid>
         }
 
         //FIXME: Fix assignment and copying...
+        
+        /** The deleted copy constructor of Core.
+         * 
+         * The Core class cannot be copied.
+         */
         Core(const Core& rhs) = delete;
+        /** The deleted assignment operator of Core.
+         * 
+         * There cannot be two identical copies of core.
+         */
         Core& operator=(const Core& rhs) = delete;
+        /** The default move constructor of Core.
+         * 
+         * FIXME: figure out and note where and why it is actually used.
+         */
         Core(Core&& other) = default;
-        Core& operator=(Core&& other) = default;
+        /** The deleted move assignment operator of Core.
+         * 
+         * There cannot be two identical copies of core.
+         */
+        Core& operator=(Core&& other) = delete;
         
         template<size_t N = 0, typename... Ts, typename S, typename G>
         inline typename std::enable_if_t<N == sizeof...(Ts), void>
