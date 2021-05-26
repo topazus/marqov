@@ -87,10 +87,20 @@ namespace MARQOV
 		  					  	 ncluster(nc), 
 		  					  	 nsweeps(nsw) {}
 		
+		/** Default Copy Constructor of Config.
+         */
 		Config(const Config& rhs) = default; // < FIXME: Think about wether we can get rid of it.
+		/** The deleted assignment operator of Config.
+         * 
+         * The Configuration cannot be copied.
+         */
 		Config& operator=(const Config& rhs) = delete;
+        /** Default Move constructor of Config.
+         */
 		Config(Config&& other) = default;
-		Config& operator=(Config&& other) = default;
+        /** The deleted assignment move operator of Config.
+         */
+		Config& operator=(Config&& other) = delete;
 		
 		
 		// Output
@@ -314,13 +324,27 @@ namespace MARQOV
         auto createCArgTuple(H5::Group& h5loc, Tup& t) {return detail::createCArgTuple_impl<i>(h5loc, t, typename obs_has_desc<typename std::tuple_element<i, Tup>::type>::type() );}
 	};
     
+    
+    /** Implementation function to call an objects' member function with a tuple of arguments.
+     * 
+     * This call actually performs the function call.
+     * @tparam Function Which member function to call.
+     * @tparam Object The type of the object
+     * @tparam Tuple The type of the Tuple of arguments.
+     * @tparam I an index sequence
+     * 
+     * @param f the name of the function.
+     * @param obj the object.
+     * @param t the arguments to f.
+     * @returns the return value of the function call.
+     */
 	template<typename Function, typename Object, typename Tuple, size_t ... I>
 	auto _call(Function f, Object& obj, Tuple t, std::index_sequence<I ...>) 
 	{
 		return (obj.*f)(std::get<I>(t) ...);
 	}
 	
-	/** A helper function to call an objects member function with a tuple of arguments.
+	/** A helper function to call an objects' member function with a tuple of arguments.
      * 
      * @tparam Function Which member function to call.
      * @tparam Object The type of the object
@@ -878,10 +902,27 @@ class Core : public RefType<Grid>
         }
 
         //FIXME: Fix assignment and copying...
+        
+        /** The deleted copy constructor of Core.
+         * 
+         * The Core class cannot be copied.
+         */
         Core(const Core& rhs) = delete;
+        /** The deleted assignment operator of Core.
+         * 
+         * There cannot be two identical copies of core.
+         */
         Core& operator=(const Core& rhs) = delete;
+        /** The default move constructor of Core.
+         * 
+         * FIXME: figure out and note where and why it is actually used.
+         */
         Core(Core&& other) = default;
-        Core& operator=(Core&& other) = default;
+        /** The deleted move assignment operator of Core.
+         * 
+         * There cannot be two identical copies of core.
+         */
+        Core& operator=(Core&& other) = delete;
         
         template<size_t N = 0, typename... Ts, typename S, typename G>
         inline typename std::enable_if_t<N == sizeof...(Ts), void>
