@@ -39,6 +39,7 @@ using std::ofstream;
 #include "replicate.h"
 #include "svmath.h"
 #include "filters.h"
+//#include "embedder.h"
 #include "marqovscheduler.h"
 #include "util.h"
 
@@ -110,9 +111,9 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
 		auto parameters = cart_prod(beta, J);
 
-		write_logfile(registry, beta);
  		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
+
 
 
 	else if (ham == "AshkinTeller")
@@ -122,9 +123,9 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto K    = registry.Get<std::vector<double> >("mc.ini", ham, "K");
 		auto parameters = cart_prod(beta, J, K);
 
-		write_logfile(registry, beta);
-		RegularLatticeLoop<AshkinTeller<int> >(registry, outbasedir, parameters, defaultfilter);
+		RegularLatticeLoop<AshkinTeller>(registry, outbasedir, parameters, defaultfilter);
 	}
+
 
 
 	else if (ham == "Heisenberg")
@@ -133,7 +134,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
 		auto parameters = cart_prod(beta, J);
 
-		write_logfile(registry, beta);
 		RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
 	}
 
@@ -150,9 +150,9 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		// this requires some gymnastics ...
 		std::vector<double> dummy = {0.0};
 		auto parameters = cart_prod(beta, dummy, lambda, mass);
-		for (std::size_t i=0; i<parameters.size(); i++) std::get<1>(parameters[i]) = std::get<0>(parameters[i]);
+		for (std::size_t i=0; i<parameters.size(); i++) 
+			std::get<1>(parameters[i]) = std::get<0>(parameters[i]);
 		
-		write_logfile(registry, beta);
 		RegularLatticeLoop<Phi4<double, double> >(registry, outbasedir, parameters, defaultfilter);
 	}
 
@@ -166,24 +166,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto D    = registry.Get<std::vector<double> >("mc.ini", ham, "D");
 		auto parameters = cart_prod(beta, J, D);
 		
-		write_logfile(registry, beta);
 		RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
-
-
-
-
-	else if (startswith(ham, "AshkinTeller"))
-	{
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-		auto K    = registry.Get<std::vector<double> >("mc.ini", ham, "K");
-		auto parameters = cart_prod(beta, J, K);
-		
-		write_logfile(registry, beta);
-		RegularLatticeLoop<AshkinTeller<int>>(registry, outbasedir, parameters, defaultfilter);
-	}
-
 
 
 
@@ -194,8 +178,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto aniso    = registry.Get<std::vector<double>>("mc.ini", ham, "aniso");
 		auto parameters = cart_prod(beta, aniso, extfield);
 		
-		write_logfile(registry, beta);
-		RegularLatticeLoop<XXZAntiferro<double, double> >(registry, outbasedir, parameters, defaultfilter);
+		RegularLatticeLoop<XXZAntiferro<double>>(registry, outbasedir, parameters, defaultfilter);
 	}
 
 
@@ -209,8 +192,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto singleaniso = registry.Get<std::vector<double>>("mc.ini", ham, "singleaniso");
 		auto parameters = cart_prod(beta, extfield, aniso, singleaniso);
 
-		write_logfile(registry, extfield);
-		RegularLatticeLoop<XXZAntiferroSingleAniso<double,double> >(registry, outbasedir, parameters, xxzfilter);
+		RegularLatticeLoop<XXZAntiferroSingleAniso<double>>(registry, outbasedir, parameters, xxzfilter);
 	}
 
 
@@ -245,9 +227,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		// Typedefs
 		typedef EdwardsAndersonIsing<int> Hamiltonian;
-
 		typedef RegularRandomBond<GaussianPDF> Lattice;
-        	//typedef RegularRandomBond<BimodalPDF> Lattice;
+        //typedef RegularRandomBond<BimodalPDF> Lattice;
 
 		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTripleType;
 		typedef typename ParameterTripleType::value_type ParameterType;
@@ -283,7 +264,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		}
 		sched.start(); // run!
 	}
-
 
 
 
@@ -358,11 +338,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			sched.start();
 		}
 	}
-
-
-
-
-
 
 
 
@@ -454,6 +429,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 int main()
 {
+
     std::cout<<"MARQOV Copyright (C) 2020-2021, The MARQOV Project contributors"<<std::endl;
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;
     std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;

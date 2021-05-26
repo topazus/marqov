@@ -50,11 +50,11 @@ namespace MARQOV
     template <class Hamiltonian, class Lattice>
     template <class StateSpace, class M, class RNGType>
     int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, 
-    										const Lattice& grid, 
-										StateSpace& statespace, 
-										M& metro, RNGCache<RNGType>& rng, 
-										double beta, 
-										int rsite)
+    											const Lattice& grid, 
+												StateSpace& statespace, 
+												M& metro, RNGCache<RNGType>& rng, 
+												double beta, 
+												int rsite)
     {
         static_assert(Is_Container<decltype(std::declval<Hamiltonian>().interactions)>::value, "[MARQOV::Metropolis] COMPILATION FAILED: interactions are not a container.");
         static_assert(Is_Container<decltype(std::declval<Hamiltonian>().onsite)>::value, "[MARQOV::Metropolis] COMPILATION FAILED: onsite terms are not a container.");
