@@ -56,27 +56,35 @@ namespace MARQOV
 												double beta, 
 												int rsite)
     {
-        static_assert(Is_Container<decltype(std::declval<Hamiltonian>().interactions)>::value, "[MARQOV::Metropolis] COMPILATION FAILED: interactions are not a container.");
-        static_assert(Is_Container<decltype(std::declval<Hamiltonian>().onsite)>::value, "[MARQOV::Metropolis] COMPILATION FAILED: onsite terms are not a container.");
-        static_assert(Is_Container<decltype(std::declval<Hamiltonian>().multisite)>::value, "[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
+        static_assert(Is_Container<decltype(std::declval<Hamiltonian>().interactions)>::value, 
+			"[MARQOV::Metropolis] COMPILATION FAILED: interactions are not a container.");
+        static_assert(Is_Container<decltype(std::declval<Hamiltonian>().onsite)>::value, 
+			"[MARQOV::Metropolis] COMPILATION FAILED: onsite terms are not a container.");
+        static_assert(Is_Container<decltype(std::declval<Hamiltonian>().multisite)>::value, 
+			"[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
+
 		typedef typename Hamiltonian::StateVector StateVector;
+		typedef StateVector NbrType;
+		typedef typename std::remove_cv<decltype(ham.interactions.size())>::type InteractionSizeType;
         
-		// old state vector at rsite
+		// old state vector at index rsite
 		StateVector& svold = statespace[rsite];
 		// propose new configuration
 		StateVector svnew = metro.newsv(svold);
 		        
 		// interaction part
 		double interactionenergydiff = 0;
-		for (typename std::remove_cv<decltype(ham.interactions.size())>::type a=0; a < ham.interactions.size(); ++a)
+		for (InteractionSizeType a=0; a<ham.interactions.size(); a++)
 		{
-			typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
-			typedef decltype(callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
-			typedef typename Promote_Array<InteractionType, BondType>::CommonArray CommonArray;
+
+			const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
+			const auto bnds = getbnds<Lattice>(grid, a, rsite);
+
+//			typedef decltype(nbr_contrib<Lattice>(grid, a, rsite, 0, statespace[0])) BondType;
+			typedef std::array<int,1> BondType;
+			typedef typename Promote_Array<NbrType, BondType>::CommonArray CommonArray;
 			            
-			auto nbrs = getnbrs<Lattice>(grid, a, rsite);
-			            
-			CommonArray averagevector = {0};
+			CommonArray neighbourhood = {0};
             
 			// sum over neighbours
 			for (std::size_t i = 0; i < nbrs.size(); ++i)
@@ -84,14 +92,14 @@ namespace MARQOV
 				// index of the neighbour
 				auto idx = nbrs[i];
 				                
-				// configuration of the neighbour
+				// configuration of the neighbour after applying the interaction
 				auto nbr = ham.interactions[a]->get(statespace[idx]);
 				                
-				// add neighbours (also accounting for bond strength if available)
-				averagevector = averagevector + MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
+				// sum up contributions from neighbourbood
+				neighbourhood = neighbourhood + nbr_contrib<Lattice>(nbr, bnds[i]);
 			}
 
-			interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
+//			interactionenergydiff += ham.interactions[a]->J * (dot(svnew-svold, neighbourhood));
 		}
         
         

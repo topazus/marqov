@@ -52,17 +52,17 @@ using std::ofstream;
 
 
 // Hamiltonians
-#include "hamiltonian/Heisenberg.h"
+//#include "hamiltonian/Heisenberg.h"
 #include "hamiltonian/Ising.h"
-#include "hamiltonian/Phi4.h"
-#include "hamiltonian/BlumeCapel.h"
-#include "hamiltonian/XXZAntiferro.h"
-#include "hamiltonian/XXZAntiferroSingleAniso.h"
-#include "hamiltonian/AshkinTeller.h"
-#include "hamiltonian/EdwardsAndersonIsing.h"
+//#include "hamiltonian/Phi4.h"
+//#include "hamiltonian/BlumeCapel.h"
+//#include "hamiltonian/XXZAntiferro.h"
+//#include "hamiltonian/XXZAntiferroSingleAniso.h"
+//#include "hamiltonian/AshkinTeller.h"
+//#include "hamiltonian/EdwardsAndersonIsing.h"
 //#include "hamiltonian/Ssh.h" // seperate branch
-#include "hamiltonian/BlumeCapelBipartite.h"
-#include "hamiltonian/AshkinTeller.h"
+//#include "hamiltonian/BlumeCapelBipartite.h"
+//#include "hamiltonian/AshkinTeller.h"
 
 using namespace MARQOV;
 
@@ -114,7 +114,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
  		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
 
-
+/*
 
 	else if (ham == "AshkinTeller")
 	{
@@ -420,6 +420,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		}
 		sched.start();
 	}
+	*/
 }
 
 
