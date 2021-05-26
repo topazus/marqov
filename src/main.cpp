@@ -113,18 +113,18 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
  		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
-//
-//
-//	else if (ham == "AshkinTeller")
-//	{
-//		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-//		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-//		auto K    = registry.Get<std::vector<double> >("mc.ini", ham, "K");
-//		auto parameters = cart_prod(beta, J, K);
-//
-//		RegularLatticeLoop<AshkinTeller<int> >(registry, outbasedir, parameters, defaultfilter);
-//	}
 
+
+
+	else if (ham == "AshkinTeller")
+	{
+		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+		auto K    = registry.Get<std::vector<double> >("mc.ini", ham, "K");
+		auto parameters = cart_prod(beta, J, K);
+
+		RegularLatticeLoop<AshkinTeller<int> >(registry, outbasedir, parameters, defaultfilter);
+	}
 
 
 
@@ -227,9 +227,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		// Typedefs
 		typedef EdwardsAndersonIsing<int> Hamiltonian;
-
 		typedef RegularRandomBond<GaussianPDF> Lattice;
-        	//typedef RegularRandomBond<BimodalPDF> Lattice;
+        //typedef RegularRandomBond<BimodalPDF> Lattice;
 
 		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTripleType;
 		typedef typename ParameterTripleType::value_type ParameterType;
