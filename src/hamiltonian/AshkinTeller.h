@@ -208,7 +208,7 @@ namespace MARQOV
 			void draw(RNG& rng)	{ rcolor = rng.integer(3); }
 
 
-			double coupling(int pos1, int pos2)
+			double coupling(int pos1, int pos2) const
 			{
 				double retval = 0.0;
 				const auto sv1 = statespace[pos1];

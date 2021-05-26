@@ -24,18 +24,22 @@
 
 #include "XXZAntiferro.h"
 
-/** Single-site anistropic term for the XXZ model */
+
+/** Single-site anistropic term for the XXZ model
+ * @tparam StateVector the type of the state vectors 
+ */
 template <class StateVector>
 class XXZAntiferro_onsiteaniso : public OnSite<StateVector, double>
 {
 	public:
 
-		double D;
+		double D; ///< coupling strength of the anisotropic term
 
-		XXZAntiferro_onsiteaniso(double myD) : D(myD)
-		{
-			this->h = D;
-		}
+		/** Constructor of the single-site anistropic term for the XXZ model
+		*
+		* @param D coupling strength of the anisotropic term
+		*/
+		XXZAntiferro_onsiteaniso(double D) : D(D) {this->h = D;}
 		double get (const StateVector& phi) {return pow(phi[2],2);};
 };
 
@@ -43,6 +47,10 @@ class XXZAntiferro_onsiteaniso : public OnSite<StateVector, double>
 
 /** Hamiltonian of the antiferromagnetic XXZ O(3) model with an additional single-site anisotropy.
   * see XXZAntiferr.h for more documentation
+  * @tparam SpinType type in which the spins are stored
+  * @param Delta uniaxial exchange anisotropy
+  * @param H external field strength
+  * @param D single-ion anisotropy
   */
 template <typename SpinType>
 class XXZAntiferroSingleAniso
@@ -69,6 +77,13 @@ class XXZAntiferroSingleAniso
         std::vector<OnSite<StateVector, double>*> onsite;
         std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
+		/** Constructor for the Hamiltonian of the antiferromagnetic XXZ O(3) model with 
+		  * an additional single-site anisotropy.
+		  *
+		  * @param H external field strength 
+		  * @param Delta uniaxial exchange anisotropy
+		  * @param D single-ion anisotropy
+		  */
 		XXZAntiferroSingleAniso(double H, double Delta, double D) : Delta(Delta), H(H), D(D), name("XXZAntiferroSingleAniso")
 		{
             onsite.push_back(new XXZAntiferro_extfield<StateVector>(H));

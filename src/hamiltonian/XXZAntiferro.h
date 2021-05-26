@@ -23,14 +23,14 @@ class XXZAntiferroStaggeredMagZ
 			const int N = grid.size();
 			const int L = grid.len;
 
-			if ((L+1) % 2 == 0) cout << "Error: Lattice size must be a multiple of two!" << endl; // TODO
+			if ((L+1) % 2 == 0) cout << "[MARQOV] Error: Lattice size must be a multiple of two!" << endl; // TODO
 
 			double magA = 0;
 			double magB = 0;
 
 			if (grid.dim == 2)
 			{
-				cout << "Error: This is not implemented!" << endl; // TODO
+				cout << "[MARQOV] Error: This is not implemented!" << endl; // TODO
 			}
 
 			if (grid.dim == 3)
@@ -85,7 +85,7 @@ class XXZAntiferroStaggeredMagXY
 
 			if (grid.dim == 2)
 			{
-				cout << "Error: This is not implemented!" << endl; // TODO
+				cout << "[MARQOV] Error: This is not implemented!" << endl; // TODO
 			}
 
 			if (grid.dim == 3)
@@ -171,12 +171,18 @@ class XXZAntiferro_interaction
 
 /** Anisotropic external field.
  * The field only acts along the z-direction
+ *
+ * @tparam StateVector the type of the state vectors
  */
 template <class StateVector>
 class XXZAntiferro_extfield : public OnSite<StateVector, double>
 {
 	public:
         const double& h;
+		/** Constructor of anisotropic external field term
+		*
+		* @param H the coupling constant of the field in z-direction
+		*/
 		XXZAntiferro_extfield(const double& H) : h(H) {}
 		double get (const StateVector& phi) {return phi[2];};
 };
@@ -186,7 +192,6 @@ class XXZAntiferro_extfield : public OnSite<StateVector, double>
 /** Hamiltonian of the antiferromagnetic XXZ O(3) model
   * 
   * @tparam SpinType the type in which to store the vector-valued magnetization values.
-  * @tparam CouplingType the type in which the coupling of the on-site term would be stored (if there was one)
   */
 template <typename SpinType>
 class XXZAntiferro

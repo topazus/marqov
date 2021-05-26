@@ -282,6 +282,7 @@ public:
 
 
 
+/** Hamiltonian for a Edwards-Anderson spin glass */
 template <typename SpinType = int>
 class EdwardsAndersonIsing
 {

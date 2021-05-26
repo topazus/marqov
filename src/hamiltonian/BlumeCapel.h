@@ -162,7 +162,7 @@ namespace MARQOV
 			*
 			* @note For this model, only clusters on the subset of +1/-1 spins are created. Spin-0 site are left untouched. The update will hence not be ergodic!
 			*/
-			double coupling(int pos1, int pos2)
+			double coupling(int pos1, int pos2) const
 			{
 				const SpinType s1 = statespace[pos1][0];
 				const SpinType s2 = statespace[pos2][0];
@@ -174,7 +174,7 @@ namespace MARQOV
 
 
 			/** Specifies how a spin flip is performed */
-			void flip(StateVector& sv) {sv[0] *= -1;}
+			void flip(StateVector& sv) const {sv[0] *= -1;}
 
 	};
 }

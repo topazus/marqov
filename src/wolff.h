@@ -20,11 +20,12 @@
 #define WOLFF_H
 #include <vector>
 #include <cmath>
+#include "embedder.h"
 
 namespace MARQOV
 {
     /**
-     * This class serves as an entry poi8nt for easily defining your own
+     * This class serves as an entry point for easily defining your own
      * specializations of the Wolff Algorithm of your Hamiltonians.
      * To that end it has the two prototypical template parameters:
      * @tparam Hamiltonian The Hamiltonian that the Wolff algo will use.

@@ -6,3 +6,6 @@ log/
 src/build
 *.swp
 a.out
+doc/doxgen/
+doc/_build/
+

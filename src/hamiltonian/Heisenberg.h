@@ -158,7 +158,7 @@ namespace MARQOV
 
 			const Hamiltonian& ham;
 			const Lattice& lat;
-			StateSpace& statespace;
+			const StateSpace& statespace;
 
 			std::array<SpinType,SymD> rdir;
 
@@ -174,9 +174,9 @@ namespace MARQOV
 
 			/** Set new embedding variable.
 			*
-			* Typically, this function is executed once before every cluster update. The random variable
-			* can be drawn randomly (for which an RNG is provided), but of course can also follow some
-			* sequential scheme.
+			* Typically, this function is executed once before every cluster update. The variable
+			* can be drawn randomly (for which case an RNG is provided), but of course can also follow
+			* some sequential scheme.
 			*
 			* @tparam RNG the type of the random number generator
 			* @param rng reference to the random number generator
@@ -192,7 +192,7 @@ namespace MARQOV
 			*
 			* @return The scalar Wolff coupling (a double)
 			*/
-			double coupling(int pos1, int pos2)
+			double coupling(int pos1, int pos2) const
 			{
 				return dot(statespace[pos1], rdir) * dot(statespace[pos2], rdir);
 			}
