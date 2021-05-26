@@ -103,11 +103,8 @@ class AshkinTeller_Initializer
 
 /**
  * Three-Color Ashkin-Teller Hamiltonian
- *
- * @tparam SpinType the type in which to store the binary magnetization values.
  */
 
-template <typename SpinType = int>
 class AshkinTeller
 {
 	public:
@@ -123,7 +120,7 @@ class AshkinTeller
 
 		//  ---- Definitions  -----
 
-		typedef std::array<SpinType, SymD> StateVector;
+		typedef std::array<int, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
 
@@ -187,10 +184,9 @@ namespace MARQOV
 {
 
 	template <class Lattice>
-//	template <class SpinType, class CouplingType, class Lattice>
-	class Embedder<AshkinTeller<int>,Lattice>
+	class Embedder<AshkinTeller,Lattice>
 	{
-		typedef AshkinTeller<int> Hamiltonian;
+		typedef AshkinTeller Hamiltonian;
 		typedef typename Hamiltonian::StateVector StateVector;
 		typedef StateVector* StateSpace;
 		constexpr static int SymD = Hamiltonian::SymD;
@@ -199,7 +195,7 @@ namespace MARQOV
 
 			const Hamiltonian& ham;
 			const Lattice& lat;
-			StateSpace& statespace;
+			const StateSpace& statespace;
 
 			int rcolor;
 
@@ -245,16 +241,16 @@ namespace MARQOV
 	 * @tparam Lattice type of the lattice
 	 */
 	template <class Lattice>
-	struct Metropolis<AshkinTeller<int>, Lattice>
+	struct Metropolis<AshkinTeller, Lattice>
 	{
 
 		// some typedefs
-		typedef typename AshkinTeller<int>::StateVector StateVector;
+		typedef typename AshkinTeller::StateVector StateVector;
 		typedef int ReducedStateVector;
 
 
 		// coupling of the embedded Ising model
-		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, AshkinTeller<int>& ham)
+		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, AshkinTeller& ham)
 		{
 			double retval = 0.0;
 			switch (color)
@@ -287,7 +283,7 @@ namespace MARQOV
 	
 		// the actual Metropolis move attempt
 		template <class StateSpace, class M, class RNG>
-		static inline int move(AshkinTeller<int>& ham, 
+		static inline int move(AshkinTeller& ham, 
 						   Lattice& grid, 
 						   StateSpace& statespace, 
 						   M& metro, 

@@ -349,7 +349,7 @@ namespace MARQOV
 
 	/** Specialization of the Metropolis algorithm for an Ising spin glass.
 	  * Identical to the specialization for the regular Ising model in "ising.h"
-	  * for further details, see "metropolis.h"
+	  * @see "metropolis.h"
 	  */
 	template <class Lattice>
 	struct Metropolis<EdwardsAndersonIsing<int>, Lattice>

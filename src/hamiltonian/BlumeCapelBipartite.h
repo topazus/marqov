@@ -30,19 +30,7 @@
 
 // ...
 
-// ----------------------------------------------------------------------
-
-template <class StateVector>
-class BlumeCapelBipartite_interaction : public Interaction<StateVector> 
-{
-	public:
-		BlumeCapelBipartite_interaction(double J)
-		{
-			this->J = J;
-		}
-		StateVector get (const StateVector& phi) {return phi;};
-};
-
+// ------------------------------ HAMILTONIAN ---------------------------
 
 template <class StateVector>
 class BlumeCapelBipartite_onsite
@@ -113,13 +101,12 @@ class BlumeCapelBipartite
 
 		//  ----  Hamiltonian terms  ----
         
-        std::vector<BlumeCapelBipartite_interaction<StateVector>*> interactions;
+        std::array<Standard_Interaction<StateVector>*,1> interactions = {new Standard_Interaction<StateVector>(J)};
         std::array<BlumeCapelBipartite_onsite<StateVector>*, 2> onsite = {new BlumeCapelBipartite_onsite<StateVector>(DA), new BlumeCapelBipartite_onsite<StateVector>(DB)};
         std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 	
 		BlumeCapelBipartite(double J, double DA, double DB) : J(J), DA(DA), DB(DB), name("BlumeCapelBipartite"), observables(obs_m)
 		{
-            interactions.push_back(new BlumeCapelBipartite_interaction<StateVector>(J));
 		}
 		
 		~BlumeCapelBipartite(){delete interactions[0]; delete onsite[0]; delete onsite[1];}

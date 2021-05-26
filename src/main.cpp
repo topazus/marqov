@@ -123,7 +123,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto K    = registry.Get<std::vector<double> >("mc.ini", ham, "K");
 		auto parameters = cart_prod(beta, J, K);
 
-		RegularLatticeLoop<AshkinTeller<int> >(registry, outbasedir, parameters, defaultfilter);
+		RegularLatticeLoop<AshkinTeller>(registry, outbasedir, parameters, defaultfilter);
 	}
 
 
