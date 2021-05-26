@@ -146,7 +146,6 @@ namespace MARQOV
 	* @tparam CouplingType the type of the coupling of the on-site term (in case there is one)
 	*/
 
-
 	template <class SpinType, class CouplingType, class Lattice>
 	class Embedder<Heisenberg<SpinType,CouplingType>,Lattice>
 	{
@@ -183,10 +182,7 @@ namespace MARQOV
 			* @param rng reference to the random number generator
 			*/
 			template <class RNG>
-			void draw(RNG& rng)
-			{
-				rdir = rnddir<RNG, double, SymD>(rng);
-			}
+			void draw(RNG& rng)	{rdir = rnddir<RNG, double, SymD>(rng);}
 
 
 			/** Computes the Wolff coupling when attempting to add a spin to the cluster

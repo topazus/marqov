@@ -115,4 +115,69 @@ class BlumeCapel
 			}
 		}
 };
+
+
+
+
+// ------------------------------ SPECIALIZATIONS ---------------------------
+
+namespace MARQOV
+{
+	/** Specialization of the Embedding class for the Blume Capel model */
+
+	template <class SpinType, class Lattice>
+	class Embedder<BlumeCapel<SpinType>,Lattice>
+	{
+		typedef BlumeCapel<SpinType> Hamiltonian;
+		typedef typename Hamiltonian::StateVector StateVector;
+		typedef StateVector* StateSpace;
+
+		private:
+			const Hamiltonian& ham;
+			const Lattice& lat;
+			StateSpace& statespace;
+
+		public:
+			/** Constructs a Blume Capel embedding object.
+			 *
+			 * @param ham The corresponding Hamiltonian
+			 * @param lat The corresponding lattice
+			 * @param statespace The statespace of the simulation
+			 */
+			Embedder(const Hamiltonian& ham, const Lattice& lat, StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
+
+
+			/** Set new embedding variable.
+			  * @note For this specific model this is not necessary, as the embedding is fixed
+			  */
+			template <class RNG>
+			void draw(RNG& rng) { } // nothing to draw 
+
+
+			/** Computes the Wolff coupling when attempting to add a spin to the cluster
+			*
+			* @param pos1 The position (index) of the current state vector (which is already in the cluster)
+			* @param pos2 The position (index) of a neighbour being checked whether it will become part of the cluster as well
+			* @return The scalar Wolff coupling (a double)
+			*
+			* @note For this model, only clusters on the subset of +1/-1 spins are created. Spin-0 site are left untouched. The update will hence not be ergodic!
+			*/
+			double coupling(int pos1, int pos2)
+			{
+				const SpinType s1 = statespace[pos1][0];
+				const SpinType s2 = statespace[pos2][0];
+
+				if (s1 == 0) return 0.0; // no cluster if seed state is zero
+				if (s1 == s2) return 0.0;
+				else return -1.0;
+			}
+
+
+			/** Specifies how a spin flip is performed */
+			void flip(StateVector& sv) {sv[0] *= -1;}
+
+	};
+}
+
+
 #endif
