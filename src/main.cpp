@@ -53,16 +53,15 @@ using std::ofstream;
 
 // Hamiltonians
 #include "hamiltonian/Heisenberg.h"
-//#include "hamiltonian/Ising.h"
-//#include "hamiltonian/Phi4.h"
-//#include "hamiltonian/BlumeCapel.h"
-//#include "hamiltonian/XXZAntiferro.h"
-//#include "hamiltonian/XXZAntiferroSingleAniso.h"
-//#include "hamiltonian/AshkinTeller.h"
-//#include "hamiltonian/EdwardsAndersonIsing.h"
+#include "hamiltonian/Ising.h"
+#include "hamiltonian/Phi4.h"
+#include "hamiltonian/BlumeCapel.h"
+#include "hamiltonian/XXZAntiferro.h"
+#include "hamiltonian/XXZAntiferroSingleAniso.h"
+#include "hamiltonian/AshkinTeller.h"
+#include "hamiltonian/EdwardsAndersonIsing.h"
 //#include "hamiltonian/Ssh.h" // seperate branch
-//#include "hamiltonian/BlumeCapelBipartite.h"
-//#include "hamiltonian/AshkinTeller.h"
+#include "hamiltonian/BlumeCapelBipartite.h"
 
 using namespace MARQOV;
 
@@ -104,7 +103,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	// ----------------- select simulation ------------------
 
 
-/*
 
 	if (ham == "Ising")
 	{
@@ -126,18 +124,16 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		RegularLatticeLoop<AshkinTeller>(registry, outbasedir, parameters, defaultfilter);
 	}
 
-*/
 
-//	else if (ham == "Heisenberg")
-//	{
+	else if (ham == "Heisenberg")
+	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
 		auto parameters = cart_prod(beta, J);
 
 		RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
-//	}
+	}
 
-/*
 
 
 	else if (ham == "Phi4")
@@ -420,7 +416,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		}
 		sched.start();
 	}
-	*/
 }
 
 
