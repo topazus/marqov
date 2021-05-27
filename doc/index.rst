@@ -3,6 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. default-domain:: cpp
+.. highlight:: cpp
+
 Welcome to Marqov's documentation!
 ========================================
 Table of Contents
