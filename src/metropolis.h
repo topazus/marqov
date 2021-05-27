@@ -92,6 +92,24 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
 	return neighbourhood;
 }
 
+template <class Lattice, class Hamiltonian, class StateSpace>
+typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid, 
+											  const Hamiltonian& ham, 
+											  const StateSpace& statespace, 
+											  int a, 
+											  int rsite, 
+											  std::false_type, 
+											  std::false_type) 
+{
+	cout << "[MARQOV] Error: The lattice does not provide the following function: nbrs" << endl;
+	cout << "In order to use the general Metropolis algorithm, this function must be implemented" << endl;
+	cout << "Alternatively, you can write you own specialization of the Metropolis algorithm" << endl;
+	exit(0);
+}
+
+
+
+
 /**
  * A class to encapsulate the Metropolis update.
  * Using the power of partial template class specializations it is possible to
@@ -128,9 +146,11 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
         static_assert(Is_Container<decltype(std::declval<Hamiltonian>().multisite)>::value, 
 			"[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
 
+		// definitions
 		typedef typename Hamiltonian::StateVector StateVector;
-		typedef StateVector NbrType;
 		typedef typename std::remove_cv<decltype(ham.interactions.size())>::type InteractionSizeType;
+		typedef typename std::remove_cv<decltype(ham.onsite.size())>::type OnSiteSizeType;
+		typedef typename std::remove_cv<decltype(ham.multisite.size())>::type FlexSizeType; 
 		typedef typename has_nbrs<Lattice>::type HasNbrs;
 		typedef typename has_bonds<Lattice>::type HasBnds;
         
@@ -139,7 +159,8 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
 		// propose new configuration
 		StateVector svnew = metro.newsv(svold);
 		        
-		// interaction part
+
+		// I. interaction part
 		double interactionenergydiff = 0;
 		for (InteractionSizeType a=0; a<ham.interactions.size(); a++)
 		{
@@ -151,12 +172,12 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
 		}
         
         
-		// onsite energy part
+		// II. onsite energy part
 		auto terms = get_terms<Lattice>(grid, rsite);
 		if (terms[0] == -1) terms = arange(0, ham.onsite.size());
 		
 		double onsiteenergydiff = 0;
-		for (typename std::remove_cv<decltype(ham.onsite.size())>::type b=0; b < terms.size(); ++b)
+		for (OnSiteSizeType b=0; b<terms.size(); b++)
 		{
 			// select on-site term
 			const int tidx = terms[b]; 
@@ -168,9 +189,10 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
 			onsiteenergydiff += dot(ham.onsite[tidx]->h, diff);
 		}
         
-		// flex term energy
+
+		// III. flex term energy
 		double flexenergydiff = 0;
-		for (typename std::remove_cv<decltype(ham.multisite.size())>::type c = 0; c < ham.multisite.size(); ++c)
+		for (FlexSizeType c=0; c<ham.multisite.size(); c++)
 		{
 			auto nbrs = getflexnbrs<Lattice>(grid, c, rsite);
 			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace, grid);

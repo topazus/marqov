@@ -116,10 +116,11 @@ class RegularHypercubic
 		}
 
 		// only for debug, delete me later
-		std::vector<double> bnds(const int alpha, const int i) const
-		{
-			return {1,1,1,1};
-		}
+//		std::vector<double> bnds(const int alpha, const int i) const
+//		{
+//			return {1,1,1,1};
+//		}
+
 		std::size_t size() const {return npoints;}
 };
 
