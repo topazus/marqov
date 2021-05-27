@@ -37,47 +37,7 @@ namespace MARQOV
 		decltype( std::declval<Lattice>().bnds(std::declval<int>(), std::declval<int>()) ) 
 		>> : std::true_type {};
     
-    
-    
-	// what are the input parameters:
-	// a: bond family (not yet implemented)
-	// i: site to be looked at
-	// j: j-th neighbour of i (encodes the site to which the bond goes)
 	
-	
-	// there are three possibilities
-	
-	//    nbr  |   cpl                      return type
-	// -----------------                 ----------------
-	//  scalar   scalar                     -> scalar
-	//  vector   vector  (same length!)	-> vector
-	//  vector   scalar 				-> vector
-	
-
-	// note also that "nbr" is always a "statvector" (std::array), 
-	// whereas "cpl" can be anything (typically though: int, double, std::vector)
-	
-	template <class NbrType, class BndType>
-	inline auto nbr_contrib_helper(NbrType nbr, BndType bnd, std::true_type)
-	{
-		return mult(bnd, nbr);
-	}
-	
-	template <class NbrType, class BndType>
-	inline auto nbr_contrib_helper(NbrType nbr, BndType bnd, std::false_type)
-	{
-		return nbr;
-	}
-
-	template <class Lattice, class NbrType, class BndType>
-	inline auto nbr_contrib(NbrType nbr, BndType bnd)
-	{
-		return nbr_contrib_helper(nbr, bnd, typename has_bonds<Lattice>::type());
-	}
-	
-
-
-
 	/**
      * Promote_Array utility class.
      * 

@@ -30,7 +30,13 @@ namespace MARQOV
 
 
 template <class Lattice, class Hamiltonian, class StateSpace>
-typename Hamiltonian::StateVector nbrhoodloop(Lattice grid, Hamiltonian ham, StateSpace statespace, int a, int rsite, std::true_type, std::true_type) 
+typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid, 
+											  const Hamiltonian& ham, 
+											  const StateSpace& statespace, 
+											  int a, 
+											  int rsite, 
+											  std::true_type, 
+											  std::true_type) 
 {
 	typedef typename Hamiltonian::StateVector StateVector;
 
@@ -56,7 +62,13 @@ typename Hamiltonian::StateVector nbrhoodloop(Lattice grid, Hamiltonian ham, Sta
 }
 
 template <class Lattice, class Hamiltonian, class StateSpace>
-typename Hamiltonian::StateVector nbrhoodloop(Lattice grid, Hamiltonian ham, StateSpace statespace, int a, int rsite, std::true_type, std::false_type) 
+typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid, 
+											  const Hamiltonian& ham, 
+											  const StateSpace& statespace, 
+											  int a, 
+											  int rsite, 
+											  std::true_type, 
+											  std::false_type) 
 {
 	typedef typename Hamiltonian::StateVector StateVector;
 
