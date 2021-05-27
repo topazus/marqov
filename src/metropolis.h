@@ -30,7 +30,7 @@ namespace MARQOV
 
 
 template <class Lattice, class Hamiltonian, class StateSpace>
-typename Hamiltonian::StateVector neighbourhoodloop(Lattice grid, Hamiltonian ham, StateSpace statespace, int a, int rsite, std::true_type, std::true_type) 
+typename Hamiltonian::StateVector nbrhoodloop(Lattice grid, Hamiltonian ham, StateSpace statespace, int a, int rsite, std::true_type, std::true_type) 
 {
 	typedef typename Hamiltonian::StateVector StateVector;
 
@@ -56,7 +56,7 @@ typename Hamiltonian::StateVector neighbourhoodloop(Lattice grid, Hamiltonian ha
 }
 
 template <class Lattice, class Hamiltonian, class StateSpace>
-typename Hamiltonian::StateVector neighbourhoodloop(Lattice grid, Hamiltonian ham, StateSpace statespace, int a, int rsite, std::true_type, std::false_type) 
+typename Hamiltonian::StateVector nbrhoodloop(Lattice grid, Hamiltonian ham, StateSpace statespace, int a, int rsite, std::true_type, std::false_type) 
 {
 	typedef typename Hamiltonian::StateVector StateVector;
 
@@ -119,6 +119,8 @@ typename Hamiltonian::StateVector neighbourhoodloop(Lattice grid, Hamiltonian ha
 		typedef typename Hamiltonian::StateVector StateVector;
 		typedef StateVector NbrType;
 		typedef typename std::remove_cv<decltype(ham.interactions.size())>::type InteractionSizeType;
+		typedef typename has_nbrs<Lattice>::type HasNbrs;
+		typedef typename has_bonds<Lattice>::type HasBnds;
         
 		// old state vector at index rsite
 		StateVector& svold = statespace[rsite];
@@ -129,9 +131,11 @@ typename Hamiltonian::StateVector neighbourhoodloop(Lattice grid, Hamiltonian ha
 		double interactionenergydiff = 0;
 		for (InteractionSizeType a=0; a<ham.interactions.size(); a++)
 		{
-			auto neighbourhood = neighbourhoodloop<Lattice,Hamiltonian,StateSpace>(grid, ham, statespace, a, rsite,  typename has_nbrs<Lattice>::type(), typename has_bonds<Lattice>::type());
+			// sum up neighbourhood contributions
+			auto nbrhood = nbrhoodloop<Lattice,Hamiltonian,StateSpace>(grid, ham, statespace, a, rsite, HasNbrs(), HasBnds());
 
-			interactionenergydiff += ham.interactions[a]->J * (dot(svnew-svold, neighbourhood));
+			// compute interaction energy difference
+			interactionenergydiff += ham.interactions[a]->J * (dot(svnew-svold, nbrhood));
 		}
         
         
