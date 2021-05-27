@@ -76,17 +76,20 @@ namespace MARQOV
 		>> : std::true_type {};
 	// in C++17 (which we don't use), this can be solved with void_t
 	
-	template <class Grid>
-	std::vector<int> get_terms_helper(const Grid& grid, int idx, std::false_type) {return {-1};}
-	
-	template <class Grid>
-	std::vector<int> get_terms_helper(const Grid& grid, int idx, std::true_type) {return grid.termselector(idx);}
-	
-	/** A helper to detect if the Hamiltonian has a has_trms function.
-     */
-	template <class Grid>
-	std::vector<int> get_terms(const Grid& grid, int idx) {	return get_terms_helper<Grid>(grid, idx, has_trms<Grid>{}); }
 
+
+
+	template <class Grid, class Hamiltonian>
+	std::vector<int> get_terms(const Grid& grid, const Hamiltonian& ham, int idx, std::false_type) 
+	{	
+		return arange(0, ham.onsite.size());
+	}
+
+	template <class Grid, class Hamiltonian>
+	std::vector<int> get_terms(const Grid& grid, const Hamiltonian& ham, int idx, std::true_type) 
+	{	
+		return grid.termselector(idx);
+	}
 
 
 

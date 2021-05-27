@@ -174,10 +174,12 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
         
         
 		// II. onsite energy part
-		auto terms = get_terms<Lattice>(grid, rsite);
-		if (terms[0] == -1) terms = arange(0, ham.onsite.size());
-		
 		double onsiteenergydiff = 0;
+
+		// find Hamiltonian terms associated to "rsite"
+		auto terms = get_terms<Lattice,Hamiltonian>(grid, ham, rsite, HasTrms());
+		
+		// loop over these terms
 		for (OnSiteSizeType b=0; b<terms.size(); b++)
 		{
 			// select on-site term
