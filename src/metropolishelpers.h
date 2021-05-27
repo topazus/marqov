@@ -23,17 +23,17 @@
 
 namespace MARQOV
 {
-    /** has_bonds utility function.
+    /** has_bnds utility function.
      * 
      * This function decays to a bool_type to denote whether a lattice provides
      * the getbond function.
      * @tparam L The lattice that we are querying.
      */
 	template<class L, class=void> 
-	struct has_bonds : std::false_type {};
+	struct has_bnds : std::false_type {};
 	
 	template<class Lattice> 
-	struct has_bonds<Lattice, MARQOV::detail::type_sink_t< 
+	struct has_bnds<Lattice, MARQOV::detail::type_sink_t< 
 		decltype( std::declval<Lattice>().bnds(std::declval<int>(), std::declval<int>()) ) 
 		>> : std::true_type {};
     
@@ -63,15 +63,15 @@ namespace MARQOV
 
 	// A helper to check whether the lattice provides a termselector method
 	/**
-     * has_terms utility class.
-     * This class tries to figure out whether there is a has_terms function.
+     * has_trms utility class.
+     * This class tries to figure out whether there is a has_trms function.
      * @tparam Grid the Grid which we check.
      */
 	template<class Grid , class = void> 
-	struct has_terms : std::false_type {};
+	struct has_trms : std::false_type {};
 	
 	template<class Grid>
-	struct has_terms<Grid, MARQOV::detail::type_sink_t<
+	struct has_trms<Grid, MARQOV::detail::type_sink_t<
 		decltype(std::declval<Grid>().termselector(std::declval<int>()))
 		>> : std::true_type {};
 	// in C++17 (which we don't use), this can be solved with void_t
@@ -82,10 +82,10 @@ namespace MARQOV
 	template <class Grid>
 	std::vector<int> get_terms_helper(const Grid& grid, int idx, std::true_type) {return grid.termselector(idx);}
 	
-	/** A helper to detect if the Hamiltonian has a has_terms function.
+	/** A helper to detect if the Hamiltonian has a has_trms function.
      */
 	template <class Grid>
-	std::vector<int> get_terms(const Grid& grid, int idx) {	return get_terms_helper<Grid>(grid, idx, has_terms<Grid>{}); }
+	std::vector<int> get_terms(const Grid& grid, int idx) {	return get_terms_helper<Grid>(grid, idx, has_trms<Grid>{}); }
 
 
 
@@ -208,7 +208,7 @@ namespace MARQOV
 	template <class Grid>
 	auto getbnds(const Grid& grid, int fam, int idx)
 	{
-		return getbnds_helper<Grid>(grid, fam, idx, has_bonds<Grid>{}); 
+		return getbnds_helper<Grid>(grid, fam, idx, has_bnds<Grid>{}); 
 	}
 
     /**

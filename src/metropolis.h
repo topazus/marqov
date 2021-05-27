@@ -152,7 +152,8 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
 		typedef typename std::remove_cv<decltype(ham.onsite.size())>::type OnSiteSizeType;
 		typedef typename std::remove_cv<decltype(ham.multisite.size())>::type FlexSizeType; 
 		typedef typename has_nbrs<Lattice>::type HasNbrs;
-		typedef typename has_bonds<Lattice>::type HasBnds;
+		typedef typename has_bnds<Lattice>::type HasBnds;
+		typedef typename has_trms<Lattice>::type HasTrms;
         
 		// old state vector at index rsite
 		StateVector& svold = statespace[rsite];
