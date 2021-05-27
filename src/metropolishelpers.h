@@ -60,7 +60,7 @@ namespace MARQOV
 	template <class NbrType, class BndType>
 	inline auto nbr_contrib_helper(NbrType nbr, BndType bnd, std::true_type)
 	{
-		return mult(nbr,bnd);
+		return mult(bnd, nbr);
 	}
 	
 	template <class NbrType, class BndType>
@@ -230,6 +230,8 @@ namespace MARQOV
 	template <class Grid>
 	auto getbnds_helper(const Grid& grid, int fam, int idx, std::false_type)
 	{
+		cout << "error" << endl;
+		exit(0);
 		return std::vector<int>{1,1,1,1};
 	}
 	

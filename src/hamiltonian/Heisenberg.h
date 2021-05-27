@@ -110,7 +110,7 @@ class Heisenberg
         {
             interactions.push_back(new Heisenberg_interaction<StateVector>(J));
         }
-		~Heisenberg() {delete interactions[0];}
+//		~Heisenberg() {delete interactions[0];} // fixme
 		
 
 		//  ----  Observables ----

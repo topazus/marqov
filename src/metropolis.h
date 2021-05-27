@@ -27,6 +27,59 @@
 
 namespace MARQOV
 {
+
+
+template <class Lattice, class Hamiltonian, class StateSpace>
+typename Hamiltonian::StateVector neighbourhoodloop(Lattice grid, Hamiltonian ham, StateSpace statespace, int a, int rsite, std::true_type, std::true_type) 
+{
+	typedef typename Hamiltonian::StateVector StateVector;
+
+	const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
+	const auto bnds = getbnds<Lattice>(grid, a, rsite);
+
+	StateVector neighbourhood = {0};
+
+	// sum over neighbours
+	for (std::size_t i=0; i<nbrs.size(); ++i)
+	{
+		// index of the neighbour
+		auto idx = nbrs[i];
+		                
+		// configuration of the neighbour after applying the interaction
+		auto nbr = ham.interactions[a]->get(statespace[idx]);
+		                
+		// sum up contributions from neighbourbood
+		neighbourhood = neighbourhood + mult(bnds[i], nbr);
+	}
+
+	return neighbourhood;
+}
+
+template <class Lattice, class Hamiltonian, class StateSpace>
+typename Hamiltonian::StateVector neighbourhoodloop(Lattice grid, Hamiltonian ham, StateSpace statespace, int a, int rsite, std::true_type, std::false_type) 
+{
+	typedef typename Hamiltonian::StateVector StateVector;
+
+	const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
+
+	StateVector neighbourhood = {0};
+
+	// sum over neighbours
+	for (std::size_t i=0; i<nbrs.size(); ++i)
+	{
+		// index of the neighbour
+		auto idx = nbrs[i];
+		                
+		// configuration of the neighbour after applying the interaction
+		auto nbr = ham.interactions[a]->get(statespace[idx]);
+		                
+		// sum up contributions from neighbourbood
+		neighbourhood = neighbourhood + nbr;
+	}
+
+	return neighbourhood;
+}
+
 /**
  * A class to encapsulate the Metropolis update.
  * Using the power of partial template class specializations it is possible to
@@ -76,26 +129,7 @@ namespace MARQOV
 		double interactionenergydiff = 0;
 		for (InteractionSizeType a=0; a<ham.interactions.size(); a++)
 		{
-			const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
-			const auto bnds = getbnds<Lattice>(grid, a, rsite);
-
-			typedef decltype(bnds[0]) BondType;
-			typedef typename Promote_Array<NbrType, BondType>::CommonArray CommonArray;
-			            
-			CommonArray neighbourhood = {0};
-
-			// sum over neighbours
-			for (std::size_t i=0; i<nbrs.size(); ++i)
-			{
-				// index of the neighbour
-				auto idx = nbrs[i];
-				                
-				// configuration of the neighbour after applying the interaction
-				auto nbr = ham.interactions[a]->get(statespace[idx]);
-				                
-				// sum up contributions from neighbourbood
-				neighbourhood = neighbourhood + nbr_contrib<Lattice>(nbr, bnds[i]);
-			}
+			auto neighbourhood = neighbourhoodloop<Lattice,Hamiltonian,StateSpace>(grid, ham, statespace, a, rsite,  typename has_nbrs<Lattice>::type(), typename has_bonds<Lattice>::type());
 
 			interactionenergydiff += ham.interactions[a]->J * (dot(svnew-svold, neighbourhood));
 		}
