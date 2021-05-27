@@ -76,18 +76,16 @@ namespace MARQOV
 		double interactionenergydiff = 0;
 		for (InteractionSizeType a=0; a<ham.interactions.size(); a++)
 		{
-
 			const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
 			const auto bnds = getbnds<Lattice>(grid, a, rsite);
 
-//			typedef decltype(nbr_contrib<Lattice>(grid, a, rsite, 0, statespace[0])) BondType;
-			typedef std::array<int,1> BondType;
+			typedef decltype(bnds[0]) BondType;
 			typedef typename Promote_Array<NbrType, BondType>::CommonArray CommonArray;
 			            
 			CommonArray neighbourhood = {0};
-            
+
 			// sum over neighbours
-			for (std::size_t i = 0; i < nbrs.size(); ++i)
+			for (std::size_t i=0; i<nbrs.size(); ++i)
 			{
 				// index of the neighbour
 				auto idx = nbrs[i];
@@ -99,7 +97,7 @@ namespace MARQOV
 				neighbourhood = neighbourhood + nbr_contrib<Lattice>(nbr, bnds[i]);
 			}
 
-//			interactionenergydiff += ham.interactions[a]->J * (dot(svnew-svold, neighbourhood));
+			interactionenergydiff += ham.interactions[a]->J * (dot(svnew-svold, neighbourhood));
 		}
         
         

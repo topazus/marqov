@@ -56,8 +56,7 @@ namespace MARQOV
 
 	// note also that "nbr" is always a "statvector" (std::array), 
 	// whereas "cpl" can be anything (typically though: int, double, std::vector)
-    
-    
+	
 	template <class NbrType, class BndType>
 	inline auto nbr_contrib_helper(NbrType nbr, BndType bnd, std::true_type)
 	{
@@ -69,7 +68,7 @@ namespace MARQOV
 	{
 		return nbr;
 	}
-	
+
 	template <class Lattice, class NbrType, class BndType>
 	inline auto nbr_contrib(NbrType nbr, BndType bnd)
 	{
