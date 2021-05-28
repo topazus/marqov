@@ -174,7 +174,7 @@ marqov_sphinx_docs:
       - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.physik.uni-wuerzburg.de/marqov/jupyter.git
       - rm jupyter/pymarqov/doc/conf.py
       - cd doc
-      - cp -rn jupyter/pymarqov/doc python
+      - cp -rn ../jupyter/pymarqov/doc python
       - echo "sys.path.insert(0, os.path.abspath('../jupyter/pymarqov/'))" >> conf.py
       - doxygen Doxyfile-marqov-breathe.cfg
       - make html
