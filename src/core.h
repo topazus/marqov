@@ -1103,24 +1103,6 @@ class Core : public RefType<Grid>
             std::cout <<"\n\n";
         }
 	private:
-        /** A Metropolis step.
-         * 
-         * This function dispatches the call for a metropolis step 
-         * to the Metropolis class.
-         * @see metropolis.h
-         * @param rsite the randomly chosen site for the update.
-         */
-		inline int metropolisstep(int rsite);
-
-        /** A step of the Wolff Cluster Algorithm.
-         * 
-         * The exact procedure how this type of update is performed
-		 * is determined by an Embedding class (see embedder.h)
-		 *
-         * @param rsite The random site where to start the cluster.
-         */
-		inline int wolffstep(int rsite);
-
 		double beta; ///< The inverse temperature.
 		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.
 		Config mcfg; ///< An instance of all our MARQOV related parameters.

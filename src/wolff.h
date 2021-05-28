@@ -101,12 +101,6 @@ namespace MARQOV
         }
         return clustersize;
     }
-    
-    template <class Grid, class Hamiltonian, template<class> class RefType>
-    inline int Core<Grid, Hamiltonian, RefType>::wolffstep(int rsite)
-    {
-        return Wolff<Hamiltonian, Grid>::move(this->ham, this->grid, this->statespace, this->rngcache, this->beta, rsite);
-    }
 };
 
 
