@@ -48,7 +48,7 @@ class DisorderType
 		std::size_t size() const {return npoints;}
 
 		inline int identify(int i) {return 0;};
-		inline std::vector<int> termselector(int sublattice){return {-1};}
+		inline std::vector<int> termselector(int sublattice) const {return {-1};}
 };
 
 /**

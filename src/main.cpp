@@ -56,6 +56,7 @@ using std::ofstream;
 //#include "hamiltonian/Ising.h"
 //#include "hamiltonian/Phi4.h"
 //#include "hamiltonian/BlumeCapel.h"
+#include "hamiltonian/BlumeEmeryGriffiths.h"
 //#include "hamiltonian/XXZAntiferro.h"
 //#include "hamiltonian/XXZAntiferroSingleAniso.h"
 //#include "hamiltonian/AshkinTeller.h"
@@ -103,9 +104,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	// ----------------- select simulation ------------------
 
-
 /*
-
 	if (ham == "Ising")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
@@ -126,18 +125,16 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		RegularLatticeLoop<AshkinTeller>(registry, outbasedir, parameters, defaultfilter);
 	}
 
-*/
 
-//	else if (ham == "Heisenberg")
-//	{
+	else if (ham == "Heisenberg")
+	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
 		auto parameters = cart_prod(beta, J);
 
 		RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
-//	}
+	}
 
-/*
 
 
 	else if (ham == "Phi4")
@@ -168,9 +165,20 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		
 		RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
+*/
 
+//	else if (ham == "BlumeEmeryGriffiths")
+//	{
+		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+		auto D    = registry.Get<std::vector<double> >("mc.ini", ham, "D");
+		auto K    = registry.Get<std::vector<double> >("mc.ini", ham, "K");
+		auto parameters = cart_prod(beta, J, D, K);
+		
+		RegularLatticeLoop<BlumeEmeryGriffiths<int>>(registry, outbasedir, parameters, defaultfilter);
+//	}
 
-
+/*
 	else if (ham == "XXZAntiferro")
 	{
 		auto beta     = registry.Get<std::vector<double>>("mc.ini", ham, "beta");
