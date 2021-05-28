@@ -37,6 +37,11 @@
 
 namespace MARQOV
 {
+    template <typename... Ts>
+    struct Tuple_Head_is_Ref : std::false_type {};
+    
+    template <typename L, class... Ts>
+    struct Tuple_Head_is_Ref<std::tuple<L&, Ts...> , Lattice> : std::true_type {};
     
     template <class Cont, class Tuple1, class Tuple2, std::size_t... I>
     constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple1&& t1, MARQOV::Config&& mc, std::mutex& mtx, Tuple2&& t2, std::index_sequence<I...> )
