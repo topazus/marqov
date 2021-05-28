@@ -36,15 +36,15 @@ namespace MARQOV
     template <class Hamiltonian, class Lattice>
     struct Wolff
     {
-        template <class RNG, class StateSpace>
-        static inline int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite);
+        template <class RNGType, class StateSpace>
+        static inline int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNGCache<RNGType>& rng, double beta, int rsite);
     };
     
 
 
     template <class Hamiltonian, class Lattice>
-    template <class RNG, class StateSpace>
-    int Wolff<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
+    template <class RNGType, class StateSpace>
+    int Wolff<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNGCache<RNGType>& rng, double beta, int rsite)
     {
 		// set up embedder
 		Embedder<Hamiltonian,Lattice> embd(ham,grid,statespace);
