@@ -71,9 +71,9 @@ class BiquadraticExchangeInteraction
 //class BiquadraticExchangeInteraction : public FlexTerm<StateSpace, StateVector>
 {
 
-	double k = 1;
 
 	public:
+		double k = 1;
 
 		BiquadraticExchangeInteraction(double k) : k(k) {}
 
@@ -93,11 +93,10 @@ class BiquadraticExchangeInteraction
 			{
 				auto idx = nbrs[i];
 				auto nbr = s[idx];
-				neighbourhood += mult(nbr,nbr);
+				neighbourhood = neighbourhood + dot(nbr,nbr);
 			}
 
-			auto svdiff = mult(svnew,svnew)-mult(svold,svold);
-
+			auto svdiff = dot(svnew,svnew)-dot(svold,svold);
 			return dot(svdiff, neighbourhood);
 		}
 };
@@ -128,8 +127,7 @@ class BlumeEmeryGriffiths
 
 		std::array<Standard_Interaction<StateVector>*, 1>    interactions = {new Standard_Interaction<StateVector>(J)};
 		std::array<Onsite_Quadratic<StateVector>*, 1>        onsite       = {new Onsite_Quadratic<StateVector>(D)};
-		std::array<BiquadraticExchangeInteraction<StateVector*,StateVector>,0> multisite = {};//new BiquadraticExchangeInteraction<StateVector*,StateVector>(K)};
-//		std::array<FlexTerm<StateVector*,  StateVector>*, 1> multisite = {new BiquadraticExchangeInteraction<StateVector*,StateVector>(K)};
+		std::array<BiquadraticExchangeInteraction<StateVector*,StateVector>*,1> multisite = {new BiquadraticExchangeInteraction<StateVector*,StateVector>(K)};
 	
 		BlumeEmeryGriffiths(double J, double D, double K) : J(J), D(D), K(K), name("BlumeCapel"), observables(obs_m) {}
 
