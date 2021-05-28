@@ -165,7 +165,7 @@ marqov_Bullseye_breathe:
 marqov_sphinx_docs:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-clang
     stage: docs
-    needs: ["marqov_Bullseye_breathe"]
+    needs: ["marqov_Bullseye_doxygen"]
     artifacts: 
       paths:
         - doc/*
