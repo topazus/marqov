@@ -163,7 +163,7 @@ marqov_Bullseye_breathe:
       - make html
 
 marqov_sphinx_docs:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-clang
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
     stage: docs
     needs: ["marqov_Bullseye_doxygen"]
     artifacts: 
