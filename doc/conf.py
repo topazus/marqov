@@ -68,3 +68,4 @@ if os.path.exists('./doxygen/xml'):
     breathe_projects = { "Marqov": "./doxygen/xml" }
 
     breathe_default_project = "Marqov"
+sys.path.insert(0, os.path.abspath('../jupyter/pymarqov/'))
