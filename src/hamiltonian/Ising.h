@@ -27,7 +27,6 @@
 #include <array>
 #include "../hamparts.h"
 #include "../obsparts.h"
-#include "../metropolis.h"
 #include "termcollection.h"
 
 
@@ -49,17 +48,9 @@ class IsingGenericVectorValuedObs
 		IsingGenericVectorValuedObs() : name("dummy"), desc("testing vector-valued observables ...") {}
 };
 
-// ----------------------------------------------------------------------
 
-template <class StateVector>
-class Ising_interaction
-{
-public:
-	Ising_interaction(const double& myJ) : J(myJ) {}
-	StateVector get (const StateVector& phi) {return phi;};
-    const double& J;
-};
 
+// ------------------------------ INITIALIZER ---------------------------
 
 template <class StateVector, class RNG>
 class Ising_Initializer
@@ -78,6 +69,9 @@ class Ising_Initializer
 		};
 };
 
+
+// ------------------------------ HAMILTONIAN ---------------------------
+
 /**
  * Ising Hamiltonian
  * This defines the Ising Hamiltonian. It only consists of a single part,
@@ -88,16 +82,24 @@ template <typename SpinType = int>
 class Ising
 {
 	public:
+		
+		//  ----  Parameters  ----
+
 		double J;
 		static constexpr int SymD = 1;
 		const std::string name;
+
+
+		//  ---- Definitions  -----
+
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
 
-        // instantiate interaction terms (requires pointers)
+
+		//  ----  Hamiltonian terms  ---- 
+
         std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
-//        std::array<Ising_interaction<StateVector>*, 1> interactions = {new Ising_interaction<StateVector>(J)};
         std::array<OnSite<StateVector, int>*, 0> onsite;
         std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
@@ -106,18 +108,19 @@ class Ising
 		{}
 		~Ising() {delete interactions[0];}
 
-		// instantiate and choose observables
+
+		//  ----  Observables ----
+
 		Magnetization  obs_m;
-		Energy<Ising>		 obs_e;
+		Energy<Ising>  obs_e;
 		MagFTComp      obs_fx;
 		MagFTComp      obs_fy;
 		IsingGenericVectorValuedObs dummy;
         decltype(std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy)) observables = {std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy)};
 
-// 		auto getobs()	{return std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy);}
 
+		//  ----  Initializer  ----
 
-		// initialize state space
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
@@ -128,35 +131,21 @@ class Ising
 			}
 		}
 
-
-		// using the Wolff cluster algorithm requires to implement
-		// the functions 'wolff_coupling' and 'wolff_flip'
-
-		template <class A = bool>
-		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a=0) const 
-		{
-			if (sv1[0] == sv2[0]) return 0.0;
-			else return -1.0;
-		}
-
-		template <class A = bool>
-		inline void wolff_flip(StateVector& sv, const A a=0) const 
-		{
-			sv[0] *= -1;
-		}
 };
 
 
 
-/* // comment out for debug
+
+// ------------------------------ SPECIALIZATIONS ---------------------------
+
+namespace MARQOV 
+{
 
 
-namespace MARQOV {
-
-    //Work around GCC Bug for specializations of things in namespaces:
-    //https://gcc.gnu.org/bugzilla/show_bug.cgi?id=56480
-    // still occurs on 6.4.0
-
+	/** Specialization of the Metropolis algorithm for the Ising model.
+	* The principle structure is identical to the general version of the algorithm
+	* See metropolis.h for details
+	*/
 	template <class Lattice>
 	struct Metropolis<Ising<int>, Lattice>
 	{
@@ -164,14 +153,14 @@ namespace MARQOV {
 	    static int move(const Ising<int>& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNG& rng, double beta, int rsite)
 	    {
 			typedef typename Ising<int>::StateVector StateVector;
-		    	// old state vector at rsite
+	    	// old state vector at rsite
 			StateVector& svold = statespace[rsite];
 			// propose new configuration
 			StateVector svnew = metro.newsv(svold);
 			
 			// interaction part
 			double interactionenergydiff = 0;
-			for(typename std::remove_cv<decltype(ham.Nalpha)> ::type a = 0; a < ham.Nalpha; ++a)
+			for(typename std::remove_cv<decltype(ham.interactions.size())>::type a=0; a<ham.interactions.size(); ++a)
 			{
 				auto nbrs = grid.nbrs(a, rsite);
 				typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
@@ -188,68 +177,62 @@ namespace MARQOV {
 				interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
 			}
 
-	    		// sum up energy differences
-	    		double dE 	= interactionenergydiff;
+	    	// sum up energy differences
+	    	double dE 	= interactionenergydiff;
 	
-	    		 // improve me: what about models with discrete statevectors where the acceptance probability should be
-	    		 // looked up in tables? -> specialized Metropolis routine for this case??
-	
-	    		int retval = 0;
-	    		if ( dE <= 0 )
-	    		{
-	    		    svold = svnew;
-	    		    retval = 1;
-	    		}
-	    		else if (rng.real() < exp(-beta*dE))
-	    		{
-	    		    svold = svnew;
-	    		    retval = 1;
-	    		}
-	    		return retval;
+	    	int retval = 0;
+	    	if ( dE <= 0 )
+	    	{
+	    	    svold = svnew;
+	    	    retval = 1;
+	    	}
+	    	else if (rng.real() < exp(-beta*dE))
+	    	{
+	    	    svold = svnew;
+	    	    retval = 1;
+	    	}
+	    	return retval;
 	    }
 	};
 
 
+	/** Specialization of the Wolff algorithm for the Ising model.
+	* The principle structure is identical to the general version of the algorithm
+	* See wolff.h for details
+	*/
 	template <class Lattice>
 	struct Wolff<Ising<int>, Lattice>
 	{
-		template <class DirType, class RNG, class StateSpace>
-		static inline int move(const Ising<int>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite, const DirType&)
-		{
-			typedef typename Ising<int>::StateVector StateVector;
-			// prepare stack
-			std::vector<int> cstack(grid.size(), 0);
-		
-			// add initial site and flip it
-			int q = 0;
-			cstack[q] = rsite;
-			const int val = statespace[rsite][0];
-			ham.wolff_flip(statespace[rsite]);
-			int clustersize = 1;
-		
-			// compute 'Wolff probability' 
-			const int a = 0; // plain Ising model has only one interaction term
-			const double coupling = ham.interactions[a]->J;
-			const double prob = -std::expm1(+2.0*beta*coupling);
-			
-			// loop over stack as long as non-empty
-			while (q>=0)
-			{
-				// extract last sv in stack
-				const int currentidx = cstack[q];
-				q--;
-			
-				// get its neighbours
-				const auto nbrs = grid.nbrs(a, currentidx);
-	
+		template <class RNG, class StateSpace>
+		static inline int move(const Ising<int>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
+		 {
+			// prepare stack and add seed
+            std::vector<int> cstack(grid.size(), 0);
+            int q = 0;
+            auto& seed = statespace[rsite];
+			const int val = seed[0];
+            cstack[q] = rsite;
+			seed[0] *= -1;
+            int clustersize = 1;
+            int current;
+				
+			const auto gcpl = ham.interactions[0]->J; 
+			const auto prob = -std::expm1(+2.0*beta*gcpl);
+
+			// work through stack
+            while (q>=0)
+            {
+                current = cstack[q];
+                q--;
+
 				// loop over neighbours
+				const auto nbrs = grid.nbrs(0, current);
 				for (std::size_t i = 0; i < nbrs.size(); ++i)
 				{
-					// extract corresponding sv
 					const auto currentnbr = nbrs[i];
-					StateVector& candidate = statespace[currentnbr];
-	
-					// test whether site is added to the cluster
+					auto& candidate = statespace[currentnbr];
+
+					// decide whether to add to cluster
 					if (candidate[0] == val)
 					{
 						if (rng.real() < prob)
@@ -257,19 +240,17 @@ namespace MARQOV {
 							q++;
 							cstack[q] = currentnbr;
 							clustersize++;
-							ham.wolff_flip(candidate);
+							candidate[0] *= -1;
 						}
 					}
 				}
 			}
-	
-		return clustersize;
-	    }
+			return clustersize;
+		}
 	};
 
 }
 
-*/
 
 
 #endif

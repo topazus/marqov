@@ -35,11 +35,9 @@ double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 	double avgclustersize = 0;
 	for (int j=0; j < mcfg.ncluster; j++)
 	{
-		const int rsite = rngcache.integer(this->grid.size());
+		const int seed = rngcache.integer(this->grid.size());
 
-		const auto rdir = rnddir<RNGCache<RNGType>, typename StateVector::value_type, SymD>(rngcache);
-
-		avgclustersize += wolffstep(rsite, rdir);
+		avgclustersize += wolffstep(seed);
 	}
 
 

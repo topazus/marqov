@@ -1114,13 +1114,12 @@ class Core : public RefType<Grid>
 
         /** A step of the Wolff Cluster Algorithm.
          * 
-         * The plane of reflection for the cluster update does not be aligned
-         * to a coordinate axis, but can be chosen randomly in space.
+         * The exact procedure how this type of update is performed
+		 * is determined by an Embedding class (see embedder.h)
+		 *
          * @param rsite The random site where to start the cluster.
-         * @param rdir The randomized plane of reflection for the cluster update.
          */
-		template <typename DirType>
-		inline int wolffstep(int rsite, const DirType& rdir);
+		inline int wolffstep(int rsite);
 
 		double beta; ///< The inverse temperature.
 		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.

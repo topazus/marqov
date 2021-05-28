@@ -101,14 +101,10 @@ class AshkinTeller_Initializer
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
-
 /**
  * Three-Color Ashkin-Teller Hamiltonian
- *
- * @tparam SpinType the type in which to store the binary magnetization values.
  */
 
-template <typename SpinType = int>
 class AshkinTeller
 {
 	public:
@@ -124,9 +120,12 @@ class AshkinTeller
 
 		//  ---- Definitions  -----
 
-		typedef std::array<SpinType, SymD> StateVector;
+		typedef std::array<int, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
+
+
+		//  ---- Hamiltonian  -----
 
 		/** Constructor
 		 *  
@@ -135,6 +134,11 @@ class AshkinTeller
 		 */
 		AshkinTeller(double J, double K) : J(J), K(K), name("ThreeColorAshkinTeller"), observables(obs_m) {}
 		
+
+		// we need this only for the update algorithms to access ham.interactions[0]->J 
+		std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
+		// can be avoided by providing an explicit specialization of the Wolff algorithm for this model
+
 
 	
 		//  ----  Observables ----
@@ -179,108 +183,56 @@ class AshkinTeller
 namespace MARQOV 
 {
 
-	/** Specialized Wolff algorithm for the Ashkin-Teller Hamiltonian
-	* 
-	*
-	* @tparam Lattice the type of the lattice
-	*/
 	template <class Lattice>
-	struct Wolff<AshkinTeller<int>, Lattice>
+	class Embedder<AshkinTeller,Lattice>
 	{
+		typedef AshkinTeller Hamiltonian;
+		typedef typename Hamiltonian::StateVector StateVector;
+		typedef StateVector* StateSpace;
+		static constexpr int SymD = Hamiltonian::SymD;
 
-		// some typedefs
-		typedef typename AshkinTeller<int>::StateVector StateVector;
-		typedef int ReducedStateVector;
+		private:
 
-		// Wolff coupling
-		static inline double wolff_coupling(StateVector& sv1, StateVector& sv2, int color, AshkinTeller<int>& ham) 
-		{
-			double retval = 0.0;
-			if (sv1[color] != sv2[color])
+			const Hamiltonian& ham;
+			const Lattice& lat;
+			const StateSpace& statespace;
+
+			int rcolor;
+
+		public:
+
+			Embedder(const Hamiltonian& ham, const Lattice& lat, StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
+
+
+			template <class RNG>
+			void draw(RNG& rng)	{ rcolor = rng.integer(3); }
+
+
+			double coupling(int pos1, int pos2) const
 			{
-				switch (color)
+				double retval = 0.0;
+				const auto sv1 = statespace[pos1];
+				const auto sv2 = statespace[pos2];
+
+				if (sv1[rcolor] != sv2[rcolor])
 				{
-					case 0: retval = ham.J - ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]); break;
-					case 1: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]); break;
-					case 2: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]); break;
-					default: cout << "invalid color!" << color << endl;
-//					default: throw std::invalid_argument("invalid color!"); // catch me!
+					switch (rcolor)
+					{
+						case 0: retval = ham.J - ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]); break;
+						case 1: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]); break;
+						case 2: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]); break;
+						default: cout << "invalid color!" << rcolor << endl;
+//						default: throw std::invalid_argument("invalid color!"); // catch me!
+					}
 				}
+				return retval;
 			}
-			return retval;
-		}
-	
-		// Wolff flip
-		static inline void wolff_flip(StateVector& sv, const int color) {sv[color] *= -1;}
-	
-	
-		// The actual Wolff step
-		template <class DirType, class RNG, class StateSpace>
-		static inline int move(AshkinTeller<int>& ham, 
-						   Lattice& grid, 
-						   StateSpace& statespace, 
-						   RNG& rng, 
-						   double beta, 
-						   int rsite, 
-						   const DirType&)
-		{
-			const int ncolors = 3;
-			int clustersize_sum = 0;
-			for (int color=0; color<ncolors; color++) // better select a random color
-			{
-	
-				// prepare stack
-	     		std::vector<int> cstack(grid.size(), 0);
-	
-	     		// add initial site and flip it
-	     		int q = 0;
-	     		cstack[q] = rsite;
-	
-	     		wolff_flip(statespace[rsite], color);
-	     		int clustersize = 1;
-	
-	     		// loop over stack as long as non-empty
-	     		while (q>=0)
-	     		{
-	         			 // extract last sv in stack
-	         			 const int currentidx = cstack[q];
-		    			 StateVector& currentsv = statespace[currentidx];
-	         			 q--;
-	
-	         			 // get its neighbours
-					 const int a = 0; // spin family (hard-coded)
-	         			 const auto nbrs = grid.nbrs(a, currentidx);
-	
-	         			 // loop over neighbours
-	         			 for (std::size_t i = 0; i < nbrs.size(); ++i)
-	         			 {
-	         			      // extract corresponding sv
-	         			      const auto currentnbr = nbrs[i];
-	         			      StateVector& candidate = statespace[currentnbr];
-	
-						const double coupling  = - wolff_coupling(currentsv, candidate, color, ham);
-	
-	         			      // test whether site is added to the cluster
-						if (coupling > 0)
-	         			      {
-	         			           if (rng.real() < -std::expm1(-2.0*beta*coupling))
-	         			           {
-	         			                q++;
-	         			                cstack[q] = currentnbr;
-	         			                clustersize++;
-	         			                wolff_flip(candidate, color);
-	         			           }
-	         			      }
-	         			 }
-	         		}
-				clustersize_sum += clustersize;
-			}
-			return clustersize_sum/ncolors;
-		}
-	};
-	
-	
-	
+
+
+			void flip(StateVector& sv) { sv[rcolor] *= -1; }
+		};
+				
+
 	
 	
 	
@@ -289,16 +241,16 @@ namespace MARQOV
 	 * @tparam Lattice type of the lattice
 	 */
 	template <class Lattice>
-	struct Metropolis<AshkinTeller<int>, Lattice>
+	struct Metropolis<AshkinTeller, Lattice>
 	{
 
 		// some typedefs
-		typedef typename AshkinTeller<int>::StateVector StateVector;
+		typedef typename AshkinTeller::StateVector StateVector;
 		typedef int ReducedStateVector;
 
 
 		// coupling of the embedded Ising model
-		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, AshkinTeller<int>& ham)
+		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, AshkinTeller& ham)
 		{
 			double retval = 0.0;
 			switch (color)
@@ -331,7 +283,7 @@ namespace MARQOV
 	
 		// the actual Metropolis move attempt
 		template <class StateSpace, class M, class RNG>
-		static inline int move(AshkinTeller<int>& ham, 
+		static inline int move(AshkinTeller& ham, 
 						   Lattice& grid, 
 						   StateSpace& statespace, 
 						   M& metro, 

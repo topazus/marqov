@@ -7,244 +7,96 @@
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
 
+
 // ------------------------------ OBSERVABLES ---------------------------
 
-// Staggered magnetization easy axis (z)
-class XXZAntiferroSingleAnisoStaggeredMagZ
-{
-	public:
-		std::string name;
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			const int N = grid.size();
-			const int L = grid.len;
-
-			if ((L+1) % 2 == 0) cout << "error"<< endl;
-
-			double magA = 0;
-			double magB = 0;
-
-			if (grid.dim == 2)
-			{
-				for (int i=0; i<L; i++)
-				{
-					for (int j=0; j<L; j++)
-					{
-						const int idx = i*L + j;
-
-						// sublattice A
-						if ((i+j) % 2 == 0) 	
-							magA += statespace[idx][2];
-						// sublattice B
-						else					
-							magB += statespace[idx][2];
-					}
-				}
-			}
-
-			if (grid.dim == 3)
-			{
-				for (int i=0; i<L; i++)
-				{
-					for (int j=0; j<L; j++)
-					{
-						for (int k=0; k<L; k++)
-						{
-							const int idx = i*L*L + j*L + k;
-
-							// sublattice A
-							if ((i+j+k) % 2 == 0) 	
-								magA += statespace[idx][2];
-							// sublattice B
-							else					
-								magB += statespace[idx][2];
-						}
-					}
-				}
-			}
-
-			return fabs(magA-magB) / double(0.5*N);
-		}
-
-		XXZAntiferroSingleAnisoStaggeredMagZ() : name("mstagz") {}
-};
+#include "XXZAntiferro.h"
 
 
 
-// Staggered magnetization perpendicular to easy axis (x-y plane)
-class XXZAntiferroSingleAnisoStaggeredMagXY
-{
-	public:
-		std::string name;
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			const int N = grid.size();
-			const int L = grid.len;
+// ------------------------------ INITIALIZER ---------------------------
 
-			if ((L+1) % 2 == 0) cout << "error"<< endl;
+#include "XXZAntiferro.h"
 
-			double magAx = 0;
-			double magBx = 0;
-			double magAy = 0;
-			double magBy = 0;
 
-			if (grid.dim == 2)
-			{
-				for (int i=0; i<L; i++)
-				{
-					for (int j=0; j<L; j++)
-					{
-						const int idx = i*L + j;
-
-						// sublattice A
-						if ((i+j) % 2 == 0) 	
-						{
-							magAx += statespace[idx][0];
-							magAy += statespace[idx][1];
-						}
-						// sublattice B
-						else					
-						{
-							magBx += statespace[idx][0];
-							magBy += statespace[idx][1];
-						}
-					}
-				}
-			}
-
-			if (grid.dim == 3)
-			{
-				for (int i=0; i<L; i++)
-				{
-					for (int j=0; j<L; j++)
-					{
-						for (int k=0; k<L; k++)
-						{
-							const int idx = i*L*L + j*L + k;
-
-							if ((i+j+k) % 2 == 0) // sublattice A
-							{
-								magAx += statespace[idx][0];
-								magAy += statespace[idx][1];
-							}
-							else // sublattice B
-							{
-								magBx += statespace[idx][0];
-								magBy += statespace[idx][1];
-							}
-						}
-					}
-				}
-			}
-
-			return std::sqrt(pow(magAx-magBx,2) + pow(magAy-magBy,2)) / double(0.5*N);
-		}
-
-		XXZAntiferroSingleAnisoStaggeredMagXY() : name("mstagxy") {}
-};
-
-// ----------------------------------------------------------------------
-
-template <class StateVector, class RNG>
-class XXZAntiferroSingleAniso_Initializer
-{
-	public:
-		// provide the spin dimension as a compile-time constant expression
-		constexpr static int SymD = std::tuple_size<StateVector>::value;
-
-		// constructors
-		XXZAntiferroSingleAniso_Initializer()   {}
-		XXZAntiferroSingleAniso_Initializer(RNG& rn) : rng(rn) {}
-
-		// generate new statevector
-		StateVector newsv(const StateVector&) 
-		{
-			return rnddir<RNG, double, SymD>(rng);
-		};
-
-	private:
-		RNG& rng;
-};
-
-template <class StateVector>
-class XXZAntiferroSingleAniso_interaction
-{
-	public:
-		const double& Delta; // uniaxial exchange anisotropy
-		static constexpr double J = 1;
-		XXZAntiferroSingleAniso_interaction(const double& myDelta) : Delta(myDelta) {}
-		StateVector get (const StateVector& phi) 
-		{
-			StateVector retval;
-
-			retval[0] = Delta*phi[0];
-			retval[1] = Delta*phi[1];
-			retval[2] = phi[2];
-
-			return retval;
-		};
-};
-
-template <class StateVector>
-class XXZAntiferroSingleAniso_extfield : public OnSite<StateVector, double>
-{
-	public:
-
-		double H;
-
-		XXZAntiferroSingleAniso_extfield(double myH) : H(myH)
-		{
-			this->h = H;
-		}
-		double get (const StateVector& phi) {return phi[2];};
-};
-
-template <class StateVector>
-class XXZAntiferroSingleAniso_onsiteaniso : public OnSite<StateVector, double>
-{
-	public:
-
-		double D;
-
-		XXZAntiferroSingleAniso_onsiteaniso(double myD) : D(myD)
-		{
-			this->h = D;
-		}
-		double get (const StateVector& phi) {return pow(phi[2],2);};
-};
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
-template <typename SpinType, typename MyFPType>
+#include "XXZAntiferro.h"
+
+
+/** Single-site anistropic term for the XXZ model
+ * @tparam StateVector the type of the state vectors 
+ */
+template <class StateVector>
+class XXZAntiferro_onsiteaniso : public OnSite<StateVector, double>
+{
+	public:
+
+		double D; ///< coupling strength of the anisotropic term
+
+		/** Constructor of the single-site anistropic term for the XXZ model
+		*
+		* @param D coupling strength of the anisotropic term
+		*/
+		XXZAntiferro_onsiteaniso(double D) : D(D) {this->h = D;}
+		double get (const StateVector& phi) {return pow(phi[2],2);};
+};
+
+
+
+/** Hamiltonian of the antiferromagnetic XXZ O(3) model with an additional single-site anisotropy.
+  * see XXZAntiferr.h for more documentation
+  * @tparam SpinType type in which the spins are stored
+  * @param Delta uniaxial exchange anisotropy
+  * @param H external field strength
+  * @param D single-ion anisotropy
+  */
+template <typename SpinType>
 class XXZAntiferroSingleAniso
 {
 	public:
+
+		//  ----  Parameters  ----
+
         double Delta, H, D;
 		static constexpr int SymD = 3;
-		typedef MyFPType FPType;
-		typedef std::array<SpinType, SymD> StateVector;
-		template <typename RNG>
-		using MetroInitializer =  XXZAntiferroSingleAniso_Initializer<StateVector, RNG>; 
-
 		const std::string name;
 
-		// instantiate interaction terms (requires pointers)
-        std::array<XXZAntiferroSingleAniso_interaction<StateVector>*, 1> interactions = {new XXZAntiferroSingleAniso_interaction<StateVector>(Delta)};
-        std::vector<OnSite<StateVector, FPType>*> onsite;
+
+		//  ---- Definitions  -----
+
+		typedef std::array<SpinType, SymD> StateVector;
+		template <typename RNG>
+		using MetroInitializer =  XXZAntiferro_Initializer<StateVector, RNG>; 
+
+
+		//  ----  Hamiltonian terms  ----	
+
+        std::array<XXZAntiferro_interaction<StateVector>*, 1> interactions = {new XXZAntiferro_interaction<StateVector>(Delta)};
+        std::vector<OnSite<StateVector, double>*> onsite;
         std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
-		XXZAntiferroSingleAniso(double myH, double myDelta, double myD) : Delta(myDelta), H(myH), D(myD), name("XXZAntiferroSingleAniso")
+		/** Constructor for the Hamiltonian of the antiferromagnetic XXZ O(3) model with 
+		  * an additional single-site anisotropy.
+		  *
+		  * @param H external field strength 
+		  * @param Delta uniaxial exchange anisotropy
+		  * @param D single-ion anisotropy
+		  */
+		XXZAntiferroSingleAniso(double H, double Delta, double D) : Delta(Delta), H(H), D(D), name("XXZAntiferroSingleAniso")
 		{
-            onsite.push_back(new XXZAntiferroSingleAniso_extfield<StateVector>(H));
-            onsite.push_back(new XXZAntiferroSingleAniso_onsiteaniso<StateVector>(D));
+            onsite.push_back(new XXZAntiferro_extfield<StateVector>(H));
+            onsite.push_back(new XXZAntiferro_onsiteaniso<StateVector>(D));
 		}
 
 		~XXZAntiferroSingleAniso()
         {
             delete onsite[1]; delete onsite[0]; delete interactions[0];
         }
+
+
+		//  ----  Parameter Names  ----
 
 		std::string paramname(int i) {//A helper function to have nice names for the I/O
             std::string retval;
@@ -258,25 +110,11 @@ class XXZAntiferroSingleAniso
             return retval;
         }
 		
-		// instantiate and choose observables
-		XXZAntiferroSingleAnisoStaggeredMagZ  obs_mstagz;
-		XXZAntiferroSingleAnisoStaggeredMagXY obs_mstagxy;
+		//  ----  Observables ----
+
+		XXZAntiferroStaggeredMagZ  obs_mstagz;
+		XXZAntiferroStaggeredMagXY obs_mstagxy;
         decltype(std::make_tuple(obs_mstagz, obs_mstagxy)) observables = {std::make_tuple(obs_mstagz, obs_mstagxy)};
 
-		// using the Wolff cluster algorithm requires to implement 
-		// the functions 'wolff_coupling' and 'wolff_flip'
-
-		template <class A> 
-		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a) const
-		{
-			return sv1[2]*sv2[2]; // perform the cluster update only in the z-components
-		}
-
-		template <class A>
-		inline void wolff_flip(StateVector& sv, const A a) const
-		{
-			sv[2] = -sv[2];
-			normalize(sv);  // necessary?
-		}
 };
 #endif
