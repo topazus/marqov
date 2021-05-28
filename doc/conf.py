@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'pyMARQOV'
+project = 'pyMARQOV/MARQOV'
 copyright = '2021, The MARQOV project'
 author = 'Manuel Schrauth, Florian Goth'
 
@@ -27,7 +27,11 @@ author = 'Manuel Schrauth, Florian Goth'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'breathe']
+
+# from the CXX version
+autosummary_generate = True
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -47,8 +51,6 @@ html_theme = 'sphinx_rtd_theme'
 html_css_files = ['custom.css']
 html_logo = "./_static/logo.png"
 
-
-
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
@@ -59,3 +61,10 @@ html_static_path = ['_static']
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
 
+# set up breathe only if doxygen config is present.
+if os.path.exists('./doxygen/xml'):
+    print("Using doxygen!")
+    # CXX
+    breathe_projects = { "Marqov": "./doxygen/xml" }
+
+    breathe_default_project = "Marqov"
