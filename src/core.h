@@ -371,7 +371,7 @@ namespace MARQOV
  * and depending on these the respective Monte Carlo moves will be generated.
  * I/O for the Observables will be generated.
  * The RNGCache will be initialized.
- * @tparam Grid the Lattice that we should use
+ * @tparam Grid the Lattice that we should use.
  * @tparam Hamiltonian The Hamiltonian that we should use.
  * @tparam RefType used internally to distinguish, whether MARQOV::Core should
  *                 create the lattice or whether it is user provided.

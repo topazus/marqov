@@ -32,6 +32,7 @@
 		std::string str_repid = std::to_string(mp.repid);
 		std::string str_beta  = "beta"+std::to_string(std::get<0>(hp));
 		mp.outname = str_beta+"_"+str_repid;
+int x = std::tuple_cat(std::forward_as_tuple(latt), p);
 		return std::tuple_cat(std::forward_as_tuple(latt), p);
 	};
 
