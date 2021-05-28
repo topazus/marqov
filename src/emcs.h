@@ -36,12 +36,65 @@ namespace MARQOV
      */
 
 
-    template <class Hamiltonian, class Lattice>
-    struct EMCS
-    {
-        template <class RNG, class StateSpace>
-        static inline int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite);
-    };
+// //     template <class Hamiltonian, class Lattice>
+// //     struct EMCS
+// //     {
+// //         template <class RNG, class M, class StateSpace>
+// //         static inline double move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNG& rng, double beta);
+// //     };
+// //     
+// //     template <class Hamiltonian, class Lattice>
+// //     template <class StateSpace, class M, class RNGType>
+// //     double EMCS<Hamiltonian, Lattice>::move(const Hamiltonian& ham, 
+// //     											const Lattice& grid, 
+// // 												StateSpace& statespace, 
+// // 												M& metro, RNGCache<RNGType>& rngcache, 
+// // 												double beta)
+// //     {
+// //         
+// //         
+// //         
+// //         
+// //     // cluster updates
+// // 	mrqvt.switch_clock("cluster");
+// // 	double avgclustersize = 0;
+// // 	for (int j=0; j < mcfg.ncluster; j++)
+// // 	{
+// // 		const int seed = rngcache.integer(this->grid.size());
+// // 
+// // 		avgclustersize += 
+// // 		Wolff<Hamiltonian, Grid>::move(ham, grid, statespace, rngcache, beta, seed);
+// // 		//wolffstep(seed);
+// // 	}
+// // 
+// // 
+// // 	// Metropolis sweeps
+// // 	mrqvt.switch_clock("metrop");
+// // 	for (int j=0; j<mcfg.nmetro; j++)
+// // 	{
+// // 		// loop sites
+// // 		for(decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
+// // 		{
+// // 			const int rsite = rngcache.integer(this->grid.size());
+// //             Metropolis<Hamiltonian, Grid>::move(ham,
+// // 											grid, 
+// // 											statespace, 
+// // 											metro, 
+// // 											rngcache, 
+// // 											beta, 
+// // 											rsite);
+// //             
+// //             
+// //             
+// // // 			metropolisstep(rsite);
+// // 		}
+// // 	}
+// // 
+// // 	return avgclustersize/mcfg.ncluster;
+// //         
+// //         
+// //         
+// //     }
     
 template <class Grid, class Hamiltonian, template<class> class RefType>
 double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
@@ -59,7 +112,7 @@ double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 
 	// Metropolis sweeps
 	mrqvt.switch_clock("metrop");
-	for (int j=0; j<mcfg.nsweeps; j++)
+	for (int j=0; j<mcfg.nmetro; j++)
 	{
 		// loop sites
 		for(decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
