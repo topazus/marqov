@@ -143,10 +143,10 @@ namespace MARQOV
         }
     };
     
-    /**
-     * The Marqov internal scheduler
+    /** The Marqov internal scheduler.
+     * 
      * It encapsulates the creation of simulations, the parallel tempering
-     * and the distribution across nodes/cores
+     * and the distribution across nodes/cores.
      * @tparam Sim a fully specified Marqov type
      */
     template <class Sim>
@@ -158,7 +158,7 @@ namespace MARQOV
          * 
          * This gives us the parameters of a simulation and we are responsible for setting everything up.
          * It has a template parameter, but of course all used parameters have to resolve to the same underlying MarqovType.
-         * @param p The full set of parameters that are relevant for your Problem
+         * @param p The full set of parameters that are relevant for your problem
          * @param filter A filter that can be applied before the actual creation of MARQOV
          */
         template <typename ParamType, typename Callable>
@@ -178,7 +178,7 @@ namespace MARQOV
         {
             int idx = simvector.size();
             simvectormutex.lock();
-            simvector.push_back(&sim);//NOTE: We only take care about sims that go through addsims.
+            simvector.push_back(&sim);//NOTE: We only take care about sims that go through enqueuesim.
             simvectormutex.unlock();
             taskqueue.enqueue([&, idx]{
                 //work here
