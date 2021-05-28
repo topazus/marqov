@@ -250,7 +250,7 @@ namespace MARQOV
 
 
 		// coupling of the embedded Ising model
-		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, AshkinTeller& ham)
+		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, const AshkinTeller& ham)
 		{
 			double retval = 0.0;
 			switch (color)
@@ -283,7 +283,7 @@ namespace MARQOV
 	
 		// the actual Metropolis move attempt
 		template <class StateSpace, class M, class RNG>
-		static inline int move(AshkinTeller& ham, 
+		static inline int move(const AshkinTeller& ham, 
 						   Lattice& grid, 
 						   StateSpace& statespace, 
 						   M& metro, 
