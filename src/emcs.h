@@ -25,11 +25,27 @@
 
 namespace MARQOV
 {
+    /** Entry point for overwriting the EMCS.
+     * 
+     * This class serves as an entry point for easily defining your own
+     * specializations of the notion of a basic sweep of your Hamiltonians.
+     * Further uses are e.g. adding your own moves
+     * To that end it has the two prototypical template parameters:
+     * @tparam Hamiltonian The Hamiltonian that the Wolff algo will use.
+     * @tparam Lattice The Lattice, that the Wolff algo should use.
+     */
+
+
+    template <class Hamiltonian, class Lattice>
+    struct EMCS
+    {
+        template <class RNG, class StateSpace>
+        static inline int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite);
+    };
+    
 template <class Grid, class Hamiltonian, template<class> class RefType>
 double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
 {
-	constexpr int SymD = std::tuple_size<StateVector>::value;
-
 	// cluster updates
 	mrqvt.switch_clock("cluster");
 	double avgclustersize = 0;
