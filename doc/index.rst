@@ -40,6 +40,7 @@ Welcome to the official documentation of the pyMARQOV package!
    api/core
    api/container
    api/parameters
+   api/api
 
 .. image:: ./_static/icon_regular.svg
 
