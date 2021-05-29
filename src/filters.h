@@ -19,21 +19,23 @@
 #ifndef FILTERS_H
 #define FILTERS_H
 #include <string>
+#include <tuple>
 	// -------------------- filters --------------------
 
 	// filter to determine output file path and name
 	// the filter _must_ set the outname
 
-	auto defaultfilter = [](auto& latt, auto p)
+	auto defaultfilter = [](auto p)
 	{
-		auto& mp = p.first;		// Monte Carlo params
-		auto& hp = p.second;	// Hamiltonian params
+		auto& mp = std::get<1>(p);		// Monte Carlo params
+		auto& hp = std::get<2>(p);	// Hamiltonian params
 		
 		std::string str_repid = std::to_string(mp.repid);
 		std::string str_beta  = "beta"+std::to_string(std::get<0>(hp));
+		std::cout<<"[defaultfilter] "<<mp.outname<<std::endl;
 		mp.outname = str_beta+"_"+str_repid;
-int x = std::tuple_cat(std::forward_as_tuple(latt), p);
-		return std::tuple_cat(std::forward_as_tuple(latt), p);
+		std::cout<<"[defaultfilter] "<<mp.outname<<std::endl;
+		return p;
 	};
 
 	auto defaultfilter_triple = [](auto p)

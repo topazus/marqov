@@ -32,6 +32,7 @@
 #include <ctime>
 #include <chrono>
 #include <mutex>
+#include <thread>
 #include "cachecontainer.h"
 #include "svmath.h"
 #include "rngcache.h"

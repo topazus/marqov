@@ -62,14 +62,16 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 
 		makeDir(mp.outpath);
 		
-		auto params = finalize_parameter_pair(mp, hp);
-		auto rparams = replicator_pair(params, nreplicas[j]);
-		
 		// set up and execute        
 		RegularHypercubic& latt = latts[j];
+		
+		auto params = finalize_parameter(latt, mp, hp);//FLO
+		auto rparams = replicator_flo(params, nreplicas[j]);//FLO
 
-		auto f = [&filter, &latt](auto p){return filter(latt, p);}; //partially apply filter
-		for(auto p : rparams) sched.createSimfromParameter(p, f);
+//		auto params = finalize_parameter_pair(mp, hp);
+//		auto rparams = replicator_pair(params, nreplicas[j]);
+
+		for(auto p : rparams) sched.createSimfromParameter(p, filter);
 	}
 	sched.start();
 }
