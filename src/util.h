@@ -12,8 +12,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 {
 	
 	// Typedefs
-	typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) ParameterPairType;
-	typedef typename ParameterPairType::value_type ParameterType;
+	typedef typename std::tuple<RegularHypercubic&, MARQOV::Config, Params> ParameterType;
 	typedef typename GetSchedulerType<Hamiltonian, RegularHypercubic, ParameterType>::MarqovScheduler SchedulerType;
 
 
@@ -65,7 +64,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		// set up and execute        
 		RegularHypercubic& latt = latts[j];
 		
-		auto params = finalize_parameter(latt, mp, hp);//FLO
+		auto params = finalize_parameter<decltype(latt)>(latt, mp, hp);//FLO
 		auto rparams = replicator_flo(params, nreplicas[j]);//FLO
 
 //		auto params = finalize_parameter_pair(mp, hp);

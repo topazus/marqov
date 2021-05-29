@@ -230,8 +230,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		typedef RegularRandomBond<GaussianPDF> Lattice;
         //typedef RegularRandomBond<BimodalPDF> Lattice;
 
-		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTripleType;
-		typedef typename ParameterTripleType::value_type ParameterType;
+		typedef decltype(finalize_parameter(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTupleType;
+		typedef typename ParameterTupleType::value_type ParameterType;
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
 		SchedulerType sched(1);
