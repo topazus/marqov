@@ -67,8 +67,8 @@ class BlumeEmeryGriffiths_Initializer
 // ------------------------------ HAMILTONIAN ---------------------------
 
 template <class StateSpace, class StateVector>
-class BiquadraticExchangeInteraction
-//class BiquadraticExchangeInteraction : public FlexTerm<StateSpace, StateVector>
+//class BiquadraticExchangeInteraction
+class BiquadraticExchangeInteraction : public FlexTerm<StateSpace, StateVector>
 {
 
 
@@ -76,6 +76,7 @@ class BiquadraticExchangeInteraction
 		double k = 1;
 
 		BiquadraticExchangeInteraction(double k) : k(k) {}
+		~BiquadraticExchangeInteraction() {};
 
 
 		template <class Lattice>
@@ -99,6 +100,9 @@ class BiquadraticExchangeInteraction
 			auto svdiff = dot(svnew,svnew)-dot(svold,svold);
 			return dot(svdiff, neighbourhood);
 		}
+
+		// TODO: implement me
+		double get(const StateVector& sv, int svpos, StateSpace s) {return 0;}
 };
 
 
@@ -125,11 +129,25 @@ class BlumeEmeryGriffiths
 
 		//  ----  Hamiltonian terms  ----
 
+		
+		BiquadraticExchangeInteraction<StateVector*,StateVector> biquadratic_exchange_int;
+
+
 		std::array<Standard_Interaction<StateVector>*, 1>    interactions = {new Standard_Interaction<StateVector>(J)};
 		std::array<Onsite_Quadratic<StateVector>*, 1>        onsite       = {new Onsite_Quadratic<StateVector>(D)};
-		std::array<BiquadraticExchangeInteraction<StateVector*,StateVector>*,1> multisite = {new BiquadraticExchangeInteraction<StateVector*,StateVector>(K)};
+		std::vector<FlexTerm<StateVector*,StateVector>*> multisite ;
 	
-		BlumeEmeryGriffiths(double J, double D, double K) : J(J), D(D), K(K), name("BlumeCapel"), observables(obs_m) {}
+		BlumeEmeryGriffiths(double J, double D, double K) : J(J), 
+															D(D), 
+															K(K), 
+															name("BlumeCapel"), 
+															observables(obs_m),
+															biquadratic_exchange_int(K)
+							{
+								multisite.push_back(&biquadratic_exchange_int);
+
+
+							}
 
 
 
