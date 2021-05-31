@@ -1,6 +1,9 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <string>
+#include <vector>
+
 #include "geometry/regular_lattice.h"
 #include "geometry/grid.h"
 
@@ -55,7 +58,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
 		MARQOV::Config mp(outpath);
-		mp.setnsweeps(5);
+		mp.setnmetro(5);
 		mp.setncluster(int(L/2));
 		mp.setwarmupsteps(200);
 		mp.setgameloopsteps(1000);

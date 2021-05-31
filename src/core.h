@@ -65,7 +65,7 @@ namespace MARQOV
          * @param ws warmup steps
          * @param gls gameloop steps
          * @param nc number of cluster updates
-         * @param nsw number of sweeps
+         * @param nm number of metropolis updates
 		 */
 		Config(	std::string op, 
 					int i = 0, 
@@ -76,7 +76,7 @@ namespace MARQOV
 		  			int ws = 100, 
 		  			int gls = 200, 
 		  			int nc = 20, 
-		  			int nsw = 10) : outpath(op), 
+		  			int nm = 10) : outpath(op), 
 		  		 			  	 id(i), 
 		  					  	 repid(ri),
 		  					  	 seed(s), 
@@ -85,7 +85,7 @@ namespace MARQOV
 		  					  	 warmupsteps(ws), 
 		  					  	 gameloopsteps(gls), 
 		  					  	 ncluster(nc), 
-		  					  	 nsweeps(nsw) {}
+		  					  	 nmetro(nm) {}
 		
 		/** Default Copy Constructor of Config.
          */
@@ -118,7 +118,7 @@ namespace MARQOV
 		int warmupsteps; ///< The number of steps to do for warmups.
 		int gameloopsteps; ///< gameloop steps.
 		int ncluster; ///< number of cluster updates.
-		int nsweeps; ///< number of sweeps.
+		int nmetro; ///< number of Metropolis updates.
 
 		Config& setid(int i) {id = i; return *this;}
 
@@ -145,9 +145,9 @@ namespace MARQOV
          */
 		Config& setncluster(int nc) {ncluster = nc; return *this;}
 
-		/**Set the number of sweeps.
+		/**Set the number of Metropolis sweeps.
          */
-		Config& setnsweeps(int ns) {nsweeps = ns; return *this;}
+		Config& setnmetro(int nm) {nmetro = nm; return *this;}
 
 		/** Dump parameters to HDF5 Group.
          * 
@@ -164,7 +164,7 @@ namespace MARQOV
             dumpscalartoH5(mcg, "warmupsteps", warmupsteps);
             dumpscalartoH5(mcg, "gameloopsteps", gameloopsteps);
             dumpscalartoH5(mcg, "ncluster", ncluster);
-            dumpscalartoH5(mcg, "nsweeps", nsweeps);
+            dumpscalartoH5(mcg, "nmetro", nmetro);
         };
 	};
     
@@ -1042,7 +1042,7 @@ class Core : public RefType<Grid>
          */
         void debugloop(const int nsteps, const int ncluster, const int nsweeps)
         {
-            this->mcfg.setnsweeps(nsweeps);
+            this->mcfg.setnmetro(nsweeps);
             this->mcfg.setncluster(ncluster);
 
 
@@ -1103,24 +1103,6 @@ class Core : public RefType<Grid>
             std::cout <<"\n\n";
         }
 	private:
-        /** A Metropolis step.
-         * 
-         * This function dispatches the call for a metropolis step 
-         * to the Metropolis class.
-         * @see metropolis.h
-         * @param rsite the randomly chosen site for the update.
-         */
-		inline int metropolisstep(int rsite);
-
-        /** A step of the Wolff Cluster Algorithm.
-         * 
-         * The exact procedure how this type of update is performed
-		 * is determined by an Embedding class (see embedder.h)
-		 *
-         * @param rsite The random site where to start the cluster.
-         */
-		inline int wolffstep(int rsite);
-
 		double beta; ///< The inverse temperature.
 		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.
 		Config mcfg; ///< An instance of all our MARQOV related parameters.
