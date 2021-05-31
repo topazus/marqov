@@ -147,7 +147,7 @@ namespace MARQOV
 	
 	template<class Grid>
 	struct has_flexnbrs<Grid, MARQOV::detail::type_sink_t< 
-		decltype( std::declval<Grid>().getflexnbrs(std::declval<int>(), std::declval<int>()) ) 
+		decltype( std::declval<Grid>().flexnbrs(std::declval<int>(), std::declval<int>()) ) 
 		>> : std::true_type {};
 
 	
@@ -162,7 +162,7 @@ namespace MARQOV
 	template <class Grid>
 	auto getflexnbrs_helper(const Grid& grid, int fam, int idx, std::true_type)  
 	{
-		return grid.getflexnbrs(fam,idx); 
+		return grid.flexnbrs(fam,idx); 
 	}
 	
 	/** A helper to detect if the lattice has a getflexnbrs function.
