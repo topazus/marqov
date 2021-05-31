@@ -70,9 +70,9 @@ template <class StateSpace, class StateVector>
 class BiquadraticExchangeInteraction : public FlexTerm<StateSpace, StateVector>
 {
 	public:
-		double k = 1;
+		double k;
 
-		BiquadraticExchangeInteraction(double k) : k(k) {}
+		BiquadraticExchangeInteraction(double K) : k(K) {}
 		~BiquadraticExchangeInteraction() {};
 
 
@@ -84,7 +84,6 @@ class BiquadraticExchangeInteraction : public FlexTerm<StateSpace, StateVector>
 					StateSpace& s,
 					Lattice& grid)
 		{
-
 			double neighbourhood = 0;
 
 			for (std::size_t i=0; i<nbrs.size(); ++i)
@@ -150,9 +149,9 @@ class BlumeEmeryGriffiths
 		BiquadraticExchangeInteraction<StateVector*,StateVector> biquadratic_exchange_int;
 
 
-		std::array<Standard_Interaction<StateVector>*, 1>    interactions = {new Standard_Interaction<StateVector>(J)};
-		std::array<Onsite_Quadratic<StateVector>*, 1>        onsite       = {new Onsite_Quadratic<StateVector>(D)};
-		std::vector<FlexTerm<StateVector*,StateVector>*> multisite ;
+		std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
+		std::array<Onsite_Quadratic<StateVector>*, 1>     onsite       = {new Onsite_Quadratic<StateVector>(D)};
+		std::vector<FlexTerm<StateVector*,StateVector>*>  multisite ;
 	
 		BlumeEmeryGriffiths(double J, double D, double K) : J(J), 
 															D(D), 
@@ -161,6 +160,7 @@ class BlumeEmeryGriffiths
 															observables(obs_m),
 															biquadratic_exchange_int(K)
 							{
+								cout << "K " << K << endl;
 								multisite.push_back(&biquadratic_exchange_int);
 							}
 
