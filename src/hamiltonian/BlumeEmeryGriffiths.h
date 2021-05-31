@@ -71,11 +71,9 @@ class BiquadraticExchangeInteraction : public FlexTerm<StateSpace, StateVector>
 {
 	public:
 
-		BiquadraticExchangeInteraction(double k) : FlexTerm<StateSpace, StateVector>(k) 
+		BiquadraticExchangeInteraction(double k)
 		{
-			cout << "k: " << k << endl;
-			cout << "this->k: " << this->k << endl;
-
+			this->k = k;
 		}
 		~BiquadraticExchangeInteraction() {};
 
@@ -163,13 +161,7 @@ class BlumeEmeryGriffiths
 															observables(obs_m),
 															biquadratic_exchange_int(K)
 							{
-								cout << K << "   ";
-
 								multisite.push_back(&biquadratic_exchange_int);
-
-								cout << multisite[0]->k << endl;
-
-//								multisite[0]->printk();
 							}
 
 

@@ -276,9 +276,6 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
 			flexenergydiff += dot(ham.multisite[c]->k, diff);
 		}
         
-//			cout << ham.interactions[0]->J << endl;
-//			cout << ham.onsite[0]->h << endl;
-//			cout << ham.multisite[0]->k << endl;
 
 		// collect everything
 		double dE = interactionenergydiff + onsiteenergydiff + flexenergydiff;

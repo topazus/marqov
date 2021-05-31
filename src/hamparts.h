@@ -60,8 +60,6 @@ class FlexTerm
 {
 	public:
 		double k;
-//		virtual double get(const StateVector& sv, int svpos, StateSpace s) = 0; // do we really need this?
-		FlexTerm(int k) : k(k) {};
 		virtual ~FlexTerm() {};
 		template <class Lattice>
 		double diff (const int rsite,
