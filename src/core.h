@@ -513,7 +513,7 @@ class Core : public RefType<Grid>
 	 * @param hargs the arguemts for the Hamiltonian.
 	 */
 	template <class ...HArgs, class ... LArgs>
-	Core(std::tuple<LArgs...>& largs, Config mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
+	Core(std::tuple<LArgs...>&& largs, Config mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
 		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
@@ -1164,7 +1164,7 @@ class Core : public RefType<Grid>
 template <class Lattice, class H, class... LArgs, class... HArgs, size_t... S>
 auto makeCore3(Config& mc, std::mutex& mtx, std::tuple<LArgs...>&& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
-    return Core<Lattice, H, detail::NonRef>(largs, mc, mtx,
+    return Core<Lattice, H, detail::NonRef>(std::forward<std::tuple<LArgs...>>(largs), mc, mtx,
                                         std::get<S>(std::forward<std::tuple<HArgs...>>(hargs))...);
 }
 

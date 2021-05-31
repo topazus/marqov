@@ -38,7 +38,6 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 	if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 	std::vector<RegularHypercubic> latts;
 	for (std::size_t j=0; j<nL.size(); j++) latts.emplace_back(nL[j], dim);
-    
 
 	// Init Scheduler
 	SchedulerType sched(1, nthreads);

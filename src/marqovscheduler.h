@@ -37,12 +37,6 @@
 
 namespace MARQOV
 {
-    template <typename... Ts>
-    struct Tuple_Head_is_Ref : std::false_type {};
-    
-    template <typename L, class... Ts>
-    struct Tuple_Head_is_Ref<std::tuple<L&, Ts...> , L> : std::true_type {};
-    
     template <class Cont, class Tuple1, class Tuple2, std::size_t... I>
     constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple1&& t1, MARQOV::Config&& mc, std::mutex& mtx, Tuple2&& t2, std::index_sequence<I...> )
     {
@@ -65,7 +59,7 @@ namespace MARQOV
     }
     
     template <class T, class Tuple1, class Tuple2, std::size_t... I>
-    constexpr T* ptr_from_tuple_impl(Tuple1&& t1, MARQOV::Config&& mc, std::mutex& mtx, Tuple2&& t2, std::index_sequence<I...> )
+    constexpr T* ptr_from_tuple_impl(Tuple1& t1, MARQOV::Config&& mc, std::mutex& mtx, Tuple2&& t2, std::index_sequence<I...> )
     {
         return new T(std::forward<Tuple1>(t1),
                      std::forward<MARQOV::Config>(mc), 
@@ -74,79 +68,15 @@ namespace MARQOV
         );
     }
     
-    template <class T, class Tuple1, class Tuple2>
-    constexpr T* ptr_from_tuple(Tuple1&& t1, MARQOV::Config&& mc, std::mutex& mtx, Tuple2&& t2)
+    template <class T, class L, class HArgs>
+    constexpr T* ptr_from_tuple(std::tuple<L, MARQOV::Config, HArgs> t, std::mutex& mtx)
     {
-        return ptr_from_tuple_impl<T>(std::forward<Tuple1>(t1),
-                                      std::forward<MARQOV::Config>(mc), 
+        return ptr_from_tuple_impl<T>(std::forward<decltype(std::get<0>(t))>(std::get<0>(t)),
+                                      std::forward<MARQOV::Config>(std::get<1>(t)), 
                                       mtx,
-                                      std::forward<Tuple2>(t2),
-                                      std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
+                                      std::forward<HArgs>(std::get<2>(t)),
+                                      std::make_index_sequence<std::tuple_size<std::remove_reference_t<HArgs>>::value>{});
     }
-    
-    /**
-     * sims_helper utility class
-     * A utility class to figure out the actual type of the Marqov class 
-     */
-    template<class ... Ts> struct sims_helper {};
-    
-    template <class H,  class L, class HArgstuple, size_t... S>
-    struct sims_helper<H, L, HArgstuple, std::index_sequence<S...> >
-    {
-        typedef decltype(MARQOV::makeCore<H>(std::declval<L>(),
-                                               std::declval<MARQOV::Config>(), std::declval<std::mutex>(),
-                                               std::declval<typename std::tuple_element<S, HArgstuple>::type>()...
-        )) MarqovType;
-    };
-
-    /**
-     * sims_helper utility class
-     * A utility class to figure out the actual type of the Marqov class 
-     */    
-    template <class ... Ts>
-    struct sims_helper2 {};
-    
-    template <class Hamiltonian, class Lattice, class LArgs, class HArgs>
-    struct sims_helper2<Hamiltonian, Lattice, std::tuple<LArgs, MARQOV::Config, HArgs> >
-    {
-        typedef decltype(MARQOV::makeCore<Hamiltonian, Lattice>(std::declval<MARQOV::Config>(), std::declval<std::mutex>(),
-                                                                  std::declval<std::pair<LArgs, HArgs>& >()
-        )) MarqovType;
-//         template <typename T>
-//         static void emplacer(std::vector<MarqovType>& sims, T&  t, std::mutex& mtx)
-//         {
-//             emplace_from_tuple(sims, t.first, std::forward<MARQOV::Config>(t.second), mtx, t.third);
-//         }
-//         
-//         template <typename T>
-//         static MarqovType* creator(std::mutex& mtx, T&  t)
-//         {
-//             return ptr_from_tuple<MarqovType>(t.first, std::forward<MARQOV::Config>(t.second), std::forward<decltype(mtx)>(mtx), t.third);
-//         }
-    };
-    
-    template <class Hamiltonian, class Lattice, class HArgs>
-    struct sims_helper2<Hamiltonian, Lattice, std::tuple<Lattice&, MARQOV::Config, HArgs> >
-    {
-        static constexpr std::size_t tsize = std::tuple_size<typename std::remove_reference<HArgs>::type>::value;
-        typedef std::make_index_sequence<tsize> HArgSequence;
-        typedef typename sims_helper<Hamiltonian, Lattice, HArgs, HArgSequence>::MarqovType MarqovType;
-//         
-//         template <typename T>
-//         static void emplacer(std::vector<MarqovType>& sims, T& t, std::mutex& mtx)
-//         {
-//             emplace_from_tuple(sims, 
-//                                std::forward<decltype(std::get<0>(t))>(std::get<0>(t)), 
-//                                std::forward<MARQOV::Config>(std::get<1>(t)), mtx, std::get<2>(t));
-//         }
-//         
-//         template <typename T>
-//         static MarqovType* creator(std::mutex& mtx, T& t)
-//         {
-//             return ptr_from_tuple<MarqovType>(std::forward<decltype(std::get<0>(t))>(std::get<0>(t)), 
-//                                               std::forward<MARQOV::Config>(std::get<1>(t)), std::forward<decltype(mtx)>(mtx), std::get<2>(t));
-//         }
-    };
     
     /** The Marqov internal scheduler.
      * 
@@ -163,14 +93,15 @@ namespace MARQOV
          * 
          * This gives us the parameters of a simulation and we are responsible for setting everything up.
          * It has a template parameter, but of course all used parameters have to resolve to the same underlying MarqovType.
-         * @param p The full set of parameters that are relevant for your problem
-         * @param filter A filter that can be applied before the actual creation of MARQOV
+         * @param p The full set of parameters that are relevant for your problem.
+         * @param filter A filter that can be applied before the actual creation of MARQOV.
          */
         template <typename ParamType, typename Callable>
         void createSimfromParameter(ParamType& p, Callable filter)
         {
-            auto t = filter(p);
-            auto simptr = sims_helper2<typename Sim::HamiltonianType, typename Sim::Lattice, ParamType>::template creator(mutexes.hdf, t);
+            auto t = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
+            
+            auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
             oursims.push_back(simptr);
             this->enqueuesim(*simptr);
         }
@@ -409,7 +340,10 @@ namespace MARQOV
     template <class Hamiltonian, class Lattice, class Parameters>
     struct GetSchedulerType
     {
-        typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType; ///< Holds the Type of the Simulation
+        typedef std::mutex& mtxref;
+        typedef decltype(makeCore<Lattice, Hamiltonian>(std::declval<Parameters>(), std::declval<mtxref>()
+            )) MarqovType;
+//         typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType; ///< Holds the Type of the Simulation
         typedef Scheduler<MarqovType> MarqovScheduler; ///< Holds the type of a scheduler for these simulations.
     };
 };
