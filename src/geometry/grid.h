@@ -135,7 +135,7 @@ class SimpleBipartite
 		}
 
 
-		inline int identify(int i) // is this correct?
+		inline int identify(int i) const // is this correct?
 		{
 			auto index = IndexOf(i, dim, len);
 			
@@ -147,7 +147,7 @@ class SimpleBipartite
 		}
 
 
-		inline std::vector<int> termselector(int rsite)
+		inline std::vector<int> termselector(int rsite) const
 		{
 			return {this->identify(rsite)};
 		}
