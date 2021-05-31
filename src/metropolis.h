@@ -272,10 +272,10 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
 		for (FlexSizeType c=0; c<ham.multisite.size(); c++)
 		{
 			auto nbrs = getflexnbrs<Lattice>(grid, c, rsite);
-			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace, grid);
+			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace);
+//			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace, grid);
 			flexenergydiff += dot(ham.multisite[c]->k, diff);
 		}
-        
 
 		// collect everything
 		double dE = interactionenergydiff + onsiteenergydiff + flexenergydiff;

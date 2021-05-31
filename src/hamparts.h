@@ -61,13 +61,13 @@ class FlexTerm
 	public:
 		double k;
 		virtual ~FlexTerm() {};
-		template <class Lattice>
-		double diff (const int rsite,
+//		template <class Lattice>  // template functions may not be virtual!
+		virtual double diff (const int rsite,
 					const StateVector& svold,
 					const StateVector& svnew,
 					std::vector<int>& nbrs,
-					StateSpace& s,
-					Lattice& grid) {return 0;}
+					StateSpace& s) = 0;
+//					Lattice& grid) {return 0;}
 
 		template <class Grid>
 		double energy(const StateSpace& s, const Grid& grid, int c) {return 0;}

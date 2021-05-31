@@ -78,13 +78,13 @@ class BiquadraticExchangeInteraction : public FlexTerm<StateSpace, StateVector>
 		~BiquadraticExchangeInteraction() {};
 
 
-		template <class Lattice>
+//		template <class Lattice>
 		double diff (const int rsite,
 					const StateVector& svold, 
 					const StateVector& svnew, 
 					std::vector<int>& nbrs, 
-					StateSpace& s,
-					Lattice& grid)
+					StateSpace& s)//,
+//					Lattice& grid)
 		{
 			double neighbourhood = 0;
 
