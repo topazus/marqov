@@ -25,8 +25,18 @@ template <class StateVector, typename CouplingType = double>
 class Standard_Interaction : public Interaction<StateVector>
 {
 	public:
-		const CouplingType& J;
-		Standard_Interaction(const CouplingType &J) : J(J) {}
+		// what is correct?
+		// this:
+
+//		const CouplingType& J;
+//		Standard_Interaction(const CouplingType &J) : J(J) {}
+
+		// or this:
+
+		Standard_Interaction(const CouplingType &J) {this->J = J;}
+
+
+
 		StateVector get (const StateVector& phi) {return phi;}
 
 		// TODO: rename J to something more generic, like "constant"
