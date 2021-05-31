@@ -506,7 +506,7 @@ class Core : public RefType<Grid>
 	 * @tparam HArgs the Arguments of the Hamiltonian.
 	 * @tparam LArgs The Arguments of the Lattice.
 	 *
-	 * @param largs the arguments that we forward to the lattice
+	 * @param largs The arguments that we forward to the lattice.
 	 * @param mc The Marqov config object with all configuration.
      * @param mtx The Mutex for synchronizing access to the HDF5 library.
 	 * @param mybeta the temperature that governs the Metropolis dynamics.
@@ -1186,7 +1186,7 @@ auto makeCore3(Config& mc, std::mutex& mtx, std::tuple<LArgs...>&& largs, std::t
 template <class Lattice, class H, class ...HArgs, size_t... S>
 auto makeCore4(Lattice&& latt, Config mc, std::mutex& mtx, std::tuple<HArgs...> hargs, std::index_sequence<S...>)
 {
-    return Core<Lattice, H, detail::Ref>(latt, mc, mtx, 
+    return Core<Lattice, H, detail::Ref>(std::forward<Lattice>(latt), mc, mtx,
                                    std::get<S>(std::forward<std::tuple<HArgs...>>(hargs))...
                                    );
 }
@@ -1206,7 +1206,7 @@ auto makeCore(std::tuple<Lattice&, Config, std::tuple<HArgs...> > t, std::mutex&
 {
     //The first argument is a Lattice-like type -> from this we infer that 
     //we get a reference to sth. already allocated
-    return makeCore4<Lattice, H>(std::get<0>(t), std::get<1>(t), mtx, std::get<2>(t),
+    return makeCore4<Lattice, H>(std::forward<Lattice>(std::get<0>(t)), std::get<1>(t), mtx, std::get<2>(t),
                                  std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
                                  );
 }
