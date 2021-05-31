@@ -60,7 +60,7 @@ class FlexTerm
 {
 	public:
 		double k;
-		virtual double get(const StateVector& sv, int svpos, StateSpace s) = 0;
+//		virtual double get(const StateVector& sv, int svpos, StateSpace s) = 0; // do we really need this?
 		virtual ~FlexTerm() {};
 		template <class Lattice>
 		double diff (const int rsite,
@@ -70,5 +70,8 @@ class FlexTerm
 					StateSpace& s,
 					Lattice& grid) {return 0;}
 
+		template <class Grid>
+		double energy(const StateSpace& s, const Grid& grid, int c) {return 0;}
+		// TODO: remove this default implementation and instead check for existence at compile-time
 };
 #endif

@@ -234,12 +234,13 @@ class FlexEnergy
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
+			double retval = 0;
 			for (decltype(ham.multisite.size()) c = 0; c < ham.multisite.size(); c++)
 			{
-//				enepart = ham.multisite[c]->energy();
-//				ene += ham.onsite[c]->k * enepart;
+				double enepart = ham.multisite[c]->energy<Grid>(statespace, grid, c);
+				retval += ham.onsite[c]->k * enepart;
 			}
-			return 0;
+			return retval;
 		}
 };
 

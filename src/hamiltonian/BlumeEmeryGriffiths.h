@@ -69,8 +69,6 @@ class BlumeEmeryGriffiths_Initializer
 template <class StateSpace, class StateVector>
 class BiquadraticExchangeInteraction : public FlexTerm<StateSpace, StateVector>
 {
-
-
 	public:
 		double k = 1;
 
@@ -100,8 +98,28 @@ class BiquadraticExchangeInteraction : public FlexTerm<StateSpace, StateVector>
 			return dot(svdiff, neighbourhood);
 		}
 
-		// TODO: implement me
-		double get(const StateVector& sv, int svpos, StateSpace s) {return 0;}
+
+		template <class Grid>
+		double energy(const StateSpace& statespace, const Grid& grid, int c)
+		{
+			const int N = grid.size();
+			double retval = 0;
+
+			for (int idx=0; idx<N; idx++)
+			{
+				auto nbrs = grid.flexnbrs(c, idx);
+				auto self = statespace[idx];
+				
+				for (std::size_t i=0; i<nbrs.size(); ++i)
+				{
+					auto idx = nbrs[i];
+					auto nbr = statespace[idx];
+
+					retval += dot(self,self) * dot(nbr,nbr);
+				}
+			}
+			return 0.5*retval; // account for double counting
+		}
 };
 
 
