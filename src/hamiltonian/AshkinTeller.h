@@ -284,7 +284,7 @@ namespace MARQOV
 		// the actual Metropolis move attempt
 		template <class StateSpace, class M, class RNG>
 		static inline int move(AshkinTeller& ham, 
-						   Lattice& grid, 
+						   const Lattice& grid, 
 						   StateSpace& statespace, 
 						   M& metro, 
 						   RNG& rng, 
