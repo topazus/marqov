@@ -63,11 +63,8 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		// set up and execute        
 		RegularHypercubic& latt = latts[j];
 		
-		auto params = finalize_parameter<decltype(latt)>(latt, mp, hp);//FLO
-		auto rparams = replicator_flo(params, nreplicas[j]);//FLO
-
-//		auto params = finalize_parameter_pair(mp, hp);
-//		auto rparams = replicator_pair(params, nreplicas[j]);
+		auto params = finalize_parameter(latt, mp, hp);
+		auto rparams = replicator(params, nreplicas[j]);
 
 		for(auto p : rparams) sched.createSimfromParameter(p, filter);
 	}

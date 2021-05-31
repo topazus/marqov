@@ -1,7 +1,6 @@
 #ifndef MARQOVSCHEDULER_H
 #define MARQOVSCHEDULER_H
-/*
- * MIT License
+/* MIT License
  * 
  * Copyright (c) 2020-2021 Florian Goth
  * fgoth@physik.uni-wuerzburg.de
@@ -341,9 +340,7 @@ namespace MARQOV
     struct GetSchedulerType
     {
         typedef std::mutex& mtxref;
-        typedef decltype(makeCore<Lattice, Hamiltonian>(std::declval<Parameters>(), std::declval<mtxref>()
-            )) MarqovType;
-//         typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType; ///< Holds the Type of the Simulation
+        typedef decltype(makeCore<Lattice, Hamiltonian>(std::declval<Parameters>(), std::declval<mtxref>())) MarqovType;
         typedef Scheduler<MarqovType> MarqovScheduler; ///< Holds the type of a scheduler for these simulations.
     };
 };
