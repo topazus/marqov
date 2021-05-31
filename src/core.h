@@ -1144,86 +1144,89 @@ class Core : public RefType<Grid>
 		typename Hamiltonian::template MetroInitializer<RNGCache<RNGType> > metro;
 };
 
-/** Instantiate Core with our own lattice.
+
+/** Instantiate Core and let it create the lattice. 
  * 
- * Internal function to unpack the template parameter pack
+ * Internal function to unpack the template parameter pack for the hamiltonian.
  * 
  * @tparam H the type of Hamiltonian
- * @tparam L the type of the lattice
+ * @tparam Lattice the type of the lattice
  * @tparam LArgs The arguments of the lattice.
  * @tparam HArgs the arguments of the hamiltonian.
- * @tparam S a parameter pack of integers for unpacking the hamiltonian parameters
+ * @tparam S a parameter pack of integers for unpacking the hamiltonian parameters.
  * 
  * @param mc the MARQOVConfig object
  * @param mtx The mutex that synchronizes access to the HDF5 files.
  * @param largs The lattice arguments
  * @param hargs The hamiltonian arguments.
  */
-template <class H, class L, class... LArgs, class... HArgs, size_t... S>
-auto makeCore3(Config& mc, std::mutex&& mtx, std::tuple<LArgs...>&& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
+
+template <class Lattice, class H, class... LArgs, class... HArgs, size_t... S>
+auto makeCore3(Config& mc, std::mutex& mtx, std::tuple<LArgs...>&& largs, std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
-    return Core<L, H, detail::NonRef>(largs, mc, mtx,
+    return Core<Lattice, H, detail::NonRef>(largs, mc, mtx,
                                         std::get<S>(std::forward<std::tuple<HArgs...>>(hargs))...);
 }
 
-/** Instantiate Core with our own lattice.
+/** Instantiate Core and use a reference to a precreated lattice.
  * 
- * In this call we get the arguments for the lattice 
- * and construct it ourselves.
+ * Internal function to unpack the template parameter pack for the hamiltonian.
+ * 
+ * @tparam H The type of Hamiltonian
+ * @tparam Lattice The type of the lattice
+ * @tparam LArgs The arguments of the lattice.
+ * @tparam HArgs The arguments of the hamiltonian.
+ * @tparam S A parameter pack of integers for unpacking the hamiltonian parameters.
+ * 
+ * @param mc the MARQOVConfig object
+ * @param mtx The mutex that synchronizes access to the HDF5 files.
+ * @param latt A reference to a lattice.
+ * @param hargs The hamiltonian arguments.
+ */
+template <class Lattice, class H, class ...HArgs, size_t... S>
+auto makeCore4(Lattice&& latt, Config mc, std::mutex& mtx, std::tuple<HArgs...> hargs, std::index_sequence<S...>)
+{
+    return Core<Lattice, H, detail::Ref>(latt, mc, mtx, 
+                                   std::get<S>(std::forward<std::tuple<HArgs...>>(hargs))...
+                                   );
+}
+
+/** Instantiate Core with a reference to a precreated lattice.
  * 
  * @tparam H the type of Hamiltonian
- * @tparam L the type of the lattice
+ * @tparam Lattice the type of the lattice
  * @tparam LArgs The arguments of the lattice.
  * @tparam HArgs the arguments of the hamiltonian.
  * 
- * @param mc the MARQOVConfig object
+ * @param t a tuple of a reference to a lattice, a config object and the hamiltonian parameters.
  * @param mtx The mutex that synchronizes access to the HDF5 files.
- * @param p A pair of lattice arguments and Hamiltonian arguments.
  */
-template <class H, class L, class... LArgs, class... HArgs>
-auto makeCore(Config mc, std::mutex&& mtx, std::pair<std::tuple<LArgs...>, std::tuple<HArgs...> >& p)
-{
-    return makeCore3<H, L>(mc, std::forward<std::mutex>(mtx), std::forward<decltype(p.first)>(p.first), p.second,
-        std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
-    );
-}
-
-/** Instantiate Core with a pre-allocated lattice.
- * 
- * @tparam H the type of Hamiltonian
- * @tparam L the type of the lattice
- * @tparam Args the other arguments.
- * 
- * @param latt the lattice
- * @param mc the MARQOVConfig object
- * @param mtx The mutex that synchronizes access to the HDF5 files.
- * @param args the remaining arguments.
- */
-template <class H, class L, class ...Args>
-auto makeCore2(std::true_type, L&& latt, Config&& mc, std::mutex&& mtx, Args&& ... args)
+template <class Lattice, class H, typename... HArgs>
+auto makeCore(std::tuple<Lattice&, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
 {
     //The first argument is a Lattice-like type -> from this we infer that 
-    //We get a reference to sth. already allocated
-    return Core<L, H, detail::Ref>(latt, mc, mtx, args...);
+    //we get a reference to sth. already allocated
+    return makeCore4<Lattice, H>(std::get<0>(t), std::get<1>(t), mtx, std::get<2>(t),
+                                 std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
+                                 );
 }
 
-/** Instantiate the right core class.
+/** Instantiate Core and let it create the lattice. 
  * 
- * This function figures out from the function arguments which is the right .
- * version of MARQOV::Core to take.
  * @tparam H the type of Hamiltonian
- * @tparam L the type of the lattice
- * @tparam Args the other arguments.
+ * @tparam Lattice the type of the lattice
+ * @tparam LArgs The arguments of the lattice.
+ * @tparam HArgs the arguments of the hamiltonian.
  * 
- * @param latt the lattice
- * @param mc the MARQOVConfig object
+ * @param t a tuple of the lattice parameters, a config object and the hamiltonian parameters.
  * @param mtx The mutex that synchronizes access to the HDF5 files.
- * @param args the remaining arguments.
  */
-template <class H, class L, class ...Args>
-auto makeCore(L&& latt, Config&& mc, std::mutex&& mtx, Args&&... args)
+template <class Lattice, class H, typename... LArgs, typename... HArgs>
+auto makeCore(std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
 {
-    return makeCore2<H>(typename detail::is_Lattice<L>::type(), latt, std::forward<Config>(mc), std::forward<std::mutex>(mtx), args...);
+    return makeCore3<Lattice, H>(std::get<1>(t), mtx, std::forward<std::tuple<LArgs...> >(std::get<0>(t)), std::get<2>(t), 
+                                 std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
+                                 );
 }
 
 }
