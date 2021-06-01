@@ -215,19 +215,25 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
 			"[MARQOV::Metropolis] COMPILATION FAILED: interactions are not a container.");
         static_assert(Is_Container<decltype(std::declval<Hamiltonian>().onsite)>::value, 
 			"[MARQOV::Metropolis] COMPILATION FAILED: onsite terms are not a container.");
-        static_assert(Is_Container<decltype(std::declval<Hamiltonian>().multisite)>::value, 
-			"[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
+//        static_assert(Is_Container<decltype(std::declval<Hamiltonian>().multisite)>::value, 
+//			"[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
 
 		// definitions
 		typedef typename Hamiltonian::StateVector StateVector;
 		typedef typename std::remove_cv<decltype(ham.interactions.size())>::type InteractionSizeType;
 		typedef typename std::remove_cv<decltype(ham.onsite.size())>::type OnSiteSizeType;
-		typedef typename std::remove_cv<decltype(ham.multisite.size())>::type FlexSizeType; 
+//		typedef typename std::remove_cv<decltype(ham.multisite.size())>::type FlexSizeType; 
 
 		// availablity of certain functions in the lattice
 		typedef typename has_nbrs<Lattice>::type HasNbrs;
 		typedef typename has_bnds<Lattice>::type HasBnds;
 		typedef typename has_trms<Lattice>::type HasTrms;
+
+		typedef typename HasFlexTerms<Hamiltonian>::type HasFlex;
+		
+//		std::cout << HasFlexTerms<Hamiltonian>::value << std::endl;
+//		std::cout << HasX<A>::value << std::endl;
+//		std::cout << HasX<B>::value << std::endl;
         
 		// old state vector at index rsite
 		StateVector& svold = statespace[rsite];
@@ -268,14 +274,16 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
         
 
 		// III. flex term energy
-		double flexenergydiff = 0;
-		for (FlexSizeType c=0; c<ham.multisite.size(); c++)
-		{
-			auto nbrs = getflexnbrs<Lattice>(grid, c, rsite);
-			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace);
-//			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace, grid);
-			flexenergydiff += dot(ham.multisite[c]->k, diff);
-		}
+		auto flexenergydiff = compute_flexenergydiff(grid, ham, statespace, svnew, svold, rsite, HasFlex());
+//		double flexenergydiff = 0;
+//		for (FlexSizeType c=0; c<ham.multisite.size(); c++)
+//		{
+//			auto nbrs = getflexnbrs<Lattice>(grid, c, rsite);
+//			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace);
+//			flexenergydiff += dot(ham.multisite[c]->k, diff);
+//		}
+
+		cout << flexenergydiff << endl;
 
 		// collect everything
 		double dE = interactionenergydiff + onsiteenergydiff + flexenergydiff;

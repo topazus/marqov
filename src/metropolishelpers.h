@@ -6,12 +6,12 @@
  * under the terms of the GNU General Public License as published by the Free
  * Software Foundation, either version 3 of the License, or (at your option)
  * any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see <https://www.gnu.org/licenses/>.
  */
@@ -23,24 +23,25 @@
 
 namespace MARQOV
 {
+ 
     /** has_bnds utility function.
-     * 
+     *
      * This function decays to a bool_type to denote whether a lattice provides
      * the getbond function.
      * @tparam L The lattice that we are querying.
      */
-	template<class L, class=void> 
+	template<class L, class=void>
 	struct has_bnds : std::false_type {};
-	
-	template<class Lattice> 
-	struct has_bnds<Lattice, MARQOV::detail::type_sink_t< 
-		decltype( std::declval<Lattice>().bnds(std::declval<int>(), std::declval<int>()) ) 
+
+	template<class Lattice>
+	struct has_bnds<Lattice, MARQOV::detail::type_sink_t<
+		decltype( std::declval<Lattice>().bnds(std::declval<int>(), std::declval<int>()) )
 		>> : std::true_type {};
-    
-	
+
+
 	/**
      * Promote_Array utility class.
-     * 
+     *
      * This function takes two types and tries to figure out, which one is wider.
      * @tparam A the first type.
      * @tparam B the other type.
@@ -67,27 +68,27 @@ namespace MARQOV
      * This class tries to figure out whether there is a has_trms function.
      * @tparam Grid the Grid which we check.
      */
-	template<class Grid , class = void> 
+	template<class Grid , class = void>
 	struct has_trms : std::false_type {};
-	
+
 	template<class Grid>
 	struct has_trms<Grid, MARQOV::detail::type_sink_t<
 		decltype(std::declval<Grid>().termselector(std::declval<int>()))
 		>> : std::true_type {};
 	// in C++17 (which we don't use), this can be solved with void_t
-	
+
 
 
 
 	template <class Grid, class Hamiltonian>
-	std::vector<int> get_terms(const Grid& grid, const Hamiltonian& ham, int idx, std::false_type) 
-	{	
+	std::vector<int> get_terms(const Grid& grid, const Hamiltonian& ham, int idx, std::false_type)
+	{
 		return arange(0, ham.onsite.size());
 	}
 
 	template <class Grid, class Hamiltonian>
-	std::vector<int> get_terms(const Grid& grid, const Hamiltonian& ham, int idx, std::true_type) 
-	{	
+	std::vector<int> get_terms(const Grid& grid, const Hamiltonian& ham, int idx, std::true_type)
+	{
 		return grid.termselector(idx);
 	}
 
@@ -96,19 +97,19 @@ namespace MARQOV
 
 
 	/** has_nbrs utility struct
-     * 
+     *
      * This struct checks whether the lattice provides a getnbrs method.
      * @tparam Grid the lattice that we query.
      */
-	template<class Grid, class = void> 
+	template<class Grid, class = void>
 	struct has_nbrs : std::false_type {};
-	
+
 	template<class Grid>
-	struct has_nbrs<Grid, MARQOV::detail::type_sink_t< 
-		decltype( std::declval<Grid>().nbrs(std::declval<int>(), std::declval<int>()) ) 
+	struct has_nbrs<Grid, MARQOV::detail::type_sink_t<
+		decltype( std::declval<Grid>().nbrs(std::declval<int>(), std::declval<int>()) )
 		>> : std::true_type {};
 
-	
+
 	template <class Grid>
 	auto getnbrs_helper(const Grid& grid, int fam, int idx, std::false_type)
 	{
@@ -116,80 +117,80 @@ namespace MARQOV
 		exit(0); // improve me
 		return std::vector<int>{};
 	}
-	
+
 	template <class Grid>
 	auto getnbrs_helper(const Grid& grid, int fam, int idx, std::true_type)
 	{
-		return grid.nbrs(fam,idx); 
+		return grid.nbrs(fam,idx);
 	}
-	
+
 	/** A helper to detect if the lattice has a getnbrs function.
-     * 
+     *
      * @tparam Grid the type of the lattice.
      */
 	template <class Grid>
 	auto getnbrs(const Grid& grid, int fam, int idx)
 	{
-		return getnbrs_helper<Grid>(grid, fam, idx, has_nbrs<Grid>{}); 
+		return getnbrs_helper<Grid>(grid, fam, idx, has_nbrs<Grid>{});
 	}
 
 
 
 
     /** has_flexnbrs utility struct.
-     * 
+     *
      * This utility class checks whether the lattice provides a getflexnbrs
      * method.
      * @tparam Grid The grid that we query.
      */
-	template<class Grid, class = void> 
+	template<class Grid, class = void>
 	struct has_flexnbrs : std::false_type {};
-	
+
 	template<class Grid>
-	struct has_flexnbrs<Grid, MARQOV::detail::type_sink_t< 
-		decltype( std::declval<Grid>().flexnbrs(std::declval<int>(), std::declval<int>()) ) 
+	struct has_flexnbrs<Grid, MARQOV::detail::type_sink_t<
+		decltype( std::declval<Grid>().flexnbrs(std::declval<int>(), std::declval<int>()) )
 		>> : std::true_type {};
 
-	
+
 	template <class Grid>
-	auto getflexnbrs_helper(const Grid& grid, int fam, int idx, std::false_type) 
+	auto getflexnbrs_helper(const Grid& grid, int fam, int idx, std::false_type)
 	{
 		cout << "flexnbrs not implement!" << flush;
 		exit(0); // improve me
 		return std::vector<int>{};
 	}
-	
+
 	template <class Grid>
-	auto getflexnbrs_helper(const Grid& grid, int fam, int idx, std::true_type)  
+	auto getflexnbrs_helper(const Grid& grid, int fam, int idx, std::true_type)
 	{
-		return grid.flexnbrs(fam,idx); 
+		return grid.flexnbrs(fam,idx);
 	}
-	
+
 	/** A helper to detect if the lattice has a getflexnbrs function.
-     * 
+     *
      * @tparam Grid the type of the lattice.
      */
 	template <class Grid>
-	auto getflexnbrs(const Grid& grid, int fam, int idx) 
+	auto getflexnbrs(const Grid& grid, int fam, int idx)
 	{
-		return getflexnbrs_helper<Grid>(grid, fam, idx, has_flexnbrs<Grid>{}); 
+		return getflexnbrs_helper<Grid>(grid, fam, idx, has_flexnbrs<Grid>{});
 	}
-    
+
 
 
 	/** has_bnds utility struct
-     * 
+     *
      * This struct checks whether the lattice provides a getbnds method.
      * @tparam Grid the lattice that we query.
      */
-//	template<class Grid, class = void> 
+//	template<class Grid, class = void>
 //	struct has_bnds : std::false_type {};
-//	
+//
 //	template<class Grid>
-//	struct has_bnds<Grid, MARQOV::detail::type_sink_t< 
-//		decltype( std::declval<Grid>().bnds(std::declval<int>(), std::declval<int>()) ) 
+//	struct has_bnds<Grid, MARQOV::detail::type_sink_t<
+//		decltype( std::declval<Grid>().bnds(std::declval<int>(), std::declval<int>()) )
 
-	
+
 	template <class Grid>
 	auto getbnds_helper(const Grid& grid, int fam, int idx, std::false_type)
 	{
@@ -197,26 +198,68 @@ namespace MARQOV
 		exit(0);
 		return std::vector<int>{1,1,1,1};
 	}
-	
+
 	template <class Grid>
 	auto getbnds_helper(const Grid& grid, int fam, int idx, std::true_type)
 	{
-		return grid.bnds(fam,idx); 
+		return grid.bnds(fam,idx);
 	}
-	
+
 	/** A helper to detect if the lattice has a getbnds function.
-     * 
+     *
      * @tparam Grid the type of the lattice.
      */
 	template <class Grid>
 	auto getbnds(const Grid& grid, int fam, int idx)
 	{
-		return getbnds_helper<Grid>(grid, fam, idx, has_bnds<Grid>{}); 
+		return getbnds_helper<Grid>(grid, fam, idx, has_bnds<Grid>{});
 	}
+
+
+
+
+
+	// check of the existence of class of member with name "multisite" at compile time
+	// can be of any type!
+	template <typename T, typename = int>
+	struct HasFlexTerms : std::false_type { };
+
+	template <typename T>
+	struct HasFlexTerms <T, decltype((void) T::multisite, 0)> : std::true_type { };
+
+
+	template <class Grid, class Hamiltonian, class StateSpace, class StateVector>
+	double compute_flexenergydiff(Grid& grid, Hamiltonian& ham, StateSpace& statespace, StateVector& svnew, StateVector& svold, int rsite, std::true_type)
+	{
+		static_assert(Is_Container<decltype(std::declval<Hamiltonian>().multisite)>::value,
+			"[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
+//		typedef typename Hamiltonian::StateVector StateVector;
+		typedef typename std::remove_cv<decltype(ham.multisite.size())>::type FlexSizeType;
+
+		double flexenergydiff = 0;
+		for (FlexSizeType c=0; c<ham.multisite.size(); c++)
+		{
+			auto nbrs = getflexnbrs<Grid>(grid, c, rsite);
+			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace);
+			flexenergydiff += dot(ham.multisite[c]->k, diff); 
+		}
+		return flexenergydiff;
+	}
+
+	template <class Grid, class Hamiltonian, class StateSpace, class StateVector>
+	double compute_flexenergydiff(Grid& grid, Hamiltonian& ham, StateSpace& statespace, StateVector& svnew, StateVector& svold, int rsite, std::false_type)
+	{
+		return 0;
+	}
+
+
+
+
+
 
     /**
      * Is_Container utility struct.
-     * 
+     *
      * Helpers to determine if the interactions are container-like.
      * By that we mean whether it has a .size() method and an array access
      * operator.
@@ -229,7 +272,7 @@ namespace MARQOV
     {
         static constexpr bool value = false;
     };
-    
+
     template <class Cont>
     struct Is_Container<Cont,
     MARQOV::detail::type_sink_t<decltype(std::declval<Cont>().size())>,
