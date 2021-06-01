@@ -1,20 +1,10 @@
-/* This file is part of MARQOV:
- * A modern framework for classical spin models on general topologies
- * Copyright (C) 2020-2021, The MARQOV Project
- *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option)
- * any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License along with
- * this program. If not, see <https://www.gnu.org/licenses/>.
- */
+/** @file BlumeEmeryGriffiths.h
+  *
+  * @brief The Blume Emergy Griffiths (BEG) Hamiltonian
+  *
+  * introduced in M. Blume, V. J. Emery, and R. B. Griftiths, Phys. Rev. A 4, 1071 (1971)
+  * phase diagram: L. Wang, F. Lee, and J. D. Kimel, Phys. Rev. B 36, 8945 (1987)
+  */
 
 #ifndef BLUMEEMERYGRIFFITHS_H
 #define BLUMEEMERYGRIFFITHS_H
@@ -25,43 +15,15 @@
 #include "../hamparts.h"
 #include "termcollection.h"
 
+
 // ------------------------------ OBSERVABLES ---------------------------
 
-// ...
-
+#include "../observables.h"
 
 
 // ------------------------------ INITIALIZER ---------------------------
 
-template <class StateVector, class RNG>
-class BlumeEmeryGriffiths_Initializer
-{
-	public:
-		BlumeEmeryGriffiths_Initializer(RNG& rn) : rng(rn) {}
-
-		StateVector newsv(const StateVector& svold) 
-		{
-			StateVector retval(svold); 
-			int state = retval[0];
-
-			if (state == 0)
-			{
-				if (rng.real() < 0.5) state = -1;
-				else state = +1;
-			}
-			else // +1/-1
-			{
-				if (rng.real() < 0.5) state *= -1;
-				else state = 0;
-			}
-
-			retval[0] = state;
-			return retval;
-		};
-
-	private:
-		RNG& rng;
-};
+#include "initializers.h"
 
 
 // ------------------------------ HAMILTONIAN ---------------------------
@@ -71,10 +33,7 @@ class BiquadraticExchangeInteraction : public FlexTerm<StateSpace, StateVector>
 {
 	public:
 
-		BiquadraticExchangeInteraction(double k)
-		{
-			this->k = k;
-		}
+		BiquadraticExchangeInteraction(double k) {this->k = k;}
 		~BiquadraticExchangeInteraction() {};
 
 
@@ -141,7 +100,7 @@ class BlumeEmeryGriffiths
 
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
-		using MetroInitializer = BlumeEmeryGriffiths_Initializer<StateVector, RNG>;
+		using MetroInitializer = Spin1_Initializer<StateVector, RNG>;
 
 
 

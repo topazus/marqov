@@ -39,7 +39,7 @@ using std::ofstream;
 #include "replicate.h"
 #include "svmath.h"
 #include "filters.h"
-//#include "embedder.h"
+#include "embedder.h"
 #include "marqovscheduler.h"
 #include "util.h"
 

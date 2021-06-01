@@ -25,43 +25,15 @@
 #include "../hamparts.h"
 #include "termcollection.h"
 
+
 // ------------------------------ OBSERVABLES ---------------------------
 
-// ...
-
+#include "../observables.h"
 
 
 // ------------------------------ INITIALIZER ---------------------------
 
-template <class StateVector, class RNG>
-class BlumeCapel_Initializer
-{
-	public:
-		BlumeCapel_Initializer(RNG& rn) : rng(rn) {}
-
-		StateVector newsv(const StateVector& svold) 
-		{
-			StateVector retval(svold); 
-			int state = retval[0];
-
-			if (state == 0)
-			{
-				if (rng.real() < 0.5) state = -1;
-				else state = +1;
-			}
-			else // +1/-1
-			{
-				if (rng.real() < 0.5) state *= -1;
-				else state = 0;
-			}
-
-			retval[0] = state;
-			return retval;
-		};
-
-	private:
-		RNG& rng;
-};
+#include "initializers.h"
 
 
 // ------------------------------ HAMILTONIAN ---------------------------
@@ -83,7 +55,7 @@ class BlumeCapel
 
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
-		using MetroInitializer = BlumeCapel_Initializer<StateVector, RNG>;
+		using MetroInitializer = Spin1_Initializer<StateVector, RNG>;
 
 
 
