@@ -53,17 +53,17 @@ using std::ofstream;
 
 // Hamiltonians
 #include "hamiltonian/Heisenberg.h"
-//#include "hamiltonian/Ising.h"
-//#include "hamiltonian/Phi4.h"
-//#include "hamiltonian/BlumeCapel.h"
+#include "hamiltonian/Ising.h"
+#include "hamiltonian/Phi4.h"
+#include "hamiltonian/BlumeCapel.h"
 #include "hamiltonian/BlumeEmeryGriffiths.h"
-//#include "hamiltonian/XXZAntiferro.h"
-//#include "hamiltonian/XXZAntiferroSingleAniso.h"
-//#include "hamiltonian/AshkinTeller.h"
-//#include "hamiltonian/EdwardsAndersonIsing.h"
+#include "hamiltonian/XXZAntiferro.h"
+#include "hamiltonian/XXZAntiferroSingleAniso.h"
+#include "hamiltonian/AshkinTeller.h"
+#include "hamiltonian/EdwardsAndersonIsing.h"
 //#include "hamiltonian/Ssh.h" // seperate branch
-//#include "hamiltonian/BlumeCapelBipartite.h"
-//#include "hamiltonian/AshkinTeller.h"
+#include "hamiltonian/BlumeCapelBipartite.h"
+#include "hamiltonian/AshkinTeller.h"
 
 using namespace MARQOV;
 
@@ -104,7 +104,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	// ----------------- select simulation ------------------
 
-/*
 	if (ham == "Ising")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
@@ -155,7 +154,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-
 	else if (ham == "BlumeCapel")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
@@ -165,10 +163,11 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		
 		RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
-*/
 
-//	else if (ham == "BlumeEmeryGriffiths")
-//	{
+
+
+	else if (ham == "BlumeEmeryGriffiths")
+	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
 		auto D    = registry.Get<std::vector<double> >("mc.ini", ham, "D");
@@ -176,9 +175,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto parameters = cart_prod(beta, J, D, K);
 		
 		RegularLatticeLoop<BlumeEmeryGriffiths<int>>(registry, outbasedir, parameters, defaultfilter);
-//	}
+	}
 
-/*
+
+
 	else if (ham == "XXZAntiferro")
 	{
 		auto beta     = registry.Get<std::vector<double>>("mc.ini", ham, "beta");
@@ -188,7 +188,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		
 		RegularLatticeLoop<XXZAntiferro<double>>(registry, outbasedir, parameters, defaultfilter);
 	}
-
 
 
 
@@ -428,7 +427,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		}
 		sched.start();
 	}
-	*/
 }
 
 

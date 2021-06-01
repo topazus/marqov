@@ -36,27 +36,7 @@
 
 // ------------------------------ INITIALIZER ---------------------------
 
-template <class StateVector, class RNG>
-class Heisenberg_Initializer
-{
-	public:
-		// provide the spin dimension as a compile-time constant expression
-		static constexpr int SymD = std::tuple_size<StateVector>::value;
-
-		// constructors
-		Heisenberg_Initializer()   {}
-		Heisenberg_Initializer(RNG& rn) : rng(rn) {}
-
-		// generate new statevector
-		StateVector newsv(const StateVector&) 
-		{
-			return rnddir<RNG, double, SymD>(rng);
-		};
-
-	private:
-		RNG& rng;
-};
-
+#include "initializers.h"
 
 
 // ------------------------------ HAMILTONIAN ---------------------------
@@ -95,7 +75,7 @@ class Heisenberg
 
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
-		using MetroInitializer =  Heisenberg_Initializer<StateVector, RNG>; 
+		using MetroInitializer =  NVector_Initializer<StateVector, RNG>; 
 
 
 		//  ----  Hamiltonian terms  ----

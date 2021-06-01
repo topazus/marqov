@@ -16,7 +16,7 @@
 
 // ------------------------------ INITIALIZER ---------------------------
 
-#include "XXZAntiferro.h"
+#include "initializers.h"
 
 
 
@@ -68,7 +68,7 @@ class XXZAntiferroSingleAniso
 
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
-		using MetroInitializer =  XXZAntiferro_Initializer<StateVector, RNG>; 
+		using MetroInitializer = NVector_Initializer<StateVector, RNG>; 
 
 
 		//  ----  Hamiltonian terms  ----	

@@ -5,13 +5,12 @@
 #include <vector>
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
-#include "../obsparts.h"
 #include "termcollection.h" 
 
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-// ...
+#include "../observables.h"
 
 
 // ------------------------------ INITIALIZER ---------------------------

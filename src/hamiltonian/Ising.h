@@ -26,7 +26,7 @@
 #include <functional>
 #include <array>
 #include "../hamparts.h"
-#include "../obsparts.h"
+#include "../observables.h"
 #include "termcollection.h"
 
 

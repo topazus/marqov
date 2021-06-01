@@ -123,24 +123,7 @@ class XXZAntiferroStaggeredMagXY
 
 // ------------------------------ INITIALIZER ---------------------------
 
-template <class StateVector, class RNG>
-class XXZAntiferro_Initializer
-{
-	public:
-		// constructors
-		XXZAntiferro_Initializer(RNG& rn) : rng(rn) {}
-
-		// generate new statevector
-		StateVector newsv(const StateVector&) 
-		{
-			return rnddir<RNG, double, 3>(rng);
-		};
-
-	private:
-		RNG& rng;
-};
-
-
+#include "initializers.h"
 
 
 
@@ -209,7 +192,7 @@ class XXZAntiferro
 		
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
-		using MetroInitializer =  XXZAntiferro_Initializer<StateVector, RNG>; 
+		using MetroInitializer = NVector_Initializer<StateVector, RNG>; 
 
 
 		//  ----  Hamiltonian terms  ----
