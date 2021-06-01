@@ -216,41 +216,144 @@ namespace MARQOV
 	}
 
 
+	
+	
+	
+	
+	
+	
+/**
+ * Helper function for the Metropolis algorithm, sums over local neighbourhood of spin
+ *
+ * @tparam Lattice the type of the lattice
+ * @tparam Hamiltonian the type of the Hamiltonian
+ * @tparam StateSpace the type of the statespace
+ * @param grid the lattice
+ * @param ham the Hamiltonian
+ * @param statespace the statespace
+ * @param a the index of the interaction term under consideration
+ * @param rsite the site under consideration
+ * @param std::true_type lattice has function grid.nbrs
+ * @param std::true_type lattice has function grid.bnds
+ *
+ * @return sum over neighbours after applying the interaction term and weighted by respective bond strengths
+ */
+template <class Lattice, class Hamiltonian, class StateSpace>
+typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid, 
+											  const Hamiltonian& ham, 
+											  const StateSpace& statespace, 
+											  int a, 
+											  int rsite, 
+											  std::true_type, 
+											  std::true_type) 
+{
+	typedef typename Hamiltonian::StateVector StateVector;
 
+	// gather neighbours and bonds
+	const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
+	const auto bnds = getbnds<Lattice>(grid, a, rsite);
 
+	StateVector neighbourhood = {0};
 
-	// check of the existence of class of member with name "multisite" at compile time
-	// can be of any type!
-	template <typename T, typename = int>
-	struct HasFlexTerms : std::false_type { };
-
-	template <typename T>
-	struct HasFlexTerms <T, decltype((void) T::multisite, 0)> : std::true_type { };
-
-
-	template <class Grid, class Hamiltonian, class StateSpace, class StateVector>
-	double compute_flexenergydiff(Grid& grid, Hamiltonian& ham, StateSpace& statespace, StateVector& svnew, StateVector& svold, int rsite, std::true_type)
+	// sum over neighbours
+	for (std::size_t i=0; i<nbrs.size(); ++i)
 	{
-		static_assert(Is_Container<decltype(std::declval<Hamiltonian>().multisite)>::value,
-			"[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
-//		typedef typename Hamiltonian::StateVector StateVector;
-		typedef typename std::remove_cv<decltype(ham.multisite.size())>::type FlexSizeType;
-
-		double flexenergydiff = 0;
-		for (FlexSizeType c=0; c<ham.multisite.size(); c++)
-		{
-			auto nbrs = getflexnbrs<Grid>(grid, c, rsite);
-			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace);
-			flexenergydiff += dot(ham.multisite[c]->k, diff); 
-		}
-		return flexenergydiff;
+		// index of the neighbour
+		auto idx = nbrs[i];
+		                
+		// configuration of the neighbour after applying the interaction
+		auto nbr = ham.interactions[a]->get(statespace[idx]);
+		                
+		// sum up contributions from neighbourbood
+		neighbourhood = neighbourhood + mult(bnds[i], nbr);
 	}
 
-	template <class Grid, class Hamiltonian, class StateSpace, class StateVector>
-	double compute_flexenergydiff(Grid& grid, Hamiltonian& ham, StateSpace& statespace, StateVector& svnew, StateVector& svold, int rsite, std::false_type)
+	return neighbourhood;
+}
+
+
+/**
+ * Helper function for the Metropolis algorithm, sums over local neighbourhood of spin
+ *
+ * @tparam Lattice the type of the lattice
+ * @tparam Hamiltonian the type of the Hamiltonian
+ * @tparam StateSpace the type of the statespace
+ * @param grid the lattice
+ * @param ham the Hamiltonian
+ * @param statespace the statespace
+ * @param a the index of the interaction term under consideration
+ * @param rsite the site under consideration
+ * @param std::true_type lattice has function grid.nbrs
+ * @param std::false_type lattice has no function grid.bnds
+ *
+ * @return sum over neighbours after applying the interaction term
+ */
+template <class Lattice, class Hamiltonian, class StateSpace>
+typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid, 
+											  const Hamiltonian& ham, 
+											  const StateSpace& statespace, 
+											  int a, 
+											  int rsite, 
+											  std::true_type, 
+											  std::false_type) 
+{
+	typedef typename Hamiltonian::StateVector StateVector;
+
+	// gather neighbours
+	const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
+
+	StateVector neighbourhood = {0};
+
+	// sum over neighbours
+	for (std::size_t i=0; i<nbrs.size(); ++i)
 	{
-		return 0;
+		// index of the neighbour
+		auto idx = nbrs[i];
+		                
+		// configuration of the neighbour after applying the interaction
+		auto nbr = ham.interactions[a]->get(statespace[idx]);
+		                
+		// sum up contributions from neighbourbood
+		neighbourhood = neighbourhood + nbr;
 	}
+
+	return neighbourhood;
+}
+
+
+/**
+ * Helper function for the Metropolis algorithm, sums over local neighbourhood of spin.
+ * this overloading covers the case when the lattice has no function "nbrs".
+ * in this case the general Metropolis algorithm cannot be used hence the user is given an error message
+ *
+ * @tparam Lattice the type of the lattice
+ * @tparam Hamiltonian the type of the Hamiltonian
+ * @tparam StateSpace the type of the statespace
+ * @param grid the lattice
+ * @param ham the Hamiltonian
+ * @param statespace the statespace
+ * @param a the index of the interaction term under consideration
+ * @param rsite the site under consideration
+ * @param std::true_type lattice has no function grid.nbrs
+ * @param std::false_type lattice has no function grid.bnds
+ *
+ * @return does not apply 
+ */
+template <class Lattice, class Hamiltonian, class StateSpace>
+typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid, 
+											  const Hamiltonian& ham, 
+											  const StateSpace& statespace, 
+											  int a, 
+											  int rsite, 
+											  std::false_type, 
+											  std::false_type) 
+{
+	cout << "[MARQOV] Error: The lattice does not provide the following function: nbrs" << endl;
+	cout << "In order to use the general Metropolis algorithm, this function must be implemented" << endl;
+	cout << "Alternatively, you can write you own specialization of the Metropolis algorithm" << endl;
+	exit(0);
+}
+
 
 
 
@@ -281,7 +384,140 @@ namespace MARQOV
     {
         static constexpr bool value = true;
     };
-};
 
+
+
+
+
+
+	// check of the existence of class of member with name "interactions" at compile time
+	// can be of any type!
+	template <typename T, typename = int>
+	struct HasInteractions : std::false_type { };
+
+	template <typename T>
+	struct HasInteractions <T, decltype((void) T::interactions, 0)> : std::true_type { };
+
+	template <class Grid, class Hamiltonian, class StateSpace, class StateVector>
+	double compute_interactionenergydiff(Grid& grid, Hamiltonian& ham, StateSpace& statespace, StateVector& svnew, StateVector& svold, int rsite, std::true_type)
+	{
+		static_assert(MARQOV::Is_Container<decltype(std::declval<Hamiltonian>().interactions)>::value,
+			"[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
+//		typedef typename Hamiltonian::StateVector StateVector;
+		typedef typename std::remove_cv<decltype(ham.interactions.size())>::type InteractionSizeType;
+		typedef typename has_nbrs<Grid>::type HasNbrs;
+		typedef typename has_bnds<Grid>::type HasBnds;
+
+		double interactionenergydiff = 0;
+		for (InteractionSizeType a=0; a<ham.interactions.size(); a++)
+		{
+			// sum up neighbourhood contributions
+			auto nbrhood = nbrhoodloop<Grid,Hamiltonian,StateSpace>(grid, ham, statespace, a, rsite, HasNbrs(), HasBnds());
+
+			// compute interaction energy difference
+			interactionenergydiff += ham.interactions[a]->J * (dot(svnew-svold, nbrhood));
+		}
+		return interactionenergydiff;
+	}
+
+	template <class Grid, class Hamiltonian, class StateSpace, class StateVector>
+	double compute_interactionenergydiff(Grid& grid, Hamiltonian& ham, StateSpace& statespace, StateVector& svnew, StateVector& svold, int rsite, std::false_type)
+	{
+		return 0;
+	}
+
+
+
+
+
+
+
+
+
+	// check of the existence of class of member with name "onsite" at compile time
+	// can be of any type!
+	template <typename T, typename = int>
+	struct HasOnsite : std::false_type { };
+
+	template <typename T>
+	struct HasOnsite <T, decltype((void) T::onsite, 0)> : std::true_type { };
+
+	template <class Grid, class Hamiltonian, class StateVector>
+	double compute_onsiteenergydiff(Grid& grid, Hamiltonian& ham, StateVector& svnew, StateVector& svold, int rsite, std::true_type)
+	{
+		static_assert(MARQOV::Is_Container<decltype(std::declval<Hamiltonian>().onsite)>::value,
+			"[MARQOV::Metropolis] COMPILATION FAILED: onsite terms are not a container.");
+//		typedef typename Hamiltonian::StateVector StateVector;
+		typedef typename std::remove_cv<decltype(ham.onsite.size())>::type OnSiteSizeType;
+
+
+		// find Hamiltonian terms associated to "rsite"
+		typedef typename has_trms<Grid>::type HasTrms;
+
+		double onsiteenergydiff = 0;
+
+
+		auto terms = get_terms<Grid,Hamiltonian>(grid, ham, rsite, HasTrms());
+
+		for (OnSiteSizeType b=0; b<terms.size(); b++)
+		{
+			// select on-site term
+			const int tidx = terms[b];
+
+			// compute the difference
+			auto diff = ham.onsite[tidx]->get(svnew) - ham.onsite[tidx]->get(svold);
+
+			// multiply the constant
+			onsiteenergydiff += dot(ham.onsite[tidx]->h, diff);
+		}
+
+		return onsiteenergydiff;
+	}
+
+
+	template <class Grid, class Hamiltonian, class StateVector>
+	double compute_onsiteenergydiff(Grid& grid, Hamiltonian& ham, StateVector& svnew, StateVector& svold, int rsite, std::false_type)
+	{
+		return 0;
+	}
+
+
+
+
+
+
+	// check of the existence of class of member with name "multisite" at compile time
+	// can be of any type!
+	template <typename T, typename = int>
+	struct HasFlexTerms : std::false_type { };
+
+	template <typename T>
+	struct HasFlexTerms <T, decltype((void) T::multisite, 0)> : std::true_type { };
+
+	template <class Grid, class Hamiltonian, class StateSpace, class StateVector>
+	double compute_flexenergydiff(Grid& grid, Hamiltonian& ham, StateSpace& statespace, StateVector& svnew, StateVector& svold, int rsite, std::true_type)
+	{
+		static_assert(MARQOV::Is_Container<decltype(std::declval<Hamiltonian>().multisite)>::value,
+			"[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
+//		typedef typename Hamiltonian::StateVector StateVector;
+		typedef typename std::remove_cv<decltype(ham.multisite.size())>::type FlexSizeType;
+
+		double flexenergydiff = 0;
+		for (FlexSizeType c=0; c<ham.multisite.size(); c++)
+		{
+			auto nbrs = getflexnbrs<Grid>(grid, c, rsite);
+			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace);
+			flexenergydiff += dot(ham.multisite[c]->k, diff); 
+		}
+		return flexenergydiff;
+	}
+
+	template <class Grid, class Hamiltonian, class StateSpace, class StateVector>
+	double compute_flexenergydiff(Grid& grid, Hamiltonian& ham, StateSpace& statespace, StateVector& svnew, StateVector& svold, int rsite, std::false_type)
+	{
+		return 0;
+	}
+
+};
 
 #endif
