@@ -245,7 +245,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	
 			// Monte Carlo parameters
 			MARQOV::Config mp(outpath);
-			mp.setnsweeps(50);
+			mp.setnmetro(50);
 			mp.setncluster(0);
 			mp.setwarmupsteps(200);
 			mp.setgameloopsteps(1000);
@@ -316,7 +316,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	
 			// Monte Carlo parameters
 			MARQOV::Config mp(outpath);
-			mp.setnsweeps(5);
+			mp.setnmetro(5);
 			mp.setncluster(15);
 			mp.setwarmupsteps(500);
 			mp.setgameloopsteps(1500);
@@ -392,7 +392,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 	
 			MARQOV::Config mp(outpath);
-			mp.setnsweeps(10);
+			mp.setnmetro(10);
 			mp.setncluster(int(L/2));
 			mp.setwarmupsteps(200);
 			mp.setgameloopsteps(500);
