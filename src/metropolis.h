@@ -29,15 +29,13 @@ namespace MARQOV
 {
 
 
-
-
-/**
- * A class to encapsulate the Metropolis update.
- * Using the power of partial template class specializations it is possible to
- * define moves peculiar to your model.
- * @tparam Hamiltonian The Hamiltonian used to generate a Metropolis move
- * @tparam Lattice The lattice used for the neighbourhood relations.
- */
+	/**
+	 * A class to encapsulate the Metropolis update.
+	 * Using the power of partial template class specializations it is possible to
+	 * define moves peculiar to your model.
+	 * @tparam Hamiltonian The Hamiltonian used to generate a Metropolis move
+	 * @tparam Lattice The lattice used for the neighbourhood relations.
+	 */
 	template <class Hamiltonian, class Lattice>
 	struct Metropolis
 	{
@@ -94,7 +92,7 @@ namespace MARQOV
 		// I. interaction part
 		double interactionenergydiff = compute_interactionenergydiff(grid, ham, statespace, svnew, svold, rsite, HasInt());
         
-		// II. onsite energy part  -----
+		// II. onsite energy part
 		auto onsiteenergydiff = compute_onsiteenergydiff(grid, ham, svnew, svold, rsite, HasOns());
 
 		// III. flex term energy
