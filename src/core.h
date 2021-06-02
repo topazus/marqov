@@ -769,11 +769,11 @@ class Core : public RefType<Grid>
             }
         }
 
-        /** Select the user supplied initializer
+        /** Select the user supplied initializer for the statespace.
          * 
          * @tparam StateSpace The type of the statespace
-         * @tparam Lattice The Lattice
-         * @tparam H The Hamiltonian
+         * @tparam Lattice The type of the Lattice
+         * @tparam H The type of the Hamiltonian
          * @tparam Ts optional arguments
          * 
          * @param statespace The statespace of MARQOV.

@@ -99,7 +99,7 @@ namespace MARQOV
         void createSimfromParameter(ParamType& p, Callable filter)
         {
             auto t = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
-            
+
             auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
             oursims.push_back(simptr);
             this->enqueuesim(*simptr);
@@ -118,7 +118,7 @@ namespace MARQOV
             taskqueue.enqueue([&, idx]{
                 //work here
                 simvectormutex.lock();
-                auto mysim = simvector[idx];
+                Sim* mysim = simvector[idx];
                 simvectormutex.unlock();
                 mysim->init();
                 mysim->wrmploop();
@@ -173,16 +173,16 @@ namespace MARQOV
         void waitforall() {}
         /** Construct Scheduler
          * 
-         * @param maxptsteps How many parallel tempering steps do we do
+         * @param maxptsteps How many parallel tempering steps do we do.
          * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
          */
         Scheduler(int maxptsteps, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
-        taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads))
+        taskqueue(1/*((nthreads == 0)?std::thread::hardware_concurrency():nthreads)*/)
         {}
-        /** Tidy up scheduler
+        /** Tidy up scheduler.
          * 
-         * this frees all resources and waits until all threads have finished.
+         * This frees all resources and waits until all threads have finished.
          */
         ~Scheduler() {
             if (!nowork() && !masterstop && (taskqueue.tasks_enqueued() > 0) )
@@ -194,7 +194,6 @@ namespace MARQOV
             masterstop = true;
             for (auto sim : oursims)
                 delete sim;
-            //         std::cout<<"Deleting Scheduler"<<std::endl;
         }
     private:
         /**
