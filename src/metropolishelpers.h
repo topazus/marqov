@@ -139,6 +139,9 @@ namespace MARQOV
 
 
 
+	
+
+
 	template <class Grid>
 	auto getnbrs_helper(const Grid& grid, int fam, int idx, std::false_type)
 	{
@@ -190,25 +193,12 @@ namespace MARQOV
 
 
 
-	/** has_bnds utility struct
-     *
-     * This struct checks whether the lattice provides a getbnds method.
-     * @tparam Grid the lattice that we query.
-     */
-//	template<class Grid, class = void>
-//	struct has_bnds : std::false_type {};
-//
-//	template<class Grid>
-//	struct has_bnds<Grid, MARQOV::detail::type_sink_t<
-//		decltype( std::declval<Grid>().bnds(std::declval<int>(), std::declval<int>()) )
-
 
 	template <class Grid>
 	auto getbnds_helper(const Grid& grid, int fam, int idx, std::false_type)
 	{
-		cout << "error" << endl;
+		cout << "[MARQOV] Error: The lattice does not have a bnds function" << endl;
 		exit(0);
-		return std::vector<int>{1,1,1,1};
 	}
 
 	template <class Grid>
@@ -217,10 +207,6 @@ namespace MARQOV
 		return grid.bnds(fam,idx);
 	}
 
-	/** A helper to detect if the lattice has a getbnds function.
-     *
-     * @tparam Grid the type of the lattice.
-     */
 	template <class Grid>
 	auto getbnds(const Grid& grid, int fam, int idx)
 	{
