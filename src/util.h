@@ -41,8 +41,6 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 
 	// Init Scheduler
 	SchedulerType sched(1, nthreads);
-    
-
 
 	for (std::size_t j=0; j<nL.size(); j++)
 	{
@@ -60,12 +58,9 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 
 		makeDir(mp.outpath);
 		
-		// set up and execute        
-		RegularHypercubic& latt = latts[j];
-		
-		auto params = finalize_parameter(latt, mp, hp);
-		auto rparams = replicator(params, nreplicas[j]);
-
+		auto params = finalize_parameter(latts[j], mp, hp);
+ 		auto rparams = replicator(params, nreplicas[j]);
+ 
 		for(auto p : rparams) sched.createSimfromParameter(p, filter);
 	}
 	sched.start();
