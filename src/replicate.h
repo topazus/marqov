@@ -48,46 +48,30 @@ inline std::vector<Params> replicator(const std::vector<Params>& params, int nre
 	return newparams;
 }
 
+/** Set up a vector with the parameters for the simulation.
+ * 
+ * @tparam L the argument for the lattice information. If a Lattice or a reference to a full lattice is given for lp
+ *           the universal reference decays to a plain reference. If a temporary object is given, move semantcs is invoked.
+ * @tparam HArgs A template parameter pack with the parameters of the Hamiltonian
+ * 
+ * @param lp Depending on context this is usually either a reference to a lattice, or a tuple of arguments for a lattice.
+ * @param mp The parameters for MARQOV.
+ * @param hp The array with the hamiltonian parameters.
+ * 
+ * @return a vector of tuples with the full arguments for MARQOV::Core
+ */
 template <class L, class HArgs>
-inline auto finalize_parameter(L lp, const MARQOV::Config& mp, const std::vector<HArgs>& hp)
+inline auto finalize_parameter(L&& l_or_lp, const MARQOV::Config& mp, const std::vector<HArgs>& hp)
 {
 	typedef std::tuple<L, MARQOV::Config, HArgs> RetType;
 	std::vector<RetType> params;
 
 	for(std::size_t i=0; i < hp.size(); ++i) 
 	{
-		params.emplace_back(lp, mp, hp[i]);
+		params.emplace_back(l_or_lp, mp, hp[i]);
 	}
 
 	return params;
 }
-/*
-template <class LArgs, class MArgs, class HArgs>
-inline auto finalize_parameter_triple(const LArgs& lp, const MArgs& mp, const std::vector<HArgs>& hp)
-{
-	std::vector<Triple<LArgs, MArgs, HArgs>> params;
-
-	for(std::size_t i=0; i<hp.size(); ++i) 
-	{
-		params.push_back(make_triple(lp, mp, hp[i]));
-	}
-
-	return params;
-}
-
-
-template <class MArgs, class HArgs>
-inline auto finalize_parameter_pair(const MArgs& mp, const std::vector<HArgs>& hp)
-{
-	std::vector<std::pair<MArgs, HArgs>> params;
-
-	for(std::size_t i=0; i<hp.size(); ++i) 
-	{
-		params.push_back(std::make_pair(mp, hp[i]));
-	}
-
-	return params;
-}*/
-
 
 #endif
