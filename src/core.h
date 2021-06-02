@@ -364,17 +364,16 @@ namespace MARQOV
 
 // --------------------------- MARQOV::Core class -------------------------------
 
-template <class SV, class Grid>
+template <class StateVectorT, class Grid>
 class Space
 {
 	private:
-	SV* myspace;
-	int size_;
+	StateVectorT *const myspace;
+	const std::size_t size_;
 
 	public:
 	typedef Grid Lattice; ///< The Type of the Lattice 
-	typedef SV StateVector;
-
+	typedef StateVectorT StateVector;
 
 	Space(int size) : myspace(new StateVector[size]), size_(size) {}
 	~Space() {delete [] myspace;}
@@ -407,8 +406,7 @@ class Core : public RefType<Grid>
         typedef Grid Lattice; ///< The Type of the Lattice
 		typedef typename Hamiltonian::StateVector StateVector; ///< The type of the StateVector as retrieved from the Hamiltonian.
 
-//		typedef StateVector* StateSpace; ///< the type of the state space.
-		typedef Space<StateVector,Grid> StateSpace; ///< the type of the state space.
+		typedef Space<StateVector, Grid> StateSpace; ///< the type of the state space.
 
 		marqovtime::timetracker mrqvt; ///< The TimeTracker for tracking times.
 
@@ -914,7 +912,7 @@ class Core : public RefType<Grid>
             std::array<hsize_t, rank> count;
             count.fill(static_cast<hsize_t>(this->grid.size()));
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
-//            dataset.write(statespace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
+            dataset.write(statespace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
         }
 
         /** Destructor.
