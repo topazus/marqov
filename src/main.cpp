@@ -293,7 +293,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "J");
 		auto hp = cart_prod(beta, J);
-        
 
 		// Typedefs
 		typedef Ising<int> Hamiltonian;
@@ -322,11 +321,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			mp.setwarmupsteps(500);
 			mp.setgameloopsteps(1500);
 
-			// lattice parameters
-			auto lp = std::make_tuple(L,dim);
-
-			// form parameter triple and replicate
-			auto params  = finalize_parameter(lp, mp, hp);
+			// form parameter triple with lattice parameters and replicate
+			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);
 			auto rparams = replicator(params, nreplicas[j]);
 
 			// feed scheduler
