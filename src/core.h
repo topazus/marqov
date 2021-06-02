@@ -362,8 +362,6 @@ namespace MARQOV
 		return _call(f, obj, t, std::make_index_sequence<size>{});
 	}
 
-// --------------------------- MARQOV::Core class -------------------------------
-
 template <class StateVectorT, class Grid>
 class Space
 {
@@ -384,7 +382,7 @@ class Space
 	const StateVector& operator[] (int j) const {return myspace[j];}
 
 };
-
+// --------------------------- MARQOV::Core class -------------------------------
 
 /** The MARQOV Core class.
  *
