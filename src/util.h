@@ -10,6 +10,16 @@
 using namespace MARQOV;
 
 
+/** Helper to execute a series of simulations on regular hypercubic lattices
+*
+* @tparam Hamiltonian the type of the Hamiltonian
+* @tparam Params the type of the parameter space
+* @tparam Callable the type of the filter
+* @param reg the registry
+* @param outbasedir	the base directory of the simulation output
+* @param hp the Hamiltonian parameters
+* @param filter the filter
+*/
 template <class Hamiltonian, class Params, class Callable>
 void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& hp, Callable filter)
 {
@@ -54,8 +64,6 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
 		MARQOV::Config mp(outpath);
-//		mp.setnsweeps(5);
-//		mp.setncluster(0);
 		mp.setnmetro(5);
 		mp.setncluster(int(L/2));
 		mp.setwarmupsteps(500);

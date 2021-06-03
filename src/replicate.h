@@ -24,16 +24,24 @@
 #include "helpers.h"
 
 
+/** A helper to replicate parameter sets (to be used for disordered systems).
+*
+* @tparam Params the type of a parameter set
+* @param params	the parameter set
+* @param nreplicas number of replicas
+*
+* @return returns vector of replicated parameters
+*/
 template <class Params>
-inline std::vector<Params> replicator(const std::vector<Params>& params, int nreplicas, int sortmode=0)
+inline std::vector<Params> replicator(const std::vector<Params>& params, int nreplicas)
 {
 	std::vector<Params> newparams;
 
 	int mcid = 0;
 	for(std::size_t i=0; i<params.size(); ++i)
 	{
-		auto&& l = std::get<0>(params[i]);
-		auto mp = std::get<1>(params[i]);
+		auto&& l  = std::get<0>(params[i]);
+		auto mp   = std::get<1>(params[i]);
 		auto&& hp = std::get<2>(params[i]);
 
 		for (int j = 0; j < nreplicas; ++j)
@@ -47,6 +55,8 @@ inline std::vector<Params> replicator(const std::vector<Params>& params, int nre
 
 	return newparams;
 }
+
+
 
 /** Set up a vector with the parameters for the simulation.
  * 

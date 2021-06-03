@@ -472,7 +472,6 @@ namespace MARQOV
 	{
 		static_assert(MARQOV::Is_Container<decltype(std::declval<Hamiltonian>().interactions)>::value,
 			"[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
-//		typedef typename Hamiltonian::StateVector StateVector;
 		typedef typename std::remove_cv<decltype(ham.interactions.size())>::type InteractionSizeType;
 		typedef typename has_nbrs<Grid>::type HasNbrs;
 		typedef typename has_bnds<Grid>::type HasBnds;
@@ -516,17 +515,14 @@ namespace MARQOV
 	{
 		static_assert(MARQOV::Is_Container<decltype(std::declval<Hamiltonian>().onsite)>::value,
 			"[MARQOV::Metropolis] COMPILATION FAILED: onsite terms are not a container.");
-//		typedef typename Hamiltonian::StateVector StateVector;
 		typedef typename std::remove_cv<decltype(ham.onsite.size())>::type OnSiteSizeType;
 
 
 		// find Hamiltonian terms associated to "rsite"
 		typedef typename has_trms<Grid>::type HasTrms;
+		auto terms = get_terms<Grid,Hamiltonian>(grid, ham, rsite, HasTrms());
 
 		double onsiteenergydiff = 0;
-
-
-		auto terms = get_terms<Grid,Hamiltonian>(grid, ham, rsite, HasTrms());
 
 		for (OnSiteSizeType b=0; b<terms.size(); b++)
 		{
@@ -572,14 +568,16 @@ namespace MARQOV
 	{
 		static_assert(MARQOV::Is_Container<decltype(std::declval<Hamiltonian>().multisite)>::value,
 			"[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
-//		typedef typename Hamiltonian::StateVector StateVector;
 		typedef typename std::remove_cv<decltype(ham.multisite.size())>::type FlexSizeType;
 
 		double flexenergydiff = 0;
 		for (FlexSizeType c=0; c<ham.multisite.size(); c++)
 		{
+			// extract neighbours
 			auto nbrs = getflexnbrs<Grid>(grid, c, rsite);
+			// compute energy difference
 			auto diff = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace);
+			// multiply constant
 			flexenergydiff += dot(ham.multisite[c]->k, diff); 
 		}
 		return flexenergydiff;
