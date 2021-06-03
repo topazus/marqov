@@ -32,26 +32,24 @@
 		
 		std::string str_repid = std::to_string(mp.repid);
 		std::string str_beta  = "beta"+std::to_string(std::get<0>(hp));
-		std::cout<<"[defaultfilter] "<<mp.outname<<std::endl;
 		mp.outname = str_beta+"_"+str_repid;
-		std::cout<<"[defaultfilter] "<<mp.outname<<std::endl;
 		return p;
 	};
 
-	auto defaultfilter_triple = [](auto p)
-	{
-       	auto& lp = p.first;
-       	auto& mp = p.second;
-       	auto& hp = p.third;
-
- 		auto str_repid = std::to_string(mp.repid);
-		auto str_beta  = "beta"+std::to_string(std::get<0>(hp));
-		auto str_L     = std::to_string(std::get<0>(lp));
-
-		mp.outname = str_beta+"_"+str_repid;
-
-		return p;
-	};
+// 	auto defaultfilter_triple = [](auto p)
+// 	{
+//        	auto& lp = p.first;
+//        	auto& mp = p.second;
+//        	auto& hp = p.third;
+// 
+//  		auto str_repid = std::to_string(mp.repid);
+// 		auto str_beta  = "beta"+std::to_string(std::get<0>(hp));
+// 		auto str_L     = std::to_string(std::get<0>(lp));
+// 
+// 		mp.outname = str_beta+"_"+str_repid;
+// 
+// 		return p;
+// 	};
 
 	auto xxzfilter = [](auto p)
 	{	
