@@ -65,7 +65,7 @@ namespace MARQOV
          * @param ws warmup steps
          * @param gls gameloop steps
          * @param nc number of cluster updates
-         * @param nsw number of sweeps
+         * @param nm number of metropolis updates
 		 */
 		Config(	std::string op, 
 					int i = 0, 
@@ -76,7 +76,7 @@ namespace MARQOV
 		  			int ws = 100, 
 		  			int gls = 200, 
 		  			int nc = 20, 
-		  			int nsw = 10) : outpath(op), 
+		  			int nm = 10) : outpath(op), 
 		  		 			  	 id(i), 
 		  					  	 repid(ri),
 		  					  	 seed(s), 
@@ -85,7 +85,7 @@ namespace MARQOV
 		  					  	 warmupsteps(ws), 
 		  					  	 gameloopsteps(gls), 
 		  					  	 ncluster(nc), 
-		  					  	 nsweeps(nsw) {}
+		  					  	 nmetro(nm) {}
 		
 		/** Default Copy Constructor of Config.
          */
@@ -118,7 +118,7 @@ namespace MARQOV
 		int warmupsteps; ///< The number of steps to do for warmups.
 		int gameloopsteps; ///< gameloop steps.
 		int ncluster; ///< number of cluster updates.
-		int nsweeps; ///< number of sweeps.
+		int nmetro; ///< number of Metropolis updates.
 
 		Config& setid(int i) {id = i; return *this;}
 
@@ -145,9 +145,9 @@ namespace MARQOV
          */
 		Config& setncluster(int nc) {ncluster = nc; return *this;}
 
-		/**Set the number of sweeps.
+		/**Set the number of Metropolis sweeps.
          */
-		Config& setnsweeps(int ns) {nsweeps = ns; return *this;}
+		Config& setnmetro(int nm) {nmetro = nm; return *this;}
 
 		/** Dump parameters to HDF5 Group.
          * 
@@ -164,7 +164,7 @@ namespace MARQOV
             dumpscalartoH5(mcg, "warmupsteps", warmupsteps);
             dumpscalartoH5(mcg, "gameloopsteps", gameloopsteps);
             dumpscalartoH5(mcg, "ncluster", ncluster);
-            dumpscalartoH5(mcg, "nsweeps", nsweeps);
+            dumpscalartoH5(mcg, "nmetro", nmetro);
         };
 	};
     
@@ -382,6 +382,7 @@ class Space
 	const StateVector& operator[] (int j) const {return myspace[j];}
 
 };
+	
 // --------------------------- MARQOV::Core class -------------------------------
 
 /** The MARQOV Core class.
@@ -403,9 +404,7 @@ class Core : public RefType<Grid>
         typedef Hamiltonian HamiltonianType; ///< Via HamiltonianType the used Hamiltonian is accessible.
         typedef Grid Lattice; ///< The Type of the Lattice
 		typedef typename Hamiltonian::StateVector StateVector; ///< The type of the StateVector as retrieved from the Hamiltonian.
-
-		typedef Space<StateVector, Grid> StateSpace; ///< the type of the state space.
-
+		typedef Space<StateVector, Lattice> StateSpace; ///< the type of the state space.
 		marqovtime::timetracker mrqvt; ///< The TimeTracker for tracking times.
 
 		// Local classes. We gain access to all Types of MARQOV::Core
@@ -502,8 +501,7 @@ class Core : public RefType<Grid>
 		step(-1),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
-		statespace(lattice.size()),
-//		statespace(setupstatespace(lattice.size())),
+		statespace(/*setupstatespace(lattice.size())*/lattice.size()),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
@@ -543,8 +541,7 @@ class Core : public RefType<Grid>
 		step(-1),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
-		statespace(this->grid.size()),
-//		statespace(setupstatespace(this->grid.size())),
+		statespace(/*setupstatespace(this->grid.size())*/this->grid.size()),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
@@ -573,67 +570,65 @@ class Core : public RefType<Grid>
 		auto setupstatespace(int size)
         {
             auto retval = new typename Hamiltonian::StateVector[size];
-			/*
-            if (step > 0)
-            {
-                std::cout<<"Previous data found! Continuing simulation at step "<<step<<std::endl;
-                //read in the state space
-                auto prevstepstate = dump.openGroup("/step" + std::to_string(step-1) + "/state");
-                {
-                    auto stateds = prevstepstate.openDataSet("hamiltonianstatespace");
-                    auto dataspace = stateds.getSpace();
-                    //read the data... For now we just hope that everything matches...
-                    int rank = dataspace.getSimpleExtentNdims();
-                    hsize_t fdims[rank], maxdims[rank], start[rank], dims_out[rank];
-                    dataspace.getSimpleExtentDims( dims_out, NULL);
-
-                    for(int i = 0; i < rank; ++i)
-                    {
-                        fdims[i] = static_cast<hsize_t>(size);
-                        maxdims[i] = H5S_UNLIMITED;
-                        start[i] = 0;
-                    }
-
-                    H5::DataSpace mspace1(rank, fdims, maxdims);
-                    dataspace.selectHyperslab(H5S_SELECT_SET, fdims, start);//We have no separate count array since fdims contains identical information
-                    stateds.read(retval, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
-                }
-        
-                //compare the used RNGs
-                {
-                    auto stateds = prevstepstate.openDataSet("RNG");
-                    auto dataspace = stateds.getSpace();
-                    //FIXME: proper reading of strings...
-                }
-        
-                std::vector<u_int64_t> rngstate;
-                {
-                    H5::DataSet stateds = prevstepstate.openDataSet("rngstate");
-                    auto dataspace = stateds.getSpace();
-                    //read the data... For now we just hope that everything matches...
-                    int rank = dataspace.getSimpleExtentNdims();
-                    hsize_t dims_out[rank];
-                    dataspace.getSimpleExtentDims( dims_out, NULL);
-                    rngstate.resize(dims_out[0]);
-                    hsize_t maxdims[rank], start[rank];
-                    for(int i = 0; i < rank; ++i)
-                    {
-                        maxdims[i] = H5S_UNLIMITED;
-                        start[i] = 0;
-                    }
-
-                    H5::DataSpace mspace1(rank, dims_out, maxdims);
-
-                    dataspace.selectHyperslab(H5S_SELECT_SET, dims_out, start);
-                    stateds.read(rngstate.data(), H5Mapper<u_int64_t>::H5Type(), mspace1, dataspace);
-                }
-                rngcache.setstate(rngstate);
-            }
-            else
-            {
-                //FIXME: initial seed!!
-            }
-			*/
+// //             if (step > 0)
+// //             {
+// //                 std::cout<<"Previous data found! Continuing simulation at step "<<step<<std::endl;
+// //                 //read in the state space
+// //                 auto prevstepstate = dump.openGroup("/step" + std::to_string(step-1) + "/state");
+// //                 {
+// //                     auto stateds = prevstepstate.openDataSet("hamiltonianstatespace");
+// //                     auto dataspace = stateds.getSpace();
+// //                     //read the data... For now we just hope that everything matches...
+// //                     int rank = dataspace.getSimpleExtentNdims();
+// //                     hsize_t fdims[rank], maxdims[rank], start[rank], dims_out[rank];
+// //                     dataspace.getSimpleExtentDims( dims_out, NULL);
+// // 
+// //                     for(int i = 0; i < rank; ++i)
+// //                     {
+// //                         fdims[i] = static_cast<hsize_t>(size);
+// //                         maxdims[i] = H5S_UNLIMITED;
+// //                         start[i] = 0;
+// //                     }
+// // 
+// //                     H5::DataSpace mspace1(rank, fdims, maxdims);
+// //                     dataspace.selectHyperslab(H5S_SELECT_SET, fdims, start);//We have no separate count array since fdims contains identical information
+// //                     stateds.read(retval, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
+// //                 }
+// //         
+// //                 //compare the used RNGs
+// //                 {
+// //                     auto stateds = prevstepstate.openDataSet("RNG");
+// //                     auto dataspace = stateds.getSpace();
+// //                     //FIXME: proper reading of strings...
+// //                 }
+// //         
+// //                 std::vector<u_int64_t> rngstate;
+// //                 {
+// //                     H5::DataSet stateds = prevstepstate.openDataSet("rngstate");
+// //                     auto dataspace = stateds.getSpace();
+// //                     //read the data... For now we just hope that everything matches...
+// //                     int rank = dataspace.getSimpleExtentNdims();
+// //                     hsize_t dims_out[rank];
+// //                     dataspace.getSimpleExtentDims( dims_out, NULL);
+// //                     rngstate.resize(dims_out[0]);
+// //                     hsize_t maxdims[rank], start[rank];
+// //                     for(int i = 0; i < rank; ++i)
+// //                     {
+// //                         maxdims[i] = H5S_UNLIMITED;
+// //                         start[i] = 0;
+// //                     }
+// // 
+// //                     H5::DataSpace mspace1(rank, dims_out, maxdims);
+// // 
+// //                     dataspace.selectHyperslab(H5S_SELECT_SET, dims_out, start);
+// //                     stateds.read(rngstate.data(), H5Mapper<u_int64_t>::H5Type(), mspace1, dataspace);
+// //                 }
+// //                 rngcache.setstate(rngstate);
+// //             }
+// //             else
+// //             {
+// //                 //FIXME: initial seed!!
+// //             }
             return retval;
         }
         /** Helper function for HDF5.
@@ -910,7 +905,7 @@ class Core : public RefType<Grid>
             std::array<hsize_t, rank> count;
             count.fill(static_cast<hsize_t>(this->grid.size()));
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
-            dataset.write(statespace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
+//             dataset.write(statespace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
         }
 
         /** Destructor.
@@ -923,7 +918,6 @@ class Core : public RefType<Grid>
             hdf5lock.lock();
             dumprng();
             dumpstatespace();
-//            delete [] statespace;
             dump.close();
         }
 
@@ -1068,7 +1062,7 @@ class Core : public RefType<Grid>
          */
         void debugloop(const int nsteps, const int ncluster, const int nsweeps)
         {
-            this->mcfg.setnsweeps(nsweeps);
+            this->mcfg.setnmetro(nsweeps);
             this->mcfg.setncluster(ncluster);
 
 
@@ -1129,24 +1123,6 @@ class Core : public RefType<Grid>
             std::cout <<"\n\n";
         }
 	private:
-        /** A Metropolis step.
-         * 
-         * This function dispatches the call for a metropolis step 
-         * to the Metropolis class.
-         * @see metropolis.h
-         * @param rsite the randomly chosen site for the update.
-         */
-		inline int metropolisstep(int rsite);
-
-        /** A step of the Wolff Cluster Algorithm.
-         * 
-         * The exact procedure how this type of update is performed
-		 * is determined by an Embedding class (see embedder.h)
-		 *
-         * @param rsite The random site where to start the cluster.
-         */
-		inline int wolffstep(int rsite);
-
 		double beta; ///< The inverse temperature.
 		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.
 		Config mcfg; ///< An instance of all our MARQOV related parameters.

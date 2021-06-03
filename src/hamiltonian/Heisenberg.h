@@ -147,7 +147,7 @@ namespace MARQOV
 	*/
 
 	template <class SpinType, class CouplingType, class Lattice>
-	class Embedder<Heisenberg<SpinType,CouplingType>,Lattice>
+	class Embedder<Heisenberg<SpinType, CouplingType>, Lattice>
 	{
 		typedef Heisenberg<SpinType,CouplingType> Hamiltonian;
 		typedef typename Hamiltonian::StateVector StateVector;

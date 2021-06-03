@@ -22,14 +22,12 @@
 
 namespace MARQOV 
 {
-
-// the default embedder
-// projects the model onto one of the SymD Cartesian dimensions
 /** The default Embedder.
   * projects the model onto one of the SymD Cartesian dimensions
   *
   * @tparam Hamiltonian the type of the Hamiltonian
   * @tparam Lattice the type of the Lattice
+  * @tparam StateSpace The type of the Statespace.
   *
   * @note This default Embedder will also work, i.e. lead to a code which compiles
   * and runs, however it might not be physically reasonable for models other than
@@ -37,12 +35,11 @@ namespace MARQOV
   * using more complex models -- or disable cluster updates, in which case it will 
   * not be executed
   */
-template <class Hamiltonian, class Lattice>
+template <class Hamiltonian, class Lattice, class StateSpace>
 class Embedder
 {
 	// definitions
 	typedef typename Hamiltonian::StateVector StateVector;
-	typedef StateVector* StateSpace;
 	constexpr static int SymD = Hamiltonian::SymD;
 
 	private:
