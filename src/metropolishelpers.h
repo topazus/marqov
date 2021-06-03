@@ -81,6 +81,7 @@ namespace MARQOV
 
 
 
+    // ---------------- has_something helpers -----------------
 
  
     /** A helper to check whether the lattice provides a bnds method.
@@ -96,7 +97,6 @@ namespace MARQOV
 
 
 
-
 	/** A helper to check whether the lattice provides a termselector method.
      * @tparam Grid the Grid which we check.
      */
@@ -107,7 +107,6 @@ namespace MARQOV
 	struct has_trms<Grid, MARQOV::detail::type_sink_t<
 		decltype(std::declval<Grid>().termselector(std::declval<int>()))
 		>> : std::true_type {};
-
 
 
 
@@ -139,13 +138,52 @@ namespace MARQOV
 
 
 
+	/** A helper to check whether the Hamiltonian provides a member with name interactions.
+	 * can be of any type!
+	 *
+	 * @tparam T the type of the class under consideration (in this case it will be the Hamiltonian)
+	 */
+	template <typename T, typename = int>
+	struct HasInteractions : std::false_type { };
+
+	template <typename T>
+	struct HasInteractions <T, decltype((void) T::interactions, 0)> : std::true_type { };
+
+
+	/** A helper to check whether the Hamiltonian provides a member with name onsite;
+	 * can be of any type!
+	 *
+	 * @tparam T the type of the class under consideration (in this case it will be the Hamiltonian)
+	 */
+	template <typename T, typename = int>
+	struct HasOnsite : std::false_type { };
+
+	template <typename T>
+	struct HasOnsite <T, decltype((void) T::onsite, 0)> : std::true_type { };
 	
+
+
+	/** A helper to check whether the Hamiltonian provides a member with name multisite.
+	 * can be of any type!
+	 *
+	 * @tparam T the type of the class under consideration (in this case it will be the Hamiltonian)
+	 */
+	template <typename T, typename = int>
+	struct HasFlexTerms : std::false_type { };
+
+	template <typename T>
+	struct HasFlexTerms <T, decltype((void) T::multisite, 0)> : std::true_type { };
+
+
+
+    // ---------------- overloaded getters -----------------
+
 
 
 	template <class Grid>
 	auto getnbrs_helper(const Grid& grid, int fam, int idx, std::false_type)
 	{
-		cout << "nbrs not implement!" << flush;
+		cout << "[MARQOV::Lattice] function nbrs not implement!" << flush;
 		exit(0); // improve me
 		return std::vector<int>{};
 	}
@@ -156,6 +194,15 @@ namespace MARQOV
 		return grid.nbrs(fam,idx);
 	}
 
+	/** A helper to get neighbours from lattice
+	*
+	* @tparam Grid the type of the lattice
+	* @param grid the lattice
+	* @param fam the index of the sublattice
+	* @param idx the index of the site under consideration
+	*
+	* @return std::vector<int> containing the indices of the neighbours of site idx
+	*/
 	template <class Grid>
 	auto getnbrs(const Grid& grid, int fam, int idx)
 	{
@@ -170,7 +217,7 @@ namespace MARQOV
 	template <class Grid>
 	auto getflexnbrs_helper(const Grid& grid, int fam, int idx, std::false_type)
 	{
-		cout << "flexnbrs not implement!" << flush;
+		cout << "[MARQOV::Lattice] function flexnbrs not implement!" << flush;
 		exit(0); // improve me
 		return std::vector<int>{};
 	}
@@ -181,10 +228,15 @@ namespace MARQOV
 		return grid.flexnbrs(fam,idx);
 	}
 
-	/** A helper to detect if the lattice has a getflexnbrs function.
-     *
-     * @tparam Grid the type of the lattice.
-     */
+	/** A helper to get flexneighbours from lattice
+	*
+	* @tparam Grid the type of the lattice
+	* @param grid the lattice
+	* @param fam the index of the sublattice
+	* @param idx the index of the site under consideration
+	*
+	* @return std::vector<int> containing the indices of the flexneighbours of site idx
+	*/
 	template <class Grid>
 	auto getflexnbrs(const Grid& grid, int fam, int idx)
 	{
@@ -197,7 +249,7 @@ namespace MARQOV
 	template <class Grid>
 	auto getbnds_helper(const Grid& grid, int fam, int idx, std::false_type)
 	{
-		cout << "[MARQOV] Error: The lattice does not have a bnds function" << endl;
+		cout << "[MARQOV::Lattice] function bnds not implemented" << endl;
 		exit(0);
 	}
 
@@ -207,6 +259,15 @@ namespace MARQOV
 		return grid.bnds(fam,idx);
 	}
 
+	/** A helper to get bonds from lattice
+	*
+	* @tparam Grid the type of the lattice
+	* @param grid the lattice
+	* @param fam the index of the family / sublattice
+	* @param idx the index of the site under consideration
+	*
+	* @return std::vector<int> containing the indices of the flexneighbours of site idx
+	*/
 	template <class Grid>
 	auto getbnds(const Grid& grid, int fam, int idx)
 	{
@@ -216,141 +277,141 @@ namespace MARQOV
 
 	
 	
+	// ----------------- Metropolis helpers -------------------	
 	
 	
 	
-	
-/**
- * Helper function for the Metropolis algorithm, sums over local neighbourhood of spin
- *
- * @tparam Lattice the type of the lattice
- * @tparam Hamiltonian the type of the Hamiltonian
- * @tparam StateSpace the type of the statespace
- * @param grid the lattice
- * @param ham the Hamiltonian
- * @param statespace the statespace
- * @param a the index of the interaction term under consideration
- * @param rsite the site under consideration
- * @param std::true_type lattice has function grid.nbrs
- * @param std::true_type lattice has function grid.bnds
- *
- * @return sum over neighbours after applying the interaction term and weighted by respective bond strengths
- */
-template <class Lattice, class Hamiltonian, class StateSpace>
-typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid, 
-											  const Hamiltonian& ham, 
-											  const StateSpace& statespace, 
-											  int a, 
-											  int rsite, 
-											  std::true_type, 
-											  std::true_type) 
-{
-	typedef typename Hamiltonian::StateVector StateVector;
-
-	// gather neighbours and bonds
-	const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
-	const auto bnds = getbnds<Lattice>(grid, a, rsite);
-
-	StateVector neighbourhood = {0};
-
-	// sum over neighbours
-	for (std::size_t i=0; i<nbrs.size(); ++i)
+	/**
+	 * Helper function for the Metropolis algorithm, sums over local neighbourhood of spin
+	 *
+	 * @tparam Lattice the type of the lattice
+	 * @tparam Hamiltonian the type of the Hamiltonian
+	 * @tparam StateSpace the type of the statespace
+	 * @param grid the lattice
+	 * @param ham the Hamiltonian
+	 * @param statespace the statespace
+	 * @param a the index of the interaction term under consideration
+	 * @param rsite the site under consideration
+	 * @param std::true_type lattice has function grid.nbrs
+	 * @param std::true_type lattice has function grid.bnds
+	 *
+	 * @return sum over neighbours after applying the interaction term and weighted by respective bond strengths
+	 */
+	template <class Lattice, class Hamiltonian, class StateSpace>
+	typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid, 
+												  const Hamiltonian& ham, 
+												  const StateSpace& statespace, 
+												  int a, 
+												  int rsite, 
+												  std::true_type, 
+												  std::true_type) 
 	{
-		// index of the neighbour
-		auto idx = nbrs[i];
-		                
-		// configuration of the neighbour after applying the interaction
-		auto nbr = ham.interactions[a]->get(statespace[idx]);
-		                
-		// sum up contributions from neighbourbood
-		neighbourhood = neighbourhood + mult(bnds[i], nbr);
+		typedef typename Hamiltonian::StateVector StateVector;
+	
+		// gather neighbours and bonds
+		const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
+		const auto bnds = getbnds<Lattice>(grid, a, rsite);
+	
+		StateVector neighbourhood = {0};
+	
+		// sum over neighbours
+		for (std::size_t i=0; i<nbrs.size(); ++i)
+		{
+			// index of the neighbour
+			auto idx = nbrs[i];
+			                
+			// configuration of the neighbour after applying the interaction
+			auto nbr = ham.interactions[a]->get(statespace[idx]);
+			                
+			// sum up contributions from neighbourbood
+			neighbourhood = neighbourhood + mult(bnds[i], nbr);
+		}
+	
+		return neighbourhood;
 	}
 
-	return neighbourhood;
-}
 
-
-/**
- * Helper function for the Metropolis algorithm, sums over local neighbourhood of spin
- *
- * @tparam Lattice the type of the lattice
- * @tparam Hamiltonian the type of the Hamiltonian
- * @tparam StateSpace the type of the statespace
- * @param grid the lattice
- * @param ham the Hamiltonian
- * @param statespace the statespace
- * @param a the index of the interaction term under consideration
- * @param rsite the site under consideration
- * @param std::true_type lattice has function grid.nbrs
- * @param std::false_type lattice has no function grid.bnds
- *
- * @return sum over neighbours after applying the interaction term
- */
-template <class Lattice, class Hamiltonian, class StateSpace>
-typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid, 
-											  const Hamiltonian& ham, 
-											  const StateSpace& statespace, 
-											  int a, 
-											  int rsite, 
-											  std::true_type, 
-											  std::false_type) 
-{
-	typedef typename Hamiltonian::StateVector StateVector;
-
-	// gather neighbours
-	const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
-
-	StateVector neighbourhood = {0};
-
-	// sum over neighbours
-	for (std::size_t i=0; i<nbrs.size(); ++i)
+	/**
+	 * Helper function for the Metropolis algorithm, sums over local neighbourhood of spin
+	 *
+	 * @tparam Lattice the type of the lattice
+	 * @tparam Hamiltonian the type of the Hamiltonian
+	 * @tparam StateSpace the type of the statespace
+	 * @param grid the lattice
+	 * @param ham the Hamiltonian
+	 * @param statespace the statespace
+	 * @param a the index of the interaction term under consideration
+	 * @param rsite the site under consideration
+	 * @param std::true_type lattice has function grid.nbrs
+	 * @param std::false_type lattice has no function grid.bnds
+	 *
+	 * @return sum over neighbours after applying the interaction term
+	 */
+	template <class Lattice, class Hamiltonian, class StateSpace>
+	typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid, 
+												  const Hamiltonian& ham, 
+												  const StateSpace& statespace, 
+												  int a, 
+												  int rsite, 
+												  std::true_type, 
+												  std::false_type) 
 	{
-		// index of the neighbour
-		auto idx = nbrs[i];
-		                
-		// configuration of the neighbour after applying the interaction
-		auto nbr = ham.interactions[a]->get(statespace[idx]);
-		                
-		// sum up contributions from neighbourbood
-		neighbourhood = neighbourhood + nbr;
+		typedef typename Hamiltonian::StateVector StateVector;
+	
+		// gather neighbours
+		const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
+	
+		StateVector neighbourhood = {0};
+	
+		// sum over neighbours
+		for (std::size_t i=0; i<nbrs.size(); ++i)
+		{
+			// index of the neighbour
+			auto idx = nbrs[i];
+			                
+			// configuration of the neighbour after applying the interaction
+			auto nbr = ham.interactions[a]->get(statespace[idx]);
+			                
+			// sum up contributions from neighbourbood
+			neighbourhood = neighbourhood + nbr;
+		}
+	
+		return neighbourhood;
 	}
-
-	return neighbourhood;
-}
-
-
-/**
- * Helper function for the Metropolis algorithm, sums over local neighbourhood of spin.
- * this overloading covers the case when the lattice has no function "nbrs".
- * in this case the general Metropolis algorithm cannot be used hence the user is given an error message
- *
- * @tparam Lattice the type of the lattice
- * @tparam Hamiltonian the type of the Hamiltonian
- * @tparam StateSpace the type of the statespace
- * @param grid the lattice
- * @param ham the Hamiltonian
- * @param statespace the statespace
- * @param a the index of the interaction term under consideration
- * @param rsite the site under consideration
- * @param std::true_type lattice has no function grid.nbrs
- * @param std::false_type lattice has no function grid.bnds
- *
- * @return does not apply 
- */
-template <class Lattice, class Hamiltonian, class StateSpace>
-typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid, 
-											  const Hamiltonian& ham, 
-											  const StateSpace& statespace, 
-											  int a, 
-											  int rsite, 
-											  std::false_type, 
-											  std::false_type) 
-{
-	cout << "[MARQOV] Error: The lattice does not provide the following function: nbrs" << endl;
-	cout << "In order to use the general Metropolis algorithm, this function must be implemented" << endl;
-	cout << "Alternatively, you can write you own specialization of the Metropolis algorithm" << endl;
-	exit(0);
-}
+	
+	
+	/**
+	 * Helper function for the Metropolis algorithm, sums over local neighbourhood of spin.
+	 * this overloading covers the case when the lattice has no function "nbrs".
+	 * in this case the general Metropolis algorithm cannot be used hence the user is given an error message
+	 *
+	 * @tparam Lattice the type of the lattice
+	 * @tparam Hamiltonian the type of the Hamiltonian
+	 * @tparam StateSpace the type of the statespace
+	 * @param grid the lattice
+	 * @param ham the Hamiltonian
+	 * @param statespace the statespace
+	 * @param a the index of the interaction term under consideration
+	 * @param rsite the site under consideration
+	 * @param std::true_type lattice has no function grid.nbrs
+	 * @param std::false_type lattice has no function grid.bnds
+	 *
+	 * @return does not apply 
+	 */
+	template <class Lattice, class Hamiltonian, class StateSpace>
+	typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid, 
+												  const Hamiltonian& ham, 
+												  const StateSpace& statespace, 
+												  int a, 
+												  int rsite, 
+												  std::false_type, 
+												  std::false_type) 
+	{
+		cout << "[MARQOV] Error: The lattice does not provide the following function: nbrs" << endl;
+		cout << "In order to use the general Metropolis algorithm, this function must be implemented" << endl;
+		cout << "Alternatively, you can write you own specialization of the Metropolis algorithm" << endl;
+		exit(0);
+	}
 
 
 
@@ -385,17 +446,27 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
 
 
 
+	
 
 
 
-	// check of the existence of class of member with name "interactions" at compile time
-	// can be of any type!
-	template <typename T, typename = int>
-	struct HasInteractions : std::false_type { };
 
-	template <typename T>
-	struct HasInteractions <T, decltype((void) T::interactions, 0)> : std::true_type { };
-
+	/** Computes the difference of the interaction energy in the Metropolis algorithm
+	 *
+	 * @tparam Grid the type of the lattice
+	 * @tparam Hamiltonian the type of the Hamiltonian
+	 * @tparam StateSpace the type of the StateSpace
+	 * @tparam StateVector the type of the StateVector
+	 * @param grid the lattice
+	 * @param ham the Hamiltonian
+	 * @param statespace the state space
+	 * @param svnew new state vector configuration
+	 * @param svold old state vector configuration
+	 * @param rsite index of the site under consideration
+	 * @param std::true_type marks the specialization
+	 *
+	 * @return double
+	 */
 	template <class Grid, class Hamiltonian, class StateSpace, class StateVector>
 	double compute_interactionenergydiff(Grid& grid, Hamiltonian& ham, StateSpace& statespace, StateVector& svnew, StateVector& svold, int rsite, std::true_type)
 	{
@@ -426,20 +497,20 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
 
 
 
-
-
-
-
-
-
-	// check of the existence of class of member with name "onsite" at compile time
-	// can be of any type!
-	template <typename T, typename = int>
-	struct HasOnsite : std::false_type { };
-
-	template <typename T>
-	struct HasOnsite <T, decltype((void) T::onsite, 0)> : std::true_type { };
-
+	/** Computes the difference of the onsite energy in the Metropolis algorithm
+	 *
+	 * @tparam Grid the type of the lattice
+	 * @tparam Hamiltonian the type of the Hamiltonian
+	 * @tparam StateVector the type of the StateVector
+	 * @param grid the lattice
+	 * @param ham the Hamiltonian
+	 * @param svnew new state vector configuration
+	 * @param svold old state vector configuration
+	 * @param rsite index of the site under consideration
+	 * @param std::true_type marks the specialization
+	 *
+	 * @return double
+	 */
 	template <class Grid, class Hamiltonian, class StateVector>
 	double compute_onsiteenergydiff(Grid& grid, Hamiltonian& ham, StateVector& svnew, StateVector& svold, int rsite, std::true_type)
 	{
@@ -480,18 +551,22 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
 	}
 
 
-
-
-
-
-	// check of the existence of class of member with name "multisite" at compile time
-	// can be of any type!
-	template <typename T, typename = int>
-	struct HasFlexTerms : std::false_type { };
-
-	template <typename T>
-	struct HasFlexTerms <T, decltype((void) T::multisite, 0)> : std::true_type { };
-
+	/** Computes the difference of the flexterm  energy in the Metropolis algorithm
+	 *
+	 * @tparam Grid the type of the lattice
+	 * @tparam Hamiltonian the type of the Hamiltonian
+	 * @tparam StateSpace the type of the StateSpace
+	 * @tparam StateVector the type of the StateVector
+	 * @param grid the lattice
+	 * @param ham the Hamiltonian
+	 * @param statespace the state space
+	 * @param svnew new state vector configuration
+	 * @param svold old state vector configuration
+	 * @param rsite index of the site under consideration
+	 * @param std::true_type marks the specialization
+	 *
+	 * @return double
+	 */
 	template <class Grid, class Hamiltonian, class StateSpace, class StateVector>
 	double compute_flexenergydiff(Grid& grid, Hamiltonian& ham, StateSpace& statespace, StateVector& svnew, StateVector& svold, int rsite, std::true_type)
 	{
