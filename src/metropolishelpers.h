@@ -245,7 +245,6 @@ namespace MARQOV
 
 
 
-
 	template <class Grid>
 	auto getbnds_helper(const Grid& grid, int fam, int idx, std::false_type)
 	{
