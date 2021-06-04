@@ -294,22 +294,6 @@ typename Hamiltonian::StateVector nbrhoodloop(const Lattice& grid,
 		}
 		return retval;
 	}
-
-
-    
-	// Single Metropolis update step statevectors on a lattice
-	// returns an integer which encodes whether the flip attempt was successful (1) or not (0)
-	template <class Grid, class Hamiltonian, template<class> class RefType>
-	inline int Core<Grid, Hamiltonian, RefType>::metropolisstep(int rsite)
-	{
-		return Metropolis<Hamiltonian, Grid>::move(this->ham,
-											this->grid, 
-											statespace, 
-											this->metro, 
-											this->rngcache, 
-											this->beta, 
-											rsite);
-	}
 };
 
 

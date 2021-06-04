@@ -19,86 +19,59 @@
 #ifndef REPLICATE_H
 #define REPLICATE_H
 #include <vector>
+#include <tuple>
+#include "core.h"
 #include "helpers.h"
 
+
 template <class Params>
-inline std::vector<Params> replicator(std::vector<Params>& params, int nreplicas, int sortmode=0)
+inline std::vector<Params> replicator(const std::vector<Params>& params, int nreplicas, int sortmode=0)
 {
 	std::vector<Params> newparams;
 
 	int mcid = 0;
 	for(std::size_t i=0; i<params.size(); ++i)
 	{
-		auto lp = params[i].first;
-		auto mp = params[i].second;
-		auto hp = params[i].third;
+		auto&& l = std::get<0>(params[i]);
+		auto mp = std::get<1>(params[i]);
+		auto&& hp = std::get<2>(params[i]);
 
 		for (int j = 0; j < nreplicas; ++j)
 		{
 			auto mpr(mp);
 			mpr.setrepid(j);
 			mpr.setid(mcid++);
-			auto newparam = make_triple(lp, mpr, hp);
-			newparams.push_back(newparam);
+			newparams.emplace_back(l, mpr, hp);
 		}
 	}
 
 	return newparams;
 }
 
-
-template <class Params>
-inline std::vector<Params> replicator_pair(std::vector<Params>& params, int nreplicas, int sortmode=0)
+/** Set up a vector with the parameters for the simulation.
+ * 
+ * @tparam L the argument for the lattice information. If a Lattice or a reference to a full lattice is given for lp
+ *           the universal reference decays to a plain reference. If a temporary object is given, move semantcs is invoked.
+ * @tparam HArgs A template parameter pack with the parameters of the Hamiltonian
+ * 
+ * @param lp Depending on context this is usually either a reference to a lattice, or a tuple of arguments for a lattice.
+ * @param mp The parameters for MARQOV.
+ * @param hp The array with the hamiltonian parameters.
+ * 
+ * @return a vector of tuples with the full arguments for MARQOV::Core
+ */
+template <class L, class HArgs>
+inline auto finalize_parameter(L&& l_or_lp, const MARQOV::Config& mp, const std::vector<HArgs>& hp)
 {
-	std::vector<Params> newparams;
+	typedef std::tuple<L, MARQOV::Config, HArgs> RetType;
+	std::vector<RetType> params;
 
-	int mcid = 0;
-	for(std::size_t i=0; i<params.size(); ++i)
+	for(std::size_t i=0; i < hp.size(); ++i) 
 	{
-		auto mp = params[i].first;
-		auto hp = params[i].second;
-
-		for (int j = 0; j < nreplicas; ++j)
-		{
-			auto mpr(mp);
-			mpr.setrepid(j);
-			mpr.setid(mcid++);
-			auto newparam = std::make_pair(mpr, hp);
-			newparams.push_back(newparam);
-		}
-	}
-
-	return newparams;
-}
-
-
-
-template <class LArgs, class MArgs, class HArgs>
-inline auto finalize_parameter_triple(const LArgs& lp, const MArgs& mp, const std::vector<HArgs>& hp)
-{
-	std::vector<Triple<LArgs, MArgs, HArgs>> params;
-
-	for(std::size_t i=0; i<hp.size(); ++i) 
-	{
-		params.push_back(make_triple(lp, mp, hp[i]));
+		params.emplace_back(l_or_lp, mp, hp[i]);
 	}
 
 	return params;
 }
-
-
-template <class MArgs, class HArgs>
-inline auto finalize_parameter_pair(const MArgs& mp, const std::vector<HArgs>& hp)
-{
-	std::vector<std::pair<MArgs, HArgs>> params;
-
-	for(std::size_t i=0; i<hp.size(); ++i) 
-	{
-		params.push_back(std::make_pair(mp, hp[i]));
-	}
-
-	return params;
-}
-
 
 #endif

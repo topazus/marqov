@@ -152,7 +152,7 @@ namespace MARQOV
 		typedef Heisenberg<SpinType,CouplingType> Hamiltonian;
 		typedef typename Hamiltonian::StateVector StateVector;
 		typedef StateVector* StateSpace;
-		constexpr static int SymD = Hamiltonian::SymD;
+		static constexpr int SymD = Hamiltonian::SymD;
 
 		private:
 
