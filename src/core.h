@@ -89,6 +89,8 @@ namespace MARQOV
 		  					  	 nmetro(nm) {}
 		
 		/** Default Copy Constructor of Config.
+         * 
+         * @param rhs the other Config object.
          */
 		Config(const Config& rhs) = default; // < FIXME: Think about wether we can get rid of it.
 		/** The deleted assignment operator of Config.
@@ -102,13 +104,12 @@ namespace MARQOV
         /** The deleted assignment move operator of Config.
          */
 		Config& operator=(Config&& other) = delete;
-		
-		
+
 		// Output
 		std::string outname; ///< the output filename; is empty but will be specified by a filter!
 		std::string outpath; ///< the outpath; full filename will be "outpath/outfile.h5"
 		std::string logpath; ///< the logpath. For lack of a better place it is currently stored here.
-		
+
 
 		// MC variables
 		int id; ///< id
@@ -382,6 +383,7 @@ class Space
 	typedef Grid Lattice; ///< The Type of the Lattice 
 	typedef StateVectorT StateVector;
 	Space(int size) : myspace(new StateVector[size]), size_(size) {}
+	Space(std::pair<StateVectorT*, std::size_t> arg) : myspace(arg.first), size_(arg.second) {}
 	~Space() {delete [] myspace;}
 
 	int size() const {return size_;}
@@ -509,7 +511,7 @@ class Core : public RefType<Grid>
 		step(-1),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
-		statespace(/*setupstatespace(lattice.size())*/lattice.size()),
+		statespace(setupstatespace(lattice.size())),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
@@ -549,7 +551,7 @@ class Core : public RefType<Grid>
 		step(-1),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
-		statespace(/*setupstatespace(this->grid.size())*/this->grid.size()),
+		statespace(setupstatespace(this->grid.size())),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
@@ -637,7 +639,7 @@ class Core : public RefType<Grid>
             {
                 //FIXME: initial seed!!
             }
-            return retval;
+            return std::make_pair(retval, size);
         }
         /** Helper function for HDF5.
          * 
