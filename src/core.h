@@ -201,7 +201,7 @@ namespace MARQOV
 		type_sink_t< decltype( std::declval<Lattice>().size() ) >
 		> : std::true_type {};
 		
-        /** Internal Base class if MARQOV gets the lattice by reference.
+        /** Internal base class if MARQOV gets the lattice by reference.
          * 
          * A base class that gets used if MARQOV::Core gets the lattice by reference.
          * @tparam L the lattice that will be used
@@ -362,18 +362,25 @@ namespace MARQOV
 		static constexpr auto size = std::tuple_size<Tuple>::value;
 		return _call(f, obj, t, std::make_index_sequence<size>{});
 	}
-
+	
+	//forward declaration of Core.
+	//FIXME think about proper placement of docs and where...
+    template <class Grid, class Hamiltonian, template<class> class RefType>
+    class Core;
+	
 template <class StateVectorT, class Grid>
 class Space
 {
 	private:
 	StateVectorT *const myspace;
 	const std::size_t size_;
+    
+    template <class G, class Hamiltonian, template<class> class RefType>
+    friend class Core;
 
 	public:
 	typedef Grid Lattice; ///< The Type of the Lattice 
 	typedef StateVectorT StateVector;
-
 	Space(int size) : myspace(new StateVector[size]), size_(size) {}
 	~Space() {delete [] myspace;}
 
@@ -906,7 +913,7 @@ class Core : public RefType<Grid>
             std::array<hsize_t, rank> count;
             count.fill(static_cast<hsize_t>(this->grid.size()));
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
-//             dataset.write(statespace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
+            dataset.write(statespace.myspace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
         }
 
         /** Destructor.
