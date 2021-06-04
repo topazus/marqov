@@ -146,6 +146,8 @@ namespace MARQOV
 	* The principle structure is identical to the general version of the algorithm
 	* See metropolis.h for details
 	*/
+
+	/*
 	template <class Lattice>
 	struct Metropolis<Ising<int>, Lattice>
 	{
@@ -194,6 +196,7 @@ namespace MARQOV
 	    	return retval;
 	    }
 	};
+	*/
 
 
 	/** Specialization of the Wolff algorithm for the Ising model.

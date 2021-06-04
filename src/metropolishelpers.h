@@ -23,67 +23,25 @@
 
 namespace MARQOV
 {
-    /** has_bonds utility function.
+    /** has_bnds utility function.
      * 
      * This function decays to a bool_type to denote whether a lattice provides
      * the getbond function.
      * @tparam L The lattice that we are querying.
      */
 	template<class L, class=void> 
-	struct has_bonds : std::false_type {};
+	struct has_bnds : std::false_type {};
 	
 	template<class Lattice> 
-	struct has_bonds<Lattice, MARQOV::detail::type_sink_t< 
+	struct has_bnds<Lattice, MARQOV::detail::type_sink_t< 
 		decltype( std::declval<Lattice>().bnds(std::declval<int>(), std::declval<int>()) ) 
 		>> : std::true_type {};
     
-    
-    
-	// what are the input parameters:
-	// a: bond family (not yet implemented)
-	// i: site to be looked at
-	// j: j-th neighbour of i (encodes the site to which the bond goes)
-	
-	
-	// there are three possibilities
-	
-	//    nbr  |   cpl                      return type
-	// -----------------                 ----------------
-	//  scalar   scalar                     -> scalar
-	//  vector   vector  (same length!)	-> vector
-	//  vector   scalar 				-> vector
-	
-
-	// note also that "nbr" is always a "statvector" (std::array), 
-	// whereas "cpl" can be anything (typically though: int, double, std::vector)
-    
-    
-	template <class Lattice, class NbrType>
-	inline auto callbonds_helper(const Lattice& grid, int a, int i, int j, NbrType nbr, std::true_type)
-	{
-		auto cpl = grid.bnds(a,i)[j];  
-		// improve me: if only one particular bond is needed, 
-		// why load all in the first place
-
-		return mult(cpl, nbr);
-	}
-	
-	template <class Lattice, class NbrType>
-	inline auto callbonds_helper(const Lattice& grid, int a, int i, int j, NbrType nbr, std::false_type)
-	{
-		return nbr;
-	}
-	
-	template <class Lattice, class NbrType>
-	inline auto callbonds(const Lattice& grid, int a, int i, int j, NbrType nbr)
-	{
-		return callbonds_helper(grid, a, i, j, nbr, typename has_bonds<Lattice>::type());
-	}
 	
 	/**
      * Promote_Array utility class.
      * 
-     * This function takes two types and tries to figure out,which one is wider.
+     * This function takes two types and tries to figure out, which one is wider.
      * @tparam A the first type.
      * @tparam B the other type.
      */
@@ -99,31 +57,43 @@ namespace MARQOV
 		typedef typename std::conditional<std::is_same<AElemType, CommonType>::value, A, B>::type CommonArray;
 	};
 
+
+
+
+
 	// A helper to check whether the lattice provides a termselector method
 	/**
-     * has_terms utility class.
-     * This class tries to figure out whether there is a has_terms function.
+     * has_trms utility class.
+     * This class tries to figure out whether there is a has_trms function.
      * @tparam Grid the Grid which we check.
      */
 	template<class Grid , class = void> 
-	struct has_terms : std::false_type {};
+	struct has_trms : std::false_type {};
 	
 	template<class Grid>
-	struct has_terms<Grid, MARQOV::detail::type_sink_t<
+	struct has_trms<Grid, MARQOV::detail::type_sink_t<
 		decltype(std::declval<Grid>().termselector(std::declval<int>()))
 		>> : std::true_type {};
 	// in C++17 (which we don't use), this can be solved with void_t
 	
-	template <class Grid>
-	std::vector<int> get_terms_helper(const Grid& grid, int idx, std::false_type) {return {-1};}
-	
-	template <class Grid>
-	std::vector<int> get_terms_helper(const Grid& grid, int idx, std::true_type) {return grid.termselector(idx);}
-	
-	/** A helper to detect if the Hamiltonian has a has_terms function.
-     */
-	template <class Grid>
-	std::vector<int> get_terms(const Grid& grid, int idx) {	return get_terms_helper<Grid>(grid, idx, has_terms<Grid>{}); }
+
+
+
+	template <class Grid, class Hamiltonian>
+	std::vector<int> get_terms(const Grid& grid, const Hamiltonian& ham, int idx, std::false_type) 
+	{	
+		return arange(0, ham.onsite.size());
+	}
+
+	template <class Grid, class Hamiltonian>
+	std::vector<int> get_terms(const Grid& grid, const Hamiltonian& ham, int idx, std::true_type) 
+	{	
+		return grid.termselector(idx);
+	}
+
+
+
+
 
 	/** has_nbrs utility struct
      * 
@@ -162,6 +132,9 @@ namespace MARQOV
 	{
 		return getnbrs_helper<Grid>(grid, fam, idx, has_nbrs<Grid>{}); 
 	}
+
+
+
 
     /** has_flexnbrs utility struct.
      * 
@@ -202,6 +175,45 @@ namespace MARQOV
 		return getflexnbrs_helper<Grid>(grid, fam, idx, has_flexnbrs<Grid>{}); 
 	}
     
+
+
+	/** has_bnds utility struct
+     * 
+     * This struct checks whether the lattice provides a getbnds method.
+     * @tparam Grid the lattice that we query.
+     */
+//	template<class Grid, class = void> 
+//	struct has_bnds : std::false_type {};
+//	
+//	template<class Grid>
+//	struct has_bnds<Grid, MARQOV::detail::type_sink_t< 
+//		decltype( std::declval<Grid>().bnds(std::declval<int>(), std::declval<int>()) ) 
+
+	
+	template <class Grid>
+	auto getbnds_helper(const Grid& grid, int fam, int idx, std::false_type)
+	{
+		cout << "error" << endl;
+		exit(0);
+		return std::vector<int>{1,1,1,1};
+	}
+	
+	template <class Grid>
+	auto getbnds_helper(const Grid& grid, int fam, int idx, std::true_type)
+	{
+		return grid.bnds(fam,idx); 
+	}
+	
+	/** A helper to detect if the lattice has a getbnds function.
+     * 
+     * @tparam Grid the type of the lattice.
+     */
+	template <class Grid>
+	auto getbnds(const Grid& grid, int fam, int idx)
+	{
+		return getbnds_helper<Grid>(grid, fam, idx, has_bnds<Grid>{}); 
+	}
+
     /**
      * Is_Container utility struct.
      * 

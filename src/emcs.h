@@ -52,35 +52,35 @@ namespace MARQOV
 												M& metro, RNGCache<RNGType>& rngcache, 
 												double beta, int ncluster, int nmetro, Timer& mrqvt)
     {
-    // cluster updates
-	mrqvt.switch_clock("cluster");
-	double avgclustersize = 0;
-	for (int j=0; j < ncluster; j++)
-	{
-		const int seed = rngcache.integer(grid.size());
+        // cluster updates
+        mrqvt.switch_clock("cluster");
+        double avgclustersize = 0;
+        for (int j=0; j < ncluster; j++)
+        {
+            const int seed = rngcache.integer(grid.size());
 
-		avgclustersize += Wolff<Hamiltonian, Lattice>::move(ham, grid, statespace, rngcache, beta, seed);
-	}
+            avgclustersize += Wolff<Hamiltonian, Lattice>::move(ham, grid, statespace, rngcache, beta, seed);
+        }
 
-	// Metropolis sweeps
-	mrqvt.switch_clock("metrop");
-	for (int j=0; j < nmetro; j++)
-	{
-		// loop sites
-		for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
-		{
-			const int rsite = rngcache.integer(grid.size());
-            Metropolis<Hamiltonian, Lattice>::move(ham,
-											grid, 
-											statespace, 
-											metro, 
-											rngcache, 
-											beta, 
-											rsite);
-		}
-	}
+        // Metropolis sweeps
+        mrqvt.switch_clock("metrop");
+        for (int j=0; j < nmetro; j++)
+        {
+            // loop sites
+            for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
+            {
+                const int rsite = rngcache.integer(grid.size());
+                Metropolis<Hamiltonian, Lattice>::move(ham,
+                                                grid, 
+                                                statespace, 
+                                                metro, 
+                                                rngcache, 
+                                                beta, 
+                                                rsite);
+            }
+        }
 
-	return avgclustersize/ncluster;
+        return avgclustersize/ncluster;
     }
     
 template <class Grid, class Hamiltonian, template<class> class RefType>
