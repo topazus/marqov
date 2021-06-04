@@ -293,8 +293,9 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		// Typedefs
 		typedef Ising<int> Hamiltonian;
 		typedef ConstantCoordinationLattice<Poissonian> Lattice;
-        typedef decltype(finalize_parameter(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTupleType;
-		typedef typename ParameterTupleType::value_type ParameterType;
+        typedef std::tuple<std::tuple<int, int>, MARQOV::Config, std::tuple<double, double> > ParameterType;
+//         typedef decltype(finalize_parameter(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTupleType;
+// 		typedef typename ParameterTupleType::value_type ParameterType;
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
 
