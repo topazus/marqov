@@ -62,7 +62,6 @@ using std::ofstream;
 #include "hamiltonian/EdwardsAndersonIsing.h"
 //#include "hamiltonian/Ssh.h" // seperate branch
 #include "hamiltonian/BlumeCapelBipartite.h"
-#include "hamiltonian/AshkinTeller.h"
 
 using namespace MARQOV;
 
@@ -115,7 +114,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	}
 
 
-
 	else if (ham == "AshkinTeller")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
@@ -127,7 +125,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	}
 
 
-
 	else if (ham == "Heisenberg")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
@@ -136,7 +133,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
 	}
-
 
 
 

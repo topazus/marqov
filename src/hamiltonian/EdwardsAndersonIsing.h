@@ -352,6 +352,7 @@ namespace MARQOV
 	  * Identical to the specialization for the regular Ising model in "ising.h"
 	  * @see "metropolis.h"
 	  */
+	  /*
 	template <class Lattice>
 	struct Metropolis<EdwardsAndersonIsing<int>, Lattice>
 	{
@@ -400,6 +401,7 @@ namespace MARQOV
 	    	return retval;
 	    }
 	};
+	*/
 
 }
 #endif
