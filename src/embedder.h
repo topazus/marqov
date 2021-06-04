@@ -18,7 +18,7 @@
 
 #ifndef EMBEDDER_H
 #define EMBEDDER_H
-
+#include "svmath.h"
 
 namespace MARQOV 
 {
@@ -35,11 +35,12 @@ namespace MARQOV
   * using more complex models -- or disable cluster updates, in which case it will 
   * not be executed
   */
-template <class Hamiltonian, class Lattice, class StateSpace>
+template <class Hamiltonian, class Lattice>
 class Embedder
 {
 	// definitions
 	typedef typename Hamiltonian::StateVector StateVector;
+    typedef Space<typename Hamiltonian::StateVector, Lattice> StateSpace;
 	constexpr static int SymD = Hamiltonian::SymD;
 
 	private:

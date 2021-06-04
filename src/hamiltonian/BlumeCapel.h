@@ -130,7 +130,7 @@ namespace MARQOV
 	{
 		typedef BlumeCapel<SpinType> Hamiltonian;
 		typedef typename Hamiltonian::StateVector StateVector;
-		typedef StateVector* StateSpace;
+		typedef Space<StateVector, Lattice> StateSpace;
 
 		private:
 			const Hamiltonian& ham;

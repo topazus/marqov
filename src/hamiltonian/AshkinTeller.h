@@ -182,11 +182,11 @@ namespace MARQOV
 {
 
 	template <class Lattice>
-	class Embedder<AshkinTeller,Lattice>
+	class Embedder<AshkinTeller, Lattice>
 	{
 		typedef AshkinTeller Hamiltonian;
 		typedef typename Hamiltonian::StateVector StateVector;
-		typedef StateVector* StateSpace;
+		typedef Space<StateVector, Lattice> StateSpace;
 		static constexpr int SymD = Hamiltonian::SymD;
 
 		private:
