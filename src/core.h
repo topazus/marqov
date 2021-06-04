@@ -89,6 +89,8 @@ namespace MARQOV
 		  					  	 nmetro(nm) {}
 		
 		/** Default Copy Constructor of Config.
+         * 
+         * @param rhs the other Config object.
          */
 		Config(const Config& rhs) = default; // < FIXME: Think about wether we can get rid of it.
 		/** The deleted assignment operator of Config.
@@ -102,13 +104,12 @@ namespace MARQOV
         /** The deleted assignment move operator of Config.
          */
 		Config& operator=(Config&& other) = delete;
-		
-		
+
 		// Output
 		std::string outname; ///< the output filename; is empty but will be specified by a filter!
 		std::string outpath; ///< the outpath; full filename will be "outpath/outfile.h5"
 		std::string logpath; ///< the logpath. For lack of a better place it is currently stored here.
-		
+
 
 		// MC variables
 		int id; ///< id
@@ -201,7 +202,7 @@ namespace MARQOV
 		type_sink_t< decltype( std::declval<Lattice>().size() ) >
 		> : std::true_type {};
 		
-        /** Internal Base class if MARQOV gets the lattice by reference.
+        /** Internal base class if MARQOV gets the lattice by reference.
          * 
          * A base class that gets used if MARQOV::Core gets the lattice by reference.
          * @tparam L the lattice that will be used
@@ -362,19 +363,27 @@ namespace MARQOV
 		static constexpr auto size = std::tuple_size<Tuple>::value;
 		return _call(f, obj, t, std::make_index_sequence<size>{});
 	}
-
+	
+	//forward declaration of Core.
+	//FIXME think about proper placement of docs and where...
+    template <class Grid, class Hamiltonian, template<class> class RefType>
+    class Core;
+	
 template <class StateVectorT, class Grid>
 class Space
 {
 	private:
 	StateVectorT *const myspace;
 	const std::size_t size_;
+    
+    template <class G, class Hamiltonian, template<class> class RefType>
+    friend class Core;
 
 	public:
 	typedef Grid Lattice; ///< The Type of the Lattice 
 	typedef StateVectorT StateVector;
-
 	Space(int size) : myspace(new StateVector[size]), size_(size) {}
+	Space(std::pair<StateVectorT*, std::size_t> arg) : myspace(arg.first), size_(arg.second) {}
 	~Space() {delete [] myspace;}
 
 	int size() const {return size_;}
@@ -502,7 +511,7 @@ class Core : public RefType<Grid>
 		step(-1),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
-		statespace(/*setupstatespace(lattice.size())*/lattice.size()),
+		statespace(setupstatespace(lattice.size())),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
@@ -542,7 +551,7 @@ class Core : public RefType<Grid>
 		step(-1),
 		hdf5lock(mtx),
 		dump(setupHDF5Container(mc, std::forward<HArgs>(hargs)...)),
-		statespace(/*setupstatespace(this->grid.size())*/this->grid.size()),
+		statespace(setupstatespace(this->grid.size())),
 		obsgroup(dump.openGroup("/step"+std::to_string(step)+"/observables")),
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
@@ -571,66 +580,66 @@ class Core : public RefType<Grid>
 		auto setupstatespace(int size)
         {
             auto retval = new typename Hamiltonian::StateVector[size];
-// //             if (step > 0)
-// //             {
-// //                 std::cout<<"Previous data found! Continuing simulation at step "<<step<<std::endl;
-// //                 //read in the state space
-// //                 auto prevstepstate = dump.openGroup("/step" + std::to_string(step-1) + "/state");
-// //                 {
-// //                     auto stateds = prevstepstate.openDataSet("hamiltonianstatespace");
-// //                     auto dataspace = stateds.getSpace();
-// //                     //read the data... For now we just hope that everything matches...
-// //                     int rank = dataspace.getSimpleExtentNdims();
-// //                     hsize_t fdims[rank], maxdims[rank], start[rank], dims_out[rank];
-// //                     dataspace.getSimpleExtentDims( dims_out, NULL);
-// // 
-// //                     for(int i = 0; i < rank; ++i)
-// //                     {
-// //                         fdims[i] = static_cast<hsize_t>(size);
-// //                         maxdims[i] = H5S_UNLIMITED;
-// //                         start[i] = 0;
-// //                     }
-// // 
-// //                     H5::DataSpace mspace1(rank, fdims, maxdims);
-// //                     dataspace.selectHyperslab(H5S_SELECT_SET, fdims, start);//We have no separate count array since fdims contains identical information
-// //                     stateds.read(retval, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
-// //                 }
-// //         
-// //                 //compare the used RNGs
-// //                 {
-// //                     auto stateds = prevstepstate.openDataSet("RNG");
-// //                     auto dataspace = stateds.getSpace();
-// //                     //FIXME: proper reading of strings...
-// //                 }
-// //         
-// //                 std::vector<u_int64_t> rngstate;
-// //                 {
-// //                     H5::DataSet stateds = prevstepstate.openDataSet("rngstate");
-// //                     auto dataspace = stateds.getSpace();
-// //                     //read the data... For now we just hope that everything matches...
-// //                     int rank = dataspace.getSimpleExtentNdims();
-// //                     hsize_t dims_out[rank];
-// //                     dataspace.getSimpleExtentDims( dims_out, NULL);
-// //                     rngstate.resize(dims_out[0]);
-// //                     hsize_t maxdims[rank], start[rank];
-// //                     for(int i = 0; i < rank; ++i)
-// //                     {
-// //                         maxdims[i] = H5S_UNLIMITED;
-// //                         start[i] = 0;
-// //                     }
-// // 
-// //                     H5::DataSpace mspace1(rank, dims_out, maxdims);
-// // 
-// //                     dataspace.selectHyperslab(H5S_SELECT_SET, dims_out, start);
-// //                     stateds.read(rngstate.data(), H5Mapper<u_int64_t>::H5Type(), mspace1, dataspace);
-// //                 }
-// //                 rngcache.setstate(rngstate);
-// //             }
-// //             else
-// //             {
-// //                 //FIXME: initial seed!!
-// //             }
-            return retval;
+            if (step > 0)
+            {
+                std::cout<<"Previous data found! Continuing simulation at step "<<step<<std::endl;
+                //read in the state space
+                auto prevstepstate = dump.openGroup("/step" + std::to_string(step-1) + "/state");
+                {
+                    auto stateds = prevstepstate.openDataSet("hamiltonianstatespace");
+                    auto dataspace = stateds.getSpace();
+                    //read the data... For now we just hope that everything matches...
+                    int rank = dataspace.getSimpleExtentNdims();
+                    hsize_t fdims[rank], maxdims[rank], start[rank], dims_out[rank];
+                    dataspace.getSimpleExtentDims( dims_out, NULL);
+
+                    for(int i = 0; i < rank; ++i)
+                    {
+                        fdims[i] = static_cast<hsize_t>(size);
+                        maxdims[i] = H5S_UNLIMITED;
+                        start[i] = 0;
+                    }
+
+                    H5::DataSpace mspace1(rank, fdims, maxdims);
+                    dataspace.selectHyperslab(H5S_SELECT_SET, fdims, start);//We have no separate count array since fdims contains identical information
+                    stateds.read(retval, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
+                }
+        
+                //compare the used RNGs
+                {
+                    auto stateds = prevstepstate.openDataSet("RNG");
+                    auto dataspace = stateds.getSpace();
+                    //FIXME: proper reading of strings...
+                }
+        
+                std::vector<u_int64_t> rngstate;
+                {
+                    H5::DataSet stateds = prevstepstate.openDataSet("rngstate");
+                    auto dataspace = stateds.getSpace();
+                    //read the data... For now we just hope that everything matches...
+                    int rank = dataspace.getSimpleExtentNdims();
+                    hsize_t dims_out[rank];
+                    dataspace.getSimpleExtentDims( dims_out, NULL);
+                    rngstate.resize(dims_out[0]);
+                    hsize_t maxdims[rank], start[rank];
+                    for(int i = 0; i < rank; ++i)
+                    {
+                        maxdims[i] = H5S_UNLIMITED;
+                        start[i] = 0;
+                    }
+
+                    H5::DataSpace mspace1(rank, dims_out, maxdims);
+
+                    dataspace.selectHyperslab(H5S_SELECT_SET, dims_out, start);
+                    stateds.read(rngstate.data(), H5Mapper<u_int64_t>::H5Type(), mspace1, dataspace);
+                }
+                rngcache.setstate(rngstate);
+            }
+            else
+            {
+                //FIXME: initial seed!!
+            }
+            return std::make_pair(retval, size);
         }
         /** Helper function for HDF5.
          * 
@@ -906,7 +915,7 @@ class Core : public RefType<Grid>
             std::array<hsize_t, rank> count;
             count.fill(static_cast<hsize_t>(this->grid.size()));
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
-//             dataset.write(statespace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
+            dataset.write(statespace.myspace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
         }
 
         /** Destructor.

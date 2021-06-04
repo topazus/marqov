@@ -125,7 +125,7 @@ class Phi4
 
 		std::array<Standard_Interaction<StateVector>*, 1>      interactions = {new Standard_Interaction<StateVector>(J)};
 		std::vector<OnSite<StateVector, CouplingType>*>        onsite; // empty here, to be filled in the constructor!
-		std::array <FlexTerm<StateVector*,  StateVector>*, 0>  multisite;
+        std::array<FlexTerm<Space<StateVector, RegularHypercubic>,  StateVector>*, 0> multisite;
 
 		Phi4(double beta, double lambda, double mass) : beta(beta), 
 												lambda(lambda), 
