@@ -368,31 +368,63 @@ namespace MARQOV
 	//FIXME think about proper placement of docs and where...
     template <class Grid, class Hamiltonian, template<class> class RefType>
     class Core;
-	
-template <class StateVectorT, class Grid>
-class Space
-{
-	private:
-	StateVectorT *const myspace;
-	const std::size_t size_;
-    
-    template <class G, class Hamiltonian, template<class> class RefType>
-    friend class Core;
 
-	public:
-	typedef Grid Lattice; ///< The Type of the Lattice 
-	typedef StateVectorT StateVector;
-	Space(int size) : myspace(new StateVector[size]), size_(size) {}
-	Space(std::pair<StateVectorT*, std::size_t> arg) : myspace(arg.first), size_(arg.second) {}
-	~Space() {delete [] myspace;}
+    /** A class to encapsulate the state space of a hamiltonian.
+     * 
+     * Note that we have the type of the lattice available.
+     * @tparam StateVectorT the type of the State Vector
+     * @tparam Grid the type of the grid.
+     */
+    template <class StateVectorT, class Grid>
+    class Space
+    {
+    private:
+        StateVectorT *const myspace; ///< the storage of the state space.
+        const std::size_t size_; ///< how many state vectors are in our state space
+        
+        template <class G, class Hamiltonian, template<class> class RefType>
+        friend class Core;
+        
+    public:
+        typedef Grid Lattice; ///< The Type of the lattice 
+        typedef StateVectorT StateVector; ///< a typedef for the state vector
+        typedef StateVectorT value_type; ///< a typedef for better STL conformance
+        /** A constructor where we allocate the memory ourselves.
+         * 
+         * @param size the size of the state space.
+         */
+        Space(int size) : myspace(new StateVector[size]), size_(size) {}
+        /** A constructor where we basically get the memory from somewhere else.
+         * 
+         * @param arg a pair of a pointer and the length of the memory.
+         */
+        Space(std::pair<StateVectorT*, std::size_t> arg) : myspace(arg.first), size_(arg.second) {}
+        /** The destructor frees the memory.
+         */
+        ~Space() {delete [] myspace;}
+        
+        /** Query the size of the statespace
+         * 
+         * @return the size of the state space.
+         */
+        int size() const {return size_;}
+        
+        /** Access a single state vector by index.
+         * 
+         * non-const version
+         * @param j index of the state vector
+         * @return the state vector at memory position j
+         */
+        StateVector& operator[] (int j) {return myspace[j];}
+        /** Access a single state vector by index.
+         * 
+         * const version
+         * @param j index of the state vector
+         * @return the state vector at memory position j
+         */
+        const StateVector& operator[] (int j) const {return myspace[j];}
+    };
 
-	int size() const {return size_;}
-
-	StateVector& operator[] (int j) {return myspace[j];}
-	const StateVector& operator[] (int j) const {return myspace[j];}
-
-};
-	
 // --------------------------- MARQOV::Core class -------------------------------
 
 /** The MARQOV Core class.
