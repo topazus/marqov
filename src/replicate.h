@@ -64,7 +64,7 @@ inline std::vector<Params> replicator(const std::vector<Params>& params, int nre
  *           the universal reference decays to a plain reference. If a temporary object is given, move semantcs is invoked.
  * @tparam HArgs A template parameter pack with the parameters of the Hamiltonian
  * 
- * @param lp Depending on context this is usually either a reference to a lattice, or a tuple of arguments for a lattice.
+ * @param l_or_lp Depending on context this is usually either a reference to a lattice, or a tuple of arguments for a lattice.
  * @param mp The parameters for MARQOV.
  * @param hp The array with the hamiltonian parameters.
  * 

@@ -29,9 +29,13 @@ class Interaction
 {
 	public:
 		double J;
-		virtual StateVector get(const StateVector& phi_i) = 0;
+		Interaction(double J) : J(J) {}
 		virtual ~Interaction() {};
+		virtual StateVector get(const StateVector& phi_i) = 0;
 };
+
+
+
 
 /**
  * A generic interface for an site interaction.
@@ -44,9 +48,13 @@ class OnSite
 {
 	public: 
 		CouplingType h;
-		virtual CouplingType get(const StateVector& phi) = 0;
+		OnSite(CouplingType h) : h(h) {}
 		virtual ~OnSite(){};
+		virtual CouplingType get(const StateVector& phi) = 0;
 };
+
+
+
 
 /**
  * A generic interface for a flexible term.
@@ -60,16 +68,36 @@ class FlexTerm
 {
 	public:
 		double k;
+		FlexTerm(double k) : k(k) {};
 		virtual ~FlexTerm() {};
-//		template <class Lattice>  // template functions may not be virtual!
+
+		/** Interface for the energy difference to be used in local update algorithms
+		*
+		* @param rsite site under consideration
+		* @param svold state before the update
+		* @param svnew proposed state after the update
+		* @param nbrs neighbours of the site
+		* @param the statespace
+		*
+		* @return energy difference (double)
+		*/
 		virtual double diff (const int rsite,
 					const StateVector& svold,
 					const StateVector& svnew,
 					std::vector<int>& nbrs,
 					StateSpace& s) = 0;
-//					Lattice& grid) {return 0;}
 
 		template <class Grid>
+
+
+		/** Computes the total energy of this Hamiltonian term on the lattice
+		*
+		* @param s the statespace
+		* @param grid the lattice
+		* @param c the sublattice / bond family
+		*
+		* @return energy difference (double)
+		*/
 		double energy(const StateSpace& s, const Grid& grid, int c) {return 0;}
 		// TODO: remove this default implementation and instead check for existence at compile-time
 };

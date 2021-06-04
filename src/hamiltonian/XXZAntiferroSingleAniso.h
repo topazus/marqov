@@ -39,7 +39,7 @@ class XXZAntiferro_onsiteaniso : public OnSite<StateVector, double>
 		*
 		* @param D coupling strength of the anisotropic term
 		*/
-		XXZAntiferro_onsiteaniso(double D) : D(D) {this->h = D;}
+		XXZAntiferro_onsiteaniso(double D) : OnSite<StateVector,double>(D) {}
 		double get (const StateVector& phi) {return pow(phi[2],2);};
 };
 

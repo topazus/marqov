@@ -161,12 +161,11 @@ template <class StateVector>
 class XXZAntiferro_extfield : public OnSite<StateVector, double>
 {
 	public:
-        const double& h;
 		/** Constructor of anisotropic external field term
 		*
 		* @param H the coupling constant of the field in z-direction
 		*/
-		XXZAntiferro_extfield(const double& H) : h(H) {}
+		XXZAntiferro_extfield(const double& H) : OnSite<StateVector,double>(H) {}
 		double get (const StateVector& phi) {return phi[2];};
 };
 

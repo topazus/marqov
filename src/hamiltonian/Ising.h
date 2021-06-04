@@ -50,25 +50,6 @@ class IsingGenericVectorValuedObs
 
 
 
-// ------------------------------ INITIALIZER ---------------------------
-
-template <class StateVector, class RNG>
-class Ising_Initializer
-{
-	public:
-		Ising_Initializer()   {}
-		Ising_Initializer(RNG&) {}
-
-		// specifies how a random new state vector is generated
-		// in this case a simple spin flip
-		StateVector newsv(const StateVector& svold) 
-		{
-			StateVector retval(svold); 
-			retval[0] = -retval[0];
-			return retval;
-		};
-};
-
 
 // ------------------------------ HAMILTONIAN ---------------------------
 

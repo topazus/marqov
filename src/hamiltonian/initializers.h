@@ -25,6 +25,28 @@
 
 // ------------------------------ INITIALIZER ---------------------------
 
+/** Initializer for Ising-like models.
+ * draws a random spin site +1/-2
+ *
+ * @tparam StateVector the type of the state vector
+ * @tparam RNG the type of the random number generator
+ */
+template <class StateVector, class RNG> 
+class Ising_Initializer
+{
+	public:
+		Ising_Initializer(RNG&) {}
+		StateVector newsv(const StateVector& svold)
+		{
+			StateVector retval(svold);
+			retval[0] = -retval[0];
+			return retval;
+		}
+};
+
+
+
+
 /** Initializer for O(N)-like models.
  * draws a random vector on the N-dimensional unit shell
  *

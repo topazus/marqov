@@ -25,32 +25,17 @@ template <class StateVector, typename CouplingType = double>
 class Standard_Interaction : public Interaction<StateVector>
 {
 	public:
-		// what is correct?
-		// this:
-
-//		const CouplingType& J;
-//		Standard_Interaction(const CouplingType &J) : J(J) {}
-
-		// or this:
-
-		Standard_Interaction(const CouplingType &J) {this->J = J;}
-
-
-
+		Standard_Interaction(const CouplingType constant) : Interaction<StateVector>(constant) {}
 		StateVector get (const StateVector& phi) {return phi;}
-
-		// TODO: rename J to something more generic, like "constant"
-		
 };
+
+
 
 template <class StateVector, typename CouplingType = double>
 class Onsite_Quadratic : public OnSite<StateVector, CouplingType> 
 {
 	public:
-		Onsite_Quadratic(CouplingType constant)
-		{
-			this->h = constant;
-		}
+		Onsite_Quadratic(CouplingType constant) : OnSite<StateVector, CouplingType>(constant) {}
 		CouplingType get (const StateVector& phi) {return dot(phi,phi);}
 };
 
