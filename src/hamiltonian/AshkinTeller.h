@@ -101,10 +101,8 @@ class AshkinTeller_Initializer
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
-/**
- * Three-Color Ashkin-Teller Hamiltonian
+/** Three-Color Ashkin-Teller Hamiltonian
  */
-
 class AshkinTeller
 {
 	public:
@@ -284,7 +282,7 @@ namespace MARQOV
 		// the actual Metropolis move attempt
 		template <class StateSpace, class M, class RNG>
 		static inline int move(const AshkinTeller& ham, 
-						   Lattice& grid, 
+						   const Lattice& grid, 
 						   StateSpace& statespace, 
 						   M& metro, 
 						   RNG& rng, 
