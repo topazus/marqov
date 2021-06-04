@@ -982,7 +982,7 @@ class Core : public RefType<Grid>
         Core(Core&& other) = default;
         /** The deleted move assignment operator of Core.
          * 
-         * There cannot be two identical copies of core.
+         * There cannot be two identical copies of Core.
          */
         Core& operator=(Core&& other) = delete;
         
