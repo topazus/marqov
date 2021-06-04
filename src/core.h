@@ -578,65 +578,65 @@ class Core : public RefType<Grid>
 		auto setupstatespace(int size)
         {
             auto retval = new typename Hamiltonian::StateVector[size];
-// //             if (step > 0)
-// //             {
-// //                 std::cout<<"Previous data found! Continuing simulation at step "<<step<<std::endl;
-// //                 //read in the state space
-// //                 auto prevstepstate = dump.openGroup("/step" + std::to_string(step-1) + "/state");
-// //                 {
-// //                     auto stateds = prevstepstate.openDataSet("hamiltonianstatespace");
-// //                     auto dataspace = stateds.getSpace();
-// //                     //read the data... For now we just hope that everything matches...
-// //                     int rank = dataspace.getSimpleExtentNdims();
-// //                     hsize_t fdims[rank], maxdims[rank], start[rank], dims_out[rank];
-// //                     dataspace.getSimpleExtentDims( dims_out, NULL);
-// // 
-// //                     for(int i = 0; i < rank; ++i)
-// //                     {
-// //                         fdims[i] = static_cast<hsize_t>(size);
-// //                         maxdims[i] = H5S_UNLIMITED;
-// //                         start[i] = 0;
-// //                     }
-// // 
-// //                     H5::DataSpace mspace1(rank, fdims, maxdims);
-// //                     dataspace.selectHyperslab(H5S_SELECT_SET, fdims, start);//We have no separate count array since fdims contains identical information
-// //                     stateds.read(retval, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
-// //                 }
-// //         
-// //                 //compare the used RNGs
-// //                 {
-// //                     auto stateds = prevstepstate.openDataSet("RNG");
-// //                     auto dataspace = stateds.getSpace();
-// //                     //FIXME: proper reading of strings...
-// //                 }
-// //         
-// //                 std::vector<u_int64_t> rngstate;
-// //                 {
-// //                     H5::DataSet stateds = prevstepstate.openDataSet("rngstate");
-// //                     auto dataspace = stateds.getSpace();
-// //                     //read the data... For now we just hope that everything matches...
-// //                     int rank = dataspace.getSimpleExtentNdims();
-// //                     hsize_t dims_out[rank];
-// //                     dataspace.getSimpleExtentDims( dims_out, NULL);
-// //                     rngstate.resize(dims_out[0]);
-// //                     hsize_t maxdims[rank], start[rank];
-// //                     for(int i = 0; i < rank; ++i)
-// //                     {
-// //                         maxdims[i] = H5S_UNLIMITED;
-// //                         start[i] = 0;
-// //                     }
-// // 
-// //                     H5::DataSpace mspace1(rank, dims_out, maxdims);
-// // 
-// //                     dataspace.selectHyperslab(H5S_SELECT_SET, dims_out, start);
-// //                     stateds.read(rngstate.data(), H5Mapper<u_int64_t>::H5Type(), mspace1, dataspace);
-// //                 }
-// //                 rngcache.setstate(rngstate);
-// //             }
-// //             else
-// //             {
-// //                 //FIXME: initial seed!!
-// //             }
+            if (step > 0)
+            {
+                std::cout<<"Previous data found! Continuing simulation at step "<<step<<std::endl;
+                //read in the state space
+                auto prevstepstate = dump.openGroup("/step" + std::to_string(step-1) + "/state");
+                {
+                    auto stateds = prevstepstate.openDataSet("hamiltonianstatespace");
+                    auto dataspace = stateds.getSpace();
+                    //read the data... For now we just hope that everything matches...
+                    int rank = dataspace.getSimpleExtentNdims();
+                    hsize_t fdims[rank], maxdims[rank], start[rank], dims_out[rank];
+                    dataspace.getSimpleExtentDims( dims_out, NULL);
+
+                    for(int i = 0; i < rank; ++i)
+                    {
+                        fdims[i] = static_cast<hsize_t>(size);
+                        maxdims[i] = H5S_UNLIMITED;
+                        start[i] = 0;
+                    }
+
+                    H5::DataSpace mspace1(rank, fdims, maxdims);
+                    dataspace.selectHyperslab(H5S_SELECT_SET, fdims, start);//We have no separate count array since fdims contains identical information
+                    stateds.read(retval, H5Mapper<StateVector>::H5Type(), mspace1, dataspace);
+                }
+        
+                //compare the used RNGs
+                {
+                    auto stateds = prevstepstate.openDataSet("RNG");
+                    auto dataspace = stateds.getSpace();
+                    //FIXME: proper reading of strings...
+                }
+        
+                std::vector<u_int64_t> rngstate;
+                {
+                    H5::DataSet stateds = prevstepstate.openDataSet("rngstate");
+                    auto dataspace = stateds.getSpace();
+                    //read the data... For now we just hope that everything matches...
+                    int rank = dataspace.getSimpleExtentNdims();
+                    hsize_t dims_out[rank];
+                    dataspace.getSimpleExtentDims( dims_out, NULL);
+                    rngstate.resize(dims_out[0]);
+                    hsize_t maxdims[rank], start[rank];
+                    for(int i = 0; i < rank; ++i)
+                    {
+                        maxdims[i] = H5S_UNLIMITED;
+                        start[i] = 0;
+                    }
+
+                    H5::DataSpace mspace1(rank, dims_out, maxdims);
+
+                    dataspace.selectHyperslab(H5S_SELECT_SET, dims_out, start);
+                    stateds.read(rngstate.data(), H5Mapper<u_int64_t>::H5Type(), mspace1, dataspace);
+                }
+                rngcache.setstate(rngstate);
+            }
+            else
+            {
+                //FIXME: initial seed!!
+            }
             return retval;
         }
         /** Helper function for HDF5.
