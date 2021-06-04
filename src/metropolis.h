@@ -116,7 +116,6 @@ namespace MARQOV
 		}
 		return retval;
 	}
-    
 };
 
 
