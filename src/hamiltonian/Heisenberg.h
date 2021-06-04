@@ -104,7 +104,7 @@ class Heisenberg
 
         std::vector<Heisenberg_interaction<StateVector>*> interactions;
         std::array<OnSite<StateVector, CouplingType>*, 0> onsite;
-        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
+        std::array<FlexTerm<Space<StateVector, RegularHypercubic>,  StateVector>*, 0> multisite;
 
 		Heisenberg(double J) : J(J), name("Heisenberg"), observables(obs_m)
         {
