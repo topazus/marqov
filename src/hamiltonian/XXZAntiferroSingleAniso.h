@@ -75,7 +75,7 @@ class XXZAntiferroSingleAniso
 
         std::array<XXZAntiferro_interaction<StateVector>*, 1> interactions = {new XXZAntiferro_interaction<StateVector>(Delta)};
         std::vector<OnSite<StateVector, double>*> onsite;
-        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
+        std::array<FlexTerm<Space<StateVector, RegularHypercubic>,  StateVector>*, 0> multisite;
 
 		/** Constructor for the Hamiltonian of the antiferromagnetic XXZ O(3) model with 
 		  * an additional single-site anisotropy.

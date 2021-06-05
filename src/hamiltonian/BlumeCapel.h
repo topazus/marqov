@@ -68,7 +68,7 @@ class BlumeCapel
 
 		std::array<Standard_Interaction<StateVector>*, 1>    interactions = {new Standard_Interaction<StateVector>(J)};
 		std::array<Onsite_Quadratic<StateVector>*, 1>        onsite       = {new Onsite_Quadratic<StateVector>(D)};
-		std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
+        std::array<FlexTerm<Space<StateVector, RegularHypercubic>,  StateVector>*, 0> multisite;
 	
 		/** Constructor of the Blume-Capel model
 		*
@@ -104,7 +104,7 @@ namespace MARQOV
 	{
 		typedef BlumeCapel<SpinType> Hamiltonian;
 		typedef typename Hamiltonian::StateVector StateVector;
-		typedef StateVector* StateSpace;
+		typedef Space<StateVector, Lattice> StateSpace;
 
 		private:
 			const Hamiltonian& ham;

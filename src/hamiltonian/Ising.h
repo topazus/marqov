@@ -82,7 +82,7 @@ class Ising
 
         std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
         std::array<OnSite<StateVector, int>*, 0> onsite;
-        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
+        std::array<FlexTerm<Space<StateVector, RegularHypercubic>,  StateVector>*, 0> multisite;
 
 
 		Ising(double J) : J(J), name("Ising"), obs_e(*this), obs_fx(0), obs_fy(1)

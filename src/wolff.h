@@ -47,7 +47,7 @@ namespace MARQOV
     int Wolff<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNGCache<RNGType>& rng, double beta, int rsite)
     {
 		// set up embedder
-		Embedder<Hamiltonian,Lattice> embd(ham,grid,statespace);
+		Embedder<Hamiltonian, Lattice> embd(ham, grid, statespace);
 		embd.draw(rng);
 
         // prepare stack

@@ -82,7 +82,7 @@ class Heisenberg
 
         std::vector<Heisenberg_interaction<StateVector>*> interactions;
         std::array<OnSite<StateVector, CouplingType>*, 0> onsite;
-        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
+        std::array<FlexTerm<Space<StateVector, RegularHypercubic>,  StateVector>*, 0> multisite;
 
 		Heisenberg(double J) : J(J), name("Heisenberg"), observables(obs_m)
         {
@@ -125,7 +125,7 @@ namespace MARQOV
 	*/
 
 	template <class SpinType, class CouplingType, class Lattice>
-	class Embedder<Heisenberg<SpinType,CouplingType>,Lattice>
+	class Embedder<Heisenberg<SpinType, CouplingType>, Lattice>
 	{
 		typedef Heisenberg<SpinType,CouplingType> Hamiltonian;
 		typedef typename Hamiltonian::StateVector StateVector;

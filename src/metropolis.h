@@ -28,7 +28,6 @@
 namespace MARQOV
 {
 
-
 	/**
 	 * A class to encapsulate the Metropolis update.
 	 * Using the power of partial template class specializations it is possible to

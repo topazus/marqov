@@ -38,7 +38,7 @@ class Interaction
 
 
 /**
- * A generic interface for an site interaction.
+ * A generic interface for an onsite interaction.
  * @tparam StateVector the type of the StateVector that the interaction
  *                     acts upon.
  * @tparam CouplingType
@@ -87,10 +87,11 @@ class FlexTerm
 					std::vector<int>& nbrs,
 					StateSpace& s) = 0;
 
-		template <class Grid>
 
 
 		/** Computes the total energy of this Hamiltonian term on the lattice
+		*
+		* @tparam grid the type of the lattice
 		*
 		* @param s the statespace
 		* @param grid the lattice
@@ -98,6 +99,7 @@ class FlexTerm
 		*
 		* @return energy difference (double)
 		*/
+		template <class Grid>
 		double energy(const StateSpace& s, const Grid& grid, int c) {return 0;}
 		// TODO: remove this default implementation and instead check for existence at compile-time
 };
