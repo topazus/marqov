@@ -61,7 +61,6 @@ namespace MARQOV
          * @param i id.
          * @param ri replica id.
          * @param s random number seed. Will be ignored if restarted
-         * @param ugli unknown game loop integer
          * @param nst number of steps
          * @param ws warmup steps
          * @param gls gameloop steps
@@ -72,7 +71,6 @@ namespace MARQOV
 					int i = 0, 
 					int ri = 0, 
 		  			int s = 0, 
-		  			int ugli = 10, 
 		  			int nst = 250, 
 		  			int ws = 100, 
 		  			int gls = 200, 
@@ -81,7 +79,6 @@ namespace MARQOV
 		  		 			  	 id(i), 
 		  					  	 repid(ri),
 		  					  	 seed(s), 
-		  					  	 gli(ugli), 
 		  					  	 nsteps(nst),
 		  					  	 warmupsteps(ws), 
 		  					  	 gameloopsteps(gls), 
@@ -114,7 +111,6 @@ namespace MARQOV
 		int id; ///< id
 		int repid; ///< replica id
 		int seed; ///< Doing this correctly opens a whole can of worms... We now dump the RNG state.
-		int gli; ///< The unknown gameloop integer.
 		int nsteps; ///< The number of elementary Monte Carlo steps.
 		int warmupsteps; ///< The number of steps to do for warmups.
 		int gameloopsteps; ///< gameloop steps.
@@ -129,8 +125,6 @@ namespace MARQOV
 		/** Set the seed.
          */
 		Config& setseed(int s) {seed = s; return *this;}
-
-		Config& setgli(int c) {gli = c; return *this;}
 		/** Set the number of steps.
          */
 		Config& setnsteps(int ns) {nsteps = ns; return *this;}
@@ -160,7 +154,6 @@ namespace MARQOV
             dumpscalartoH5(mcg, "id", id);
             dumpscalartoH5(mcg, "repid", repid);
             dumpscalartoH5(mcg, "seed", seed);
-            dumpscalartoH5(mcg, "gli", gli);
             dumpscalartoH5(mcg, "nsteps", nsteps);
             dumpscalartoH5(mcg, "warmupsteps", warmupsteps);
             dumpscalartoH5(mcg, "gameloopsteps", gameloopsteps);
@@ -972,9 +965,9 @@ class Core : public RefType<Grid>
          */
         void gameloop()
         {
-
+            constexpr int gli = 10;
             double avgclustersize = 0;
-            for (int k=0; k < this->mcfg.gli; k++)
+            for (int k=0; k < gli; k++)
             {
 
                 if (this->mcfg.id == 0) std::cout << "." << std::flush;
@@ -998,10 +991,11 @@ class Core : public RefType<Grid>
          */
         void wrmploop()
         {
+            constexpr int gli = 10;
             if(step < 1)
             {
                 if (this->mcfg.id == 0) std::cout << "|";
-                for (int k=0; k < this->mcfg.gli; k++)
+                for (int k=0; k < gli; k++)
                 {
                     if (this->mcfg.id == 0) std::cout << "." << std::flush;
                     for (int i=0; i < this->mcfg.warmupsteps/10; ++i) elementaryMCstep();
