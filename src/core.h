@@ -86,6 +86,8 @@ namespace MARQOV
 		  					  	 nmetro(nm) {}
 		
 		/** Default Copy Constructor of Config.
+         * 
+         * @param rhs the other Config object.
          */
 		Config(const Config& rhs) = default; // < FIXME: Think about wether we can get rid of it.
 		/** The deleted assignment operator of Config.
@@ -99,13 +101,12 @@ namespace MARQOV
         /** The deleted assignment move operator of Config.
          */
 		Config& operator=(Config&& other) = delete;
-		
-		
+
 		// Output
 		std::string outname; ///< the output filename; is empty but will be specified by a filter!
 		std::string outpath; ///< the outpath; full filename will be "outpath/outfile.h5"
 		std::string logpath; ///< the logpath. For lack of a better place it is currently stored here.
-		
+
 
 		// MC variables
 		int id; ///< id
@@ -194,7 +195,7 @@ namespace MARQOV
 		type_sink_t< decltype( std::declval<Lattice>().size() ) >
 		> : std::true_type {};
 		
-        /** Internal Base class if MARQOV gets the lattice by reference.
+        /** Internal base class if MARQOV gets the lattice by reference.
          * 
          * A base class that gets used if MARQOV::Core gets the lattice by reference.
          * @tparam L the lattice that will be used
@@ -355,6 +356,67 @@ namespace MARQOV
 		static constexpr auto size = std::tuple_size<Tuple>::value;
 		return _call(f, obj, t, std::make_index_sequence<size>{});
 	}
+	
+	//forward declaration of Core.
+	//FIXME think about proper placement of docs and where...
+    template <class Grid, class Hamiltonian, template<class> class RefType>
+    class Core;
+
+    /** A class to encapsulate the state space of a hamiltonian.
+     * 
+     * Note that we have the type of the lattice available.
+     * @tparam StateVectorT the type of the State Vector
+     * @tparam Grid the type of the grid.
+     */
+    template <class StateVectorT, class Grid>
+    class Space
+    {
+    private:
+        StateVectorT *const myspace; ///< the storage of the state space.
+        const std::size_t size_; ///< how many state vectors are in our state space
+        
+        template <class G, class Hamiltonian, template<class> class RefType>
+        friend class Core;
+        
+    public:
+        typedef Grid Lattice; ///< The Type of the lattice 
+        typedef StateVectorT StateVector; ///< a typedef for the state vector
+        typedef StateVectorT value_type; ///< a typedef for better STL conformance
+        /** A constructor where we allocate the memory ourselves.
+         * 
+         * @param size the size of the state space.
+         */
+        Space(int size) : myspace(new StateVector[size]), size_(size) {}
+        /** A constructor where we basically get the memory from somewhere else.
+         * 
+         * @param arg a pair of a pointer and the length of the memory.
+         */
+        Space(std::pair<StateVectorT*, std::size_t> arg) : myspace(arg.first), size_(arg.second) {}
+        /** The destructor frees the memory.
+         */
+        ~Space() {delete [] myspace;}
+        
+        /** Query the size of the statespace
+         * 
+         * @return the size of the state space.
+         */
+        int size() const {return size_;}
+        
+        /** Access a single state vector by index.
+         * 
+         * non-const version
+         * @param j index of the state vector
+         * @return the state vector at memory position j
+         */
+        StateVector& operator[] (int j) {return myspace[j];}
+        /** Access a single state vector by index.
+         * 
+         * const version
+         * @param j index of the state vector
+         * @return the state vector at memory position j
+         */
+        const StateVector& operator[] (int j) const {return myspace[j];}
+    };
 
 // --------------------------- MARQOV::Core class -------------------------------
 
@@ -377,7 +439,7 @@ class Core : public RefType<Grid>
         typedef Hamiltonian HamiltonianType; ///< Via HamiltonianType the used Hamiltonian is accessible.
         typedef Grid Lattice; ///< The Type of the Lattice
 		typedef typename Hamiltonian::StateVector StateVector; ///< The type of the StateVector as retrieved from the Hamiltonian.
-		typedef StateVector* StateSpace; ///< the type of the state space.
+		typedef Space<StateVector, Lattice> StateSpace; ///< the type of the state space.
 		marqovtime::timetracker mrqvt; ///< The TimeTracker for tracking times.
 
 		// Local classes. We gain access to all Types of MARQOV::Core
@@ -602,7 +664,7 @@ class Core : public RefType<Grid>
             {
                 //FIXME: initial seed!!
             }
-            return retval;
+            return std::make_pair(retval, size);
         }
         /** Helper function for HDF5.
          * 
@@ -878,7 +940,7 @@ class Core : public RefType<Grid>
             std::array<hsize_t, rank> count;
             count.fill(static_cast<hsize_t>(this->grid.size()));
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
-            dataset.write(statespace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
+            dataset.write(statespace.myspace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
         }
 
         /** Destructor.
@@ -891,7 +953,6 @@ class Core : public RefType<Grid>
             hdf5lock.lock();
             dumprng();
             dumpstatespace();
-            delete [] statespace;
             dump.close();
         }
 
@@ -914,7 +975,7 @@ class Core : public RefType<Grid>
         Core(Core&& other) = default;
         /** The deleted move assignment operator of Core.
          * 
-         * There cannot be two identical copies of core.
+         * There cannot be two identical copies of Core.
          */
         Core& operator=(Core&& other) = delete;
         

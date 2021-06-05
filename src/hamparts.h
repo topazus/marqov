@@ -34,7 +34,7 @@ class Interaction
 };
 
 /**
- * A generic interface for an site interaction.
+ * A generic interface for an onsite interaction.
  * @tparam StateVector the type of the StateVector that the interaction
  *                     acts upon.
  * @tparam CouplingType

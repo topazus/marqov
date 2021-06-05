@@ -29,12 +29,12 @@ namespace MARQOV
 {
 
 
-/**
- * Helper function for the Metropolis algorithm, sums over local neighbourhood of spin
+/** Helper function for the Metropolis algorithm, sums over local neighbourhood of spin
  *
  * @tparam Lattice the type of the lattice
  * @tparam Hamiltonian the type of the Hamiltonian
  * @tparam StateSpace the type of the statespace
+ * 
  * @param grid the lattice
  * @param ham the Hamiltonian
  * @param statespace the statespace
