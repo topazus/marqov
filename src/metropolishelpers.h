@@ -45,39 +45,35 @@ namespace MARQOV
 
 
 
-	/** Helper functions to extract Hamiltonian on-site terms 
-	*
-	* @tparam Grid the type of the Lattice
-	* @tparam Hamiltonian the type of the Hamiltonian
-	* @param grid the lattice
-	* @param ham the Hamiltonian
-	* @param idx the site to be considered
-	* @param std::false_type marks overload 
-	*
-	* @return std::vector<int>
-	*/
-	template <class Grid, class Hamiltonian>
-	std::vector<int> get_terms(const Grid& grid, const Hamiltonian& ham, int idx, std::false_type)
-	{
-		return arange(0, ham.onsite.size());
-	}
+    /**
+     * Is_Container utility struct.
+     *
+     * Helpers to determine if the interactions are container-like.
+     * By that we mean whether it has a .size() method and an array access
+     * operator.
+     * See metropolis.h for an example.
+     * @see metropolis.h
+     * @tparam Cont The Container that we query.
+     */
+    template <class Cont, class = void, class = void>
+    struct Is_Container
+    {
+        static constexpr bool value = false;
+    };
 
-	/** Helper functions to extract Hamiltonian on-site terms 
-	*
-	* @tparam Grid the type of the Lattice
-	* @tparam Hamiltonian the type of the Hamiltonian
-	* @param grid the lattice
-	* @param ham the Hamiltonian
-	* @param idx the site to be considered
-	* @param std::true_type marks overload 
-	*
-	* @return std::vector<int>
-	*/
-	template <class Grid, class Hamiltonian>
-	std::vector<int> get_terms(const Grid& grid, const Hamiltonian& ham, int idx, std::true_type)
-	{
-		return grid.termselector(idx);
-	}
+    template <class Cont>
+    struct Is_Container<Cont,
+    MARQOV::detail::type_sink_t<decltype(std::declval<Cont>().size())>,
+    MARQOV::detail::type_sink_t<decltype(std::declval<Cont>().operator[](std::declval<std::size_t>()))>
+    >
+    {
+        static constexpr bool value = true;
+    };
+
+
+
+	
+
 
 
 
@@ -181,7 +177,7 @@ namespace MARQOV
 
 
 	template <class Grid>
-	auto getnbrs_helper(const Grid& grid, int fam, int idx, std::false_type)
+	auto getnbrs_helper(const Grid& grid, int fam, int idx, std::false_type hasnbrs)
 	{
 		cout << "[MARQOV::Lattice] function nbrs not implement!" << flush;
 		exit(0); // improve me
@@ -189,7 +185,7 @@ namespace MARQOV
 	}
 
 	template <class Grid>
-	auto getnbrs_helper(const Grid& grid, int fam, int idx, std::true_type)
+	auto getnbrs_helper(const Grid& grid, int fam, int idx, std::true_type hasnbrs)
 	{
 		return grid.nbrs(fam,idx);
 	}
@@ -197,6 +193,7 @@ namespace MARQOV
 	/** A helper to get neighbours from lattice
 	*
 	* @tparam Grid the type of the lattice
+	*
 	* @param grid the lattice
 	* @param fam the index of the sublattice
 	* @param idx the index of the site under consideration
@@ -215,7 +212,7 @@ namespace MARQOV
 
 
 	template <class Grid>
-	auto getflexnbrs_helper(const Grid& grid, int fam, int idx, std::false_type)
+	auto getflexnbrs_helper(const Grid& grid, int fam, int idx, std::false_type hasflexnbrs)
 	{
 		cout << "[MARQOV::Lattice] function flexnbrs not implement!" << flush;
 		exit(0); // improve me
@@ -223,7 +220,7 @@ namespace MARQOV
 	}
 
 	template <class Grid>
-	auto getflexnbrs_helper(const Grid& grid, int fam, int idx, std::true_type)
+	auto getflexnbrs_helper(const Grid& grid, int fam, int idx, std::true_type hasflexnbrs)
 	{
 		return grid.flexnbrs(fam,idx);
 	}
@@ -231,6 +228,7 @@ namespace MARQOV
 	/** A helper to get flexneighbours from lattice
 	*
 	* @tparam Grid the type of the lattice
+	*
 	* @param grid the lattice
 	* @param fam the index of the sublattice
 	* @param idx the index of the site under consideration
@@ -246,14 +244,14 @@ namespace MARQOV
 
 
 	template <class Grid>
-	auto getbnds_helper(const Grid& grid, int fam, int idx, std::false_type)
+	auto getbnds_helper(const Grid& grid, int fam, int idx, std::false_type hasbonds)
 	{
 		cout << "[MARQOV::Lattice] function bnds not implemented" << endl;
 		exit(0);
 	}
 
 	template <class Grid>
-	auto getbnds_helper(const Grid& grid, int fam, int idx, std::true_type)
+	auto getbnds_helper(const Grid& grid, int fam, int idx, std::true_type hasbonds)
 	{
 		return grid.bnds(fam,idx);
 	}
@@ -261,6 +259,7 @@ namespace MARQOV
 	/** A helper to get bonds from lattice
 	*
 	* @tparam Grid the type of the lattice
+	*
 	* @param grid the lattice
 	* @param fam the index of the family / sublattice
 	* @param idx the index of the site under consideration
@@ -271,6 +270,46 @@ namespace MARQOV
 	auto getbnds(const Grid& grid, int fam, int idx)
 	{
 		return getbnds_helper<Grid>(grid, fam, idx, has_bnds<Grid>{});
+	}
+
+
+
+	/** Helper functions to extract Hamiltonian on-site terms 
+	*
+	* @tparam Grid the type of the Lattice
+	* @tparam Hamiltonian the type of the Hamiltonian
+	*
+	* @param grid the lattice
+	* @param ham the Hamiltonian
+	* @param idx the site to be considered
+	* @param hasterms encodes whether the lattice provides the termselector function 
+	*
+	* @return integer sequence (0,1,2,...) with lengt corresponding to number of on-site terms
+	*/
+	template <class Grid, class Hamiltonian>
+	std::vector<int> get_terms(const Grid& grid, const Hamiltonian& ham, int idx, std::false_type hasterms)
+	{
+		std::vector<int> retval(ham.onsite.size());
+		std::iota(std::begin(retval), std::end(retval), 0);
+		return retval;
+	}
+
+	/** Helper functions to extract Hamiltonian on-site terms 
+	*
+	* @tparam Grid the type of the Lattice
+	* @tparam Hamiltonian the type of the Hamiltonian
+	*
+	* @param grid the lattice
+	* @param ham the Hamiltonian
+	* @param idx the site to be considered
+	* @param hasterms encodes whether the lattice provides the termselector function 
+	*
+	* @return vector of integers, denoting indicies of on-site terms
+	*/
+	template <class Grid, class Hamiltonian>
+	std::vector<int> get_terms(const Grid& grid, const Hamiltonian& ham, int idx, std::true_type hasterms)
+	{
+		return grid.termselector(idx);
 	}
 
 
@@ -286,13 +325,14 @@ namespace MARQOV
 	 * @tparam Lattice the type of the lattice
 	 * @tparam Hamiltonian the type of the Hamiltonian
 	 * @tparam StateSpace the type of the statespace
+	 *
 	 * @param grid the lattice
 	 * @param ham the Hamiltonian
 	 * @param statespace the statespace
 	 * @param a the index of the interaction term under consideration
 	 * @param rsite the site under consideration
-	 * @param std::true_type lattice has function grid.nbrs
-	 * @param std::true_type lattice has function grid.bnds
+	 * @param hasnbrs encodes whether the lattice provides a nbrs function
+	 * @param hasbonds encodes whether the lattice provides a bnds function
 	 *
 	 * @return sum over neighbours after applying the interaction term and weighted by respective bond strengths
 	 */
@@ -302,8 +342,8 @@ namespace MARQOV
 												  const StateSpace& statespace, 
 												  int a, 
 												  int rsite, 
-												  std::true_type, 
-												  std::true_type) 
+												  std::true_type hasnbrs, 
+												  std::true_type hasbnds) 
 	{
 		typedef typename Hamiltonian::StateVector StateVector;
 	
@@ -336,13 +376,14 @@ namespace MARQOV
 	 * @tparam Lattice the type of the lattice
 	 * @tparam Hamiltonian the type of the Hamiltonian
 	 * @tparam StateSpace the type of the statespace
+	 *
 	 * @param grid the lattice
 	 * @param ham the Hamiltonian
 	 * @param statespace the statespace
 	 * @param a the index of the interaction term under consideration
 	 * @param rsite the site under consideration
-	 * @param std::true_type lattice has function grid.nbrs
-	 * @param std::false_type lattice has no function grid.bnds
+	 * @param hasnbrs encodes whether the lattice provides a nbrs function
+	 * @param hasbonds encodes whether the lattice provides a bnds function
 	 *
 	 * @return sum over neighbours after applying the interaction term
 	 */
@@ -352,8 +393,8 @@ namespace MARQOV
 												  const StateSpace& statespace, 
 												  int a, 
 												  int rsite, 
-												  std::true_type, 
-												  std::false_type) 
+												  std::true_type hasnbrs, 
+												  std::false_type hasbonds) 
 	{
 		typedef typename Hamiltonian::StateVector StateVector;
 	
@@ -387,13 +428,14 @@ namespace MARQOV
 	 * @tparam Lattice the type of the lattice
 	 * @tparam Hamiltonian the type of the Hamiltonian
 	 * @tparam StateSpace the type of the statespace
+	 *
 	 * @param grid the lattice
 	 * @param ham the Hamiltonian
 	 * @param statespace the statespace
 	 * @param a the index of the interaction term under consideration
 	 * @param rsite the site under consideration
-	 * @param std::true_type lattice has no function grid.nbrs
-	 * @param std::false_type lattice has no function grid.bnds
+	 * @param hasnbrs encodes whether the lattice provides a nbrs function
+	 * @param hasbonds encodes whether the lattice provides a bnds function
 	 *
 	 * @return does not apply 
 	 */
@@ -403,8 +445,8 @@ namespace MARQOV
 												  const StateSpace& statespace, 
 												  int a, 
 												  int rsite, 
-												  std::false_type, 
-												  std::false_type) 
+												  std::false_type hasnbrs, 
+												  std::false_type hasbonds) 
 	{
 		cout << "[MARQOV] Error: The lattice does not provide the following function: nbrs" << endl;
 		cout << "In order to use the general Metropolis algorithm, this function must be implemented" << endl;
@@ -418,37 +460,6 @@ namespace MARQOV
 
 
 
-    /**
-     * Is_Container utility struct.
-     *
-     * Helpers to determine if the interactions are container-like.
-     * By that we mean whether it has a .size() method and an array access
-     * operator.
-     * See metropolis.h for an example.
-     * @see metropolis.h
-     * @tparam Cont The Container that we query.
-     */
-    template <class Cont, class = void, class = void>
-    struct Is_Container
-    {
-        static constexpr bool value = false;
-    };
-
-    template <class Cont>
-    struct Is_Container<Cont,
-    MARQOV::detail::type_sink_t<decltype(std::declval<Cont>().size())>,
-    MARQOV::detail::type_sink_t<decltype(std::declval<Cont>().operator[](std::declval<std::size_t>()))>
-    >
-    {
-        static constexpr bool value = true;
-    };
-
-
-
-	
-
-
-
 
 	/** Computes the difference of the interaction energy in the Metropolis algorithm
 	 *
@@ -456,21 +467,28 @@ namespace MARQOV
 	 * @tparam Hamiltonian the type of the Hamiltonian
 	 * @tparam StateSpace the type of the StateSpace
 	 * @tparam StateVector the type of the StateVector
+	 *
 	 * @param grid the lattice
 	 * @param ham the Hamiltonian
 	 * @param statespace the state space
 	 * @param svnew new state vector configuration
 	 * @param svold old state vector configuration
 	 * @param rsite index of the site under consideration
-	 * @param std::true_type marks the specialization
+	 * @param hasinteractions marks the specialization
 	 *
-	 * @return double
+	 * @return energy difference (double)
 	 */
 	template <class Grid, class Hamiltonian, class StateSpace, class StateVector>
-	double compute_interactionenergydiff(Grid& grid, Hamiltonian& ham, StateSpace& statespace, StateVector& svnew, StateVector& svold, int rsite, std::true_type)
+	double compute_interactionenergydiff(Grid& grid, 
+				Hamiltonian& ham, 
+				StateSpace& statespace, 
+				StateVector& svnew, 
+				StateVector& svold, 
+				int rsite, 
+				std::true_type hasinteractions)
 	{
 		static_assert(MARQOV::Is_Container<decltype(std::declval<Hamiltonian>().interactions)>::value,
-			"[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
+			"[MARQOV::Metropolis] COMPILATION FAILED: interaction terms are not a container.");
 		typedef typename std::remove_cv<decltype(ham.interactions.size())>::type InteractionSizeType;
 		typedef typename has_nbrs<Grid>::type HasNbrs;
 		typedef typename has_bnds<Grid>::type HasBnds;
@@ -488,10 +506,13 @@ namespace MARQOV
 	}
 
 	template <class Grid, class Hamiltonian, class StateSpace, class StateVector>
-	double compute_interactionenergydiff(Grid& grid, Hamiltonian& ham, StateSpace& statespace, StateVector& svnew, StateVector& svold, int rsite, std::false_type)
-	{
-		return 0;
-	}
+	constexpr static double compute_interactionenergydiff(Grid& grid, 
+				Hamiltonian& ham,
+				StateSpace& statespace, 
+				StateVector& svnew, 
+				StateVector& svold, 
+				int rsite, 
+				std::false_type hasinteractions) {return 0;}
 
 
 
@@ -500,17 +521,23 @@ namespace MARQOV
 	 * @tparam Grid the type of the lattice
 	 * @tparam Hamiltonian the type of the Hamiltonian
 	 * @tparam StateVector the type of the StateVector
+	 *
 	 * @param grid the lattice
 	 * @param ham the Hamiltonian
 	 * @param svnew new state vector configuration
 	 * @param svold old state vector configuration
 	 * @param rsite index of the site under consideration
-	 * @param std::true_type marks the specialization
+	 * @param hasonsite marks the specialization
 	 *
-	 * @return double
+	 * @return energy difference (double)
 	 */
 	template <class Grid, class Hamiltonian, class StateVector>
-	double compute_onsiteenergydiff(Grid& grid, Hamiltonian& ham, StateVector& svnew, StateVector& svold, int rsite, std::true_type)
+	double compute_onsiteenergydiff(Grid& grid, 
+				Hamiltonian& ham, 
+				StateVector& svnew, 
+				StateVector& svold, 
+				int rsite, 
+				std::true_type hasonsite)
 	{
 		static_assert(MARQOV::Is_Container<decltype(std::declval<Hamiltonian>().onsite)>::value,
 			"[MARQOV::Metropolis] COMPILATION FAILED: onsite terms are not a container.");
@@ -540,30 +567,41 @@ namespace MARQOV
 
 
 	template <class Grid, class Hamiltonian, class StateVector>
-	double compute_onsiteenergydiff(Grid& grid, Hamiltonian& ham, StateVector& svnew, StateVector& svold, int rsite, std::false_type)
-	{
-		return 0;
-	}
+	constexpr static double compute_onsiteenergydiff(Grid& grid, 
+				Hamiltonian& ham, 
+				StateVector& svnew, 
+				StateVector& svold, 
+				int rsite, 
+				std::false_type hasonsite) {return 0;}
 
 
-	/** Computes the difference of the flexterm  energy in the Metropolis algorithm
+
+
+	/** Computes the difference of the flexterm energy in the Metropolis algorithm
 	 *
 	 * @tparam Grid the type of the lattice
 	 * @tparam Hamiltonian the type of the Hamiltonian
 	 * @tparam StateSpace the type of the StateSpace
 	 * @tparam StateVector the type of the StateVector
+	 *
 	 * @param grid the lattice
 	 * @param ham the Hamiltonian
 	 * @param statespace the state space
 	 * @param svnew new state vector configuration
 	 * @param svold old state vector configuration
 	 * @param rsite index of the site under consideration
-	 * @param std::true_type marks the specialization
+	 * @param hasflexterms marks the specialization
 	 *
-	 * @return double
+	 * @return the energy difference
 	 */
 	template <class Grid, class Hamiltonian, class StateSpace, class StateVector>
-	double compute_flexenergydiff(Grid& grid, Hamiltonian& ham, StateSpace& statespace, StateVector& svnew, StateVector& svold, int rsite, std::true_type)
+	double compute_flexenergydiff(Grid& grid, 
+				Hamiltonian& ham, 
+				StateSpace& statespace, 
+				StateVector& svnew, 
+				StateVector& svold, 
+				int rsite, 
+				std::true_type hasflexterms)
 	{
 		static_assert(MARQOV::Is_Container<decltype(std::declval<Hamiltonian>().multisite)>::value,
 			"[MARQOV::Metropolis] COMPILATION FAILED: multisite terms are not a container.");
@@ -583,10 +621,13 @@ namespace MARQOV
 	}
 
 	template <class Grid, class Hamiltonian, class StateSpace, class StateVector>
-	double compute_flexenergydiff(Grid& grid, Hamiltonian& ham, StateSpace& statespace, StateVector& svnew, StateVector& svold, int rsite, std::false_type)
-	{
-		return 0;
-	}
+	constexpr static double compute_flexenergydiff(Grid& grid, 
+				Hamiltonian& ham, 
+				StateSpace& statespace, 
+				StateVector& svnew, 
+				StateVector& svold, 
+				int rsite, 
+				std::false_type hasflexterms) {return 0;}
 
 };
 

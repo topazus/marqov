@@ -121,7 +121,11 @@ class BlumeEmeryGriffiths
 								multisite.push_back(&biquadratic_exchange_int);
 							}
 
-
+		~BlumeEmeryGriffiths()
+		{
+			delete interactions[0];
+			delete onsite[0];
+		}
 
 		//  ----  Observables ----
 

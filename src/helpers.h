@@ -95,17 +95,6 @@ auto cart_prod(Ts ... vals)
 
 
 
-std::vector<int> arange(int lower, int upper)
-{
-	std::vector<int> retval;
-	for (int i=lower; i<upper; i++)
-	{	
-		retval.push_back(i);
-	}
-	return retval;
-}
-
-
 /** The triple,
  * An extension of std::pair
  */

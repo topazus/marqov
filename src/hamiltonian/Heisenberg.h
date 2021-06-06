@@ -81,14 +81,12 @@ class Heisenberg
 		//  ----  Hamiltonian terms  ----
 
         std::vector<Heisenberg_interaction<StateVector>*> interactions;
-        std::array<OnSite<StateVector, CouplingType>*, 0> onsite;
-        std::array<FlexTerm<Space<StateVector, RegularHypercubic>,  StateVector>*, 0> multisite;
 
 		Heisenberg(double J) : J(J), name("Heisenberg"), observables(obs_m)
         {
             interactions.push_back(new Heisenberg_interaction<StateVector>(J));
         }
-//		~Heisenberg() {delete interactions[0];} // fixme
+		~Heisenberg() {delete interactions[0];}
 		
 
 		//  ----  Observables ----

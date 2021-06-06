@@ -56,6 +56,7 @@ namespace MARQOV
 	 * @tparam StateSpace the type of the state space
 	 * @tparam M the type of the initializer
 	 * @tparam RNG the type of the random number generator
+	 *
 	 * @param ham the Hamiltonian
 	 * @param grid the lattice
 	 * @param statespace the statespace
@@ -98,17 +99,19 @@ namespace MARQOV
 		auto flexenergydiff = compute_flexenergydiff(grid, ham, statespace, svnew, svold, rsite, HasFlex());
 
 
-		// collect everything
+		// collect energy differences
 		double dE = interactionenergydiff + onsiteenergydiff + flexenergydiff;
 		
-		// evaluate
 		int retval = 0;
-		if ( dE <= 0 )
+
+		// if new state is favorable, accept it
+		if ( dE <= 0 ) 
 		{
 			svold = svnew;
 			retval = 1;
 		}
-		else if (rng.real() < std::exp(-beta*dE))
+		// if not, accept with probability depending on Boltzmann weight
+		else if (rng.real() < std::exp(-beta*dE)) 
 		{
 			svold = svnew;
 			retval = 1;

@@ -147,8 +147,9 @@ class InteractionEnergy
 		InteractionEnergy (Hamiltonian& ham) : ham(ham), name("eint")  {};
 
 		std::string name;
+
 		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
+		double measure_helper(const StateSpace& statespace, const Grid& grid, std::true_type)
 		{
 			const int N = grid.size();
 			double ene = 0.0;
@@ -180,6 +181,19 @@ class InteractionEnergy
 			}
 			return ene/double(N);
 		}
+
+		template <class StateSpace, class Grid>
+		constexpr static double measure_helper(const StateSpace& statespace, const Grid& grid, std::false_type)
+		{
+			return 0;
+		}
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			typedef typename HasInteractions<Hamiltonian>::type HasInteract;
+			return measure_helper(statespace, grid, HasInteract());
+		}
 };
 
 /**
@@ -196,8 +210,10 @@ class SelfEnergy
 		SelfEnergy (Hamiltonian& ham) : ham(ham), name("eself")  {};
 
 		std::string name;
+
+
 		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
+		double measure_helper(const StateSpace& statespace, const Grid& grid, std::true_type hasonsite)
 		{
 			const int N = grid.size();
 			double ene = 0.0;
@@ -215,6 +231,19 @@ class SelfEnergy
 			}
 			return ene/double(N);
 		}
+
+		template <class StateSpace, class Grid>
+		constexpr static double measure_helper(const StateSpace& statespace, const Grid& grid, std::false_type hasonsite)
+		{
+			return 0;
+		}
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			typedef typename HasOnsite<Hamiltonian>::type HasOns;
+			return measure_helper(statespace, grid, HasOns());
+		}
 };
 
 /**
@@ -231,8 +260,10 @@ class FlexEnergy
 		FlexEnergy (Hamiltonian& ham) : ham(ham), name("eflex")  {};
 
 		std::string name;
+
+
 		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
+		double measure_helper(const StateSpace& statespace, const Grid& grid, std::true_type)
 		{
 			double retval = 0;
 			for (decltype(ham.multisite.size()) c = 0; c < ham.multisite.size(); c++)
@@ -241,6 +272,19 @@ class FlexEnergy
 				retval += ham.multisite[c]->k * enepart;
 			}
 			return retval;
+		}
+
+		template <class StateSpace, class Grid>
+		constexpr static double measure_helper(const StateSpace& statespace, const Grid& grid, std::false_type)
+		{
+			return 0;
+		}
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			typedef typename HasOnsite<Hamiltonian>::type HasOns;
+			return measure_helper(statespace,grid,HasOns());
 		}
 };
 
