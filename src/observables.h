@@ -191,7 +191,7 @@ class InteractionEnergy
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			typedef typename HasInteractions<Hamiltonian>::type HasInteract;
+			typedef typename MARQOV::HasInteractions<Hamiltonian>::type HasInteract;
 			return measure_helper(statespace, grid, HasInteract());
 		}
 };
@@ -241,7 +241,7 @@ class SelfEnergy
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			typedef typename HasOnsite<Hamiltonian>::type HasOns;
+			typedef typename MARQOV::HasOnsite<Hamiltonian>::type HasOns;
 			return measure_helper(statespace, grid, HasOns());
 		}
 };
@@ -283,7 +283,7 @@ class FlexEnergy
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			typedef typename HasOnsite<Hamiltonian>::type HasOns;
+			typedef typename MARQOV::HasOnsite<Hamiltonian>::type HasOns;
 			return measure_helper(statespace,grid,HasOns());
 		}
 };

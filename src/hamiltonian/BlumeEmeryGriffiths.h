@@ -104,11 +104,11 @@ class BlumeEmeryGriffiths
 		//  ----  Hamiltonian terms  ----
 
 		
-		BiquadraticExchangeInteraction<Space<StateVector, RegularHypercubic>, StateVector> biquadratic_exchange_int;
+		BiquadraticExchangeInteraction<MARQOV::Space<StateVector, RegularHypercubic>, StateVector> biquadratic_exchange_int;
 
 		std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
 		std::array<Onsite_Quadratic<StateVector>*, 1>     onsite       = {new Onsite_Quadratic<StateVector>(D)};
-		std::vector<FlexTerm<Space<StateVector, RegularHypercubic>, StateVector>*>  multisite ;
+		std::vector<FlexTerm<MARQOV::Space<StateVector, RegularHypercubic>, StateVector>*>  multisite ;
 	
 		BlumeEmeryGriffiths(double J, double D, double K) : J(J), 
 															D(D), 
@@ -166,7 +166,7 @@ namespace MARQOV
 	{
 		typedef BlumeEmeryGriffiths<SpinType> Hamiltonian;
 		typedef typename Hamiltonian::StateVector StateVector;
-		typedef Space<typename Hamiltonian::StateVector, Lattice> StateSpace;
+		typedef MARQOV::Space<typename Hamiltonian::StateVector, Lattice> StateSpace;
 
 		private:
 			const Hamiltonian& ham;

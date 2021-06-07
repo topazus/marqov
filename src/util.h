@@ -4,10 +4,9 @@
 #include <string>
 #include <vector>
 
+#include "registry.h"
 #include "geometry/regular_lattice.h"
 #include "geometry/grid.h"
-
-using namespace MARQOV;
 
 
 /** Helper to execute a series of simulations on regular hypercubic lattices
@@ -26,7 +25,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 	
 	// Typedefs
 	typedef typename std::tuple<RegularHypercubic&, MARQOV::Config, Params> ParameterType;
-	typedef typename GetSchedulerType<Hamiltonian, RegularHypercubic, ParameterType>::MarqovScheduler SchedulerType;
+	typedef typename MARQOV::GetSchedulerType<Hamiltonian, RegularHypercubic, ParameterType>::MarqovScheduler SchedulerType;
 
 
 	// Parameters
@@ -78,6 +77,5 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 	}
 	sched.start();
 }
-
 
 #endif

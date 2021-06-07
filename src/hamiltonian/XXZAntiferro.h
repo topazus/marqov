@@ -198,7 +198,6 @@ class XXZAntiferro
 
         std::array<XXZAntiferro_interaction<StateVector>*, 1> interactions = {new XXZAntiferro_interaction<StateVector>(Delta)};
         std::array<XXZAntiferro_extfield<StateVector>*, 1> onsite = {new XXZAntiferro_extfield<StateVector>(H)};
-        std::array<FlexTerm<Space<StateVector, RegularHypercubic>,  StateVector>*, 0> multisite;
 
 		XXZAntiferro(double Delta, double H) : Delta(Delta), H(H), name("XXZAntiferro") {}
 

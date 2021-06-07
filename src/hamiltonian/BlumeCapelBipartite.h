@@ -65,13 +65,11 @@ class BlumeCapelBipartite
 		template <typename RNG>
 		using MetroInitializer = Spin1_Initializer<StateVector, RNG>;
 
-
 		//  ----  Hamiltonian terms  ----
-        
+
         std::array<Standard_Interaction<StateVector>*,1> interactions = {new Standard_Interaction<StateVector>(J)};
         std::array<BlumeCapelBipartite_onsite<StateVector>*, 2> onsite = {new BlumeCapelBipartite_onsite<StateVector>(DA), new BlumeCapelBipartite_onsite<StateVector>(DB)};
-        std::array<FlexTerm<Space<StateVector, SimpleBipartite>,  StateVector>*, 0> multisite;
-	
+
 		BlumeCapelBipartite(double J, double DA, double DB) : J(J), DA(DA), DB(DB), name("BlumeCapelBipartite"), observables(obs_m)
 		{
 		}
