@@ -1,15 +1,11 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 #include <algorithm>
-#include <iomanip> 
 #include <vector>
 #include <cmath>
 #include <type_traits>
+#include <tuple>
 #include "registry.h"
-
-
-
-
 
 /**
  * A helper to create the cartesian product of a set of containers.
@@ -88,32 +84,6 @@ auto cart_prod(Ts ... vals)
     return cartprodhelper<Ts...>::call(vals...);
 }
 
-
-
-
-
-
-
-
-/** The triple,
- * An extension of std::pair
- */
-template <class T1, class T2, class T3>
-class Triple
-{
-	public:
-		Triple(T1 t1, T2 t2, T3 t3) : first(t1), second(t2), third(t3) {}
-		T1 first;
-		T2 second;
-		T3 third;
-};
-
-template< class T1, class T2, class T3 >
-constexpr auto make_triple( T1&& t, T2&& u, T3&& v) 
-{
-	return Triple<typename std::decay<T1>::type, typename std::decay<T2>::type, typename std::decay<T3>::type>(t,u,v);
-}
-
 void write_logfile(RegistryDB& reg, std::vector<double> loopvar)
 {
 	std::string logdir  = reg.Get<std::string>("mc.ini", "IO", "logdir" );
@@ -124,28 +94,7 @@ void write_logfile(RegistryDB& reg, std::vector<double> loopvar)
 	os.close();
 }
 
-// //C++17 make_from_tuple from cppreference adapted for emplace.
-// template <class Cont, class Latt, class Tuple, std::size_t... I>
-// constexpr auto emplace_from_tuple_impl(Cont&& cont, Latt&& latt, MARQOV::MARQOVConfig&& mc, Tuple&& t, std::index_sequence<I...> )
-// {
-//   return cont.emplace_back(std::forward<Latt>(latt), std::forward<decltype(mc)>(mc), std::get<I>(std::forward<Tuple>(t))...) ;
-// }
-// 
-// /** A function to construct an object in a container directly from a tuple
-//  * @param cont the container where we append to.
-//  * @param t the tuple containing the arguments.
-//  */
-// template <class Cont, class T, class Tuple, class Latt>
-// constexpr auto emplace_from_tuple(Cont&& cont, Latt&& latt, T&& mc, Tuple&& t )
-// {
-//     return emplace_from_tuple_impl(cont, std::forward<Latt>(latt), std::forward<T>(mc), std::forward<Tuple>(t),
-//         std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value>{});
-// }
-
-
-
-
-bool startswith(std::string longword, std::string shortword)
+bool startswith(const std::string longword, const std::string shortword)
 {
 	if (longword.rfind(shortword, 0) == 0) return true;
 	else return false;
@@ -187,7 +136,7 @@ std::vector<int> IndexOf(int k, int nDim, int nBin)
 	{
 		double index = std::fmod( double(k)/std::pow(nBin,i), nBin);
 		indices.push_back(int(index));
-		k -= index * pow(nBin,i);
+		k -= index * std::pow(nBin,i);
 	}
 
 	return indices;
