@@ -209,8 +209,11 @@ namespace MARQOV
 			}
 
 
-			/** Specifies how a spin flip is performed */
-			void flip(StateVector& sv) const {sv[0] *= -1;}
+			/** Specifies how a spin flip is performed.
+             * 
+             * @param sv The statevector that is flipped.
+             */
+			void flip(StateVector& sv) const {sv[0] = -sv[0];}
 
 	};
 }
