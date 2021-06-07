@@ -306,7 +306,7 @@ class EdwardsAndersonIsing
 
 		std::array<EdwardsAndersonIsing_interaction<StateVector>*, 1> interactions = {new EdwardsAndersonIsing_interaction<StateVector>(J)};
         std::array<OnSite<StateVector, int>*, 0> onsite;
-        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
+        std::array<FlexTerm<Space<StateVector, RegularRandomBond<GaussianPDF>>,  StateVector>*, 0> multisite;
 
 		EdwardsAndersonIsing(double J) : J(J), 
 										 name("EdwardsAndersonIsing"), 
@@ -352,6 +352,7 @@ namespace MARQOV
 	  * Identical to the specialization for the regular Ising model in "ising.h"
 	  * @see "metropolis.h"
 	  */
+	  /*
 	template <class Lattice>
 	struct Metropolis<EdwardsAndersonIsing<int>, Lattice>
 	{
@@ -400,6 +401,7 @@ namespace MARQOV
 	    	return retval;
 	    }
 	};
+	*/
 
 }
 #endif

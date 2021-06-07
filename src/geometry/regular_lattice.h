@@ -24,12 +24,14 @@
 class RegularLattice
 {
 public:
-
-	int counter = 0;
-
     typedef std::vector<int> value_type;
 
     RegularLattice() {}
+
+    RegularLattice(const RegularLattice& o) = default;
+    RegularLattice(RegularLattice&& o) = default;
+
+    RegularLattice& operator=(const RegularLattice&) = delete;
 
     RegularLattice(int l, int d) : length(l), dim(d), pows(dim) 
     {
@@ -40,7 +42,6 @@ public:
             numberatoms *= length;
         }
     }
-
 
     value_type nbrs(int a, int i) const {return this->operator[](i);}
 

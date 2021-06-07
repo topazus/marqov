@@ -1,6 +1,9 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <string>
+#include <vector>
+
 #include "geometry/regular_lattice.h"
 #include "geometry/grid.h"
 
@@ -12,8 +15,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 {
 	
 	// Typedefs
-	typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) ParameterPairType;
-	typedef typename ParameterPairType::value_type ParameterType;
+	typedef typename std::tuple<RegularHypercubic&, MARQOV::Config, Params> ParameterType;
 	typedef typename GetSchedulerType<Hamiltonian, RegularHypercubic, ParameterType>::MarqovScheduler SchedulerType;
 
 
@@ -39,12 +41,9 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 	if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 	std::vector<RegularHypercubic> latts;
 	for (std::size_t j=0; j<nL.size(); j++) latts.emplace_back(nL[j], dim);
-    
 
 	// Init Scheduler
 	SchedulerType sched(1, nthreads);
-    
-
 
 	for (std::size_t j=0; j<nL.size(); j++)
 	{
@@ -55,21 +54,17 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
 		MARQOV::Config mp(outpath);
-		mp.setnsweeps(5);
+		mp.setnmetro(5);
 		mp.setncluster(int(L/2));
 		mp.setwarmupsteps(200);
 		mp.setgameloopsteps(1000);
 
 		makeDir(mp.outpath);
 		
-		auto params = finalize_parameter_pair(mp, hp);
-		auto rparams = replicator_pair(params, nreplicas[j]);
-		
-		// set up and execute        
-		RegularHypercubic& latt = latts[j];
-
-		auto f = [&filter, &latt](auto p){return filter(latt, p);}; //partially apply filter
-		for(auto p : rparams) sched.createSimfromParameter(p, f);
+		auto params = finalize_parameter(latts[j], mp, hp);
+ 		auto rparams = replicator(params, nreplicas[j]);
+ 
+		for(auto p : rparams) sched.createSimfromParameter(p, filter);
 	}
 	sched.start();
 }

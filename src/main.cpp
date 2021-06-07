@@ -62,7 +62,6 @@ using std::ofstream;
 #include "hamiltonian/EdwardsAndersonIsing.h"
 //#include "hamiltonian/Ssh.h" // seperate branch
 #include "hamiltonian/BlumeCapelBipartite.h"
-#include "hamiltonian/AshkinTeller.h"
 
 using namespace MARQOV;
 
@@ -115,7 +114,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	}
 
 
-
 	else if (ham == "AshkinTeller")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
@@ -127,7 +125,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	}
 
 
-
 	else if (ham == "Heisenberg")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
@@ -136,7 +133,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
 	}
-
 
 
 
@@ -183,7 +179,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-
 	else if (ham == "XXZAntiferroSingleAniso")
 	{
 		auto beta        = registry.Get<std::vector<double>>("mc.ini", ham, "beta");
@@ -194,7 +189,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 		RegularLatticeLoop<XXZAntiferroSingleAniso<double>>(registry, outbasedir, parameters, xxzfilter);
 	}
-
 
 
 	else if (startswith(ham, "EdwardsAnderson-Ising"))
@@ -230,8 +224,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		typedef RegularRandomBond<GaussianPDF> Lattice;
         //typedef RegularRandomBond<BimodalPDF> Lattice;
 
-		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTripleType;
-		typedef typename ParameterTripleType::value_type ParameterType;
+		typedef decltype(finalize_parameter(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTupleType;
+		typedef typename ParameterTupleType::value_type ParameterType;
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
 		SchedulerType sched(1, nthreads);
@@ -247,97 +241,94 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	
 			// Monte Carlo parameters
 			MARQOV::Config mp(outpath);
-			mp.setnsweeps(50);
+			mp.setnmetro(50);
 			mp.setncluster(0);
 			mp.setwarmupsteps(200);
 			mp.setgameloopsteps(1000);
 
 			// lattice parameters
-			auto lp = std::make_tuple(L,dim);
+			auto lp = std::make_tuple(L, dim);
 
 			// form parameter triple and replicate
-			auto params  = finalize_parameter_triple(lp, mp, hp);
-			auto rparams = replicator(params, nreplicas[j]);
+			auto params  = finalize_parameter(lp, mp, hp);
+            auto rparams = replicator(params, nreplicas[j]);
 
 			// schedule simulations
-			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter_triple);
+ 			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
 		}
-		sched.start(); // run!
+ 		sched.start(); // run!
 	}
 
 
 
-	else if (ham == "IsingCC")
-	{
-		// Parameters
-		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
-		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
-		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
-	
-	
-		// Number of threads
-		int nthreads = 0;
-		try 
-		{
-			nthreads = registry.template Get<int>("mc.ini", "General", "threads_per_node" );
-		}
-		catch (const Registry_Key_not_found_Exception&) 
-		{
-			std::cout<<"threads_per_node not set -> automatic"<<std::endl;
-		}
-
-
-		// Replicas
-		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-
-		// Physical parameters
-		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "J");
-		auto hp = cart_prod(beta, J);
-        
-
-		// Typedefs
-		typedef Ising<int> Hamiltonian;
-		typedef ConstantCoordinationLattice<Poissonian> Lattice;
-		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTripleType;
-		typedef typename ParameterTripleType::value_type ParameterType;
-		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
-
-
-		// Lattice size loop
-		for (std::size_t j=0; j<nL.size(); j++)
-		{
-			// init scheduler
-			SchedulerType sched(1, nthreads);
-
-			// prepare output
-			int L = nL[j];
-			cout << endl << "L = " << L << endl << endl;
-			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-			makeDir(outpath);
-	
-			// Monte Carlo parameters
-			MARQOV::Config mp(outpath);
-			mp.setnsweeps(5);
-			mp.setncluster(15);
-			mp.setwarmupsteps(500);
-			mp.setgameloopsteps(1500);
-
-			// lattice parameters
-			auto lp = std::make_tuple(L,dim);
-
-			// form parameter triple and replicate
-			auto params  = finalize_parameter_triple(lp, mp, hp);
-			auto rparams = replicator(params, nreplicas[j]);
-
-			// feed scheduler
-			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter_triple);
-
-			// run!
-			sched.start();
-		}
-	}
+// 	else if (ham == "IsingCC")
+// 	{
+// 		// Parameters
+// 		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+// 		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
+// 		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
+// 		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
+// 	
+// 	
+// 		// Number of threads
+// 		int nthreads = 0;
+// 		try 
+// 		{
+// 			nthreads = registry.template Get<int>("mc.ini", "General", "threads_per_node" );
+// 		}
+// 		catch (const Registry_Key_not_found_Exception&) 
+// 		{
+// 			std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+// 		}
+// 
+// 
+// 		// Replicas
+// 		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+// 
+// 		// Physical parameters
+// 		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
+// 		auto J    = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "J");
+// 		auto hp = cart_prod(beta, J);
+// 
+// 		// Typedefs
+// 		typedef Ising<int> Hamiltonian;
+// 		typedef ConstantCoordinationLattice<Poissonian> Lattice;
+//         typedef std::tuple<std::tuple<int, int>, MARQOV::Config, std::tuple<double, double> > ParameterType;
+// //         typedef decltype(finalize_parameter(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTupleType;
+// // 		typedef typename ParameterTupleType::value_type ParameterType;
+// 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
+// 
+// 
+// 		// Lattice size loop
+// 		for (std::size_t j=0; j<nL.size(); j++)
+// 		{
+// 			// init scheduler
+// 			SchedulerType sched(1, nthreads);
+// 
+// 			// prepare output
+// 			int L = nL[j];
+// 			cout << endl << "L = " << L << endl << endl;
+// 			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+// 			makeDir(outpath);
+// 	
+// 			// Monte Carlo parameters
+// 			MARQOV::Config mp(outpath);
+// 			mp.setnmetro(5);
+// 			mp.setncluster(15);
+// 			mp.setwarmupsteps(500);
+// 			mp.setgameloopsteps(1500);
+// 
+// 			// form parameter triple with lattice parameters and replicate
+// 			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);
+// 			auto rparams = replicator(params, nreplicas[j]);
+// 
+// 			// feed scheduler
+// 			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
+// 
+// 			// run!
+// 			sched.start();
+// 		}
+// 	}
 
 
 
@@ -376,12 +367,9 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		typedef BlumeCapelBipartite<int> Hamiltonian;
 		typedef SimpleBipartite Lattice;
 
-
-		typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) ParameterPairType;
-		typedef typename ParameterPairType::value_type ParameterType;
+        typedef typename std::tuple<SimpleBipartite&, MARQOV::Config, std::tuple<double, double, double, double> > ParameterType;
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
-		
-		
+
 		// Prepare Geometry
 		std::vector<SimpleBipartite> latts;
 		for (std::size_t j=0; j<nL.size(); j++) latts.emplace_back(nL[j], dim);
@@ -401,22 +389,20 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 	
 			MARQOV::Config mp(outpath);
-			mp.setnsweeps(10);
+			mp.setnmetro(10);
 			mp.setncluster(int(L/2));
 			mp.setwarmupsteps(200);
 			mp.setgameloopsteps(500);
 			
 			makeDir(mp.outpath);
 			
-			auto params = finalize_parameter_pair(mp, hp);
-			auto rparams = replicator_pair(params, nreplicas[j]);
-			
 			// set up and execute        
 			Lattice& latt = latts[j];
-			auto f = [&latt](auto p){return defaultfilter(latt, p);}; //partially apply filter
+			auto params = finalize_parameter(latt, mp, hp);
+            auto rparams = replicator(params, nreplicas[j]);
 	
 			// feed the scheduler
-			for(auto p: rparams) sched.createSimfromParameter(p, f);
+			for(auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
 		}
 		sched.start();
 	}

@@ -36,18 +36,18 @@ namespace MARQOV
     template <class Hamiltonian, class Lattice>
     struct Wolff
     {
-        template <class RNG, class StateSpace>
-        static inline int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite);
+        template <class RNGType, class StateSpace>
+        static inline int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNGCache<RNGType>& rng, double beta, int rsite);
     };
     
 
 
     template <class Hamiltonian, class Lattice>
-    template <class RNG, class StateSpace>
-    int Wolff<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
+    template <class RNGType, class StateSpace>
+    int Wolff<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNGCache<RNGType>& rng, double beta, int rsite)
     {
 		// set up embedder
-		Embedder<Hamiltonian,Lattice> embd(ham,grid,statespace);
+		Embedder<Hamiltonian, Lattice> embd(ham, grid, statespace);
 		embd.draw(rng);
 
         // prepare stack
@@ -100,12 +100,6 @@ namespace MARQOV
             }
         }
         return clustersize;
-    }
-    
-    template <class Grid, class Hamiltonian, template<class> class RefType>
-    inline int Core<Grid, Hamiltonian, RefType>::wolffstep(int rsite)
-    {
-        return Wolff<Hamiltonian, Grid>::move(this->ham, this->grid, this->statespace, this->rngcache, this->beta, rsite);
     }
 };
 

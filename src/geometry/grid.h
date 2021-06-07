@@ -48,7 +48,7 @@ class DisorderType
 		std::size_t size() const {return npoints;}
 
 		inline int identify(int i) {return 0;};
-		inline std::vector<int> termselector(int sublattice){return {-1};}
+		inline std::vector<int> termselector(int sublattice) const {return {-1};}
 };
 
 /**
@@ -102,6 +102,9 @@ class RegularHypercubic
 
 
 		RegularHypercubic(int len, int dim) : lattice(len, dim), len(len), dim(dim), npoints(pow(len, dim)) {}
+		RegularHypercubic(const RegularHypercubic&) = default;
+		RegularHypercubic(RegularHypercubic&&) = default;
+		const RegularHypercubic& operator=(const RegularHypercubic&) = delete;
 
 		// override nbrs
 		std::vector<int> nbrs(const int alpha, const int i) const
@@ -114,6 +117,12 @@ class RegularHypercubic
 		{
 			return lattice.crds(i);
 		}
+
+		// only for debug, delete me later
+//		std::vector<double> bnds(const int alpha, const int i) const
+//		{
+//			return {1,1,1,1};
+//		}
 
 		std::size_t size() const {return npoints;}
 };
@@ -135,7 +144,7 @@ class SimpleBipartite
 		}
 
 
-		inline int identify(int i) // is this correct?
+		inline int identify(int i) const // is this correct?
 		{
 			auto index = IndexOf(i, dim, len);
 			
@@ -147,7 +156,7 @@ class SimpleBipartite
 		}
 
 
-		inline std::vector<int> termselector(int rsite)
+		inline std::vector<int> termselector(int rsite) const
 		{
 			return {this->identify(rsite)};
 		}
