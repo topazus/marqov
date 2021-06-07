@@ -99,8 +99,10 @@ int main()
 	typedef Phi4<double,double> Hamiltonian;
 	typedef Hyperbolic Lattice;
 
-	typedef decltype(finalize_parameter(std::declval<Lattice&>(), std::declval<MARQOV::Config>(), hp)) ParameterTupleType;
-	typedef typename ParameterTupleType::value_type ParameterType;
+    Hyperbolic lat(2,2);
+// 	typedef decltype(finalize_parameter(decltype(lat), std::declval<MARQOV::Config>(), hp)) ParameterTupleType;
+// 	typedef typename ParameterTupleType::value_type ParameterType;
+    typedef typename std::tuple<Hyperbolic&, MARQOV::Config, std::tuple<double,double,double,double> > ParameterType;
 	typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
  	SchedulerType sched(1,1);
@@ -117,7 +119,6 @@ int main()
 	mp.setgameloopsteps(1000);
 
 	// lattice parameters
-	Hyperbolic lat();
 
 	// form parameter triple and replicate
 	auto params  = finalize_parameter(lat, mp, hp);
