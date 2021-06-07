@@ -87,6 +87,38 @@ class ConstantCoordinationLattice
 		std::size_t size() const {return npoints;}
 };
 
+
+#include "io.h"
+
+class Hyperbolic
+{
+
+	public:
+	int npoints = 1625;
+
+	std::vector<std::vector<int>> neighbours;
+	std::vector<std::vector<double>> grid;
+
+	Hyperbolic(int a, int b) 
+	{
+		import_geometry(npoints, grid, neighbours, "/home/schrauth/marqov/marqov-dev/src/7-3-7.csv", 2);
+	}
+		
+		std::vector<int> nbrs(const int a, const int i) const
+		{
+			return neighbours[i];
+		}
+		std::vector<double> crds(const int i) const
+		{
+			return grid[i];
+		}
+
+		std::size_t size() const {return npoints;}
+};
+
+
+
+
 /**
  * The Regular Hypercubic lattice class
  * This class provides routines for encapsulating all neighbour
