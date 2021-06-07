@@ -55,8 +55,35 @@ using std::ofstream;
 
 using namespace MARQOV;
 
+
+
+
+
 int main()
 {
+    
+    
+	std::ifstream is;
+	is.open("/home/schrauth/marqov/marqov-dev/src/geometry/7-3-7.csv");
+    
+   	auto arr = readfile(is);
+
+//	for (int i=0; i<arr.size(); i++)
+//	{
+//		for (int j=0; j<arr[i].size(); j++)
+//		{
+//			cout << arr[i][j] << endl;
+//		}
+//		cout << endl;
+//	}
+    
+    
+    
+    
+    
+    
+    
+    
 
     std::cout<<"MARQOV Copyright (C) 2020-2021, The MARQOV Project contributors"<<std::endl;
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;

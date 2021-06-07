@@ -119,4 +119,29 @@ void import_geometry( const int N, std::vector<std::vector<double> >& grid, std:
 }
 
 
+#include <sstream>
+
+std::vector<std::vector<std::string>> readfile(std::istream &in) {
+    std::vector<std::vector<std::string>> table;
+    std::string row;
+    while (!in.eof()) 
+	{
+        std::getline(in, row);
+        if (in.bad() || in.fail()) 
+		{
+            break;
+        }
+		std::istringstream ss(row);
+		std::string substr;
+		while(std::getline(ss, substr, '\t'))
+		{
+			cout << substr << endl;
+    	}
+	}
+    return table;
+}
+
+
+
+
 #endif
