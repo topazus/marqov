@@ -32,13 +32,10 @@ using std::ofstream;
 
 #include "timetracker.h"
 #include "helpers.h"
-#include "vectorhelpers.h"
 #include "registry.h"
 #include "systemtools.h"
 #include "replicate.h"
-#include "svmath.h"
 #include "filters.h"
-#include "embedder.h"
 #include "marqovscheduler.h"
 #include "util.h"
 

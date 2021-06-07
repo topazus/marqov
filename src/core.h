@@ -37,6 +37,7 @@
 #include "svmath.h"
 #include "rngcache.h"
 #include "timetracker.h"
+#include "vectorhelpers.h"
 
 /** The MARQOV namespace.
  *
