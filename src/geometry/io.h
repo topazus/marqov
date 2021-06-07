@@ -22,8 +22,13 @@
 #include <string>
 #include <fstream>
 
-// export coordinates and neighbour relations
-
+/**
+* export coordinates and neighbour relations
+*
+* @tparam Grid the type of the lattice
+* @param grid the lattice
+* @param path directory in which the geometry is to be stored
+*/
 template <class Grid>
 void save_geometry(Grid& grid, const std::string path)
 {
@@ -47,7 +52,13 @@ void save_geometry(Grid& grid, const std::string path)
 
 
 
-// export coordinates and neighbour relations and bond strenghts (only scalars!)
+/**
+* export coordinates, neighbour relations and bond strengths
+*
+* @tparam Grid the type of the lattice
+* @param grid the lattice
+* @param path directory in which the geometry is to be stored
+*/
 
 template <class Grid>
 void save_geometry_deluxe(Grid& grid, const std::string path)

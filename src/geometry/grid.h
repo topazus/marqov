@@ -118,11 +118,11 @@ class RegularHypercubic
 			return lattice.crds(i);
 		}
 
-		// only for debug, delete me later
-//		std::vector<double> bnds(const int alpha, const int i) const
-//		{
-//			return {1,1,1,1};
-//		}
+		// implement flexnbrs
+		std::vector<int> flexnbrs(const int alpha, const int i) const
+		{
+			return lattice.nbrs(alpha, i);
+		}
 
 		std::size_t size() const {return npoints;}
 };

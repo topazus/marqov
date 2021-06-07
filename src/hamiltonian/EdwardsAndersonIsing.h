@@ -306,7 +306,6 @@ class EdwardsAndersonIsing
 
 		std::array<EdwardsAndersonIsing_interaction<StateVector>*, 1> interactions = {new EdwardsAndersonIsing_interaction<StateVector>(J)};
         std::array<OnSite<StateVector, int>*, 0> onsite;
-        std::array<FlexTerm<Space<StateVector, RegularRandomBond<GaussianPDF>>,  StateVector>*, 0> multisite;
 
 		EdwardsAndersonIsing(double J) : J(J), 
 										 name("EdwardsAndersonIsing"), 

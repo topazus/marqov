@@ -26,39 +26,17 @@
 #include <vector>
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
-#include "../obsparts.h"
 #include "termcollection.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-// ...
-
+#include "../observables.h"
 
 
 // ------------------------------ INITIALIZER ---------------------------
 
-template <class StateVector, class RNG>
-class Heisenberg_Initializer
-{
-	public:
-		// provide the spin dimension as a compile-time constant expression
-		static constexpr int SymD = std::tuple_size<StateVector>::value;
-
-		// constructors
-		Heisenberg_Initializer()   {}
-		Heisenberg_Initializer(RNG& rn) : rng(rn) {}
-
-		// generate new statevector
-		StateVector newsv(const StateVector&) 
-		{
-			return rnddir<RNG, double, SymD>(rng);
-		};
-
-	private:
-		RNG& rng;
-};
-
+#include "initializers.h"
 
 
 // ------------------------------ HAMILTONIAN ---------------------------
@@ -69,7 +47,7 @@ class Heisenberg_interaction
 {
 	public:
 		Heisenberg_interaction(const double myJ) : J(-myJ) {}
-		StateVector get (const StateVector& phi) {return phi;};
+		StateVector get (const StateVector& phi) noexcept {return phi;};
         const double J;
 };
 
@@ -97,20 +75,18 @@ class Heisenberg
 
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
-		using MetroInitializer =  Heisenberg_Initializer<StateVector, RNG>; 
+		using MetroInitializer =  NVector_Initializer<StateVector, RNG>; 
 
 
 		//  ----  Hamiltonian terms  ----
 
         std::vector<Heisenberg_interaction<StateVector>*> interactions;
-        std::array<OnSite<StateVector, CouplingType>*, 0> onsite;
-        std::array<FlexTerm<Space<StateVector, RegularHypercubic>,  StateVector>*, 0> multisite;
 
 		Heisenberg(double J) : J(J), name("Heisenberg"), observables(obs_m)
         {
             interactions.push_back(new Heisenberg_interaction<StateVector>(J));
         }
-//		~Heisenberg() {delete interactions[0];} // fixme
+		~Heisenberg() {delete interactions[0];}
 		
 
 		//  ----  Observables ----

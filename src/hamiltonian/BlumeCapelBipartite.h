@@ -28,7 +28,12 @@
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-// ...
+#include "../observables.h"
+
+// ------------------------------ INITIALIZER ---------------------------
+
+#include "initializers.h"
+
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
@@ -41,44 +46,6 @@ class BlumeCapelBipartite_onsite
 		double get (const StateVector& phi) {return dot(phi, phi);};
 };
 
-
-template <class StateVector, class RNG>
-class BlumeCapelBipartite_Initializer
-{
-	public:
-		BlumeCapelBipartite_Initializer()   {}
-		BlumeCapelBipartite_Initializer(RNG& rn) : rng(rn) {}
-
-		// specifies how a random new state vector is generated
-		// in this case a simple spin flip
-		StateVector newsv(const StateVector& svold) 
-		{
-			StateVector retval(svold); 
-
-			int state = retval[0];
-
-			if (state == 0)
-			{
-				if (rng.real() < 0.5)  state = -1;
-				else				state = +1;
-			}
-			else // +1/-1
-			{
-				if (rng.real() < 0.5) state *= -1;
-				else state = 0;
-			}
-
-			retval[0] = state;
-
-			return retval;
-		};
-
-	private:
-		RNG& rng;
-};
-
-
-// ------------------------------ HAMILTONIAN ---------------------------
 
 template <typename SpinType = int>
 class BlumeCapelBipartite
@@ -96,15 +63,13 @@ class BlumeCapelBipartite
 
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
-		using MetroInitializer = BlumeCapelBipartite_Initializer<StateVector, RNG>;
-
+		using MetroInitializer = Spin1_Initializer<StateVector, RNG>;
 
 		//  ----  Hamiltonian terms  ----
-        
+
         std::array<Standard_Interaction<StateVector>*,1> interactions = {new Standard_Interaction<StateVector>(J)};
         std::array<BlumeCapelBipartite_onsite<StateVector>*, 2> onsite = {new BlumeCapelBipartite_onsite<StateVector>(DA), new BlumeCapelBipartite_onsite<StateVector>(DB)};
-        std::array<FlexTerm<Space<StateVector, SimpleBipartite>,  StateVector>*, 0> multisite;
-	
+
 		BlumeCapelBipartite(double J, double DA, double DB) : J(J), DA(DA), DB(DB), name("BlumeCapelBipartite"), observables(obs_m)
 		{
 		}
