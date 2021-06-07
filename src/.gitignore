@@ -4,3 +4,4 @@ build/
 a.out
 ../build/
 config.h
+../doc/doxygen/

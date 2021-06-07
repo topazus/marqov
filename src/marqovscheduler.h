@@ -1,7 +1,6 @@
 #ifndef MARQOVSCHEDULER_H
 #define MARQOVSCHEDULER_H
-/*
- * MIT License
+/* MIT License
  * 
  * Copyright (c) 2020-2021 Florian Goth
  * fgoth@physik.uni-wuerzburg.de
@@ -37,7 +36,6 @@
 
 namespace MARQOV
 {
-    
     template <class Cont, class Tuple1, class Tuple2, std::size_t... I>
     constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple1&& t1, MARQOV::Config&& mc, std::mutex& mtx, Tuple2&& t2, std::index_sequence<I...> )
     {
@@ -60,7 +58,7 @@ namespace MARQOV
     }
     
     template <class T, class Tuple1, class Tuple2, std::size_t... I>
-    constexpr T* ptr_from_tuple_impl(Tuple1&& t1, MARQOV::Config&& mc, std::mutex& mtx, Tuple2&& t2, std::index_sequence<I...> )
+    constexpr T* ptr_from_tuple_impl(Tuple1& t1, MARQOV::Config&& mc, std::mutex& mtx, Tuple2&& t2, std::index_sequence<I...> )
     {
         return new T(std::forward<Tuple1>(t1),
                      std::forward<MARQOV::Config>(mc), 
@@ -69,103 +67,58 @@ namespace MARQOV
         );
     }
     
-    template <class T, class Tuple1, class Tuple2>
-    constexpr T* ptr_from_tuple(Tuple1&& t1, MARQOV::Config&& mc, std::mutex& mtx, Tuple2&& t2)
+    template <class T, class L, class HArgs>
+    constexpr T* ptr_from_tuple(std::tuple<L, MARQOV::Config, HArgs> t, std::mutex& mtx)
     {
-        return ptr_from_tuple_impl<T>(std::forward<Tuple1>(t1),
-                                      std::forward<MARQOV::Config>(mc), 
+        return ptr_from_tuple_impl<T>(std::forward<decltype(std::get<0>(t))>(std::get<0>(t)),
+                                      std::forward<MARQOV::Config>(std::get<1>(t)), 
                                       mtx,
-                                      std::forward<Tuple2>(t2),
-                                      std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
+                                      std::forward<HArgs>(std::get<2>(t)),
+                                      std::make_index_sequence<std::tuple_size<std::remove_reference_t<HArgs>>::value>{});
     }
     
-    template<class ... Ts> struct sims_helper {};
-    
-    template <class H,  class L, class HArgstuple, size_t... S>
-    struct sims_helper<H, L, HArgstuple, std::index_sequence<S...> >
-    {
-        typedef decltype(MARQOV::makeCore<H>(std::declval<L>(),
-                                               std::declval<MARQOV::Config>(), std::declval<std::mutex>(),
-                                               std::declval<typename std::tuple_element<S, HArgstuple>::type>()...
-        )) MarqovType;
-    };
-    
-    template <class ... Ts>
-    struct sims_helper2 {};
-    
-    template <class Hamiltonian, class Lattice, class LArgs, class HArgs>
-    struct sims_helper2<Hamiltonian, Lattice, Triple<LArgs, MARQOV::Config, HArgs> >
-    {
-        typedef decltype(MARQOV::makeCore<Hamiltonian, Lattice>(std::declval<MARQOV::Config>(), std::declval<std::mutex>(),
-                                                                  std::declval<std::pair<LArgs, HArgs>& >()
-        )) MarqovType;
-        template <typename T>
-        static void emplacer(std::vector<MarqovType>& sims, T&  t, std::mutex& mtx)
-        {
-            emplace_from_tuple(sims, t.first, std::forward<MARQOV::Config>(t.second), mtx, t.third);
-        }
-        
-        template <typename T>
-        static MarqovType* creator(std::mutex& mtx, T&  t)
-        {
-            return ptr_from_tuple<MarqovType>(t.first, std::forward<MARQOV::Config>(t.second), std::forward<decltype(mtx)>(mtx), t.third);
-        }
-    };
-    
-    template <class Hamiltonian, class Lattice, class HArgs>
-    struct sims_helper2<Hamiltonian, Lattice, std::pair<MARQOV::Config, HArgs> >
-    {
-        static constexpr std::size_t tsize = std::tuple_size<typename std::remove_reference<HArgs>::type>::value;
-        typedef std::make_index_sequence<tsize> HArgSequence;
-        typedef typename sims_helper<Hamiltonian, Lattice, HArgs, HArgSequence>::MarqovType MarqovType;
-        
-        template <typename T>
-        static void emplacer(std::vector<MarqovType>& sims, T& t, std::mutex& mtx)
-        {
-            emplace_from_tuple(sims, 
-                               std::forward<decltype(std::get<0>(t))>(std::get<0>(t)), 
-                               std::forward<MARQOV::Config>(std::get<1>(t)), mtx, std::get<2>(t));
-        }
-        
-        template <typename T>
-        static MarqovType* creator(std::mutex& mtx, T& t)
-        {
-            return ptr_from_tuple<MarqovType>(std::forward<decltype(std::get<0>(t))>(std::get<0>(t)), 
-                                              std::forward<MARQOV::Config>(std::get<1>(t)), std::forward<decltype(mtx)>(mtx), std::get<2>(t));
-        }
-    };
-    
+    /** The Marqov internal scheduler.
+     * 
+     * It encapsulates the creation of simulations, the parallel tempering
+     * and the distribution across nodes/cores.
+     * @tparam Sim a fully specified Marqov type
+     */
     template <class Sim>
     class Scheduler
     {
     private:
     public:
-        /** This gives us the parameters of a simulation and we are responsible for setting everything up.
+        /** Create a full simulation from a parameter.
+         * 
+         * This gives us the parameters of a simulation and we are responsible for setting everything up.
          * It has a template parameter, but of course all used parameters have to resolve to the same underlying MarqovType.
-         * @param p The full set of parameters that are relevant for your Problem
-         * @param filter A filter that can be applied before the actual creation of MARQOV
+         * @param p The full set of parameters that are relevant for your problem.
+         * @param filter A filter that can be applied before the actual creation of MARQOV.
          */
         template <typename ParamType, typename Callable>
         void createSimfromParameter(ParamType& p, Callable filter)
         {
-            auto t = filter(p);
-            auto simptr = sims_helper2<typename Sim::HamiltonianType, typename Sim::Lattice, ParamType>::template creator(mutexes.hdf, t);
+            auto t = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
+
+            auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
             oursims.push_back(simptr);
             this->enqueuesim(*simptr);
         }
         std::vector<Sim*> oursims; ///< Collects the sims that we have created and for which we feel repsonsible.
         /** This registers an already allocated simulation with us.
+         * 
+         * @param sim A reference to the sim that already exists.
          */
         void enqueuesim(Sim& sim)
         {
             int idx = simvector.size();
             simvectormutex.lock();
-            simvector.push_back(&sim);//NOTE: We only take care about sims that go through addsims.
+            simvector.push_back(&sim);//NOTE: We only take care about sims that go through enqueuesim.
             simvectormutex.unlock();
             taskqueue.enqueue([&, idx]{
                 //work here
                 simvectormutex.lock();
-                auto mysim = simvector[idx];
+                Sim* mysim = simvector[idx];
                 simvectormutex.unlock();
                 mysim->init();
                 mysim->wrmploop();
@@ -173,6 +126,8 @@ namespace MARQOV
                 workqueue.push_back(Simstate(idx));
             });//Put some warmup into the taskqueue
         }
+        /** Start the simulations! GoGoGo...!
+         */
         void start()
         {
             //create dummy data for the ptplan
@@ -216,10 +171,19 @@ namespace MARQOV
             //      taskqueue.enqueue(master);
         }
         void waitforall() {}
+        /** Construct Scheduler
+         * 
+         * @param maxptsteps How many parallel tempering steps do we do.
+         * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
+         */
         Scheduler(int maxptsteps, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
-        taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads))
+        taskqueue(1/*((nthreads == 0)?std::thread::hardware_concurrency():nthreads)*/)
         {}
+        /** Tidy up scheduler.
+         * 
+         * This frees all resources and waits until all threads have finished.
+         */
         ~Scheduler() {
             if (!nowork() && !masterstop && (taskqueue.tasks_enqueued() > 0) )
             {
@@ -230,9 +194,12 @@ namespace MARQOV
             masterstop = true;
             for (auto sim : oursims)
                 delete sim;
-            //         std::cout<<"Deleting Scheduler"<<std::endl;
         }
     private:
+        /**
+         * Simstate helper class
+         * This class encapsulates the parallel tempering state of a single sim.
+         */
         struct Simstate
         {
             Simstate() : id(-1), npt(-100) {}
@@ -241,22 +208,33 @@ namespace MARQOV
             int id;
             int npt;
         };
+        
+        /**
+         * This class collects mutexes that synchronize I/O.
+         */
         struct GlobalMutexes
         {
-            std::mutex hdf;//lock for the HDF5 I/O since the library for C++ is not thread-safe.
-            std::mutex io;// lock for the rest?
+            std::mutex hdf;///< Lock for the HDF5 I/O since the library for C++ is not thread-safe.
+            std::mutex io;///< Lock for the rest?
         } mutexes;
+        /** Find the parallel tempering exchange partner of the given id.
+         * 
+         * @param id find the next partner that this id has.
+         */
         auto findpartner(uint id)
         {
-            return std::find_if(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == id;});
+            return std::find_if(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == static_cast<int>(id);});
         }
         
         /** Test whether there is work available.
+         * 
          * @return true if no task is working and no work is to be executed by a task and no sim is to moved to the taskqueue.
          */
         bool nowork() {return workqueue.is_empty() && taskqueue.tasks_assigned() == 0 && taskqueue.tasks_enqueued() == 0;}
         
-        /** This function is called when the current simulation is up for a parallel tempering (PT) step.
+        /** Do a parallel tempering step. 
+         * 
+         * This function is called when the current simulation is up for a parallel tempering (PT) step.
          * If its partner is already waiting we do the parallel tempering, if not we got moved into 
          * a queue and wait for a partner
          * @param itm The Sim which is chosen for PT
@@ -286,7 +264,9 @@ namespace MARQOV
                 ptqueue.push_back(itm);
             }
         }
-        /** This determines how many steps have to be done until the next PTstep
+        /** Take simulation and move it to the workqueue.
+         * 
+         * This determines how many steps have to be done until the next PTstep
          * and moves the simulation into the taskqueue where the gameloop is executed.
          * @param itm The simulation that gets further worked on.
          */
@@ -317,7 +297,8 @@ namespace MARQOV
                 [itm, newnpt, gameloop]{gameloop(itm, newnpt);}
             );
         }
-        /** Determine the next PT step
+        /** Determine the next PT step.
+         *
          * @param idx simulation id to check
          * @param curnpt current PT time
          * @return the next PT step where this simulation is selected for PT.
@@ -325,7 +306,7 @@ namespace MARQOV
         uint findnextnpt(int idx, uint curnpt)
         {
             uint retval = curnpt+1;
-            while ((retval < maxpt) && (ptplan[retval].first != idx) && (ptplan[retval].second != idx))
+            while ((retval < static_cast<uint>(maxpt)) && (ptplan[retval].first != idx) && (ptplan[retval].second != idx))
             {
                 ++retval;
             }
@@ -334,8 +315,8 @@ namespace MARQOV
         
         int maxpt; ///< how many pt steps do we do
         std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
-        std::vector<std::pair<int, int> > ptplan;///< who exchanges with whom in each step
-        bool masterstop;
+        std::vector<std::pair<int, int> > ptplan; ///< who exchanges with whom in each step
+        bool masterstop; ///< A global flag to denote that the master has decided to stop.
         ThreadPool::Semaphore masterwork; ///< The semaphore that triggers the master process
         ThreadPool::ThreadSafeQueue<Simstate> workqueue; ///< this is the queue where threads put their finished work and the master does PT
         std::mutex simvectormutex; ///< A mutex to protect accesses to the simvector which could be invalidated by the use of push_back
@@ -347,13 +328,19 @@ namespace MARQOV
         void exchange() {}
     };
 
-    /** A helper class to figure out the type of the scheduler
+    /** A helper class to figure out the type of the scheduler.
+     * 
+     * @tparam Hamiltonian the type of the Hamiltonian.
+     * @tparam Lattice The type of the lattice
+     * @tparam Parameters The type f the parameters. We instantiate Hamiltonian
+     *                    and probably lattice in Marqov, hence the params.
      */
     template <class Hamiltonian, class Lattice, class Parameters>
     struct GetSchedulerType
     {
-        typedef typename sims_helper2<Hamiltonian, Lattice, Parameters >::MarqovType MarqovType;
-        typedef Scheduler<MarqovType> MarqovScheduler;
+        typedef std::mutex& mtxref;
+        typedef decltype(makeCore<Lattice, Hamiltonian>(std::declval<Parameters>(), std::declval<mtxref>())) MarqovType;
+        typedef Scheduler<MarqovType> MarqovScheduler; ///< Holds the type of a scheduler for these simulations.
     };
 };
 #endif

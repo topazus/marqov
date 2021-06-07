@@ -12,14 +12,20 @@
 
 namespace ThreadPool
 {
+    /** Task Queue.
+     * 
+     * A queue of the tasks that are about to be done and then get distributed
+     * to workers.
+     */
     class Queue
     {
     public:
-        using Task = std::function<void()>;
-        /** Construct the work queue
-         * @param initc number of threads. defaults to the number of hardware threads
+        using Task = std::function<void()>;///< The type of the functions that can be enqueued in our task pool. We do not support function arguments.
+        /** Construct the work queue.
+         * 
+         * @param initc number of threads. Defaults to the number of hardware threads.
          */
-        Queue(const uint initc = std::thread::hardware_concurrency()) : workers(initc), semaphores{}, queue(semaphores.work)
+        Queue(const uint initc = std::thread::hardware_concurrency()) : semaphores{}, queue(semaphores.work), workers(initc)
         {
             resize(initc);
         }
@@ -29,7 +35,8 @@ namespace ThreadPool
             sync();
             while (workers.count); // spin until all workers have exited
         }
-        /** Resize the pool of threads
+        /** Resize the pool of threads.
+         * 
          * @param cnt how many threads there should be 
          */
         void resize(const uint cnt)
@@ -43,10 +50,13 @@ namespace ThreadPool
                 while(workers.busy[id]);
             }
         }
-        /** The entry point function where we register our tasks
+        /** The entry point function where we register our tasks.
+         * 
          * We do not support arguments.
-         * @param f The task
-         * @return A future to obtain a possible result
+         * @tparam F A placeholder for the function.
+         * 
+         * @param f The task.
+         * @return A future to obtain a possible result.
          */
         template <typename F>
         auto enqueue(F&& f)
@@ -60,46 +70,68 @@ namespace ThreadPool
             ++stats.enqueued;
             return future;
         }
-        uint tasks_enqueued()
+        /** Obtain the number of currently enqueued tasks.
+         * 
+         * @return The number of currently enqueued tasks.
+         */
+        uint tasks_enqueued() const
         {
             return stats.enqueued;
         }
-        uint tasks_assigned()
+        /** Obtain the number of currently assigned tasks.
+         * 
+         * @return The number tasks currently being processed.
+         */
+        uint tasks_assigned() const
         {
             return stats.assigned;
         }
     private:
-        using auint = std::atomic<uint>;
-        using toggle = std::atomic<bool>;
-        ThreadSafeQueue<Task> queue;//the actual task queue
+        using auint = std::atomic<uint>; ///< The type of a counter with atomic access.
+        using Toggle = std::atomic<bool>; ///< A short cut for using atomic bools.
+        /** Semaphores that trigger behaviour of threads.
+         */
+        struct Semaphores
+        {
+            Semaphore work;///< This signals that the threads may begin processing.
+            Semaphore sync;///< This signals that the threads should finish.
+        } semaphores;///< The two semaphores that control the behaviour of our threads.
+        ThreadSafeQueue<Task> queue;///< The actual task queue.
+        /** A helper structure to encapsulate some useful flags.
+         */
         struct Flags
         {
-            toggle stop;
-            toggle prune;
+            Toggle stop;///< A flag for denoting that the threads should stop.
+            Toggle prune;///< A flag for denoting that the threads should terminate.
             Flags() : stop(false), prune(false) {}
-        } flags;
+        } flags;///< flags
         
-        struct Semaphores//The signals
+        /** A helper structure for some threadpool statistics.
+         */
+        struct Stats
         {
-            Semaphore work;// This signals that the threads may begin processing
-            Semaphore sync;// This signals that the threads should finish
-        } semaphores;
-        
-        struct Stats// A helper structure for various statistics
-        {
-            auint enqueued;
-            auint assigned;
+            auint enqueued; ///< count how many threads are in the queue.
+            auint assigned; ///< count how many threads are worked on.
+            /** Construct our statistics with initial values.
+             */
             Stats() : enqueued(0), assigned(0) {}
-        } stats;
+        } stats;///< Actual instance for our statistics.
         
-        struct Workers// A helper structure to bundle the bookkeeping of workers
+        /** A helper structure to bundle the bookkeeping of workers.
+         */
+        struct Workers
         {
-            std::mutex busy_mtx;
-            std::unordered_map<std::thread::id, toggle> busy; //This provides a map between the thread and whether it is busy.
-            auint count; //current count
-            auint target_count; //intended size of pool
+            std::mutex busy_mtx;///< This mutex protects access to the below map.
+            std::unordered_map<std::thread::id, Toggle> busy; ///< This provides a map between the thread and whether it is busy.
+            auint count; ///< current count of workers
+            auint target_count; ///< intended size of worker threads in the pool.
+            /** Create the worker bookkeeping.
+             * 
+             * @param tc How many workers do we intend to have.
+             */
             Workers(const uint tc) : count(0), target_count(tc) {}
-        } workers;
+        } workers; ///< An instance of the worker bookkeeping structure.
+        
         /** trigger synchronization
          */
         void sync()
@@ -124,8 +156,8 @@ namespace ThreadPool
                 {
                     Task task;//This will be the place holder of the actual work item
                     // let's do the set up of the book keeping structures
-                    uint count(++workers.count);
-                    //                std::cout<<"\tWorker "<< count<< " in thread "<< std::this_thread::get_id()<< " ready"<<std::endl;
+                    ++workers.count;
+                    //                std::cout<<"\tWorker "<< workers.count<< " in thread "<< std::this_thread::get_id()<< " ready"<<std::endl;
                     {
                         std::lock_guard<std::mutex> lk(workers.busy_mtx);
                         workers.busy.emplace(std::this_thread::get_id(), true);

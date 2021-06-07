@@ -1,28 +1,53 @@
+
+/**
+ * @file AshkinTeller.h
+ * @brief Three-Color Ashkin-Teller Hamiltonian.
+ *
+ * numerically, this model is treated as embedded Ising models
+ *
+ * the Wolff algorithm can only be used for K=<0.5!
+ *
+ * compare Zhu et. al, PRB 91, 224201 (2015) for more details
+ *
+ * 
+ * Note: This Hamiltonian presents an "extrem" use case of MARQOV, where the generic term structure is not used at all! Therefore the general Metropolis and Wolff update algorithms can not be used! Instead the interactions of the model are explicitely coded in the specialized update algorithms below
+ */
+
+
 #ifndef ASHKINTELLER_H
 #define ASHKINTELLER_H
 #include <array>
 #include <tuple>
 #include <string>
 #include <functional>
-#include "../hamparts.h"
+//#include "../hamparts.h" // not needed, see above
 #include "../metropolis.h"
 
-// the 3-color Ashkin-Teller model
-
-// numerically treated as embedded Ising models (compare Zhu et. al 2015)
 
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-// Magnetization
+/**
+* @brief Magnetization of the Three-Color Ashkin-Teller model
+*/
 class AshkinTellerMag
 {
 	public:
-		std::string name;
+		std::string name, desc;
+		/**
+		* @brief Perform a measurement of the Magnetization
+		*
+		* @tparam StateSpace	the type of the state space 
+		* @tparam Grid the type of the lattice
+		* @param statespace the statespace
+		* @param grid the lattice
+		*
+		* @return A scalar value, the magnetization per site
+		*/
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			const int N = grid.size();
+			const auto N = grid.size();
 
 			double mag1 = 0.0;
 			double mag2 = 0.0;
@@ -37,46 +62,106 @@ class AshkinTellerMag
 
 			return (std::abs(mag1)+std::abs(mag2)+std::abs(mag3))/double(3*N);
 		}
-		AshkinTellerMag() : name("m") {}
+		/**
+		* @brief Constructor of the Ashkin-Teller magnetization
+		*/
+		AshkinTellerMag() : name("m"), desc("Magnetization of the Three-color Ashkin-Teller model") {}
 };
 
 
 // ----------------------------------------------------------------------
 
+/** Dummy function which prints an error if one attempts to use the general Metropolis algorithm.
+ *
+ * @todo Find a way that this function is not needed in the first place
+ *
+ * @tparam StateVector the type of the state vector
+ * @tparam RNG the type of the random number generator
+ */
 template <class StateVector, class RNG>
 class AshkinTeller_Initializer
 {
 	public:
+		/** Constructor */
 		AshkinTeller_Initializer(RNG&) {}
-		StateVector newsv(const StateVector& svold) 	{cout << "This should not have happened!" << endl;};
+
+		/** Usually specifies how a random new state vector is generated. 
+		  * In this model it is just a place holder and will not be needed! 
+		  */
+		StateVector newsv(const StateVector& svold) 	
+		{
+			cout << "This should not have happened!" << endl;
+			cout << "This Hamiltonian is not supposed to work with the generic Metropolis algorithm." << endl;
+			cout << "Use a specialized implementation instead!" << endl;
+		};
 };
+
+
+
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
-template <typename SpinType = int>
+/** Three-Color Ashkin-Teller Hamiltonian
+ */
 class AshkinTeller
 {
 	public:
-		double J, K;
-		constexpr static int SymD = 3;
+		//  ----  Parameters  ----
+
+		double J; ///< Ising interaction strength
+		double K; ///< Four-spin interaction strength
+
+		static constexpr int SymD = 3; ///< use SymD to encode the three colors of the model
 		const std::string name;
-		typedef std::array<SpinType, SymD> StateVector;
-		typedef AshkinTeller<int> myHamiltonian;
+
+
+
+		//  ---- Definitions  -----
+
+		typedef std::array<int, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
 
-		AshkinTeller(double J, double K) : J(J), K(K), name("AshkinTeller"), observables(obs_m) {}
-		
-	
-		// instantiate and choose observables
-		AshkinTellerMag       obs_m;
-        std::tuple<AshkinTellerMag> observables;
 
-		// init
+		//  ---- Hamiltonian  -----
+
+		/** Constructor
+		 *  
+		 * @param J the Ising interaction
+		 * @param K the Four-spin interaction
+		 */
+		AshkinTeller(double J, double K) : J(J), K(K), name("ThreeColorAshkinTeller"), observables(obs_m) {}
+		
+
+		// we need this only for the update algorithms to access ham.interactions[0]->J 
+		std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
+		// can be avoided by providing an explicit specialization of the Wolff algorithm for this model
+
+
+	
+		//  ----  Observables ----
+
+		AshkinTellerMag       obs_m;
+		decltype(std::make_tuple(obs_m)) observables = {std::make_tuple(obs_m)};
+	
+
+
+
+		//  ----  Initializer  ----
+
+		/** Specifies how the state space is initialized
+		*
+		* @tparam StateSpace 	the type of the state space
+		* @tparam Lattice 		the type of the latticie
+		* @tparam RNG				the type of the random number generator
+		* @param statespace		the state space
+		* @param grid				the lattice
+		* @param rng				the random number generator
+		*/
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
-			for (int i=0; i<grid.size(); i++)
+			for (decltype(grid.size()) i = 0; i < grid.size(); i++)
 			{
 				for (int j=0; j<SymD; j++)
 				{
@@ -89,126 +174,90 @@ class AshkinTeller
 };
 
 
+
 // ----------------------- UPDATE SPECIALIZATIONS ----------------------
+
 
 namespace MARQOV 
 {
 
-	// Wolff
 	template <class Lattice>
-	struct Wolff<AshkinTeller<int>, Lattice>
+	class Embedder<AshkinTeller, Lattice>
 	{
+		typedef AshkinTeller Hamiltonian;
+		typedef typename Hamiltonian::StateVector StateVector;
+		typedef Space<StateVector, Lattice> StateSpace;
+		static constexpr int SymD = Hamiltonian::SymD;
 
-		// some typedefs
-		typedef typename AshkinTeller<int>::StateVector StateVector;
-		typedef int ReducedStateVector;
+		private:
 
-		// Wolff coupling
-		static inline double wolff_coupling(StateVector& sv1, StateVector& sv2, int color, AshkinTeller<int>& ham) 
-		{
-			double retval = 0.0;
-			if (sv1[color] != sv2[color])
+			const Hamiltonian& ham;
+			const Lattice& lat;
+			const StateSpace& statespace;
+
+			int rcolor;
+
+		public:
+
+			Embedder(const Hamiltonian& ham, const Lattice& lat, StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
+
+
+			template <class RNG>
+			void draw(RNG& rng)	{ rcolor = rng.integer(3); }
+
+
+			double coupling(int pos1, int pos2) const
 			{
-				switch (color)
+				double retval = 0.0;
+				const auto sv1 = statespace[pos1];
+				const auto sv2 = statespace[pos2];
+
+				if (sv1[rcolor] != sv2[rcolor])
 				{
-					case 0: retval = ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
-					case 1: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
-					case 2: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
-					default: throw std::invalid_argument("invalid color!");
+					switch (rcolor)
+					{
+						case 0: retval = ham.J - ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]); break;
+						case 1: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]); break;
+						case 2: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]); break;
+						default: cout << "invalid color!" << rcolor << endl;
+//						default: throw std::invalid_argument("invalid color!"); // catch me!
+					}
 				}
+				return retval;
 			}
-			return retval;
-		}
-	
-		// Wolff flip
-		static inline void wolff_flip(StateVector& sv, const int color) {sv[color] *= -1;}
-	
-	
-		// The actual Wolff step
-		template <class DirType, class RNG, class StateSpace>
-		static inline int move(AshkinTeller<int>& ham, Lattice& grid, StateSpace& statespace, 
-						   RNG& rng, double beta, int rsite, const DirType&)
-		{
-			const int ncolors = 3;
-			int clustersize_sum = 0;
-			for (int color=0; color<ncolors; color++) // better select a random color
-			{
-	
-				// prepare stack
-	     		std::vector<int> cstack(grid.size(), 0);
-	
-	     		// add initial site and flip it
-	     		int q = 0;
-	     		cstack[q] = rsite;
-	
-	     		wolff_flip(statespace[rsite], color);
-	     		int clustersize = 1;
-	
-	     		// loop over stack as long as non-empty
-	     		while (q>=0)
-	     		{
-	         			 // extract last sv in stack
-	         			 const int currentidx = cstack[q];
-		    			 StateVector& currentsv = statespace[currentidx];
-	         			 q--;
-	
-	         			 // get its neighbours
-					 const int a = 0; // spin family (hard-coded)
-	         			 const auto nbrs = grid.nbrs(a, currentidx);
-	
-	         			 // loop over neighbours
-	         			 for (std::size_t i = 0; i < nbrs.size(); ++i)
-	         			 {
-	         			      // extract corresponding sv
-	         			      const auto currentnbr = nbrs[i];
-	         			      StateVector& candidate = statespace[currentnbr];
-	
-						const double coupling  = - wolff_coupling(currentsv, candidate, color, ham);
-	
-	         			      // test whether site is added to the cluster
-						if (coupling > 0)
-	         			      {
-	         			           if (rng.real() < -std::expm1(-2.0*beta*coupling))
-	         			           {
-	         			                q++;
-	         			                cstack[q] = currentnbr;
-	         			                clustersize++;
-	         			                wolff_flip(candidate, color);
-	         			           }
-	         			      }
-	         			 }
-	         		}
-				clustersize_sum += clustersize;
-			}
-			return clustersize_sum/ncolors;
-		}
-	};
+
+
+			void flip(StateVector& sv) { sv[rcolor] *= -1; }
+		};
+				
+
 	
 	
 	
-	
-	
-	
-	// Metropolis
+	/** Specialized Metropolis algorithm for the Ashkin-Teller Hamiltonian
+	 *
+	 * @tparam Lattice type of the lattice
+	 */
 	template <class Lattice>
-	struct Metropolis<AshkinTeller<int>, Lattice>
+	struct Metropolis<AshkinTeller, Lattice>
 	{
 
 		// some typedefs
-		typedef typename AshkinTeller<int>::StateVector StateVector;
+		typedef typename AshkinTeller::StateVector StateVector;
 		typedef int ReducedStateVector;
 
 
 		// coupling of the embedded Ising model
-		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, AshkinTeller<int>& ham)
+		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, const AshkinTeller& ham)
 		{
 			double retval = 0.0;
 			switch (color)
 			{
-				case 0: retval = ham.J + ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]);
-				case 1: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]);
-				case 2: retval = ham.J + ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]);
-				default: throw std::invalid_argument("invalid color!");
+				case 0: retval = ham.J - ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]); break;
+				case 1: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]); break;
+				case 2: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]); break;
+				default: cout << "invalid color!" << color << endl;
+//				default: throw std::invalid_argument("invalid color!"); // catch me!
 			}
 			return retval;
 		}
@@ -232,11 +281,14 @@ namespace MARQOV
 	
 		// the actual Metropolis move attempt
 		template <class StateSpace, class M, class RNG>
-		static inline int move(AshkinTeller<int>& ham, Lattice& grid, StateSpace& statespace, 
-						   M& metro, RNG& rng, double beta, int rsite)
+		static inline int move(const AshkinTeller& ham, 
+						   const Lattice& grid, 
+						   StateSpace& statespace, 
+						   M& metro, 
+						   RNG& rng, 
+						   double beta, 
+						   int rsite)
 		{
-
-
 			int retval = 0;
 			for (int color=0; color<3; color++) // better select a random color
 			{
@@ -287,7 +339,4 @@ namespace MARQOV
 		}
 	};	
 }
-
-
-
 #endif

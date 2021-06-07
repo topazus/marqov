@@ -1,3 +1,20 @@
+/* MARQOV - A modern framework for classical spin models on general topologies
+ * Copyright (C) 2020-2021, The MARQOV Project
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option)
+ * any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef EDWARDSANDERSONISING_H
 #define EDWARDSANDERSONISING_H
 #include <array>
@@ -11,7 +28,7 @@
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-// the traditional EA order parameter
+/** Edwards-Anderson order parameter */
 class EdwardsAndersonOrderParameter
 {
 	public:
@@ -45,7 +62,9 @@ class EdwardsAndersonOrderParameter
 		EdwardsAndersonOrderParameter() : name("qEA") {}
 };
 
-class LinkOverlap /// not working so far!!!!
+
+
+class LinkOverlap /// not working so far!!!! TODO
 {
 	public:
 		int counter = 0;
@@ -66,7 +85,7 @@ class LinkOverlap /// not working so far!!!!
 					auto nbnds = bnds.size();
 					sum_ij[i].resize(nbnds);
 
-					for (int j=0; j<nbnds; j++) sum_ij[i][j] = 0;
+					for (decltype(nbnds) j=0; j<nbnds; j++) sum_ij[i][j] = 0;
 				}
 			}
 			int nbondstot = 0;
@@ -76,7 +95,7 @@ class LinkOverlap /// not working so far!!!!
 				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
 				nbondstot += nbnds;
-				for (int j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
+				for (decltype(nbnds) j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
 			}
 
 			counter++;
@@ -89,7 +108,7 @@ class LinkOverlap /// not working so far!!!!
 			{
 				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
-				for (int j=0; j<nbnds; j++) retval += pow(sum_ij[i][j],2);
+				for (decltype(nbnds) j=0; j<nbnds; j++) retval += pow(sum_ij[i][j],2);
 			}
 			return norml * retval;
 		}
@@ -98,7 +117,7 @@ class LinkOverlap /// not working so far!!!!
 };
 
 
-class InternalEnergy /// not working so far!!!!
+class InternalEnergy /// not working so far!!!! TODO
 {
 	public:
 		int counter = 0;
@@ -119,7 +138,7 @@ class InternalEnergy /// not working so far!!!!
 					auto nbnds = bnds.size();
 					sum_ij[i].resize(nbnds);
 
-					for (int j=0; j<nbnds; j++) sum_ij[i][j] = 0;
+					for (decltype(nbnds) j=0; j<nbnds; j++) sum_ij[i][j] = 0;
 				}
 			}
 
@@ -127,7 +146,7 @@ class InternalEnergy /// not working so far!!!!
 			{
 				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
-				for (int j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
+				for (decltype(nbnds) j=0; j<nbnds; j++) sum_ij[i][j] += statespace[i][0]*statespace[j][0];
 			}
 
 			const double norml = 1. / double(counter) / double(size);
@@ -140,7 +159,7 @@ class InternalEnergy /// not working so far!!!!
 			{
 				auto bnds = grid.bnds(0,i);
 				auto nbnds = bnds.size();
-				for (int j=0; j<nbnds; j++) retval += sum_ij[i][j] * bnds[j];
+				for (decltype(nbnds) j=0; j<nbnds; j++) retval += sum_ij[i][j] * bnds[j];
 			}
 			return - norml * retval;
 		}
@@ -151,12 +170,12 @@ class InternalEnergy /// not working so far!!!!
 
 
 
+//* Spin glass susceptibility */
 class Susceptibility
 {
-	private:
-		double kx;
 	public:
 		int counter = 0;
+		double kx;
 		std::string name;
 		std::vector<int> sum_i;
 		std::vector<std::vector<int>> sum_ij;
@@ -166,7 +185,6 @@ class Susceptibility
 		{
 			const int size = grid.size();
 			std::complex<double> jj(0,1); 
-
 			const double norml = 1. /  double(size) / double(size) / double(counter) / double(counter);
 
 			if (sum_ij.size() == 0) 
@@ -189,7 +207,6 @@ class Susceptibility
 			}
 
 			std::complex<double> retval = 0;
-
 			counter++;
 
 			for (int i=0; i<size; i++)
@@ -211,20 +228,17 @@ class Susceptibility
 
 					const std::vector<double> xi = {grid.crds(i)[dir]};
 					const std::vector<double> xj = {grid.crds(j)[dir]};
-
 					auto diff = xi[0] - xj[0];
 
 					if (fabs(diff)>0.5) diff = 1.0 - fabs(diff); // account for PBC
-
 					std::complex<double> phase = std::exp(kx*diff*jj);
-
 					retval += pow(sum_ij[i][j],2) * phase;
 				}
 			}
 
 			return norml * std::abs(retval);
 
-			// open questions:
+			// open questions (TODO):
 			// - should the distance vector account for PBC? -> most likely yes
 			// - correct normalization -> almost ;)
 			// - order of averages correct? -> think so
@@ -234,35 +248,8 @@ class Susceptibility
 		Susceptibility(double kx, std::string name) : kx(kx), name(name) {}
 };
 
-// Scalar overlap
-class ScalarOverlap
-{
-	public:
-		std::string name;
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			//
-			//
-			//
-			//
-			return 0;
-		}
-		ScalarOverlap() : name("q") {}
-};
 
-
-// ----------------------------------------------------------------------
-
-template <class StateVector>
-class EdwardsAndersonIsing_interaction
-{
-public:
-    const double& J;
-	EdwardsAndersonIsing_interaction(const double& myJ) : J(myJ) {}
-	StateVector get (const StateVector& phi) {return phi;};
-};
-
+// ------------------------------ INITIALIZER ---------------------------
 
 template <class StateVector, class RNG>
 class EdwardsAndersonIsing_Initializer
@@ -281,78 +268,90 @@ class EdwardsAndersonIsing_Initializer
 		};
 };
 
+
 // ------------------------------ HAMILTONIAN ---------------------------
 
+template <class StateVector>
+class EdwardsAndersonIsing_interaction
+{
+public:
+    const double& J;
+	EdwardsAndersonIsing_interaction(const double& J) : J(J) {}
+	StateVector get (const StateVector& phi) {return phi;};
+};
+
+
+
+/** Hamiltonian for a Edwards-Anderson spin glass */
 template <typename SpinType = int>
 class EdwardsAndersonIsing
 {
 	public:
+
+		//  ----  Parameters  ----
+
 		double J;
-		constexpr static int SymD = 1;
+		static constexpr int SymD = 1;
 		const std::string name;
+
+
+		//  ---- Definitions  -----
+
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
 		using MetroInitializer = EdwardsAndersonIsing_Initializer<StateVector, RNG>;
 
-		EdwardsAndersonIsing(double J) : J(J), name("EdwardsAndersonIsing"), obs_chi(0, "chi") , obs_chiKmin(2.0*M_PI, "chiKmin") {}
-		~EdwardsAndersonIsing() {delete interactions[0];}
-		
-		// instantiate interaction terms (requires pointers)
+
+		//  ----  Hamiltonian terms  ----
+
 		std::array<EdwardsAndersonIsing_interaction<StateVector>*, 1> interactions = {new EdwardsAndersonIsing_interaction<StateVector>(J)};
         std::array<OnSite<StateVector, int>*, 0> onsite;
-        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
-	
-		// instantiate and choose observables
-		EdwardsAndersonOrderParameter      obs_qEA;
-		ScalarOverlap					obs_q;
+
+		EdwardsAndersonIsing(double J) : J(J), 
+										 name("EdwardsAndersonIsing"), 
+										 obs_chi(0, "chi"), 
+										 obs_chiKmin(2.0*M_PI, "chiKmin") {}
+
+		~EdwardsAndersonIsing() {delete interactions[0];}
+
+
+		//  ----  Observables ----
+		
+		EdwardsAndersonOrderParameter	obs_qEA;
 		Susceptibility					obs_chi;
 		Susceptibility					obs_chiKmin;
 		InternalEnergy					obs_U;
-		LinkOverlap					obs_ql;
-        decltype(std::make_tuple(obs_qEA, obs_chi, obs_chiKmin, obs_U, obs_ql)) observables = {std::make_tuple(obs_qEA, obs_chi, obs_chiKmin, obs_U, obs_ql)};
+        decltype(std::make_tuple(obs_qEA, obs_chi, obs_chiKmin, obs_U)) observables = {std::make_tuple(obs_qEA, obs_chi, obs_chiKmin, obs_U)};
 
-		// initialize state space
+
+		//  ----  Initializer  ----
+
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
-			for (int i=0; i<grid.size(); i++)
+			for (decltype(grid.size()) i = 0; i < grid.size(); i++)
 			{
 				if (rng.real() > 0.5) statespace[i][0] = 1;
 				else statespace[i][0] = -1;
 			}
 		}
-
-
-		// using the Wolff cluster algorithm requires to implement
-		// the functions 'wolff_coupling' and 'wolff_flip'
-
-		template <class A = bool>
-		inline double wolff_coupling(StateVector& sv1, StateVector& sv2, const A a=0) const 
-		{
-			if (sv1[0] == sv2[0]) return 0.0;
-			else return -1.0;
-		}
-
-		template <class A = bool>
-		inline void wolff_flip(StateVector& sv, const A a=0) const 
-		{
-			sv[0] *= -1;
-		}
-
-
 };
 
 
 
 
 
+// ------------------------------ SPECIALIZATIONS ---------------------------
 
-namespace MARQOV {
 
-    //Work around GCC Bug for specializations of things in namespaces:
-    //https://gcc.gnu.org/bugzilla/show_bug.cgi?id=56480
-    // still occurs on 6.4.0
+namespace MARQOV 
+{
 
+	/** Specialization of the Metropolis algorithm for an Ising spin glass.
+	  * Identical to the specialization for the regular Ising model in "ising.h"
+	  * @see "metropolis.h"
+	  */
+	  /*
 	template <class Lattice>
 	struct Metropolis<EdwardsAndersonIsing<int>, Lattice>
 	{
@@ -360,7 +359,7 @@ namespace MARQOV {
 	    static int move(const EdwardsAndersonIsing<int>& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNG& rng, double beta, int rsite)
 	    {
 			typedef typename EdwardsAndersonIsing<int>::StateVector StateVector;
-		    	// old state vector at rsite
+		    // old state vector at rsite
 			StateVector& svold = statespace[rsite];
 			// propose new configuration
 			StateVector svnew = metro.newsv(svold);
@@ -380,34 +379,28 @@ namespace MARQOV {
 					auto idx = nbrs[i];
 					auto nbr = ham.interactions[a]->get(statespace[idx]);
 					averagevector = averagevector + MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
-
-//					auto temp = MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
-//					cout << temp[0] << endl; 
-
 				}
 				interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
 			}
 
-	    		// sum up energy differences
-	    		double dE 	= interactionenergydiff;
+	    	// sum up energy differences
+	    	double dE 	= interactionenergydiff;
 	
-	    		 // improve me: what about models with discrete statevectors where the acceptance probability should be
-	    		 // looked up in tables? -> specialized Metropolis routine for this case??
-	
-	    		int retval = 0;
-	    		if ( dE <= 0 )
-	    		{
-	    		    svold = svnew;
-	    		    retval = 1;
-	    		}
-	    		else if (rng.real() < exp(-beta*dE))
-	    		{
-	    		    svold = svnew;
-	    		    retval = 1;
-	    		}
-	    		return retval;
+	    	int retval = 0;
+	    	if ( dE <= 0 )
+	    	{
+	    	    svold = svnew;
+	    	    retval = 1;
+	    	}
+	    	else if (rng.real() < exp(-beta*dE))
+	    	{
+	    	    svold = svnew;
+	    	    retval = 1;
+	    	}
+	    	return retval;
 	    }
 	};
+	*/
 
 }
 #endif

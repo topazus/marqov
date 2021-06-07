@@ -9,7 +9,10 @@
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-// Staggered magnetization easy axis (z)
+/** Staggered magnetization along the easy axis.
+ * Note that the implementation of staggered magnetizations is always
+ * characteristic to the lattice being used, in this case RegularHypercubic
+*/
 class XXZAntiferroStaggeredMagZ
 {
 	public:
@@ -20,14 +23,14 @@ class XXZAntiferroStaggeredMagZ
 			const int N = grid.size();
 			const int L = grid.len;
 
-			if ((L+1) % 2 == 0) cout << "error"<< endl;
+			if ((L+1) % 2 == 0) cout << "[MARQOV] Error: Lattice size must be a multiple of two!" << endl; // TODO
 
 			double magA = 0;
 			double magB = 0;
 
 			if (grid.dim == 2)
 			{
-				// implement me
+				cout << "[MARQOV] Error: This is not implemented!" << endl; // TODO
 			}
 
 			if (grid.dim == 3)
@@ -59,7 +62,10 @@ class XXZAntiferroStaggeredMagZ
 
 
 
-// Staggered magnetization perpendicular to easy axis (x-y plane)
+/** Staggered magnetization perpendicular to the easy axis.
+ * Note that the implementation of staggered magnetizations is always
+ * characteristic to the lattice being used, in this case RegularHypercubic
+*/
 class XXZAntiferroStaggeredMagXY
 {
 	public:
@@ -79,7 +85,7 @@ class XXZAntiferroStaggeredMagXY
 
 			if (grid.dim == 2)
 			{
-				// implement me
+				cout << "[MARQOV] Error: This is not implemented!" << endl; // TODO
 			}
 
 			if (grid.dim == 3)
@@ -113,103 +119,94 @@ class XXZAntiferroStaggeredMagXY
 		XXZAntiferroStaggeredMagXY() : name("mstagxy") {}
 };
 
-// ----------------------------------------------------------------------
 
-template <class StateVector, class RNG>
-class XXZAntiferro_Initializer
-{
-	public:
-		// provide the spin dimension as a compile-time constant expression
-		constexpr static int SymD = std::tuple_size<StateVector>::value;
 
-		// constructors
-		XXZAntiferro_Initializer()   {}
-		XXZAntiferro_Initializer(RNG& rn) : rng(rn) {}
+// ------------------------------ INITIALIZER ---------------------------
 
-		// generate new statevector
-		StateVector newsv(const StateVector&) 
-		{
-			return rnddir<RNG, double, SymD>(rng);
-		};
-
-	private:
-		RNG& rng;
-};
+#include "initializers.h"
 
 
 
+// ------------------------------ HAMILTONIAN ---------------------------
+
+/** Anistropic XXZ interaction.
+  * interaction strength in z-direction is different from x,y
+  */
 template <class StateVector>
 class XXZAntiferro_interaction
 {
 	public:
 		const double& Delta; // uniaxial exchange anisotropy
-		static constexpr double J = 1;
+		static constexpr double J = 1; // global coupling (TODO)
 		XXZAntiferro_interaction(const double& myDelta) : Delta(myDelta) {}
 		StateVector get (const StateVector& phi) 
 		{
 			StateVector retval;
 
-			retval[0] = Delta*phi[0];
-			retval[1] = Delta*phi[1];
-			retval[2] = phi[2];
+			retval[0] = Delta*phi[0]; // x
+			retval[1] = Delta*phi[1]; // y
+			retval[2] = phi[2];       // z
 
 			return retval;
 		};
 };
 
+
+/** Anisotropic external field.
+ * The field only acts along the z-direction
+ *
+ * @tparam StateVector the type of the state vectors
+ */
 template <class StateVector>
 class XXZAntiferro_extfield : public OnSite<StateVector, double>
 {
 	public:
-        const double& h;
-		XXZAntiferro_extfield(const double& myH) : h(myH) {}
+		/** Constructor of anisotropic external field term
+		*
+		* @param H the coupling constant of the field in z-direction
+		*/
+		XXZAntiferro_extfield(const double& H) : OnSite<StateVector,double>(H) {}
 		double get (const StateVector& phi) {return phi[2];};
 };
 
 
-// ------------------------------ HAMILTONIAN ---------------------------
 
-template <typename SpinType, typename MyFPType>
+/** Hamiltonian of the antiferromagnetic XXZ O(3) model
+  * 
+  * @tparam SpinType the type in which to store the vector-valued magnetization values.
+  */
+template <typename SpinType>
 class XXZAntiferro
 {
 	public:
-        double Delta, H;
-		constexpr static int SymD = 3;
-		typedef MyFPType FPType;
-		typedef std::array<SpinType, SymD> StateVector;
-		
-		template <typename RNG>
-		using MetroInitializer =  XXZAntiferro_Initializer<StateVector, RNG>; 
-		// this construction allows to specify a number of template arguments
-		// while leaving others open (C++11 feature)
 
+		//  ----  Parameters  ----
+
+        double Delta, H;
+		static constexpr int SymD = 3;
 		const std::string name;
 
-		// requires pointers
+
+		//  ---- Definitions  -----
+		
+		typedef std::array<SpinType, SymD> StateVector;
+		template <typename RNG>
+		using MetroInitializer = NVector_Initializer<StateVector, RNG>; 
+
+
+		//  ----  Hamiltonian terms  ----
+
         std::array<XXZAntiferro_interaction<StateVector>*, 1> interactions = {new XXZAntiferro_interaction<StateVector>(Delta)};
         std::array<XXZAntiferro_extfield<StateVector>*, 1> onsite = {new XXZAntiferro_extfield<StateVector>(H)};
-        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
-		XXZAntiferro(double myDelta, double myH) : Delta(myDelta), H(myH), name("XXZAntiferro") {}
+		XXZAntiferro(double Delta, double H) : Delta(Delta), H(H), name("XXZAntiferro") {}
+
+
+		//  ----  Observables ----
 		
 		XXZAntiferroStaggeredMagZ  obs_mstagz;
 		XXZAntiferroStaggeredMagXY obs_mstagxy;
         decltype(std::make_tuple(obs_mstagz, obs_mstagxy)) observables = {std::make_tuple(obs_mstagz, obs_mstagxy)};
 
-		// using the Wolff cluster algorithm requires to implement 
-		// the functions 'wolff_coupling' and 'wolff_flip'
-
-		template <class A> 
-		inline auto wolff_coupling(StateVector& sv1, StateVector& sv2, const A a) const
-		{
-			return sv1[2]*sv2[2]; // perform the cluster update only in the z-components
-		}
-
-		template <class A>
-		inline void wolff_flip(StateVector& sv, const A a) const
-		{
-			sv[2] = -sv[2];
-			normalize(sv);  // necessary?
-		}
 };
 #endif

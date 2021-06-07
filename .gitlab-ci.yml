@@ -2,6 +2,7 @@ stages:
   - build
   - buildMPI
   - test
+  - docs
 
 .src_except_template: &src_except_definition
   except:
@@ -67,7 +68,7 @@ MARQOV_Bullseye:
 
 mpiMARQOV_Ubuntu_bionic:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack
-    stage: build
+    stage: buildMPI
     <<: *src_except_definition
     script:
       - apt-get update && apt-get install -y g++ cmake libhdf5-dev libopenmpi-dev
@@ -100,7 +101,6 @@ marqov_Bullseye_clang:
     stage: build
     <<: *src_except_definition
     script:
-      - apt-get update && apt-get install -y libhdf5-dev
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang++ ..
@@ -139,6 +139,28 @@ marqov_Bullseye-Intel-21:
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="icpc" ..
       - make MARQOV VERBOSE=1
+
+marqov_Bullseye_doxygen:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-clang
+    stage: build
+    script:
+      - apt-get update && apt-get install -y doxygen graphviz pdf2svg
+      - cd docs
+      - cmake -E make_directory doxygen
+      - doxygen Doxyfile-marqov.cfg
+
+marqov_Bullseye_breathe:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-clang
+    stage: docs
+    needs: ["marqov_Bullseye_doxygen"]
+    artifacts: 
+      paths:
+        - doc/*
+    script:
+      - apt-get update && apt-get install -y doxygen graphviz pdf2svg python3-breathe python3-sphinx python3-sphinx-rtd-theme
+      - cd doc/
+      - doxygen Doxyfile-marqov-breathe.cfg
+      - make html
 
 marqov_create_doc:
   image: aergus/latex
