@@ -80,14 +80,6 @@ class BiquadraticExchangeInteraction : public FlexTerm<StateSpace, StateVector>
 		}
 };
 
-#ifdef __PGI
-template <>
-double BiquadraticExchangeInteraction<
-MARQOV::Space<std::array<int, 1>, RegularHypercubic>,
-std::array<int, 1> >
-::diff (const int, const std::array<int, 1>&, const std::array<int, 1>&, std::vector<int>&, MARQOV::Space<std::array<int, 1>, RegularHypercubic>&);
-#endif
-
 template <typename SpinType = int>
 class BlumeEmeryGriffiths
 {
@@ -128,6 +120,7 @@ class BlumeEmeryGriffiths
 								multisite.push_back(&biquadratic_exchange_int);
 #ifdef __PGI
             	//The following is necessary to make PGI-19.10 happy
+        auto ptr = &BiquadraticExchangeInteraction<MARQOV::Space<StateVector, RegularHypercubic>, StateVector >::diff;
 #endif
 							}
 
