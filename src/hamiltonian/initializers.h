@@ -20,7 +20,7 @@
 #define INITIALIZERS_H
 #include <array>
 #include <tuple>
-#include "vectorhelpers.h"
+#include "../vectorhelpers.h"
 
 // ------------------------------ INITIALIZER ---------------------------
 
