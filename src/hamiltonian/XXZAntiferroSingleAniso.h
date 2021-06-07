@@ -16,7 +16,7 @@
 
 // ------------------------------ INITIALIZER ---------------------------
 
-#include "XXZAntiferro.h"
+#include "initializers.h"
 
 
 
@@ -39,7 +39,7 @@ class XXZAntiferro_onsiteaniso : public OnSite<StateVector, double>
 		*
 		* @param D coupling strength of the anisotropic term
 		*/
-		XXZAntiferro_onsiteaniso(double D) : D(D) {this->h = D;}
+		XXZAntiferro_onsiteaniso(double D) : OnSite<StateVector,double>(D) {}
 		double get (const StateVector& phi) {return pow(phi[2],2);};
 };
 
@@ -68,14 +68,13 @@ class XXZAntiferroSingleAniso
 
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
-		using MetroInitializer =  XXZAntiferro_Initializer<StateVector, RNG>; 
+		using MetroInitializer = NVector_Initializer<StateVector, RNG>; 
 
 
 		//  ----  Hamiltonian terms  ----	
 
         std::array<XXZAntiferro_interaction<StateVector>*, 1> interactions = {new XXZAntiferro_interaction<StateVector>(Delta)};
         std::vector<OnSite<StateVector, double>*> onsite;
-        std::array<FlexTerm<Space<StateVector, RegularHypercubic>,  StateVector>*, 0> multisite;
 
 		/** Constructor for the Hamiltonian of the antiferromagnetic XXZ O(3) model with 
 		  * an additional single-site anisotropy.

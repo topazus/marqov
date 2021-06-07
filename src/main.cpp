@@ -32,14 +32,10 @@ using std::ofstream;
 
 #include "timetracker.h"
 #include "helpers.h"
-#include "vectorhelpers.h"
-#include "cartprod.h"
 #include "registry.h"
 #include "systemtools.h"
 #include "replicate.h"
-#include "svmath.h"
 #include "filters.h"
-//#include "embedder.h"
 #include "marqovscheduler.h"
 #include "util.h"
 
@@ -56,12 +52,14 @@ using std::ofstream;
 #include "hamiltonian/Ising.h"
 #include "hamiltonian/Phi4.h"
 #include "hamiltonian/BlumeCapel.h"
+#include "hamiltonian/BlumeEmeryGriffiths.h"
 #include "hamiltonian/XXZAntiferro.h"
 #include "hamiltonian/XXZAntiferroSingleAniso.h"
 #include "hamiltonian/AshkinTeller.h"
 #include "hamiltonian/EdwardsAndersonIsing.h"
 //#include "hamiltonian/Ssh.h" // seperate branch
 #include "hamiltonian/BlumeCapelBipartite.h"
+#include "hamiltonian/AshkinTeller.h"
 
 using namespace MARQOV;
 
@@ -101,8 +99,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 	// ----------------- select simulation ------------------
-
-
 
 	if (ham == "Ising")
 	{
@@ -154,7 +150,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-
 	else if (ham == "BlumeCapel")
 	{
 		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
@@ -163,6 +158,19 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto parameters = cart_prod(beta, J, D);
 		
 		RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
+	}
+
+
+
+	else if (ham == "BlumeEmeryGriffiths")
+	{
+		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+		auto D    = registry.Get<std::vector<double> >("mc.ini", ham, "D");
+		auto K    = registry.Get<std::vector<double> >("mc.ini", ham, "K");
+		auto parameters = cart_prod(beta, J, D, K);
+		
+		RegularLatticeLoop<BlumeEmeryGriffiths<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
 
 

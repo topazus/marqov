@@ -25,47 +25,24 @@
 #include "../hamparts.h"
 #include "termcollection.h"
 
+
 // ------------------------------ OBSERVABLES ---------------------------
 
-// ...
-
+#include "../observables.h"
 
 
 // ------------------------------ INITIALIZER ---------------------------
 
-template <class StateVector, class RNG>
-class BlumeCapel_Initializer
-{
-	public:
-		BlumeCapel_Initializer(RNG& rn) : rng(rn) {}
-
-		StateVector newsv(const StateVector& svold) 
-		{
-			StateVector retval(svold); 
-			int state = retval[0];
-
-			if (state == 0)
-			{
-				if (rng.real() < 0.5) state = -1;
-				else state = +1;
-			}
-			else // +1/-1
-			{
-				if (rng.real() < 0.5) state *= -1;
-				else state = 0;
-			}
-
-			retval[0] = state;
-			return retval;
-		};
-
-	private:
-		RNG& rng;
-};
+#include "initializers.h"
 
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
+/**
+* The Blume-Capel Hamiltonian
+*
+* @tparam SpinType the type of the state vector
+*/
 template <typename SpinType = int>
 class BlumeCapel
 {
@@ -83,7 +60,7 @@ class BlumeCapel
 
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
-		using MetroInitializer = BlumeCapel_Initializer<StateVector, RNG>;
+		using MetroInitializer = Spin1_Initializer<StateVector, RNG>;
 
 
 
@@ -91,8 +68,12 @@ class BlumeCapel
 
 		std::array<Standard_Interaction<StateVector>*, 1>    interactions = {new Standard_Interaction<StateVector>(J)};
 		std::array<Onsite_Quadratic<StateVector>*, 1>        onsite       = {new Onsite_Quadratic<StateVector>(D)};
-        std::array<FlexTerm<Space<StateVector, RegularHypercubic>,  StateVector>*, 0> multisite;
-	
+
+		/** Constructor of the Blume-Capel model
+		*
+		* @param J standard interaction parameter
+		* @param D zero-field splitting parameter
+		*/
 		BlumeCapel(double J, double D) : J(J), D(D), name("BlumeCapel"), observables(obs_m) {}
 
 
@@ -102,18 +83,6 @@ class BlumeCapel
 		Magnetization obs_m;
         std::tuple<Magnetization> observables;
 
-
-		//  ----  Initializer  ----
-
-		template <class StateSpace, class Lattice, class RNG>
-		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
-		{
-			for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
-			{
-				if (rng.real() > 0.5) statespace[i][0] = 1;
-				else statespace[i][0] = -1;
-			}
-		}
 };
 
 
@@ -123,14 +92,18 @@ class BlumeCapel
 
 namespace MARQOV
 {
-	/** Specialization of the Embedding class for the Blume Capel model */
 
+	/** Specialization of the Embedding class for the Blume Capel model
+	*
+	* @tparam SpinType the type of the spin
+	* @tparam Lattice the type of the lattice
+	*/
 	template <class SpinType, class Lattice>
 	class Embedder<BlumeCapel<SpinType>,Lattice>
 	{
 		typedef BlumeCapel<SpinType> Hamiltonian;
 		typedef typename Hamiltonian::StateVector StateVector;
-		typedef Space<StateVector, Lattice> StateSpace;
+		typedef MARQOV::Space<StateVector, Lattice> StateSpace;
 
 		private:
 			const Hamiltonian& ham;

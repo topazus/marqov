@@ -5,13 +5,12 @@
 #include <vector>
 #include "../vectorhelpers.h"
 #include "../hamparts.h"
-#include "../obsparts.h"
 #include "termcollection.h" 
 
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-// ...
+#include "../observables.h"
 
 
 // ------------------------------ INITIALIZER ---------------------------
@@ -81,10 +80,7 @@ template <class StateVector>
 class Onsite_Fourth_Minus_One : public OnSite<StateVector, double> 
 {
 	public:
-		Onsite_Fourth_Minus_One(double constant)
-		{
-	 		this->h = constant;
-		}
+		Onsite_Fourth_Minus_One(double constant) : OnSite<StateVector,double>(constant) {}
 		inline double get (const StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);}
 };
 
@@ -125,7 +121,6 @@ class Phi4
 
 		std::array<Standard_Interaction<StateVector>*, 1>      interactions = {new Standard_Interaction<StateVector>(J)};
 		std::vector<OnSite<StateVector, CouplingType>*>        onsite; // empty here, to be filled in the constructor!
-        std::array<FlexTerm<Space<StateVector, RegularHypercubic>,  StateVector>*, 0> multisite;
 
 		Phi4(double beta, double lambda, double mass) : beta(beta), 
 												lambda(lambda), 
@@ -164,6 +159,12 @@ class Phi4
 
 		//  ---- Parameter Names ----
 
+		/** Allows to give the Hamiltonian parameter names
+		*
+		* @param i index of the parameter
+		*
+		* @return the parameter name (string)
+		*/
 		std::string paramname(int i)
 		{
 			std::string name;
