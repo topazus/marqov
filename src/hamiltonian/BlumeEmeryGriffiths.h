@@ -120,7 +120,10 @@ class BlumeEmeryGriffiths
 								multisite.push_back(&biquadratic_exchange_int);
 #ifdef __PGI
             	//The following is necessary to make PGI-19.10 happy
-        auto ptr = &BiquadraticExchangeInteraction<MARQOV::Space<StateVector, RegularHypercubic>, StateVector >::diff;
+        MARQOV::Space<StateVector, RegularHypercubic> dummy(10);
+        StateVector dummy1;
+        std::vector<int> temp; 
+        biquadratic_exchange_int.diff(1, dummy1, dummy1, temp, dummy);
 #endif
 							}
 
