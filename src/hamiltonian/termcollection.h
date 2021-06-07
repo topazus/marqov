@@ -26,7 +26,7 @@ class Standard_Interaction : public Interaction<StateVector>
 {
 	public:
 		Standard_Interaction(const CouplingType constant) : Interaction<StateVector>(constant) {}
-		StateVector get (const StateVector& phi) {return phi;}
+		StateVector get (const StateVector& phi) noexcept {return phi;}
 };
 
 
@@ -36,7 +36,7 @@ class Onsite_Quadratic : public OnSite<StateVector, CouplingType>
 {
 	public:
 		Onsite_Quadratic(CouplingType constant) : OnSite<StateVector, CouplingType>(constant) {}
-		CouplingType get (const StateVector& phi) {return dot(phi,phi);}
+		CouplingType get (const StateVector& phi) noexcept {return dot(phi,phi);}
 };
 
 #endif

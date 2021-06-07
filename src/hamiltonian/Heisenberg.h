@@ -47,7 +47,7 @@ class Heisenberg_interaction
 {
 	public:
 		Heisenberg_interaction(const double myJ) : J(-myJ) {}
-		StateVector get (const StateVector& phi) {return phi;};
+		StateVector get (const StateVector& phi) noexcept {return phi;};
         const double J;
 };
 
