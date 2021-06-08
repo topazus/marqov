@@ -63,28 +63,6 @@ int main()
 {
     
     
-	std::ifstream is;
-	is.open("/home/schrauth/marqov/marqov-dev/src/geometry/7-3-7.csv");
-    
-   	auto arr = readfile(is);
-
-//	for (int i=0; i<arr.size(); i++)
-//	{
-//		for (int j=0; j<arr[i].size(); j++)
-//		{
-//			cout << arr[i][j] << endl;
-//		}
-//		cout << endl;
-//	}
-    
-    
-    
-    
-    
-    
-    
-    
-
     std::cout<<"MARQOV Copyright (C) 2020-2021, The MARQOV Project contributors"<<std::endl;
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;
     std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;
@@ -126,23 +104,21 @@ int main()
 	typedef Phi4<double,double> Hamiltonian;
 	typedef Hyperbolic Lattice;
 
-    Hyperbolic lat(2,2);
-// 	typedef decltype(finalize_parameter(decltype(lat), std::declval<MARQOV::Config>(), hp)) ParameterTupleType;
-// 	typedef typename ParameterTupleType::value_type ParameterType;
-    typedef typename std::tuple<Hyperbolic&, MARQOV::Config, std::tuple<double,double,double,double> > ParameterType;
+    Hyperbolic lat(42,42);
+    typedef typename std::tuple<Lattice&, MARQOV::Config, std::tuple<double,double,double,double> > ParameterType;
 	typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
  	SchedulerType sched(1,1);
 
 	// prepare output
-	std::string outpath = outbasedir+"/7-3-7/";
+	std::string outpath = outbasedir+"/hyperbolic/";
 	makeDir(outpath);
 	
 	// Monte Carlo parameters
 	MARQOV::Config mp(outpath);
-	mp.setnmetro(50);
+	mp.setnmetro(10);
 	mp.setncluster(0);
-	mp.setwarmupsteps(200);
+	mp.setwarmupsteps(100);
 	mp.setgameloopsteps(1000);
 
 	// lattice parameters

@@ -86,6 +86,8 @@ void save_geometry_deluxe(Grid& grid, const std::string path)
 
 int import_geometry(const std::string path, std::vector<std::vector<double>>& grid, std::vector<std::vector<int>>& nbrs, int ncoords)
 {
+	int minusone = -1;
+
 	std::ifstream in(NULL);
 	in.open(path.c_str());
 	std::string row;
@@ -106,7 +108,7 @@ int import_geometry(const std::string path, std::vector<std::vector<double>>& gr
 		while(std::getline(ss, substr, '\t'))
 		{
 			if (counter < ncoords) g.push_back(std::stof(substr));
-			else n.push_back(std::stoi(substr));
+			else n.push_back(std::stoi(substr)+minusone);
 			counter++;
     	}
 		grid.push_back(g);

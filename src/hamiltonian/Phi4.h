@@ -100,7 +100,7 @@ class Phi4
 
 		double beta, lambda, mass;
 		const double J = -1;
-		static constexpr int SymD = 3;
+		static constexpr int SymD = 1;
 		const std::string name = "Phi4";
 
 
@@ -108,8 +108,8 @@ class Phi4
 
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
-		using MetroInitializer =  Phi4_Initializer_Radial<StateVector, RNG>; 
-		//using MetroInitializer =  Phi4_Initializer_Cartesian<StateVector, RNG>; 
+		//using MetroInitializer =  Phi4_Initializer_Radial<StateVector, RNG>; 
+		using MetroInitializer =  Phi4_Initializer_Cartesian<StateVector, RNG>; 
 
 
 

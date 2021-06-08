@@ -94,14 +94,14 @@ class Hyperbolic
 {
 
 	public:
-	int npoints = 11173;
+	int npoints;
 
 	std::vector<std::vector<int>> neighbours;
 	std::vector<std::vector<double>> grid;
 
 	Hyperbolic(int a, int b) 
 	{
-//		import_geometry(npoints, grid, neighbours, "/home/schrauth/marqov/marqov-dev/src/geometry/7-3-9.csv", 2);
+		npoints = import_geometry( "/home/schrauth/marqov/marqov-dev/src/geometry/7-3-9.csv", grid, neighbours, 2);
 	}
 		
 		std::vector<int> nbrs(const int a, const int i) const
