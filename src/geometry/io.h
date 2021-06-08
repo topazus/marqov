@@ -84,46 +84,12 @@ void save_geometry_deluxe(Grid& grid, const std::string path)
 }
 
 
-void import_geometry( const int N, std::vector<std::vector<double> >& grid, std::vector< std::vector<int> >& n, const std::string path, int dim )
+int import_geometry(const std::string path, std::vector<std::vector<double>>& grid, std::vector<std::vector<int>>& nbrs, int ncoords)
 {
-		grid.clear();
-		n.clear();
-		n.resize( N );
-		
-		std::ifstream is;
-		is.open( path.c_str() );
-		if (!is) std::cout << "\n#######\nError in import_geom: Failed to fetch grid!\n#######\n";
-		else
-		{
-				double val;
-				int lineLength;
-				int neighbour;	
-				int ct = 0;
-				double x,y;
-				while( is >> val )
-				{
-						lineLength = val;
-                        std::vector<double> xt(dim);
-                        for(int i = 0; i < dim; ++i)
-                            is >> xt[i];
-                        grid.push_back(xt);
-						for (int i=0; i<lineLength-2; i++)
-						{
-								is >> neighbour;
-								n[ct].push_back( neighbour );
-						}
-						ct++;
-						if (ct>=N) break;
-				}
-		}
-}
+	std::ifstream in(NULL);
+	in.open(path.c_str());
+	std::string row;
 
-
-#include <sstream>
-
-std::vector<std::vector<std::string>> readfile(std::istream &in) {
-    std::vector<std::vector<std::string>> table;
-    std::string row;
     while (!in.eof()) 
 	{
         std::getline(in, row);
@@ -133,12 +99,20 @@ std::vector<std::vector<std::string>> readfile(std::istream &in) {
         }
 		std::istringstream ss(row);
 		std::string substr;
+
+		int counter = 0;
+		std::vector<double> g;
+		std::vector<int> n;
 		while(std::getline(ss, substr, '\t'))
 		{
-			cout << substr << endl;
+			if (counter < ncoords) g.push_back(std::stof(substr));
+			else n.push_back(std::stoi(substr));
+			counter++;
     	}
+		grid.push_back(g);
+		nbrs.push_back(n);
 	}
-    return table;
+	return nbrs.size();
 }
 
 
