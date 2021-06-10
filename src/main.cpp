@@ -299,8 +299,8 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		// Typedefs
 		typedef Ising<int> Hamiltonian;
 		typedef ConstantCoordinationLattice<Poissonian> Lattice;
-        
-        typedef std::tuple<std::tuple<int, int>, MARQOV::Config, decltype(hp[0]) > ParameterType;
+
+                typedef std::tuple<std::tuple<int, int>, MARQOV::Config, decltype(hp[0]) > ParameterType;
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
 
@@ -326,12 +326,12 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			// form parameter triple with lattice parameters and replicate
 			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);
 			auto rparams = replicator(params, nreplicas[j]);
-// // // // // // // // /*
-// // // // // // // // 			// feed scheduler
-// // // // // // // // 			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
-// // // // // // // // 
-// // // // // // // // 			// run!
-// // // // // // // // 			sched.start();*/
+
+			// feed scheduler
+			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
+
+			// run!
+			sched.start();
 		}
 	}
 
