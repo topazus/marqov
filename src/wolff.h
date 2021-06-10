@@ -65,11 +65,10 @@ namespace MARQOV
         {
             // extract last sv in stack
             const int currentidx = cstack[q];
-            StateVector& currentsv = statespace[currentidx];
             q--;
             
             // get its neighbours
-			for (int a=0; a<ham.interactions.size(); a++)
+			for (decltype(ham.interactions.size()) a = 0; a < ham.interactions.size(); a++)
 			{
         		const double gcpl = ham.interactions[a]->J;
             	auto nbrs = grid.nbrs(a, currentidx);
