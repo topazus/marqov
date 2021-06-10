@@ -53,7 +53,7 @@ class AshkinTellerMag
 			double mag2 = 0.0;
 			double mag3 = 0.0;
 
-			for (int i=0; i<N; i++)
+			for (std::size_t i=0; i<N; i++)
 			{
 				mag1 += statespace[i][0];
 				mag2 += statespace[i][1];
