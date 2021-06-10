@@ -31,15 +31,26 @@
 class PointCloud
 {
 	protected:
-		std::vector<std::vector<double>> pccrds;
-	public:
-		int dim, npoints, len;
+		std::vector<std::vector<double>> pccrds; ///< this is where the actual coordinates are stored
 
+	public:
+		int dim; ///< dimensionality
+		int npoints; ///< number of points
+		int len; ///< linear length
+
+		/**
+		* Point cloud base class constructor
+		*/
 		PointCloud(){}
 		PointCloud(int npoints, int len, int dim) : dim(dim), npoints(npoints), len(len) {}
 
-
-
+		/**
+		* Getter function for the coordinates of a site
+		*
+		* @param i index of site
+		*
+		* @return std::vector<double> containing coordinates of site with index i
+		*/
 		const std::vector<double>& crds(const int i) const { return pccrds[i];}
 
 		double getx(const int i) const { return pccrds[i][0]; }
@@ -48,12 +59,19 @@ class PointCloud
 		std::size_t size() const {return npoints; }
 };
 
+
 /**
  * Random Poissonian point cloud
  */
 class Poissonian : public PointCloud
 {
 	public:
+		/** Constructor of the Poissonian point cloud
+		*
+		* @param npoints number of points
+		* @param len linear length of the hypercube containing the points
+		* @param dim dimensionality of the point cloud
+		*/
 		Poissonian(int npoints, int len, int dim) : PointCloud(npoints, len, dim)
 		{
             std::random_device rd;  //Will be used to obtain a seed for the random number engine
@@ -62,18 +80,15 @@ class Poissonian : public PointCloud
 			for (int i=0; i<npoints; i++)
 			{
 				std::vector<double> site;
-
-				for (int j=0; j<dim; j++)
-				{
-					site.push_back(dis(gen));
-				}
+				for (int j=0; j<dim; j++) {site.push_back(dis(gen));}
 				pccrds.push_back(site);
 			}
 		}
 };
 
+
 /**
- * regular square point cloud
+ * Regular square point cloud
  * FIXME: calculate coordinates on demand
  */
 class RegularSquare : public PointCloud

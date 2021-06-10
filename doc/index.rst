@@ -17,6 +17,9 @@ Table of Contents
    api/index
    overview/index
 
+.. doxygenfunction:: MARQOV::get_terms
+
+.. doxygenstruct:: MARQOV::has_nbrs
 
 Indices and tables
 ==================

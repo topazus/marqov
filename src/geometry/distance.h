@@ -21,7 +21,15 @@
 
 #include <cmath>
 
-// returns squared nD distances, respecting periodic boundaries in the unit hypercube.
+/**
+* Squared n-dim distance, respecting periodic boundaries in the unit hypercube
+*
+* @tparam Container the type of the sites/particles
+* @param a site a
+* @param b site b
+*
+* @return double (distance) 
+*/
 template <class Container>
 double distancePBSQ_nD(const Container& a, const Container& b)
 {

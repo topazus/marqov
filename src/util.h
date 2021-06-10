@@ -4,19 +4,28 @@
 #include <string>
 #include <vector>
 
+#include "registry.h"
 #include "geometry/regular_lattice.h"
 #include "geometry/grid.h"
 
-using namespace MARQOV;
 
-
+/** Helper to execute a series of simulations on regular hypercubic lattices
+*
+* @tparam Hamiltonian the type of the Hamiltonian
+* @tparam Params the type of the parameter space
+* @tparam Callable the type of the filter
+* @param reg the registry
+* @param outbasedir	the base directory of the simulation output
+* @param hp the Hamiltonian parameters
+* @param filter the filter
+*/
 template <class Hamiltonian, class Params, class Callable>
 void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& hp, Callable filter)
 {
 	
 	// Typedefs
 	typedef typename std::tuple<RegularHypercubic&, MARQOV::Config, Params> ParameterType;
-	typedef typename GetSchedulerType<Hamiltonian, RegularHypercubic, ParameterType>::MarqovScheduler SchedulerType;
+	typedef typename MARQOV::GetSchedulerType<Hamiltonian, RegularHypercubic, ParameterType>::MarqovScheduler SchedulerType;
 
 
 	// Parameters
@@ -56,8 +65,8 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		MARQOV::Config mp(outpath);
 		mp.setnmetro(5);
 		mp.setncluster(int(L/2));
-		mp.setwarmupsteps(200);
-		mp.setgameloopsteps(1000);
+		mp.setwarmupsteps(500);
+		mp.setgameloopsteps(3000);
 
 		makeDir(mp.outpath);
 		
@@ -68,6 +77,5 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 	}
 	sched.start();
 }
-
 
 #endif
