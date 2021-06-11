@@ -553,7 +553,7 @@ class Core : public RefType<Grid>
 			mrqvt.add_clock("measure");
 			mrqvt.add_clock("others");
 			mrqvt.run("other");
-
+dump.close();
 		}
 
 	/** Construct MARQOV and let MARQOV create the lattice.
@@ -593,7 +593,7 @@ class Core : public RefType<Grid>
 			mrqvt.add_clock("other");
 			//	mrqvt.status();
 			mrqvt.run("other");
-
+            dump.close();
 		}
 
 		/** Set up and/or reinitialize state space.

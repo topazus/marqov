@@ -32,6 +32,7 @@ SOFTWARE.
 #include <tuple>
 #include <H5Cpp.h>
 #include <H5File.h>
+#include <iostream>
 
 /*some predefined HDF5 helpers --------------------------------*/
 
@@ -221,6 +222,7 @@ public:
      */
     CacheContainer(H5::Group& hfile, const std::string& name, std::string desc = std::string(), std::size_t cachesize=4194304) : cachepos(0)
     {
+         myfilename = hfile.getFileName();
             cachemaxelems = cachesize/sizeof(T);
             constexpr int rank = H5Mapper<T>::rank;
             std::array<hsize_t, rank> maxdims, chunk_dims;
@@ -235,7 +237,14 @@ public:
             cparms.setChunk( rank, chunk_dims.data() );
             cparms.setDeflate(9);//Best (1-9) compression
             cparms.setFillValue(  H5Mapper<T>::H5Type(), &fv);
-            dataset = hfile.createDataSet(name, H5Mapper<T>::H5Type(), mspace1, cparms);
+            H5::DataSet dataset = hfile.createDataSet(name, H5Mapper<T>::H5Type(), mspace1, cparms);
+
+size_t len = H5Iget_name(dataset.getId(),NULL,0);
+    char buffer[len];
+    H5Iget_name(dataset.getId(),buffer,len+1);
+    mygroup = buffer;
+//std::cout<<myfilename<<" "<<mygroup<<std::endl;
+
             if(!desc.empty())
                 dataset.setComment(desc.c_str());
             dssize = 0;
@@ -285,13 +294,24 @@ private:
             start.fill(dssize);
 
             dssize += cachepos;
+            
+            
+            
+            auto flag = H5F_ACC_RDWR;
+            H5::H5File retval(myfilename, flag);
+            H5::DataSet dataset = retval.openDataSet(mygroup);
+            
+            
+            
             dataset.extend(&dssize);
             auto filespace = dataset.getSpace();
             count.fill(cachepos);
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data());
             dataset.write(cont.data(), H5Mapper<T>::H5Type(), mspace, filespace);
         }
-    H5::DataSet dataset; ///< The HDF5 dataset.
+    std::string myfilename;
+    std::string mygroup;
+//     H5::DataSet dataset; ///< The HDF5 dataset.
     hsize_t dssize; ///< the current dataset size.
     std::size_t cachemaxelems; ///< How many elements can the cache hold.
     std::size_t cachepos; ///< the current position of the cache.
