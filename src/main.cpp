@@ -56,7 +56,7 @@ using std::ofstream;
 using namespace MARQOV;
 
 
-
+#undef STATIC_BOUNDARY
 
 
 int main()
@@ -116,9 +116,9 @@ int main()
 	
 	// Monte Carlo parameters
 	MARQOV::Config mp(outpath);
-	mp.setnmetro(10);
+	mp.setnmetro(1);
 	mp.setncluster(0);
-	mp.setwarmupsteps(100);
+	mp.setwarmupsteps(0);
 	mp.setgameloopsteps(1000);
 
 	// lattice parameters

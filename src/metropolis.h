@@ -82,6 +82,17 @@ namespace MARQOV
 		typedef typename HasInteractions<Hamiltonian>::type HasInt;
 		typedef typename HasFlexTerms<Hamiltonian>::type HasFlex;
 		typedef typename HasOnsite<Hamiltonian>::type HasOns;
+
+
+#ifdef STATIC_BOUNDARY
+
+	auto coords = grid.crds(rsite);
+	auto neighs = grid.nbrs(0,rsite);
+
+	if (neighs.size() < 7) return 0;
+
+#endif
+
 		
 		// old state vector at index rsite
 		StateVector& svold = statespace[rsite];
@@ -101,7 +112,7 @@ namespace MARQOV
 
 		// collect energy differences
 		double dE = interactionenergydiff + onsiteenergydiff + flexenergydiff;
-		
+
 		int retval = 0;
 
 		// if new state is favorable, accept it

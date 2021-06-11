@@ -108,7 +108,6 @@ class Phi4
 
 		typedef std::array<SpinType, SymD> StateVector;
 		template <typename RNG>
-		//using MetroInitializer =  Phi4_Initializer_Radial<StateVector, RNG>; 
 		using MetroInitializer =  Phi4_Initializer_Cartesian<StateVector, RNG>; 
 
 
@@ -177,5 +176,28 @@ class Phi4
 			}
 			return name;
 		}
+
+		//  ----  Initializer  ----
+
+#ifdef STATIC_BOUNDARY
+
+		template <class StateSpace, class Lattice, class RNG>
+		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
+		{
+			for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
+			{
+				auto nnbrs = grid.nbrs(0,i).size();
+				if (nnbrs < 7) 
+				{
+					auto coords = grid.crds(i);
+					if (coords[0] > 0 && coords[1] > 0) statespace[i][0] = 2;
+					else if (coords[0] < -0.5 && coords[1] < 0) statespace[i][0] = 2;
+					else statespace[i][0] = -2;
+				}
+				else statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
+			}
+		}
+#endif
+
 };
 #endif
