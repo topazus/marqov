@@ -58,7 +58,9 @@ target_include_directories(${target} PUBLIC ${MYHDF5INCLUDES})
 target_link_libraries(${target} ${MYHDF5LIBS} Threads::Threads)
 set_target_properties(${target} PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 # target_compile_features(${target} PUBLIC cxx_return_type_deduction)
-
+if(DEBIASINTEGERS)
+    add_compile_definitions("DEBIASINTEGERS")
+endif()
 
 
 #add_definitions("-fopenmp")
