@@ -6,7 +6,7 @@
 #include "helpers/regular_lattice.h"
 
 /**
- * The Regular Hypercubic lattice class
+ * The Regular Hypercubic lattice class.
  * This class provides routines for encapsulating all neighbour
  * and coordinate relations for n-dimensional hypercubic lattices.
  */
@@ -17,7 +17,6 @@ class RegularHypercubic
 
 	public:
 		int len, dim, npoints;
-
 
 		RegularHypercubic(int len, int dim) : lattice(len, dim), len(len), dim(dim), npoints(pow(len, dim)) {}
 		RegularHypercubic(const RegularHypercubic&) = default;
