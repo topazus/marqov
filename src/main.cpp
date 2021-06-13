@@ -39,12 +39,12 @@ using std::ofstream;
 #include "marqovscheduler.h"
 #include "util.h"
 
-// Geometry
-#include "geometry/regular_lattice.h"
-#include "geometry/ssh_lattice.h"
-#include "geometry/grid.h"
-#include "geometry/neighbourclass.h"
-#include "geometry/io.h"
+
+// Lattices
+#include "lattice/regular_hypercubic.h"
+#include "lattice/constant_coordination.h"
+#include "lattice/regular_random_bond.h"
+#include "lattice/simple_bipartite.h"
 
 
 // Hamiltonians
