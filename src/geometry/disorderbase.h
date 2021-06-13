@@ -21,12 +21,12 @@
 
 #include <vector>
 #include <random>
-
 #include "points.h"
 #include "distance.h"
 
 /**
- * Disordered Grid Base Class
+ * Disordered Grid Base Class.
+ * provides default implementations for the most important interfaces of a disordered lattice
  */
 class DisorderType
 {
