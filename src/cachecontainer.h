@@ -221,7 +221,6 @@ public:
      */
     CacheContainer(H5::Group& hfile, const std::string& name, std::string desc = std::string(), std::size_t cachesize=4194304) : cachepos(0)
     {
-         myfilename = hfile.getFileName();
             cachemaxelems = cachesize/sizeof(T);
             constexpr int rank = H5Mapper<T>::rank;
             std::array<hsize_t, rank> maxdims, chunk_dims;
@@ -294,8 +293,6 @@ private:
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data());
             dataset.write(cont.data(), H5Mapper<T>::H5Type(), mspace, filespace);
         }
-    std::string myfilename;
-    std::string mygroup;
     H5::DataSet dataset; ///< The HDF5 dataset.
     hsize_t dssize; ///< the current dataset size.
     std::size_t cachemaxelems; ///< How many elements can the cache hold.
