@@ -686,6 +686,17 @@ class Core : public RefType<Grid>
             }
             return 0;
         }
+        
+        /** Test whether MARQOV would need to start from scratch.
+         * 
+         * @param mc A Config object
+         * @return true if we find an existing HDF5 file, else false.
+         */
+        static bool dumppresent(const Config& mc)
+        {
+            std::string filepath = mc.outpath + mc.outname + ".h5";
+            return std::ifstream(filepath).good() && H5::H5File::isHdf5(filepath);
+        }
 
         /** This function sets up the layout of the HDF5 Container.
          * 
@@ -700,7 +711,7 @@ class Core : public RefType<Grid>
         {
             std::string filepath = mc.outpath + mc.outname + ".h5";
             auto flag = H5F_ACC_TRUNC;
-            if (std::ifstream(filepath).good() && H5::H5File::isHdf5(filepath)) flag = H5F_ACC_RDWR;
+            if (dumppresent(mc)) flag = H5F_ACC_RDWR;
             H5::H5File retval(filepath, flag);
             if (flag == H5F_ACC_RDWR) // abuse flag
             {// We have to iterate through the root group and find the last step.
