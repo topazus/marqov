@@ -86,7 +86,7 @@ namespace MARQOV
     template <class Sim, class Parameters>
     class Scheduler
     {
-        typedef Parameters ParamType;
+        typedef Parameters MyParamType;
     private:
     public:
         /** Create a full simulation from a parameter.
@@ -103,7 +103,7 @@ namespace MARQOV
             bool needswarmup = !Sim::dumppresent(std::get<1>(t));
             auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
             oursims.push_back(simptr);
-            this->enqueuesim(*simptr, t, needswarmup);
+            this->enqueuesim(*simptr, needswarmup);
             
             auto dummy1 = [&, t]()
             {
@@ -113,7 +113,6 @@ namespace MARQOV
                 
             };
             
-            auto dummy2 = 
             
             std::vector<decltype(dummy1)> vec;
             vec.push_back(dummy1);
@@ -124,7 +123,7 @@ namespace MARQOV
          * @param sim A reference to the sim that already exists.
          * @param warmup a boolean to select whether we require warmup.
          */
-        void enqueuesim(Sim& sim, ParamType& p, bool warmup = true)
+        void enqueuesim(Sim& sim, bool warmup = true)
         {
             int idx = simvector.size();
             simvectormutex.lock();
@@ -223,7 +222,8 @@ namespace MARQOV
         {
            Simstate() : id(-1), npt(-100) {}
            Simstate(int i) : id(i), npt(0) {}
-            std::function<void(Simstate, int)> looper;
+           Simstate(int i, int np) : id(i), npt(np) {}
+//             std::function<void(Simstate, int)> looper;
             int id;
             int npt;
         };
