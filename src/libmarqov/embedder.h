@@ -18,7 +18,7 @@
 
 #ifndef EMBEDDER_H
 #define EMBEDDER_H
-#include "svmath.h"
+#include "util/svmath.h"
 
 namespace MARQOV 
 {

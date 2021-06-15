@@ -25,9 +25,9 @@
 #include <complex>
 #include <functional>
 #include <array>
-#include "../hamparts.h"
-#include "../observables.h"
-#include "termcollection.h"
+#include "util/hamparts.h"
+#include "util/observables.h"
+#include "util/termcollection.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------

@@ -20,8 +20,8 @@
 #define REPLICATE_H
 #include <vector>
 #include <tuple>
-#include "core.h"
-#include "helpers.h"
+#include "../core.h"
+//#include "helpers.h"
 
 
 /** A helper to replicate parameter sets (to be used for disordered systems).

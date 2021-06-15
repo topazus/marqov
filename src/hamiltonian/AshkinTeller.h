@@ -21,7 +21,7 @@
 #include <string>
 #include <functional>
 //#include "../hamparts.h" // not needed, see above
-#include "../metropolis.h"
+#include "../libmarqov/metropolis.h"
 
 
 

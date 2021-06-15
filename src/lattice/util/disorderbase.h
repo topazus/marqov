@@ -16,27 +16,40 @@
  * this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef TERMCOLLECTION_H
-#define TERMCOLLECTION_H
+#ifndef GRID_H
+#define GRID_H
 
-#include "../hamparts.h"
+#include <vector>
+#include <random>
+#include "points.h"
+#include "distance.h"
 
-template <class StateVector, typename CouplingType = double>
-class Standard_Interaction : public Interaction<StateVector>
+/**
+ * Disordered Grid Base Class.
+ * provides default implementations for the most important interfaces of a disordered lattice
+ */
+class DisorderType
 {
+	protected:
+		int npoints;
+		DisorderType(){}
+		DisorderType(int npoints) : npoints(npoints) {}
+
 	public:
-		Standard_Interaction(const CouplingType constant) : Interaction<StateVector>(constant) {}
-		StateVector get (const StateVector& phi) noexcept {return phi;}
+		std::vector<std::vector<int>> neighbours;
+
+		std::vector<int> nbrs(const int a, const int i)
+		{
+			return neighbours[i];
+		}
+
+		std::size_t size() const {return npoints;}
+
+		inline int identify(int i) {return 0;};
+		inline std::vector<int> termselector(int sublattice) const {return {-1};}
 };
 
 
 
-template <class StateVector, typename CouplingType = double>
-class Onsite_Quadratic : public OnSite<StateVector, CouplingType> 
-{
-	public:
-		Onsite_Quadratic(CouplingType constant) : OnSite<StateVector, CouplingType>(constant) {}
-		CouplingType get (const StateVector& phi) noexcept {return dot(phi,phi);}
-};
 
 #endif

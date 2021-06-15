@@ -22,8 +22,8 @@
 #include <string>
 #include <complex>
 #include <functional>
-#include "../hamparts.h"
-#include "../metropolis.h"
+#include "util/hamparts.h"
+#include "../libmarqov/metropolis.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------

@@ -23,10 +23,9 @@
 #include <vector>
 #include <random>
 
-// implement simple class for "site" which only carries the coordinate
-
 /**
  * Point cloud base class.
+ * Provides a way to store coordinates as well as interaces to access them.
  */
 class PointCloud
 {
@@ -85,6 +84,7 @@ class Poissonian : public PointCloud
 			}
 		}
 };
+
 
 
 /**

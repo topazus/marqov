@@ -30,21 +30,14 @@ using std::endl;
 using std::flush;
 using std::ofstream;
 
-#include "timetracker.h"
-#include "helpers.h"
-#include "registry.h"
-#include "systemtools.h"
-#include "replicate.h"
-#include "filters.h"
-#include "marqovscheduler.h"
-#include "util.h"
+// MARQOV
+#include "libmarqov/libmarqov.h"
 
-// Geometry
-#include "geometry/regular_lattice.h"
-#include "geometry/ssh_lattice.h"
-#include "geometry/grid.h"
-#include "geometry/neighbourclass.h"
-#include "geometry/io.h"
+// Lattices
+#include "lattice/regular_hypercubic.h"
+#include "lattice/constant_coordination.h"
+#include "lattice/regular_random_bond.h"
+#include "lattice/simple_bipartite.h"
 
 
 // Hamiltonians
@@ -63,6 +56,13 @@ using std::ofstream;
 
 using namespace MARQOV;
 
+
+
+bool startswith(const std::string longword, const std::string shortword)
+{
+	if (longword.rfind(shortword, 0) == 0) return true;
+	else return false; 
+}
 
 
 std::string selectsim_startup(RegistryDB& registry)
