@@ -105,17 +105,36 @@ namespace MARQOV
             oursims.push_back(simptr);
             this->enqueuesim(*simptr, needswarmup);
             
-            auto dummy1 = [&, t]()
+            std::function<void(Simstate, int)> dummy1 = [&, t](Simstate, int)
             {
                 auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
                 simptr->init();
                 simptr->wrmploop();
-                
+                delete simptr;
             };
-            
-            
-            std::vector<decltype(dummy1)> vec;
-            vec.push_back(dummy1);
+            std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
+            {
+                auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
+                // We loop until the next PT step
+                for(; mywork.npt < npt; ++mywork.npt)
+                {
+                    //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
+                    simvector[mywork.id]->gameloop();
+                }
+                if (mywork.npt < maxpt) // determine whether this itm needs more work
+                {
+                    //                 std::cout<<"putting item again into workloop"<<std::endl;
+                    workqueue.push_back(mywork);
+                }
+                else
+                {
+                    //                 std::cout<<"no more work required on "<<mywork.id<<std::endl;
+                    masterwork.notify_all();//trigger those waiting for signals from the taskqueue. since we don't push_back anything they would not be notified.
+                }
+                delete simptr;
+            };
+
+            gamekernels.push_back(gamekernel);
         }
         std::vector<Sim*> oursims; ///< Collects the sims that we have created and for which we feel repsonsible.
         /** This registers an already allocated simulation with us.
@@ -223,7 +242,7 @@ namespace MARQOV
            Simstate() : id(-1), npt(-100) {}
            Simstate(int i) : id(i), npt(0) {}
            Simstate(int i, int np) : id(i), npt(np) {}
-//             std::function<void(Simstate, int)> looper;
+            std::function<void(Simstate, int)> looper;
             int id;
             int npt;
         };
@@ -341,6 +360,7 @@ namespace MARQOV
         std::mutex simvectormutex; ///< A mutex to protect accesses to the simvector which could be invalidated by the use of push_back
         std::vector<Sim*> simvector; ///< An array for the full state of the simulations
         ThreadPool::Queue taskqueue; ///< this is the queue where threads pull their work from
+        std::vector<std::function<void(Simstate, int)> > gamekernels; ///< prefabricated workitems
         
         //FIXME fill those functions for proper PT
         void calcprob() {}
@@ -351,7 +371,7 @@ namespace MARQOV
      * 
      * @tparam Hamiltonian the type of the Hamiltonian.
      * @tparam Lattice The type of the lattice
-     * @tparam Parameters The type f the parameters. We instantiate Hamiltonian
+     * @tparam Parameters The type of the parameters. We instantiate Hamiltonian
      *                    and probably lattice in Marqov, hence the params.
      */
     template <class Hamiltonian, class Lattice, class Parameters>
