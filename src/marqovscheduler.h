@@ -83,9 +83,10 @@ namespace MARQOV
      * and the distribution across nodes/cores.
      * @tparam Sim a fully specified Marqov type
      */
-    template <class Sim>
+    template <class Sim, class Parameters>
     class Scheduler
     {
+        typedef Parameters ParamType;
     private:
     public:
         /** Create a full simulation from a parameter.
@@ -99,22 +100,37 @@ namespace MARQOV
         void createSimfromParameter(ParamType& p, Callable filter)
         {
             auto t = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
-
+            bool needswarmup = !Sim::dumppresent(std::get<1>(t));
             auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
             oursims.push_back(simptr);
-            this->enqueuesim(*simptr);
+            this->enqueuesim(*simptr, t, needswarmup);
+            
+            auto dummy1 = [&, t]()
+            {
+                auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
+                simptr->init();
+                simptr->wrmploop();
+                
+            };
+            
+            auto dummy2 = 
+            
+            std::vector<decltype(dummy1)> vec;
+            vec.push_back(dummy1);
         }
         std::vector<Sim*> oursims; ///< Collects the sims that we have created and for which we feel repsonsible.
         /** This registers an already allocated simulation with us.
          * 
          * @param sim A reference to the sim that already exists.
+         * @param warmup a boolean to select whether we require warmup.
          */
-        void enqueuesim(Sim& sim)
+        void enqueuesim(Sim& sim, ParamType& p, bool warmup = true)
         {
             int idx = simvector.size();
             simvectormutex.lock();
             simvector.push_back(&sim);//NOTE: We only take care about sims that go through enqueuesim.
             simvectormutex.unlock();
+            if (warmup)
             taskqueue.enqueue([&, idx]{
                 //work here
                 simvectormutex.lock();
@@ -125,6 +141,9 @@ namespace MARQOV
                 //enqueue the next full work item into the workqueue immediately
                 workqueue.push_back(Simstate(idx));
             });//Put some warmup into the taskqueue
+            else
+                //enqueue a full work item into the workqueue immediately
+                workqueue.push_back(Simstate(idx));
         }
         /** Start the simulations! GoGoGo...!
          */
@@ -150,7 +169,7 @@ namespace MARQOV
                 });
                 if(busy) //there really is sth. to do
                 {
-                    //                  std::cout<<"dealing with work"<<std::endl;
+                    // std::cout<<"dealing with work"<<std::endl;
                     if(ptplan[itm.npt].first == itm.id || ptplan[itm.npt].second == itm.id) // check if this sim is selected for PT in this time step. This should usually be the case since we do as many steps as necessary
                     {
                         ptstep(itm);
@@ -202,9 +221,9 @@ namespace MARQOV
          */
         struct Simstate
         {
-            Simstate() : id(-1), npt(-100) {}
-            Simstate(int i) : id(i), npt(0) {}
-            Simstate(int i, int np) : id(i), npt(np) {}
+           Simstate() : id(-1), npt(-100) {}
+           Simstate(int i) : id(i), npt(0) {}
+            std::function<void(Simstate, int)> looper;
             int id;
             int npt;
         };
@@ -272,12 +291,12 @@ namespace MARQOV
          */
         void movesimtotaskqueue(Simstate itm)
         {
-            auto gameloop = [&](Simstate mywork, int npt)//This defines the actual workitem that a task executes
+            auto gameloop = [&](Simstate mywork, const int npt)//This defines the actual workitem that a task executes
             {
                 // We loop until the next PT step
                 for(; mywork.npt < npt; ++mywork.npt)
                 {
-                    //                 std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
+                    //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
                     simvector[mywork.id]->gameloop();
                 }
                 if (mywork.npt < maxpt) // determine whether this itm needs more work
@@ -340,7 +359,7 @@ namespace MARQOV
     {
         typedef std::mutex& mtxref;
         typedef decltype(makeCore<Lattice, Hamiltonian>(std::declval<Parameters>(), std::declval<mtxref>())) MarqovType;
-        typedef Scheduler<MarqovType> MarqovScheduler; ///< Holds the type of a scheduler for these simulations.
+        typedef Scheduler<MarqovType, Parameters> MarqovScheduler; ///< Holds the type of a scheduler for these simulations.
     };
 };
 #endif
