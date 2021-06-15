@@ -23,16 +23,16 @@
 #include <string>
 #include <functional>
 #include <vector>
-#include "../hamparts.h"
+#include "util/hamparts.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-#include "../observables.h"
+#include "util/observables.h"
 
 // ------------------------------ INITIALIZER ---------------------------
 
-#include "initializers.h"
+#include "util/initializers.h"
 
 
 // ------------------------------ HAMILTONIAN ---------------------------

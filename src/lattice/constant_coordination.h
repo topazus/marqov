@@ -1,9 +1,9 @@
 #ifndef CC_LATTICE_H
 #define CC_LATTICE_H
 
-#include "../geometry/points.h"	
-#include "../geometry/distance.h"	
-#include "helpers/constantcoordination2D.h"
+#include "util/points.h"	
+#include "util/distance.h"	
+#include "util/constantcoordination2D.h"
 
 /**
  * Constant Coordination Lattice

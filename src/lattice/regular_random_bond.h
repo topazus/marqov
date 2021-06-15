@@ -1,8 +1,8 @@
 #ifndef REGULAR_RANDOM_BOND_H
 #define REGULAR_RANDOM_BOND_H
 
-#include "../geometry/disorderbase.h"
-#include "helpers/prob_density.h"
+#include "util/disorderbase.h"
+#include "util/prob_density.h"
 
 
 

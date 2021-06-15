@@ -30,15 +30,8 @@ using std::endl;
 using std::flush;
 using std::ofstream;
 
-#include "timetracker.h"
-#include "helpers.h"
-#include "registry.h"
-#include "systemtools.h"
-#include "replicate.h"
-#include "filters.h"
-#include "marqovscheduler.h"
-#include "util.h"
-
+// MARQOV
+#include "libmarqov/libmarqov.h"
 
 // Lattices
 #include "lattice/regular_hypercubic.h"
@@ -63,6 +56,13 @@ using std::ofstream;
 
 using namespace MARQOV;
 
+
+
+bool startswith(const std::string longword, const std::string shortword)
+{
+	if (longword.rfind(shortword, 0) == 0) return true;
+	else return false; 
+}
 
 
 std::string selectsim_startup(RegistryDB& registry)

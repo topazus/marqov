@@ -1,9 +1,9 @@
 #ifndef REGULAR_HYPERCUBIC_H
 #define REGULAR_HYPERCUBIC_H
 
-#include "../geometry/points.h" 
-#include "../geometry/distance.h"
-#include "helpers/regular_lattice.h"
+#include "util/points.h" 
+#include "util/distance.h"
+#include "util/regular_lattice.h"
 
 /**
  * The Regular Hypercubic lattice class.

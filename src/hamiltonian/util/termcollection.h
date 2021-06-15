@@ -19,7 +19,7 @@
 #ifndef TERMCOLLECTION_H
 #define TERMCOLLECTION_H
 
-#include "../hamparts.h"
+#include "hamparts.h"
 
 template <class StateVector, typename CouplingType = double>
 class Standard_Interaction : public Interaction<StateVector>

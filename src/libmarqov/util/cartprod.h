@@ -1,11 +1,9 @@
-#ifndef HELPERS_H
-#define HELPERS_H
+#ifndef CARTPROD_H
+#define CARTPROD_H
 #include <algorithm>
 #include <vector>
-#include <cmath>
 #include <type_traits>
 #include <tuple>
-#include "registry.h"
 
 /**
  * A helper to create the cartesian product of a set of containers.
@@ -84,62 +82,5 @@ auto cart_prod(Ts ... vals)
     return cartprodhelper<Ts...>::call(vals...);
 }
 
-void write_logfile(RegistryDB& reg, std::vector<double> loopvar)
-{
-	std::string logdir  = reg.Get<std::string>("mc.ini", "IO", "logdir" );
-	std::string logfile = reg.Get<std::string>("mc.ini", "IO", "logfile" );
-	std::ofstream os(logdir+"/"+logfile);
-	os << std::setprecision(7);
-	for (std::size_t i=0; i<loopvar.size(); i++) os << loopvar[i] << endl;
-	os.close();
-}
-
-bool startswith(const std::string longword, const std::string shortword)
-{
-	if (longword.rfind(shortword, 0) == 0) return true;
-	else return false;
-}
-
-
-
-std::vector<double> create_range(double rangestart, double rangefinal, int steps, std::string type="linear", int endpoint=0)
-{
-	std::vector<double> range(steps);
-
-	if (type == "linear")
-	{
-		double rangestep = (rangefinal-rangestart)/double(steps-endpoint);
-
-		for (int i=0; i<steps; i++) range[i] = rangestart + i*rangestep;
-	}
-	else
-	{
-		// implement me
-		std::cout << "not implemented!" << std::endl;
-	}
-
-	return range;
-}
-
-
-
-// Transforming a one-dimensional, “flattened” index into the N-dimensional vector index of an N-dimensional array
-
-// from: stackoverflow.com/questions/18932339/transforming-a-one-dimensional-flattened-index-into-the-n-dimensional-vector
-// explicit formulas for 2D and 3D: stackoverflow.com/questions/18932339/transforming-a-one-dimensional-flattened-index-into-the-n-dimensional-vector
-
-std::vector<int> IndexOf(int k, int nDim, int nBin)
-{
-	std::vector<int> indices;
-
-	for (int i=0; i<nDim; i++)
-	{
-		double index = std::fmod( double(k)/std::pow(nBin,i), nBin);
-		indices.push_back(int(index));
-		k -= index * std::pow(nBin,i);
-	}
-
-	return indices;
-}
 
 #endif

@@ -53,7 +53,7 @@ INCLUDE(CheckFunctionExists)
 SET(MARQOVTARGETS MARQOV mpiMARQOV)
 
 foreach(target ${MARQOVTARGETS})
-add_executable (${target} registry.cpp marqov.cpp main.cpp)
+add_executable (${target} libmarqov/util/registry.cpp libmarqov/marqov.cpp main.cpp)
 target_include_directories(${target} PUBLIC ${MYHDF5INCLUDES})
 target_link_libraries(${target} ${MYHDF5LIBS} Threads::Threads)
 set_target_properties(${target} PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
@@ -92,5 +92,5 @@ CHECK_FUNCTION_EXISTS(alphasort HAVE_ALPHASORT)
 
 CHECK_FUNCTION_EXISTS(readdir_r HAVE_READDIR_R)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmarqov/util/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/libmarqov/util/config.h)
 
