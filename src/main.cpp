@@ -300,7 +300,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		typedef Ising<int> Hamiltonian;
 		typedef ConstantCoordinationLattice<Poissonian> Lattice;
 
-                typedef std::tuple<std::tuple<int, int>, MARQOV::Config, decltype(hp[0]) > ParameterType;
+        typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
 
