@@ -4,8 +4,8 @@
 #include <cmath>
 #include <string>
 #include <functional>
-#include "../vectorhelpers.h"
-#include "../hamparts.h"
+#include "util/randomdir.h"
+#include "util/hamparts.h"
 
 // ------------------------------ OBSERVABLES ---------------------------
 
@@ -123,7 +123,7 @@ class XXZAntiferroStaggeredMagXY
 
 // ------------------------------ INITIALIZER ---------------------------
 
-#include "initializers.h"
+#include "util/initializers.h"
 
 
 

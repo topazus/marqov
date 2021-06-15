@@ -22,18 +22,18 @@
 #include <tuple>
 #include <string>
 #include <functional>
-#include "../hamparts.h"
-#include "termcollection.h"
+#include "util/hamparts.h"
+#include "util/termcollection.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-#include "../observables.h"
+#include "util/observables.h"
 
 
 // ------------------------------ INITIALIZER ---------------------------
 
-#include "initializers.h"
+#include "util/initializers.h"
 
 
 // ------------------------------ HAMILTONIAN ---------------------------

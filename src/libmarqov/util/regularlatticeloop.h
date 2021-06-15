@@ -5,8 +5,7 @@
 #include <vector>
 
 #include "registry.h"
-#include "geometry/regular_lattice.h"
-#include "geometry/grid.h"
+#include "../../lattice/regular_hypercubic.h"
 
 
 /** Helper to execute a series of simulations on regular hypercubic lattices

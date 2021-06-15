@@ -20,6 +20,7 @@
 #define REGULAR_LATTICE_H
 
 #include <vector>
+#include "stuff.h"
 
 class RegularLattice
 {

@@ -34,10 +34,10 @@
 #include <mutex>
 #include <thread>
 #include "cachecontainer.h"
-#include "svmath.h"
+#include "util/svmath.h"
 #include "rngcache.h"
 #include "timetracker.h"
-#include "vectorhelpers.h"
+#include "../hamiltonian/util/randomdir.h"
 
 /** The MARQOV namespace.
  *
