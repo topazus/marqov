@@ -119,7 +119,7 @@ namespace MARQOV
                 for(; mywork.npt < npt; ++mywork.npt)
                 {
                     //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
-                    simvector[mywork.id]->gameloop();
+                    simptr->gameloop();
                 }
                 if (mywork.npt < maxpt) // determine whether this itm needs more work
                 {
