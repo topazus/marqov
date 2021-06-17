@@ -101,19 +101,19 @@ namespace MARQOV
         {
             auto t = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
             bool needswarmup = !Sim::dumppresent(std::get<1>(t));
-            auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
-            oursims.push_back(simptr);
-            this->enqueuesim(*simptr, needswarmup);
+// // //             auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
+// // //             oursims.push_back(simptr);
+// // //             this->enqueuesim(*simptr, needswarmup);
             
-            std::function<void(Simstate, int)> dummy1 = [&, t](Simstate, int)
-            {
-                auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
-                simptr->init();
-                simptr->wrmploop();
-                delete simptr;
-            };
+            
+            
+            
+            
+            
+            int idx = gamekernels.size();
             std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
             {
+                std::cout<<"Beginning gamekernel"<<std::endl;
                 auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
                 // We loop until the next PT step
                 for(; mywork.npt < npt; ++mywork.npt)
@@ -132,9 +132,30 @@ namespace MARQOV
                     masterwork.notify_all();//trigger those waiting for signals from the taskqueue. since we don't push_back anything they would not be notified.
                 }
                 delete simptr;
+                std::cout<<"finished gamekernel closing file"<<std::endl;
             };
-
+            gamekernelmutex.lock();
             gamekernels.push_back(gamekernel);
+            gamekernelmutex.unlock();
+            if(needswarmup)
+            {
+            std::function<void()> warmupkernel = [&, t, idx]
+            {
+                std::cout<<"Beginning warmup"<<std::endl;
+                auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
+                simptr->init();
+                simptr->wrmploop();
+                //enqueue the next full work item into the workqueue immediately
+                workqueue.push_back(Simstate(idx));
+                delete simptr;
+                std::cout<<"finished warmup closing file"<<std::endl;
+            };
+            taskqueue.enqueue(warmupkernel);
+            }
+            else
+            {
+                workqueue.push_back(Simstate(idx));
+            }
         }
         std::vector<Sim*> oursims; ///< Collects the sims that we have created and for which we feel repsonsible.
         /** This registers an already allocated simulation with us.
@@ -242,7 +263,7 @@ namespace MARQOV
            Simstate() : id(-1), npt(-100) {}
            Simstate(int i) : id(i), npt(0) {}
            Simstate(int i, int np) : id(i), npt(np) {}
-            std::function<void(Simstate, int)> looper;
+//             std::function<void(Simstate, int)> looper;
             int id;
             int npt;
         };
@@ -310,29 +331,29 @@ namespace MARQOV
          */
         void movesimtotaskqueue(Simstate itm)
         {
-            auto gameloop = [&](Simstate mywork, const int npt)//This defines the actual workitem that a task executes
-            {
-                // We loop until the next PT step
-                for(; mywork.npt < npt; ++mywork.npt)
-                {
-                    //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
-                    simvector[mywork.id]->gameloop();
-                }
-                if (mywork.npt < maxpt) // determine whether this itm needs more work
-                {
-                    //                 std::cout<<"putting item again into workloop"<<std::endl;
-                    workqueue.push_back(mywork);
-                }
-                else
-                {
-                    //                 std::cout<<"no more work required on "<<mywork.id<<std::endl;
-                    masterwork.notify_all();//trigger those waiting for signals from the taskqueue. since we don't push_back anything they would not be notified.
-                }
-            };
+// //             auto gameloop = [&](Simstate mywork, const int npt)//This defines the actual workitem that a task executes
+// //             {
+// //                 // We loop until the next PT step
+// //                 for(; mywork.npt < npt; ++mywork.npt)
+// //                 {
+// //                     //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
+// //                     simvector[mywork.id]->gameloop();
+// //                 }
+// //                 if (mywork.npt < maxpt) // determine whether this itm needs more work
+// //                 {
+// //                     //                 std::cout<<"putting item again into workloop"<<std::endl;
+// //                     workqueue.push_back(mywork);
+// //                 }
+// //                 else
+// //                 {
+// //                     //                 std::cout<<"no more work required on "<<mywork.id<<std::endl;
+// //                     masterwork.notify_all();//trigger those waiting for signals from the taskqueue. since we don't push_back anything they would not be notified.
+// //                 }
+// //             };
             int newnpt = findnextnpt(itm.id, itm.npt);
             //         std::cout<<"Putting a new item "<<itm.id<<" with "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue"<< std::endl;
             taskqueue.enqueue(
-                [itm, newnpt, gameloop]{gameloop(itm, newnpt);}
+                [&,itm, newnpt]{gamekernels[itm.id](itm, newnpt);}
             );
         }
         /** Determine the next PT step.
@@ -358,6 +379,7 @@ namespace MARQOV
         ThreadPool::Semaphore masterwork; ///< The semaphore that triggers the master process
         ThreadPool::ThreadSafeQueue<Simstate> workqueue; ///< this is the queue where threads put their finished work and the master does PT
         std::mutex simvectormutex; ///< A mutex to protect accesses to the simvector which could be invalidated by the use of push_back
+        std::mutex gamekernelmutex; 
         std::vector<Sim*> simvector; ///< An array for the full state of the simulations
         ThreadPool::Queue taskqueue; ///< this is the queue where threads pull their work from
         std::vector<std::function<void(Simstate, int)> > gamekernels; ///< prefabricated workitems
