@@ -237,34 +237,34 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
 		SchedulerType sched(1, nthreads);
-// // /*
-// // 		// Lattice size loop
-// // 		for (std::size_t j=0; j<nL.size(); j++)
-// // 		{
-// // 			// prepare output
-// // 			int L = nL[j];
-// // 			cout << endl << "L = " << L << endl << endl;
-// // 			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-// // 			makeDir(outpath);
-// // 	
-// // 			// Monte Carlo parameters
-// // 			MARQOV::Config mp(outpath);
-// // 			mp.setnmetro(50);
-// // 			mp.setncluster(0);
-// // 			mp.setwarmupsteps(200);
-// // 			mp.setgameloopsteps(1000);
-// // 
-// // 			// lattice parameters
-// // 			auto lp = std::make_tuple(L, dim);
-// // 
-// // 			// form parameter triple and replicate
-// // 			auto params  = finalize_parameter(lp, mp, hp);
-// //             auto rparams = replicator(params, nreplicas[j]);
-// // 
-// // 			// schedule simulations
+
+		// Lattice size loop
+		for (std::size_t j=0; j<nL.size(); j++)
+		{
+			// prepare output
+			int L = nL[j];
+			cout << endl << "L = " << L << endl << endl;
+			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+			makeDir(outpath);
+	
+			// Monte Carlo parameters
+			MARQOV::Config mp(outpath);
+			mp.setnmetro(50);
+			mp.setncluster(0);
+			mp.setwarmupsteps(200);
+			mp.setgameloopsteps(1000);
+
+			// lattice parameters
+			auto lp = std::make_tuple(L, dim);
+
+			// form parameter triple and replicate
+			auto params  = finalize_parameter(lp, mp, hp);
+            auto rparams = replicator(params, nreplicas[j]);
+
+			// schedule simulations
 // //  			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
-// // 		}
-// //  		sched.start(); // run!*/
+		}
+ 		sched.start(); // run!
 	}
 
 	else if (ham == "IsingCC")
