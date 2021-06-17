@@ -154,35 +154,60 @@ namespace MARQOV
             }
             else
             {
+                std::cout<<"[MARQOV::Scheduler] Previous step found! Restarting!"<<std::endl;
                 workqueue.push_back(Simstate(idx));
             }
         }
 //         std::vector<Sim*> oursims; ///< Collects the sims that we have created and for which we feel repsonsible.
         /** This registers an already allocated simulation with us.
          * 
+         * DEPRECATED: Untested code path as of now.
+         * 
          * @param sim A reference to the sim that already exists.
          * @param warmup a boolean to select whether we require warmup.
          */
         void enqueuesim(Sim& sim, bool warmup = true)
         {
-            int idx = simvector.size();
-            simvectormutex.lock();
-            simvector.push_back(&sim);//NOTE: We only take care about sims that go through enqueuesim.
-            simvectormutex.unlock();
+            std::function<void(Simstate, int)> gamekernel = [&](Simstate mywork, int npt)
+            {
+                // We loop until the next PT step
+                for(; mywork.npt < npt; ++mywork.npt)
+                {
+                    //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
+                    sim.gameloop();
+                }
+                if (mywork.npt < maxpt) // determine whether this itm needs more work
+                {
+                    //                 std::cout<<"putting item again into workloop"<<std::endl;
+                    workqueue.push_back(mywork);
+                }
+                else
+                {
+                    //                 std::cout<<"no more work required on "<<mywork.id<<std::endl;
+                    masterwork.notify_all();//trigger those waiting for signals from the taskqueue. since we don't push_back anything they would not be notified.
+                }
+            };
+            
+            int idx = gamekernels.size();
+            gamekernelmutex.lock();
+            gamekernels.push_back(gamekernel);
+            gamekernelmutex.unlock();
+
             if (warmup)
-            taskqueue.enqueue([&, idx]{
-                //work here
-                simvectormutex.lock();
-                Sim* mysim = simvector[idx];
-                simvectormutex.unlock();
-                mysim->init();
-                mysim->wrmploop();
-                //enqueue the next full work item into the workqueue immediately
-                workqueue.push_back(Simstate(idx));
-            });//Put some warmup into the taskqueue
+            {
+                std::function<void()> warmupkernel = [&, idx]
+                {
+                    sim.init();
+                    sim.wrmploop();
+                    //enqueue the next full work item into the workqueue immediately
+                    workqueue.push_back(Simstate(idx));
+                };
+                taskqueue.enqueue(warmupkernel);
+            }
             else
-                //enqueue a full work item into the workqueue immediately
+            {
                 workqueue.push_back(Simstate(idx));
+            }
         }
         /** Start the simulations! GoGoGo...!
          */
