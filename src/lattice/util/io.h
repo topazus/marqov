@@ -133,6 +133,67 @@ int import_geometry(const std::string path, std::vector<std::vector<double>>& gr
 	return nbrs.size();
 }
 
+int import_geometry(const std::string path, std::vector<std::vector<double>>& grid, std::vector<std::vector<int>>& nbrs, int ncoords)
+{
+	int minusone = -1;
+
+	std::ifstream in(NULL);
+	in.open(path.c_str());
+	std::string row;
+
+    while (!in.eof()) 
+	{
+        std::getline(in, row);
+        if (in.bad() || in.fail()) 
+		{
+            break;
+        }
+		std::istringstream ss(row);
+		std::string substr;
+
+		int counter = 0;
+		std::vector<double> g;
+		std::vector<int> n;
+		while(std::getline(ss, substr, '\t'))
+		{
+			if (counter < ncoords) g.push_back(std::stof(substr));
+			else n.push_back(std::stoi(substr)+minusone);
+			counter++;
+    	}
+		grid.push_back(g);
+		nbrs.push_back(n);
+	}
+	return nbrs.size();
+}
+
+
+int import_geometry(const std::string path, std::vector<std::vector<int>>& nbrs)
+{
+	int minusone = 0;
+
+	std::ifstream in(NULL);
+	in.open(path.c_str());
+	std::string row;
+
+    while (!in.eof()) 
+	{
+        std::getline(in, row);
+        if (in.bad() || in.fail()) 
+		{
+            break;
+        }
+		std::istringstream ss(row);
+		std::string substr;
+
+		std::vector<int> n;
+		while(std::getline(ss, substr, '\t'))
+		{
+			n.push_back(std::stoi(substr)+minusone);
+    	}
+		nbrs.push_back(n);
+	}
+	return nbrs.size();
+}
 
 
 
