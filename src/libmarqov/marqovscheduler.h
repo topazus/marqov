@@ -141,7 +141,7 @@ namespace MARQOV
             {
             std::function<void()> warmupkernel = [&, t, idx]
             {
-                std::cout<<"Beginning warmup"<<std::endl;
+                std::cout<<"Beginning warmup of "<<idx<<std::endl;
                 auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
                 simptr->init();
                 simptr->wrmploop();
@@ -157,7 +157,7 @@ namespace MARQOV
                 workqueue.push_back(Simstate(idx));
             }
         }
-        std::vector<Sim*> oursims; ///< Collects the sims that we have created and for which we feel repsonsible.
+//         std::vector<Sim*> oursims; ///< Collects the sims that we have created and for which we feel repsonsible.
         /** This registers an already allocated simulation with us.
          * 
          * @param sim A reference to the sim that already exists.
@@ -250,8 +250,8 @@ namespace MARQOV
                 });
             }
             masterstop = true;
-            for (auto sim : oursims)
-                delete sim;
+//             for (auto sim : oursims)
+//                 delete sim;
         }
     private:
         /**
@@ -379,10 +379,10 @@ namespace MARQOV
         ThreadPool::Semaphore masterwork; ///< The semaphore that triggers the master process
         ThreadPool::ThreadSafeQueue<Simstate> workqueue; ///< this is the queue where threads put their finished work and the master does PT
         std::mutex simvectormutex; ///< A mutex to protect accesses to the simvector which could be invalidated by the use of push_back
-        std::mutex gamekernelmutex; 
+        std::mutex gamekernelmutex; ///< A mutex to protect accesses to the gamekernels which could be invalidated by the use of push_back
         std::vector<Sim*> simvector; ///< An array for the full state of the simulations
         ThreadPool::Queue taskqueue; ///< this is the queue where threads pull their work from
-        std::vector<std::function<void(Simstate, int)> > gamekernels; ///< prefabricated workitems
+        std::vector<std::function<void(Simstate, int)> > gamekernels; ///< prefabricated workitems that get executed to move a simulation forward.
         
         //FIXME fill those functions for proper PT
         void calcprob() {}
