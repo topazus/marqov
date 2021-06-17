@@ -36,47 +36,6 @@
 
 namespace MARQOV
 {
-    template <class Cont, class Tuple1, class Tuple2, std::size_t... I>
-    constexpr auto emplace_from_tuple_impl(Cont&& cont, Tuple1&& t1, MARQOV::Config&& mc, std::mutex& mtx, Tuple2&& t2, std::index_sequence<I...> )
-    {
-        return cont.emplace_back(
-            std::forward<Tuple1>(t1), 
-                                 std::forward<MARQOV::Config>(mc), mtx,
-                                 std::get<I>(std::forward<Tuple2>(t2))...);
-    }
-    
-    //c++17 make_from_tuple from cppreference adapted for emplace
-    template <class Cont, class Tuple1, class Tuple2>
-    constexpr auto emplace_from_tuple(Cont&& cont, Tuple1&& t1, MARQOV::Config&& mc, std::mutex& mtx, Tuple2&& t2 )
-    {
-        return emplace_from_tuple_impl(
-            cont, 
-            std::forward<Tuple1>(t1), 
-                                       std::forward<MARQOV::Config>(mc), mtx,
-                                       std::forward<Tuple2>(t2),
-                                       std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple2>>::value>{});
-    }
-    
-    template <class T, class Tuple1, class Tuple2, std::size_t... I>
-    constexpr T* ptr_from_tuple_impl(Tuple1& t1, MARQOV::Config&& mc, std::mutex& mtx, Tuple2&& t2, std::index_sequence<I...> )
-    {
-        return new T(std::forward<Tuple1>(t1),
-                     std::forward<MARQOV::Config>(mc), 
-                     mtx,
-                     std::get<I>(std::forward<Tuple2>(t2))...
-        );
-    }
-    
-    template <class T, class L, class HArgs>
-    constexpr T* ptr_from_tuple(std::tuple<L, MARQOV::Config, HArgs> t, std::mutex& mtx)
-    {
-        return ptr_from_tuple_impl<T>(std::forward<decltype(std::get<0>(t))>(std::get<0>(t)),
-                                      std::forward<MARQOV::Config>(std::get<1>(t)), 
-                                      mtx,
-                                      std::forward<HArgs>(std::get<2>(t)),
-                                      std::make_index_sequence<std::tuple_size<std::remove_reference_t<HArgs>>::value>{});
-    }
-    
     /** The Marqov internal scheduler.
      * 
      * It encapsulates the creation of simulations, the parallel tempering
@@ -106,12 +65,12 @@ namespace MARQOV
             std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
             {
                 std::cout<<"Beginning gamekernel"<<std::endl;
-                auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
+                auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                 // We loop until the next PT step
                 for(; mywork.npt < npt; ++mywork.npt)
                 {
                     //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
-                    simptr->gameloop();
+                     sim.gameloop();
                 }
                 if (mywork.npt < maxpt) // determine whether this itm needs more work
                 {
@@ -123,7 +82,6 @@ namespace MARQOV
                     //                 std::cout<<"no more work required on "<<mywork.id<<std::endl;
                     masterwork.notify_all();//trigger those waiting for signals from the taskqueue. since we don't push_back anything they would not be notified.
                 }
-                delete simptr;
                 std::cout<<"finished gamekernel closing file"<<std::endl;
             };
             
@@ -135,12 +93,11 @@ namespace MARQOV
                 std::function<void()> warmupkernel = [&, t, idx]
                 {
                     std::cout<<"Beginning warmup of "<<idx<<std::endl;
-                    auto simptr = ptr_from_tuple<Sim>(t, mutexes.hdf);
-                    simptr->init();
-                    simptr->wrmploop();
+                    auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
+                    sim.init();
+                    sim.wrmploop();
                     //enqueue the next full work item into the workqueue immediately
                     workqueue.push_back(Simstate(idx));
-                    delete simptr;
                     std::cout<<"finished warmup closing file"<<std::endl;
                 };
                 taskqueue.enqueue(warmupkernel);
@@ -373,11 +330,11 @@ namespace MARQOV
         std::vector<std::pair<int, int> > ptplan; ///< who exchanges with whom in each step
         bool masterstop; ///< A global flag to denote that the master has decided to stop.
         ThreadPool::Semaphore masterwork; ///< The semaphore that triggers the master process
-        ThreadPool::ThreadSafeQueue<Simstate> workqueue; ///< this is the queue where threads put their finished work and the master does PT
+        ThreadPool::ThreadSafeQueue<Simstate> workqueue; ///< This is the queue where threads put their finished work and the master does PT.
         std::mutex simvectormutex; ///< A mutex to protect accesses to the simvector which could be invalidated by the use of push_back
         std::mutex gamekernelmutex; ///< A mutex to protect accesses to the gamekernels which could be invalidated by the use of push_back
-        std::vector<Sim*> simvector; ///< An array for the full state of the simulations
-        ThreadPool::Queue taskqueue; ///< this is the queue where threads pull their work from
+        std::vector<Sim*> simvector; ///< An array for the full state of the simulations.
+        ThreadPool::Queue taskqueue; ///< This is the queue where threads pull their work from.
         std::vector<std::function<void(Simstate, int)> > gamekernels; ///< prefabricated workitems that get executed to move a simulation forward.
         
         //FIXME fill those functions for proper PT
@@ -388,7 +345,7 @@ namespace MARQOV
     /** A helper class to figure out the type of the scheduler.
      * 
      * @tparam Hamiltonian the type of the Hamiltonian.
-     * @tparam Lattice The type of the lattice
+     * @tparam Lattice The type of the lattice.
      * @tparam Parameters The type of the parameters. We instantiate Hamiltonian
      *                    and probably lattice in Marqov, hence the params.
      */
