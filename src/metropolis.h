@@ -84,14 +84,10 @@ namespace MARQOV
 		typedef typename HasOnsite<Hamiltonian>::type HasOns;
 
 
-#ifdef STATIC_BOUNDARY
 
-	auto coords = grid.crds(rsite);
 	auto neighs = grid.nbrs(0,rsite);
-
 	if (neighs.size() < 7) return 0;
 
-#endif
 
 		
 		// old state vector at index rsite

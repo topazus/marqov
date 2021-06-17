@@ -101,7 +101,7 @@ class Hyperbolic
 
 	Hyperbolic(int a, int b) 
 	{
-		npoints = import_geometry( "/home/schrauth/marqov/marqov-dev/src/geometry/7-3-9.csv", grid, neighbours, 2);
+		npoints = import_geometry( "/home/schrauth/marqov/marqov-dev/src/geometry/7-3-8.csv", neighbours);
 	}
 		
 		std::vector<int> nbrs(const int a, const int i) const

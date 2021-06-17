@@ -121,16 +121,12 @@ class Phi4
 		std::array<Standard_Interaction<StateVector>*, 1>      interactions = {new Standard_Interaction<StateVector>(J)};
 		std::vector<OnSite<StateVector, CouplingType>*>        onsite; // empty here, to be filled in the constructor!
 
-		Phi4(double beta, double lambda, double mass) : beta(beta), 
-												lambda(lambda), 
-												mass(mass), 
-												name("Phi4"), 
-                                                phi4interaction(J),
-												onsite_standard(mass/beta),
-												onsite_fourth_minus_one(lambda/beta),
-												obs_fx(0), 
-												obs_fy(1), 
-												obs_fz(2)
+		Phi4(double lambda, double mass) :	lambda(lambda), 
+											mass(mass), 
+											name("Phi4"), 
+                                            phi4interaction(J),
+											onsite_standard(mass),
+											onsite_fourth_minus_one(lambda)
 		{
 			onsite.push_back(&onsite_standard);
 			onsite.push_back(&onsite_fourth_minus_one);
@@ -149,10 +145,7 @@ class Phi4
 		//  ----  Observables  ----
 
 		Magnetization obs_m;
-		MagFTComp obs_fx;
-		MagFTComp obs_fy;
-		MagFTComp obs_fz;
-        decltype(std::make_tuple(obs_m, obs_fx, obs_fy, obs_fz)) observables = {std::make_tuple(obs_m, obs_fx, obs_fy, obs_fz)};
+        decltype(std::make_tuple(obs_m)) observables = {std::make_tuple(obs_m)};
 
 
 
@@ -179,8 +172,6 @@ class Phi4
 
 		//  ----  Initializer  ----
 
-#ifdef STATIC_BOUNDARY
-
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
@@ -189,15 +180,15 @@ class Phi4
 				auto nnbrs = grid.nbrs(0,i).size();
 				if (nnbrs < 7) 
 				{
-					auto coords = grid.crds(i);
-					if (coords[0] > 0 && coords[1] > 0) statespace[i][0] = 2;
-					else if (coords[0] < -0.5 && coords[1] < 0) statespace[i][0] = 2;
-					else statespace[i][0] = -2;
+//					auto coords = grid.crds(i);
+//					if (coords[0] > 0 && coords[1] > 0) statespace[i][0] = 2;
+//					else if (coords[0] < -0.5 && coords[1] < 0) statespace[i][0] = 2;
+//					else statespace[i][0] = -2;
+					statespace[i][0] = 1;
 				}
 				else statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
 			}
 		}
-#endif
 
 };
 #endif

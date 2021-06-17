@@ -56,7 +56,7 @@ using std::ofstream;
 using namespace MARQOV;
 
 
-#undef STATIC_BOUNDARY
+//#define STATIC_BOUNDARY
 
 
 int main()
@@ -91,7 +91,7 @@ int main()
 	auto beta   = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
 	auto lambda = registry.Get<std::vector<double> >("mc.ini", ham, "lambda");
 	auto mass   = registry.Get<std::vector<double> >("mc.ini", ham, "mass");
-	auto hp = cart_prod(beta, beta, lambda, mass);
+	auto hp = cart_prod(beta, lambda, mass);
 	
 	// Parameters
 	const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
@@ -105,7 +105,7 @@ int main()
 	typedef Hyperbolic Lattice;
 
     Hyperbolic lat(42,42);
-    typedef typename std::tuple<Lattice&, MARQOV::Config, std::tuple<double,double,double,double> > ParameterType;
+    typedef typename std::tuple<Lattice&, MARQOV::Config, std::tuple<double,double,double> > ParameterType;
 	typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
  	SchedulerType sched(1,1);
