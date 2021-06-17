@@ -606,7 +606,7 @@ class Core : public RefType<Grid>
             auto retval = new typename Hamiltonian::StateVector[size];
             if (step > 0)
             {
-                std::cout<<"Previous data found! Continuing simulation at step "<<step<<std::endl;
+                std::cout<<"[MARQOV::Core] Previous data found! Continuing simulation at step "<<step<<std::endl;
                 //read in the state space
                 auto prevstepstate = dump.openGroup("/step" + std::to_string(step-1) + "/state");
                 {
@@ -818,7 +818,9 @@ class Core : public RefType<Grid>
             dumphamparamstoH5(hamconfig, std::forward<HArgs>(hargs)...);
 
             H5::Group s1(step.createGroup("state"));
+            s1.setComment("Here we store the final state of a simulation. It is given by the statespace of the Hamiltonian and the RNG.");
             H5::Group s2(step.createGroup("observables"));
+            s2.setComment("Here we store the time series of the observables.");
         }
 
         /** The default StateSpace initializer.
