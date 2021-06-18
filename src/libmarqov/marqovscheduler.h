@@ -42,10 +42,9 @@ namespace MARQOV
      * and the distribution across nodes/cores.
      * @tparam Sim a fully specified Marqov type
      */
-    template <class Sim, class Parameters>
+    template <class Sim>
     class Scheduler
     {
-        typedef Parameters MyParamType;
     private:
     public:
         /** Create a full simulation from a parameter.
@@ -358,7 +357,7 @@ namespace MARQOV
     {
         typedef std::mutex& mtxref;
         typedef decltype(makeCore<Lattice, Hamiltonian>(std::declval<Parameters>(), std::declval<mtxref>())) MarqovType;
-        typedef Scheduler<MarqovType, Parameters> MarqovScheduler; ///< Holds the type of a scheduler for these simulations.
+        typedef Scheduler<MarqovType> MarqovScheduler; ///< Holds the type of a scheduler for these simulations.
     };
 };
 #endif
