@@ -91,11 +91,15 @@ std::string selectsim_startup(RegistryDB& registry)
 
 // ---------------------------------------
 
-void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbasedir)
+//void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbasedir)
+void selectsim()
 {
 
-	auto ham = selectsim_startup(registry);
+	RegistryDB registry("../src/config", "ini");
 
+	const auto ham = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
+
+	std::string outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
 
 
 	// ----------------- select simulation ------------------
@@ -134,9 +138,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	else if (ham == "Phi4")
 	{
-		auto beta   = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto lambda = registry.Get<std::vector<double> >("mc.ini", ham, "lambda");
-		auto mass   = registry.Get<std::vector<double> >("mc.ini", ham, "mass");
+
+		auto beta   = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto lambda = registry.Get<std::vector<double> >(ham+".ini", ham, "lambda");
+		auto mass   = registry.Get<std::vector<double> >(ham+".ini", ham, "mass");
 		
 		// we need "beta" as an explicit parameter in the Hamiltonian
 		// this requires some gymnastics ...
@@ -423,21 +428,21 @@ int main()
     std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;
 
 	// read config files
-	RegistryDB registry("../src/config", "ini");
 
 	// remove old output and prepare new one
-	std::string outbasedir = registry.Get<std::string>("mc.ini", "IO", "outdir" );
-	std::string logbasedir = registry.Get<std::string>("mc.ini", "IO", "logdir" );
+//	std::string outbasedir = registry.Get<std::string>("mc.ini", "IO", "outdir" );
+//	std::string logbasedir = registry.Get<std::string>("mc.ini", "IO", "logdir" );
 
-	//FIXME: NEVER DELETE USER DATA
-	std::string command;
-	command = "rm -r " + outbasedir;
-	system(command.c_str());
-	command = "rm -r " + logbasedir;
-	system(command.c_str());
+//	//FIXME: NEVER DELETE USER DATA
+//	std::string command;
+//	command = "rm -r " + outbasedir;
+//	system(command.c_str());
+//	command = "rm -r " + logbasedir;
+//	system(command.c_str());
+//
+//	makeDir(outbasedir);
+//	makeDir(logbasedir);
 
-	makeDir(outbasedir);
-	makeDir(logbasedir);
-
-	selectsim(registry, outbasedir, logbasedir);
+	selectsim();
+//	selectsim(registry, outbasedir, logbasedir);
 }
