@@ -236,6 +236,7 @@ public:
             cparms.setDeflate(9);//Best (1-9) compression
             cparms.setFillValue(  H5Mapper<T>::H5Type(), &fv);
             dataset = hfile.createDataSet(name, H5Mapper<T>::H5Type(), mspace1, cparms);
+
             if(!desc.empty())
                 dataset.setComment(desc.c_str());
             dssize = 0;
@@ -285,6 +286,7 @@ private:
             start.fill(dssize);
 
             dssize += cachepos;
+
             dataset.extend(&dssize);
             auto filespace = dataset.getSpace();
             count.fill(cachepos);

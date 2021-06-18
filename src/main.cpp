@@ -232,8 +232,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		typedef RegularRandomBond<GaussianPDF> Lattice;
         //typedef RegularRandomBond<BimodalPDF> Lattice;
 
-		typedef decltype(finalize_parameter(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTupleType;
-		typedef typename ParameterTupleType::value_type ParameterType;
+        typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
 		SchedulerType sched(1, nthreads);
@@ -255,10 +254,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			mp.setgameloopsteps(1000);
 
 			// lattice parameters
-			auto lp = std::make_tuple(L, dim);
+// 			auto lp = std::make_tuple(L, dim);
 
 			// form parameter triple and replicate
-			auto params  = finalize_parameter(lp, mp, hp);
+			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);//this particular form is required to happify PGI-19.10
             auto rparams = replicator(params, nreplicas[j]);
 
 			// schedule simulations
@@ -300,7 +299,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		typedef Ising<int> Hamiltonian;
 		typedef ConstantCoordinationLattice<Poissonian> Lattice;
 
-                typedef std::tuple<std::tuple<int, int>, MARQOV::Config, decltype(hp[0]) > ParameterType;
+        typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
 

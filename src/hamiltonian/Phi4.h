@@ -178,4 +178,84 @@ class Phi4
 			return name;
 		}
 };
+
+
+namespace MARQOV
+{
+
+	/** Specialization of the Embedding class for the Phi4 model
+	*
+	* @tparam SpinType the type in which to store the magnetization values.
+	* @tparam CouplingType the type of the coupling of the on-site term (in case there is one)
+	*/
+
+	template <class SpinType, class CouplingType, class Lattice>
+	class Embedder<Phi4<SpinType, CouplingType>, Lattice>
+	{
+		typedef Phi4<SpinType,CouplingType> Hamiltonian;
+    	typedef typename Hamiltonian::StateVector StateVector;                  
+	    typedef Space<typename Hamiltonian::StateVector, Lattice> StateSpace;
+		static constexpr int SymD = Hamiltonian::SymD;
+
+		private:
+
+			const Hamiltonian& ham;
+			const Lattice& lat;
+			const StateSpace& statespace;
+
+			std::array<SpinType,SymD> rdir;
+
+		public:
+			/** Constructs a Heisenberg embedding object.
+			*
+			* @param ham The corresponding Hamiltonian
+			* @param lat The corresponding lattice
+			* @param statespace The statespace of the simulation
+			*/
+			Embedder(const Hamiltonian& ham, const Lattice& lat, StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
+
+
+			/** Set new embedding variable.
+			*
+			* Typically, this function is executed once before every cluster update. The variable
+			* can be drawn randomly (for which case an RNG is provided), but of course can also follow
+			* some sequential scheme.
+			*
+			* @tparam RNG the type of the random number generator
+			* @param rng reference to the random number generator
+			*/
+			template <class RNG>
+			void draw(RNG& rng)	{rdir = rnddir<RNG, double, SymD>(rng);}
+
+
+			/** Computes the Wolff coupling when attempting to add a spin to the cluster
+			*
+			* @param pos1 The position (index) of the current state vector (which is already in the cluster)
+			* @param pos2 The position (index) of a neighbour being checked whether it will become part of the cluster as well
+			*
+			* @return The scalar Wolff coupling (a double)
+			*/
+			double coupling(int pos1, int pos2) const
+			{
+				return dot(statespace[pos1], rdir) * dot(statespace[pos2], rdir);
+			}
+
+
+
+			/** Specifies how a spin flip in the embedded (reduced) model is performed
+			*
+			* @param sv the spin to flipped
+			*/
+			void flip(StateVector& sv)
+			{
+				const double dotp = dot(sv, rdir);
+				for (int i=0; i<SymD; i++) sv[i] -= 2*dotp*rdir[i];
+			}
+	};
+
+
+}
+
+
+
 #endif

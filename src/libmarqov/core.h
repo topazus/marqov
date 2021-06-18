@@ -296,7 +296,7 @@ namespace MARQOV
          * @returns A tuple with proper arguments for the Cache Container.
          */
         template <int i, class Tup>
-        auto createCArgTuple_impl(H5::Group& h5loc, Tup& t, std::true_type) {return std::make_tuple(CacheContainerArgs(h5loc, std::get<i>(t).name, std::get<i>(t).desc));}
+        inline auto createCArgTuple_impl(H5::Group& h5loc, Tup& t, std::true_type) {return std::make_tuple(CacheContainerArgs(h5loc, std::get<i>(t).name, std::get<i>(t).desc));}
 
         /** Create proper constructor call of the cache container.
          * 
@@ -307,7 +307,7 @@ namespace MARQOV
          * @returns A tuple with proper arguments for the Cache Container.
          */
         template <int i, class Tup>
-        auto createCArgTuple_impl(H5::Group& h5loc, Tup& t, std::false_type) {return std::make_tuple(CacheContainerArgs(h5loc, std::get<i>(t).name));}
+        inline auto createCArgTuple_impl(H5::Group& h5loc, Tup& t, std::false_type) {return std::make_tuple(CacheContainerArgs(h5loc, std::get<i>(t).name));}
         
         /** Create proper constructor call of the cache container.
          * 
@@ -318,7 +318,7 @@ namespace MARQOV
          * @returns A tuple with proper arguments for the Cache Container.
          */        
         template <int i, class Tup>
-        auto createCArgTuple(H5::Group& h5loc, Tup& t) {return detail::createCArgTuple_impl<i>(h5loc, t, typename obs_has_desc<typename std::tuple_element<i, Tup>::type>::type() );}
+        inline auto createCArgTuple(H5::Group& h5loc, Tup& t) {return detail::createCArgTuple_impl<i>(h5loc, t, typename obs_has_desc<typename std::tuple_element<i, Tup>::type>::type() );}
 	};
     
     
@@ -336,7 +336,7 @@ namespace MARQOV
      * @returns the return value of the function call.
      */
 	template<typename Function, typename Object, typename Tuple, size_t ... I>
-	auto _call(Function f, Object& obj, Tuple t, std::index_sequence<I ...>) 
+	inline auto _call(Function f, Object& obj, Tuple t, std::index_sequence<I ...>) 
 	{
 		return (obj.*f)(std::get<I>(t) ...);
 	}
@@ -353,7 +353,7 @@ namespace MARQOV
      * @returns the return value of the function call.
      */
 	template<typename Function, typename Object, typename Tuple>
-	auto _call(Function f, Object& obj, Tuple t) 
+	inline auto _call(Function f, Object& obj, Tuple t) 
 	{
 		static constexpr auto size = std::tuple_size<Tuple>::value;
 		return _call(f, obj, t, std::make_index_sequence<size>{});
@@ -554,7 +554,6 @@ class Core : public RefType<Grid>
 			mrqvt.add_clock("measure");
 			mrqvt.add_clock("others");
 			mrqvt.run("other");
-
 		}
 
 	/** Construct MARQOV and let MARQOV create the lattice.
@@ -594,7 +593,6 @@ class Core : public RefType<Grid>
 			mrqvt.add_clock("other");
 			//	mrqvt.status();
 			mrqvt.run("other");
-
 		}
 
 		/** Set up and/or reinitialize state space.
@@ -609,7 +607,7 @@ class Core : public RefType<Grid>
             auto retval = new typename Hamiltonian::StateVector[size];
             if (step > 0)
             {
-                std::cout<<"Previous data found! Continuing simulation at step "<<step<<std::endl;
+                std::cout<<"[MARQOV::Core] Previous data found! Continuing simulation at step "<<step<<std::endl;
                 //read in the state space
                 auto prevstepstate = dump.openGroup("/step" + std::to_string(step-1) + "/state");
                 {
@@ -689,6 +687,17 @@ class Core : public RefType<Grid>
             }
             return 0;
         }
+        
+        /** Test whether MARQOV would need to start from scratch.
+         * 
+         * @param mc A Config object
+         * @return true if we find an existing HDF5 file, else false.
+         */
+        static bool dumppresent(const Config& mc)
+        {
+            std::string filepath = mc.outpath + mc.outname + ".h5";
+            return std::ifstream(filepath).good() && H5::H5File::isHdf5(filepath);
+        }
 
         /** This function sets up the layout of the HDF5 Container.
          * 
@@ -703,7 +712,7 @@ class Core : public RefType<Grid>
         {
             std::string filepath = mc.outpath + mc.outname + ".h5";
             auto flag = H5F_ACC_TRUNC;
-            if (std::ifstream(filepath).good() && H5::H5File::isHdf5(filepath)) flag = H5F_ACC_RDWR;
+            if (dumppresent(mc)) flag = H5F_ACC_RDWR;
             H5::H5File retval(filepath, flag);
             if (flag == H5F_ACC_RDWR) // abuse flag
             {// We have to iterate through the root group and find the last step.
@@ -810,7 +819,9 @@ class Core : public RefType<Grid>
             dumphamparamstoH5(hamconfig, std::forward<HArgs>(hargs)...);
 
             H5::Group s1(step.createGroup("state"));
+            s1.setComment("Here we store the final state of a simulation. It is given by the statespace of the Hamiltonian and the RNG.");
             H5::Group s2(step.createGroup("observables"));
+            s2.setComment("Here we store the time series of the observables.");
         }
 
         /** The default StateSpace initializer.
@@ -1201,7 +1212,7 @@ class Core : public RefType<Grid>
  */
 
 template <class Grid, class H, class... LArgs, class... HArgs, size_t... S>
-constexpr auto makeCore_with_latt(const Config& mc, std::mutex& mtx, std::tuple<LArgs...>&& largs, const std::tuple<HArgs...> hargs, std::index_sequence<S...> )
+inline constexpr auto makeCore_with_latt(const Config& mc, std::mutex& mtx, std::tuple<LArgs...>&& largs, const std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
     return Core<Grid, H, detail::NonRef>(std::forward<std::tuple<LArgs...>>(largs), mc, mtx, std::get<S>(hargs)...);
 }
@@ -1222,7 +1233,7 @@ constexpr auto makeCore_with_latt(const Config& mc, std::mutex& mtx, std::tuple<
  * @param hargs The hamiltonian arguments.
  */
 template <class Grid, class H, class ...HArgs, size_t... S>
-constexpr auto makeCore_using_latt(Grid&& latt, const Config& mc, std::mutex& mtx, std::tuple<HArgs...> hargs, std::index_sequence<S...>)
+inline constexpr auto makeCore_using_latt(Grid&& latt, const Config& mc, std::mutex& mtx, std::tuple<HArgs...> hargs, std::index_sequence<S...>)
 {
     return Core<Grid, H, detail::Ref>(std::forward<Grid>(latt), mc, mtx, std::get<S>(hargs)...);
 }
@@ -1238,7 +1249,7 @@ constexpr auto makeCore_using_latt(Grid&& latt, const Config& mc, std::mutex& mt
  * @param mtx The mutex that synchronizes access to the HDF5 files.
  */
 template <class Grid, class H, typename... HArgs>
-auto makeCore(const std::tuple<Grid&, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
+inline auto makeCore(const std::tuple<Grid&, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
 {
     //The first argument is a Lattice-like type -> from this we infer that 
     //we get a reference to sth. already allocated
@@ -1258,7 +1269,25 @@ auto makeCore(const std::tuple<Grid&, Config, std::tuple<HArgs...> > t, std::mut
  * @param mtx The mutex that synchronizes access to the HDF5 files.
  */
 template <class Grid, class H, typename... LArgs, typename... HArgs>
-auto makeCore(std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
+inline auto makeCore(std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
+{
+    return makeCore_with_latt<Grid, H>(std::get<1>(t), mtx, std::forward<std::tuple<LArgs...> >(std::get<0>(t)), std::get<2>(t), 
+                                 std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
+                                 );
+}
+
+/** Instantiate Core and let it create the lattice. 
+ * 
+ * @tparam H the type of Hamiltonian
+ * @tparam Grid the type of the lattice
+ * @tparam LArgs The arguments of the lattice.
+ * @tparam HArgs the arguments of the hamiltonian.
+ * 
+ * @param t a tuple of a reference of lattice parameters, a config object and the hamiltonian parameters.
+ * @param mtx The mutex that synchronizes access to the HDF5 files.
+ */
+template <class Grid, class H, typename... LArgs, typename... HArgs>
+inline constexpr auto makeCore(std::tuple<std::tuple<LArgs...>&, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
 {
     return makeCore_with_latt<Grid, H>(std::get<1>(t), mtx, std::forward<std::tuple<LArgs...> >(std::get<0>(t)), std::get<2>(t), 
                                  std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
@@ -1278,7 +1307,7 @@ auto makeCore(std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs...> > t,
  * @param mtx The mutex that synchronizes access to the HDF5 files.
  */
 template <class Grid, class H, typename... LArgs, typename... HArgs>
-auto makeCore(std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs...>& > t, std::mutex& mtx)
+inline auto makeCore(std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs...>& > t, std::mutex& mtx)
 {
     return makeCore_with_latt<Grid, H>(std::get<1>(t), mtx, std::forward<std::tuple<LArgs...> >(std::get<0>(t)), std::get<2>(t), 
                                  std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
