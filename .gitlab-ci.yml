@@ -1,4 +1,5 @@
 stages:
+  - pretest
   - build
   - buildMPI
   - test
@@ -42,6 +43,17 @@ stages:
     - cmake --build . --target all --config Release
     - ctest -O log.txt
     - cat log.txt | grep "tests passed" | cut -d " " -f 1
+
+MARQOV_Simple_Test:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gxx
+    stage: pretest
+    <<: *src_except_definition
+    script:
+      - apt-get update && apt-get install -y cmake libhdf5-dev
+      - cmake -E make_directory build
+      - cd build
+      - cmake ..
+      - make mysimpleising
 
 MARQOV_Ubuntu_bionic:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack
