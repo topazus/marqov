@@ -65,12 +65,14 @@ namespace MARQOV
             std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
             {
                 std::cout<<"Beginning gamekernel"<<std::endl;
+                {
                 auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                 // We loop until the next PT step
                 for(; mywork.npt < npt; ++mywork.npt)
                 {
                     //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
                      sim.gameloop();
+                }
                 }
                 if (mywork.npt < maxpt) // determine whether this itm needs more work
                 {
