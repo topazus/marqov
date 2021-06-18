@@ -1211,9 +1211,11 @@ class Core : public RefType<Grid>
  */
 
 template <class Grid, class H, class... LArgs, class... HArgs, size_t... S>
-constexpr auto makeCore_with_latt(const Config& mc, std::mutex& mtx, std::tuple<LArgs...>&& largs, const std::tuple<HArgs...> hargs, std::index_sequence<S...> )
+inline constexpr auto makeCore_with_latt(const Config& mc, std::mutex& mtx, std::tuple<LArgs...>&& largs, const std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
-    return Core<Grid, H, detail::NonRef>(std::forward<std::tuple<LArgs...>>(largs), mc, mtx, std::get<S>(hargs)...);
+    auto retval = Core<Grid, H, detail::NonRef>(std::forward<std::tuple<LArgs...>>(largs), mc, mtx, std::get<S>(hargs)...);
+//     return Core<Grid, H, detail::NonRef>(std::forward<std::tuple<LArgs...>>(largs), mc, mtx, std::get<S>(hargs)...);
+    return retval;
 }
 
 /** Instantiate Core and use a reference to a precreated lattice.
@@ -1232,7 +1234,7 @@ constexpr auto makeCore_with_latt(const Config& mc, std::mutex& mtx, std::tuple<
  * @param hargs The hamiltonian arguments.
  */
 template <class Grid, class H, class ...HArgs, size_t... S>
-constexpr auto makeCore_using_latt(Grid&& latt, const Config& mc, std::mutex& mtx, std::tuple<HArgs...> hargs, std::index_sequence<S...>)
+inline constexpr auto makeCore_using_latt(Grid&& latt, const Config& mc, std::mutex& mtx, std::tuple<HArgs...> hargs, std::index_sequence<S...>)
 {
     return Core<Grid, H, detail::Ref>(std::forward<Grid>(latt), mc, mtx, std::get<S>(hargs)...);
 }
@@ -1248,7 +1250,7 @@ constexpr auto makeCore_using_latt(Grid&& latt, const Config& mc, std::mutex& mt
  * @param mtx The mutex that synchronizes access to the HDF5 files.
  */
 template <class Grid, class H, typename... HArgs>
-auto makeCore(const std::tuple<Grid&, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
+inline auto makeCore(const std::tuple<Grid&, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
 {
     //The first argument is a Lattice-like type -> from this we infer that 
     //we get a reference to sth. already allocated
@@ -1268,7 +1270,7 @@ auto makeCore(const std::tuple<Grid&, Config, std::tuple<HArgs...> > t, std::mut
  * @param mtx The mutex that synchronizes access to the HDF5 files.
  */
 template <class Grid, class H, typename... LArgs, typename... HArgs>
-auto makeCore(std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
+inline auto makeCore(std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
 {
     return makeCore_with_latt<Grid, H>(std::get<1>(t), mtx, std::forward<std::tuple<LArgs...> >(std::get<0>(t)), std::get<2>(t), 
                                  std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
@@ -1276,7 +1278,7 @@ auto makeCore(std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs...> > t,
 }
 
 template <class Grid, class H, typename... LArgs, typename... HArgs>
-constexpr auto makeCore(std::tuple<std::tuple<LArgs...>&, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
+inline constexpr auto makeCore(std::tuple<std::tuple<LArgs...>&, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
 {
     return makeCore_with_latt<Grid, H>(std::get<1>(t), mtx, std::forward<std::tuple<LArgs...> >(std::get<0>(t)), std::get<2>(t), 
                                  std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
@@ -1296,7 +1298,7 @@ constexpr auto makeCore(std::tuple<std::tuple<LArgs...>&, Config, std::tuple<HAr
  * @param mtx The mutex that synchronizes access to the HDF5 files.
  */
 template <class Grid, class H, typename... LArgs, typename... HArgs>
-auto makeCore(std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs...>& > t, std::mutex& mtx)
+inline auto makeCore(std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs...>& > t, std::mutex& mtx)
 {
     return makeCore_with_latt<Grid, H>(std::get<1>(t), mtx, std::forward<std::tuple<LArgs...> >(std::get<0>(t)), std::get<2>(t), 
                                  std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()

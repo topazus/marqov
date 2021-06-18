@@ -262,7 +262,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
             auto rparams = replicator(params, nreplicas[j]);
 
 			// schedule simulations
-// //  			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
+ 			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
 		}
  		sched.start(); // run!
 	}
