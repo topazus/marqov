@@ -66,13 +66,13 @@ namespace MARQOV
             {
                 std::cout<<"Beginning gamekernel"<<std::endl;
                 {
-                auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
-                // We loop until the next PT step
-                for(; mywork.npt < npt; ++mywork.npt)
-                {
-                    //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
-                     sim.gameloop();
-                }
+                    auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
+                    // We loop until the next PT step
+                    for(; mywork.npt < npt; ++mywork.npt)
+                    {
+                        //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
+                        sim.gameloop();
+                    }
                 }
                 if (mywork.npt < maxpt) // determine whether this itm needs more work
                 {
@@ -96,9 +96,9 @@ namespace MARQOV
                 {
                     std::cout<<"Beginning warmup of "<<idx<<std::endl;
                     {
-                    auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
-                    sim.init();
-                    sim.wrmploop();
+                        auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
+                        sim.init();
+                        sim.wrmploop();
                     }
                     //enqueue the next full work item into the workqueue immediately
                     workqueue.push_back(Simstate(idx));
