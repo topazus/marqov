@@ -47,7 +47,13 @@ if( (NOT HDF5_FOUND) )
     endif()
 endif()
 
+# configuration for the simple ising test case
+add_executable(mysimpleising mysimpleising.cpp libmarqov/marqov.cpp)
+target_include_directories(mysimpleising PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(mysimpleising ${MYHDF5LIBS} Threads::Threads)
+set_target_properties(mysimpleising PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
+# configuration of the main parts.
 INCLUDE(CheckFunctionExists)
 
 SET(MARQOVTARGETS MARQOV mpiMARQOV)
@@ -61,6 +67,7 @@ set_target_properties(${target} PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED
 if(DEBIASINTEGERS)
     add_compile_definitions("DEBIASINTEGERS")
 endif()
+
 
 
 #add_definitions("-fopenmp")
