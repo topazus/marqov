@@ -33,6 +33,7 @@
 
 #include "marqovqueue.h"
 #include "core.h"
+#include "util/filters.h"
 
 namespace MARQOV
 {
@@ -54,8 +55,8 @@ namespace MARQOV
          * @param p The full set of parameters that are relevant for your problem.
          * @param filter A filter that can be applied before the actual creation of MARQOV.
          */
-        template <typename ParamType, typename Callable>
-        void createSimfromParameter(ParamType& p, Callable filter)
+        template <typename ParamType, typename Callable = decltype(defaultfilter)>
+        void createSimfromParameter(ParamType& p, Callable filter = defaultfilter)
         {
             auto t = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
             bool needswarmup = !Sim::dumppresent(std::get<1>(t));
