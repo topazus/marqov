@@ -57,7 +57,7 @@ MARQOV_Simple_Test:
       - make mysimpleising
 
 MARQOV_Simple_Threaded_Test:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gxx
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gxx
     stage: pretest_threaded
     <<: *src_except_definition
     script:
