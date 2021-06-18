@@ -65,7 +65,7 @@ MARQOV_Simple_Threaded_Test:
       - cmake -E make_directory build
       - cd build
       - cmake ..
-      - make mysimpleheisenberg_threaded
+      - make mysimpleheisenbergthreaded
 
 MARQOV_Ubuntu_bionic:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack
