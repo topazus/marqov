@@ -1275,6 +1275,16 @@ inline auto makeCore(std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs..
                                  );
 }
 
+/** Instantiate Core and let it create the lattice. 
+ * 
+ * @tparam H the type of Hamiltonian
+ * @tparam Grid the type of the lattice
+ * @tparam LArgs The arguments of the lattice.
+ * @tparam HArgs the arguments of the hamiltonian.
+ * 
+ * @param t a tuple of a reference of lattice parameters, a config object and the hamiltonian parameters.
+ * @param mtx The mutex that synchronizes access to the HDF5 files.
+ */
 template <class Grid, class H, typename... LArgs, typename... HArgs>
 inline constexpr auto makeCore(std::tuple<std::tuple<LArgs...>&, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
 {
