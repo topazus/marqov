@@ -361,7 +361,7 @@ namespace MARQOV
 	
 	//forward declaration of Core.
 	//FIXME think about proper placement of docs and where...
-    template <class Grid, class Hamiltonian, template<class> class RefType>
+    template <class Grid, class Hamiltonian, class MutexType, template<class> class RefType>
     class Core;
 
     /** A class to encapsulate the state space of a hamiltonian.
@@ -377,7 +377,7 @@ namespace MARQOV
         StateVectorT *const myspace; ///< the storage of the state space.
         const std::size_t size_; ///< how many state vectors are in our state space
         
-        template <class G, class Hamiltonian, template<class> class RefType>
+        template <class G, class Hamiltonian, class MutexType, template<class> class RefType>
         friend class Core;
         
     public:
@@ -434,7 +434,15 @@ namespace MARQOV
  * @tparam RefType used internally to distinguish, whether MARQOV::Core should
  *                 create the lattice or whether it is user provided.
  */
-template <class Grid, class Hamiltonian, template<class> class RefType = detail::Ref >
+struct TrivialMutex
+{
+    constexpr void lock() {}
+    constexpr void unlock() {}
+};
+
+static TrivialMutex tm;
+
+template <class Grid, class Hamiltonian, class MutexType, template<class> class RefType = detail::Ref >
 class Core : public RefType<Grid>
 {
 	public:
@@ -530,7 +538,7 @@ class Core : public RefType<Grid>
      * @param hargs A template parameter pack for the Hamiltonian.
      */
 	template <class ...HArgs>
-	Core(Grid&& lattice, Config mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
+	Core(Grid&& lattice, Config mc, MutexType& mtx, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<Grid>(lattice)),
 		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
@@ -569,7 +577,7 @@ class Core : public RefType<Grid>
 	 * @param hargs the arguemts for the Hamiltonian.
 	 */
 	template <class ...HArgs, class ... LArgs>
-	Core(std::tuple<LArgs...>&& largs, Config mc, std::mutex& mtx, double mybeta, HArgs&& ... hargs) : 
+	Core(std::tuple<LArgs...>&& largs, Config mc, MutexType& mtx, double mybeta, HArgs&& ... hargs) : 
 		RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
 		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
@@ -1176,7 +1184,7 @@ class Core : public RefType<Grid>
 		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.
 		Config mcfg; ///< An instance of all our MARQOV related parameters.
 		int step; ///< The current step of the simulation. Used for HDF5 paths.
-        std::unique_lock<std::mutex> hdf5lock; ///< The global lock to synchronize access to the HDF5 *library*.
+        std::unique_lock<MutexType> hdf5lock; ///< The global lock to synchronize access to the HDF5 *library*.
 		H5::H5File dump; ///< The handle for the HDF5 file. Must be before the obscaches and the statespace.
 		StateSpace statespace; ///< The statespace. It holds the current configuration space.
 		H5::Group obsgroup; ///< The HDF5 Group of all our observables.
@@ -1210,11 +1218,10 @@ class Core : public RefType<Grid>
  * @param largs The lattice arguments
  * @param hargs The hamiltonian arguments.
  */
-
 template <class Grid, class H, class... LArgs, class... HArgs, size_t... S>
 inline constexpr auto makeCore_with_latt(const Config& mc, std::mutex& mtx, std::tuple<LArgs...>&& largs, const std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
-    return Core<Grid, H, detail::NonRef>(std::forward<std::tuple<LArgs...>>(largs), mc, mtx, std::get<S>(hargs)...);
+    return Core<Grid, H, std::mutex, detail::NonRef>(std::forward<std::tuple<LArgs...>>(largs), mc, mtx, std::get<S>(hargs)...);
 }
 
 /** Instantiate Core and use a reference to a precreated lattice.
@@ -1232,10 +1239,10 @@ inline constexpr auto makeCore_with_latt(const Config& mc, std::mutex& mtx, std:
  * @param latt A reference to a lattice.
  * @param hargs The hamiltonian arguments.
  */
-template <class Grid, class H, class ...HArgs, size_t... S>
-inline constexpr auto makeCore_using_latt(Grid&& latt, const Config& mc, std::mutex& mtx, std::tuple<HArgs...> hargs, std::index_sequence<S...>)
+template <class Grid, class H, class MutexType, class ...HArgs, size_t... S>
+inline constexpr auto makeCore_using_latt(Grid&& latt, const Config& mc, MutexType& mtx, std::tuple<HArgs...> hargs, std::index_sequence<S...>)
 {
-    return Core<Grid, H, detail::Ref>(std::forward<Grid>(latt), mc, mtx, std::get<S>(hargs)...);
+    return Core<Grid, H, MutexType, detail::Ref>(std::forward<Grid>(latt), mc, mtx, std::get<S>(hargs)...);
 }
 
 /** Instantiate Core with a reference to a precreated lattice.
@@ -1248,8 +1255,8 @@ inline constexpr auto makeCore_using_latt(Grid&& latt, const Config& mc, std::mu
  * @param t a tuple of a reference to a lattice, a config object and the hamiltonian parameters.
  * @param mtx The mutex that synchronizes access to the HDF5 files.
  */
-template <class Grid, class H, typename... HArgs>
-inline auto makeCore(const std::tuple<Grid&, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
+template <class Grid, class H, class MutexType=TrivialMutex, typename... HArgs>
+inline auto makeCore(const std::tuple<Grid&, Config, std::tuple<HArgs...> > t, MutexType& mtx=tm)
 {
     //The first argument is a Lattice-like type -> from this we infer that 
     //we get a reference to sth. already allocated

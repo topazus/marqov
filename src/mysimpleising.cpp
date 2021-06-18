@@ -55,19 +55,17 @@ int main()
     mp.setncluster(8/2);
     mp.setwarmupsteps(500);
     mp.setgameloopsteps(3000);
-    RegularHypercubic& mylattref = mylatt;
     
-    // A section for setting our Hamiltonian parameters and the inverse temperature beta
+    // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
     double beta = 4;
     double J = -2.1;
     auto hp = make_tuple(beta, J);
     
     //prepare the arguments
     auto args = make_tuple(std::ref(mylatt), mp, hp);
-    std::mutex mtx;
     
     //execute the Core routines of MARQOV.
-    auto mysim = makeCore<RegularHypercubic, MySimpleIsing>(args, mtx);
+    auto mysim = makeCore<RegularHypercubic, MySimpleIsing>(args);
     mysim.init();
     mysim.gameloop();
 }
