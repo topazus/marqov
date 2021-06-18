@@ -1,6 +1,6 @@
 /* This file is part of MARQOV:
  * A modern framework for classical spin models on general topologies
- * Copyright (C) 2020-2021, The MARQOV Project
+ * Copyright (C) 2021, The MARQOV Project
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -133,9 +133,23 @@ int import_geometry(const std::string path, std::vector<std::vector<double>>& gr
 	return nbrs.size();
 }
 
-int import_geometry(const std::string path, std::vector<std::vector<double>>& grid, std::vector<std::vector<int>>& nbrs, int ncoords)
+/**
+* @brief Import coordinates and neighbour relations from CSV file
+*
+* @param path filename including full path
+* @param grid here the coordinates will be stored
+* @param nbrs here the neighbour relations will be stored
+* @param ncoords number of coordinates
+* @param minusone set false if indices in CSV file are counted from zero (default), set true if they are counted from one
+*
+* @return the number of vertices
+*
+* @note for format specifications see general documentation-
+*/
+int import_geometry(const std::string path, std::vector<std::vector<double>>& grid, std::vector<std::vector<int>>& nbrs, int ncoords, bool minusone=false)
 {
-	int minusone = -1;
+	int reduce = 0;
+	if (minusone) reduce = -1;
 
 	std::ifstream in(NULL);
 	in.open(path.c_str());
@@ -157,7 +171,7 @@ int import_geometry(const std::string path, std::vector<std::vector<double>>& gr
 		while(std::getline(ss, substr, '\t'))
 		{
 			if (counter < ncoords) g.push_back(std::stof(substr));
-			else n.push_back(std::stoi(substr)+minusone);
+			else n.push_back(std::stoi(substr)+reduce);
 			counter++;
     	}
 		grid.push_back(g);
@@ -167,9 +181,23 @@ int import_geometry(const std::string path, std::vector<std::vector<double>>& gr
 }
 
 
-int import_geometry(const std::string path, std::vector<std::vector<int>>& nbrs)
+
+
+/**
+* @brief Import neighbour relations from CSV file
+*
+* @param path filename including full path
+* @param grid here the coordinates will be stored
+* @param minusone set false if indices in CSV file are counted from zero (default), set true if they are counted from one
+*
+* @return the number of vertices
+*
+* @note for format specifications see general documentation-
+*/
+int import_geometry(const std::string path, std::vector<std::vector<int>>& nbrs, bool minusone=false)
 {
-	int minusone = 0;
+	int reduce = 0;
+	if (minusone) reduce = -1;
 
 	std::ifstream in(NULL);
 	in.open(path.c_str());
@@ -188,7 +216,7 @@ int import_geometry(const std::string path, std::vector<std::vector<int>>& nbrs)
 		std::vector<int> n;
 		while(std::getline(ss, substr, '\t'))
 		{
-			n.push_back(std::stoi(substr)+minusone);
+			n.push_back(std::stoi(substr)+reduce);
     	}
 		nbrs.push_back(n);
 	}
