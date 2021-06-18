@@ -5,6 +5,9 @@
 #include <utility>
 #include <unordered_map>
 #include <exception>
+#include <iostream>
+#include <vector>
+#include <iomanip>
 #include <unistd.h> // provides usleep, only for testing purposes
 
 typedef std::chrono::high_resolution_clock Time;
@@ -132,7 +135,7 @@ namespace marqovtime
 				// print timing results in a more verbose way using the full clock names
 				else
 				{
-					std::cout << "Timing results:" << endl;
+					std::cout << "Timing results:" << std::endl;
 					for (auto& x: clocks) 
 					{
 						auto dur_print = std::chrono::duration_cast<timeformat>(x.dur).count();
@@ -140,7 +143,7 @@ namespace marqovtime
 	
 						if (x.name != active_clock) // list all clocks
 						{
-							std::cout << "  " << x.name << "\t" << dur_print*print_mult << " " << print_unit << endl;
+							std::cout << "  " << x.name << "\t" << dur_print*print_mult << " " << print_unit << std::endl;
 						}
 						else
 						{
@@ -158,7 +161,7 @@ namespace marqovtime
 					auto dur_print = std::chrono::duration_cast<timeformat>(wallclock.dur).count();
 
 					if (minimal) std::cout << "wall " << dur_print*print_mult << std::endl;
-					else std::cout << "  wallclock     " << dur_print*print_mult << " " << print_unit << endl << endl;
+					else std::cout << "  wallclock     " << dur_print*print_mult << " " << print_unit << std::endl << std::endl;
 				}
 		}
 	

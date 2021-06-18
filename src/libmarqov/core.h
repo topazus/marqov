@@ -22,6 +22,7 @@
 #include <array>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <functional>
 #include <type_traits>
@@ -1076,7 +1077,7 @@ class Core : public RefType<Grid>
         {
             const int LL = this->grid.length;
 
-            ofstream os;
+            std::ofstream os;
             os.open("../log/fullout-"+std::to_string(LL)+"-"+std::to_string(beta)+".dat");
 
             for (int i=0; i<LL; i++)
@@ -1087,7 +1088,7 @@ class Core : public RefType<Grid>
                     double current = statespace[curridx][dim];
                     os << current << "\t";
                 }
-                os << endl;
+                os << std::endl;
             }
         }
 
