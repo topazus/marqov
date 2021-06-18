@@ -256,10 +256,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			mp.setgameloopsteps(1000);
 
 			// lattice parameters
-			auto lp = std::make_tuple(L, dim);
+// 			auto lp = std::make_tuple(L, dim);
 
 			// form parameter triple and replicate
-			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);
+			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);//this particular form is required to happify PGI-19.10
             auto rparams = replicator(params, nreplicas[j]);
 
 			// schedule simulations

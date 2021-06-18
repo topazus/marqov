@@ -1213,9 +1213,7 @@ class Core : public RefType<Grid>
 template <class Grid, class H, class... LArgs, class... HArgs, size_t... S>
 inline constexpr auto makeCore_with_latt(const Config& mc, std::mutex& mtx, std::tuple<LArgs...>&& largs, const std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
-    auto retval = Core<Grid, H, detail::NonRef>(std::forward<std::tuple<LArgs...>>(largs), mc, mtx, std::get<S>(hargs)...);
-//     return Core<Grid, H, detail::NonRef>(std::forward<std::tuple<LArgs...>>(largs), mc, mtx, std::get<S>(hargs)...);
-    return retval;
+    return Core<Grid, H, detail::NonRef>(std::forward<std::tuple<LArgs...>>(largs), mc, mtx, std::get<S>(hargs)...);
 }
 
 /** Instantiate Core and use a reference to a precreated lattice.
