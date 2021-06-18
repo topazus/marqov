@@ -259,7 +259,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			auto lp = std::make_tuple(L, dim);
 
 			// form parameter triple and replicate
-			auto params  = finalize_parameter(lp, mp, hp);
+			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);
             auto rparams = replicator(params, nreplicas[j]);
 
 			// schedule simulations
