@@ -295,7 +295,7 @@ namespace MARQOV
          * @returns A tuple with proper arguments for the Cache Container.
          */
         template <int i, class Tup>
-        auto createCArgTuple_impl(H5::Group& h5loc, Tup& t, std::true_type) {return std::make_tuple(CacheContainerArgs(h5loc, std::get<i>(t).name, std::get<i>(t).desc));}
+        inline auto createCArgTuple_impl(H5::Group& h5loc, Tup& t, std::true_type) {return std::make_tuple(CacheContainerArgs(h5loc, std::get<i>(t).name, std::get<i>(t).desc));}
 
         /** Create proper constructor call of the cache container.
          * 
@@ -306,7 +306,7 @@ namespace MARQOV
          * @returns A tuple with proper arguments for the Cache Container.
          */
         template <int i, class Tup>
-        auto createCArgTuple_impl(H5::Group& h5loc, Tup& t, std::false_type) {return std::make_tuple(CacheContainerArgs(h5loc, std::get<i>(t).name));}
+        inline auto createCArgTuple_impl(H5::Group& h5loc, Tup& t, std::false_type) {return std::make_tuple(CacheContainerArgs(h5loc, std::get<i>(t).name));}
         
         /** Create proper constructor call of the cache container.
          * 
@@ -317,7 +317,7 @@ namespace MARQOV
          * @returns A tuple with proper arguments for the Cache Container.
          */        
         template <int i, class Tup>
-        auto createCArgTuple(H5::Group& h5loc, Tup& t) {return detail::createCArgTuple_impl<i>(h5loc, t, typename obs_has_desc<typename std::tuple_element<i, Tup>::type>::type() );}
+        inline auto createCArgTuple(H5::Group& h5loc, Tup& t) {return detail::createCArgTuple_impl<i>(h5loc, t, typename obs_has_desc<typename std::tuple_element<i, Tup>::type>::type() );}
 	};
     
     
@@ -335,7 +335,7 @@ namespace MARQOV
      * @returns the return value of the function call.
      */
 	template<typename Function, typename Object, typename Tuple, size_t ... I>
-	auto _call(Function f, Object& obj, Tuple t, std::index_sequence<I ...>) 
+	inline auto _call(Function f, Object& obj, Tuple t, std::index_sequence<I ...>) 
 	{
 		return (obj.*f)(std::get<I>(t) ...);
 	}
@@ -352,7 +352,7 @@ namespace MARQOV
      * @returns the return value of the function call.
      */
 	template<typename Function, typename Object, typename Tuple>
-	auto _call(Function f, Object& obj, Tuple t) 
+	inline auto _call(Function f, Object& obj, Tuple t) 
 	{
 		static constexpr auto size = std::tuple_size<Tuple>::value;
 		return _call(f, obj, t, std::make_index_sequence<size>{});
