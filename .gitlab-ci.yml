@@ -1,5 +1,6 @@
 stages:
   - pretest
+  - pretest_threaded
   - build
   - buildMPI
   - test
@@ -54,6 +55,17 @@ MARQOV_Simple_Test:
       - cd build
       - cmake ..
       - make mysimpleising
+
+MARQOV_Simple_Threaded_Test:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gxx
+    stage: pretest_threaded
+    <<: *src_except_definition
+    script:
+      - apt-get update && apt-get install -y cmake libhdf5-dev
+      - cmake -E make_directory build
+      - cd build
+      - cmake ..
+      - make mysimpleheisenberg_threaded
 
 MARQOV_Ubuntu_bionic:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack

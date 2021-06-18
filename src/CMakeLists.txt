@@ -54,10 +54,10 @@ target_link_libraries(mysimpleising ${MYHDF5LIBS})
 set_target_properties(mysimpleising PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
 # configuration for the Heisenberg test case with threading
-add_executable(mysimpleheisenberg_threaded mysimpleheisenbergthreaded.cpp libmarqov/marqov.cpp)
-target_include_directories(mysimpleheisenberg_threaded PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(mysimpleheisenberg_threaded ${MYHDF5LIBS} Threads::Threads)
-set_target_properties(mysimpleheisenberg_threaded PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+add_executable(mysimpleheisenbergthreaded mysimpleheisenbergthreaded.cpp libmarqov/marqov.cpp)
+target_include_directories(mysimpleheisenbergthreaded PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(mysimpleheisenbergthreaded ${MYHDF5LIBS} Threads::Threads)
+set_target_properties(mysimpleheisenbergthreaded PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
 
 # configuration of the main parts.
