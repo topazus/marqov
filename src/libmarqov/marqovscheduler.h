@@ -95,9 +95,11 @@ namespace MARQOV
                 std::function<void()> warmupkernel = [&, t, idx]
                 {
                     std::cout<<"Beginning warmup of "<<idx<<std::endl;
+                    {
                     auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                     sim.init();
                     sim.wrmploop();
+                    }
                     //enqueue the next full work item into the workqueue immediately
                     workqueue.push_back(Simstate(idx));
                     std::cout<<"finished warmup closing file"<<std::endl;
