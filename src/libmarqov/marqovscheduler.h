@@ -64,7 +64,7 @@ namespace MARQOV
 
             std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
             {
-                std::cout<<"Beginning gamekernel"<<std::endl;
+//                 std::cout<<"Beginning gamekernel"<<std::endl;
                 {
                     auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                     // We loop until the next PT step
@@ -84,7 +84,7 @@ namespace MARQOV
                     //                 std::cout<<"no more work required on "<<mywork.id<<std::endl;
                     masterwork.notify_all();//trigger those waiting for signals from the taskqueue. since we don't push_back anything they would not be notified.
                 }
-                std::cout<<"finished gamekernel closing file"<<std::endl;
+//                 std::cout<<"finished gamekernel closing file"<<std::endl;
             };
             
             gamekernelmutex.lock();
@@ -94,7 +94,7 @@ namespace MARQOV
             {
                 std::function<void()> warmupkernel = [&, t, idx]
                 {
-                    std::cout<<"Beginning warmup of "<<idx<<std::endl;
+//                     std::cout<<"Beginning warmup of "<<idx<<std::endl;
                     {
                         auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                         sim.init();
@@ -102,7 +102,7 @@ namespace MARQOV
                     }
                     //enqueue the next full work item into the workqueue immediately
                     workqueue.push_back(Simstate(idx));
-                    std::cout<<"finished warmup closing file"<<std::endl;
+//                     std::cout<<"finished warmup closing file"<<std::endl;
                 };
                 taskqueue.enqueue(warmupkernel);
             }
