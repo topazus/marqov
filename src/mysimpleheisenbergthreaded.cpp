@@ -9,8 +9,6 @@
 //include the RegularLattice
 #include "lattice/regular_hypercubic.h"
 
-//include certain hamiltonian building blocks from the utilities
-#include "hamiltonian/util/termcollection.h"
 //include some predefined observables, e.g. the magnetization and the energy
 #include "hamiltonian/util/observables.h"
 //include initializers for now
