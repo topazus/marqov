@@ -68,11 +68,11 @@ bool startswith(const std::string longword, const std::string shortword)
 std::string selectsim_startup(RegistryDB& registry)
 {
 	const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-	const auto dim 	    = registry.Get<int>("mc.ini", ham, "dim" );
-	const auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
-	const auto nreplicass = registry.Get<std::string>("mc.ini", ham, "rep" );
-	const auto nL  	    = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
-	const auto nLs 	    = registry.Get<std::string>("mc.ini", ham, "L" );
+	const auto dim 	      = registry.Get<int>(ham+".ini", ham, "dim" );
+	const auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", ham, "rep" );
+	const auto nreplicass = registry.Get<std::string>(ham+".ini", ham, "rep" );
+	const auto nL  	      = registry.Get<std::vector<int>>(ham+".ini", ham, "L" );
+	const auto nLs 	      = registry.Get<std::string>(ham+".ini", ham, "L" );
 
 	cout << endl;
 	cout << "Hamiltonian: \t" << ham << endl;
@@ -96,10 +96,15 @@ void selectsim()
 {
 
 	RegistryDB registry("../src/config", "ini");
-
-	const auto ham = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
+	const auto ham = selectsim_startup(registry);
 
 	std::string outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
+
+	// delete previous output
+	std::string command;
+	command = "rm -r " + outbasedir;
+	system(command.c_str());
+	makeDir(outbasedir);
 
 
 	// ----------------- select simulation ------------------
@@ -427,22 +432,5 @@ int main()
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;
     std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;
 
-	// read config files
-
-	// remove old output and prepare new one
-//	std::string outbasedir = registry.Get<std::string>("mc.ini", "IO", "outdir" );
-//	std::string logbasedir = registry.Get<std::string>("mc.ini", "IO", "logdir" );
-
-//	//FIXME: NEVER DELETE USER DATA
-//	std::string command;
-//	command = "rm -r " + outbasedir;
-//	system(command.c_str());
-//	command = "rm -r " + logbasedir;
-//	system(command.c_str());
-//
-//	makeDir(outbasedir);
-//	makeDir(logbasedir);
-
 	selectsim();
-//	selectsim(registry, outbasedir, logbasedir);
 }
