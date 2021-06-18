@@ -101,7 +101,7 @@ namespace MARQOV
 		Config(Config&& other) = default;
         /** The deleted assignment move operator of Config.
          */
-// 		Config& operator=(Config&& other) = delete;
+		Config& operator=(Config&& other) = delete;
 
 		// Output
 		std::string outname; ///< the output filename; is empty but will be specified by a filter!
