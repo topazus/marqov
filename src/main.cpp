@@ -91,7 +91,6 @@ std::string selectsim_startup(RegistryDB& registry)
 
 // ---------------------------------------
 
-//void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbasedir)
 void selectsim()
 {
 
@@ -100,7 +99,7 @@ void selectsim()
 
 	std::string outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
 
-	// delete previous output
+	// delete previous output // fixme: don't do that by default!
 	std::string command;
 	command = "rm -r " + outbasedir;
 	system(command.c_str());
