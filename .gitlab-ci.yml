@@ -45,7 +45,7 @@ stages:
     - cat log.txt | grep "tests passed" | cut -d " " -f 1
 
 MARQOV_Simple_Test:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gxx
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gxx
     stage: pretest
     <<: *src_except_definition
     script:
