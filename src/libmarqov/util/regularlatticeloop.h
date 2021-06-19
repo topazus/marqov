@@ -28,10 +28,16 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 
 
 	// Parameters
-	const auto name = reg.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-	auto nreplicas  = reg.Get<std::vector<int>>("mc.ini", name, "rep" );
-	const auto nL   = reg.Get<std::vector<int>>("mc.ini", name, "L" );
-	const auto dim  = reg.Get<int>("mc.ini", name, "dim" );
+	const auto name = reg.Get<std::string>("select.ini", "General", "Hamiltonian" );
+	auto nreplicas  = reg.Get<std::vector<int>>(name+".ini", name, "rep" );
+	const auto nL   = reg.Get<std::vector<int>>(name+".ini", name, "L" );
+	const auto dim  = reg.Get<int>(name+".ini", name, "dim" );
+
+	const auto nclusteramp   = reg.Get<double>(name+".ini", "MC", "nclusteramp");
+	const auto nclusterexp   = reg.Get<int>(name+".ini", "MC", "nclusterexp");
+	const auto nmetro        = reg.Get<int>(name+".ini", "MC", "nmetro");
+	const auto warmupsteps   = reg.Get<int>(name+".ini", "MC", "warmupsteps");
+	const auto measuresteps  = reg.Get<int>(name+".ini", "MC", "measuresteps");
 
 
 	// Number of threads
@@ -62,10 +68,10 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 
 		MARQOV::Config mp(outpath);
-		mp.setnmetro(5);
-		mp.setncluster(int(L/2));
-		mp.setwarmupsteps(500);
-		mp.setgameloopsteps(3000);
+		mp.setnmetro(nmetro);
+		mp.setncluster(int(nclusteramp*pow(L,nclusterexp)));
+		mp.setwarmupsteps(warmupsteps);
+		mp.setgameloopsteps(measuresteps);
 
 		makeDir(mp.outpath);
 		
