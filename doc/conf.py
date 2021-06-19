@@ -60,8 +60,8 @@ breathe_projects = { "Marqov": "./doxygen/xml" }
 breathe_default_project = "Marqov"
 
 # Tell sphinx what the primary language being documented is.
-primary_domain = 'cpp'
+# primary_domain = 'cpp'
 
 # Tell sphinx what the pygments highlight language should be.
-highlight_language = 'cpp'
+# highlight_language = 'cpp'
 
