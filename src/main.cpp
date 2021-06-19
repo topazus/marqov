@@ -68,11 +68,11 @@ bool startswith(const std::string longword, const std::string shortword)
 std::string selectsim_startup(RegistryDB& registry)
 {
 	const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-	const auto dim 	    = registry.Get<int>("mc.ini", ham, "dim" );
-	const auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
-	const auto nreplicass = registry.Get<std::string>("mc.ini", ham, "rep" );
-	const auto nL  	    = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
-	const auto nLs 	    = registry.Get<std::string>("mc.ini", ham, "L" );
+	const auto dim 	      = registry.Get<int>(ham+".ini", ham, "dim" );
+	const auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", ham, "rep" );
+	const auto nreplicass = registry.Get<std::string>(ham+".ini", ham, "rep" );
+	const auto nL  	      = registry.Get<std::vector<int>>(ham+".ini", ham, "L" );
+	const auto nLs 	      = registry.Get<std::string>(ham+".ini", ham, "L" );
 
 	cout << endl;
 	cout << "Hamiltonian: \t" << ham << endl;
@@ -91,11 +91,19 @@ std::string selectsim_startup(RegistryDB& registry)
 
 // ---------------------------------------
 
-void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbasedir)
+void selectsim()
 {
 
-	auto ham = selectsim_startup(registry);
+	RegistryDB registry("../src/config", "ini");
+	const auto ham = selectsim_startup(registry);
 
+	std::string outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
+
+	// delete previous output // fixme: don't do that by default!
+	std::string command;
+	command = "rm -r " + outbasedir;
+	system(command.c_str());
+	makeDir(outbasedir);
 
 
 	// ----------------- select simulation ------------------
@@ -134,9 +142,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 	else if (ham == "Phi4")
 	{
-		auto beta   = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto lambda = registry.Get<std::vector<double> >("mc.ini", ham, "lambda");
-		auto mass   = registry.Get<std::vector<double> >("mc.ini", ham, "mass");
+
+		auto beta   = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto lambda = registry.Get<std::vector<double> >(ham+".ini", ham, "lambda");
+		auto mass   = registry.Get<std::vector<double> >(ham+".ini", ham, "mass");
 		
 		// we need "beta" as an explicit parameter in the Hamiltonian
 		// this requires some gymnastics ...
@@ -422,22 +431,5 @@ int main()
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;
     std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;
 
-	// read config files
-	RegistryDB registry("../src/config", "ini");
-
-	// remove old output and prepare new one
-	std::string outbasedir = registry.Get<std::string>("mc.ini", "IO", "outdir" );
-	std::string logbasedir = registry.Get<std::string>("mc.ini", "IO", "logdir" );
-
-	//FIXME: NEVER DELETE USER DATA
-	std::string command;
-	command = "rm -r " + outbasedir;
-	system(command.c_str());
-	command = "rm -r " + logbasedir;
-	system(command.c_str());
-
-	makeDir(outbasedir);
-	makeDir(logbasedir);
-
-	selectsim(registry, outbasedir, logbasedir);
+	selectsim();
 }
