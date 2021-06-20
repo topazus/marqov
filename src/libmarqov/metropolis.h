@@ -22,6 +22,7 @@
 #include <cmath>
 #include "rngcache.h"
 #include "metropolishelpers.h"
+#include "../hamiltonian/util/initializers.h"
 
 // -------------------------- Metropolis Algorithm -----------------------------
 
@@ -86,7 +87,8 @@ namespace MARQOV
 		// old state vector at index rsite
 		StateVector& svold = statespace[rsite];
 		// propose new configuration
-		StateVector svnew = metro.newsv(svold);
+        StateVector svnew(Initializer<Hamiltonian>::newsv(svold, rng) );
+// 		StateVector svnew = metro.newsv(svold);
 		        
 
 		// I. interaction part

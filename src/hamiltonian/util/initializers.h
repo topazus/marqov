@@ -128,16 +128,16 @@ public:
     }
 };
 
-template <typename FPType>
-class SVInitializer<std::array<FPType, 3>, typename std::enable_if<
+template <typename FPType, std::size_t SymD>
+class SVInitializer<std::array<FPType, SymD>, typename std::enable_if<
 std::is_floating_point<FPType>::value>::type>
 {
-    typedef std::array<FPType, 3> StateVector;
+    typedef std::array<FPType, SymD> StateVector;
 public:
     template <class RNGCache>
     static StateVector newsv(const StateVector& svold, RNGCache& rng)
     {
-        return rnddir<RNGCache, double, 3>(rng);
+        return rnddir<RNGCache, double, SymD>(rng);
     }
 };
 
