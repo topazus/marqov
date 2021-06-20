@@ -67,7 +67,7 @@ bool startswith(const std::string longword, const std::string shortword)
 
 std::string selectsim_startup(RegistryDB& registry)
 {
-	const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+	const auto ham        = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
 	const auto dim 	      = registry.Get<int>(ham+".ini", ham, "dim" );
 	const auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", ham, "rep" );
 	const auto nreplicass = registry.Get<std::string>(ham+".ini", ham, "rep" );
@@ -131,8 +131,8 @@ void selectsim()
 
 	else if (ham == "Heisenberg")
 	{
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
 		auto parameters = cart_prod(beta, J);
 
 		RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
