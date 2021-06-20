@@ -119,8 +119,12 @@ std::is_signed<IntType>::value>::type>
 {
     typedef std::array<IntType, 1> StateVector;
 public:
-    StateVector newsv(const StateVector& svold)
+    template <class RNGCache>
+    StateVector newsv(const StateVector& svold, RNGCache& rng)
     {
+			StateVector retval(svold);
+			retval[0] = -retval[0];
+			return retval;
     }
 };
 
@@ -130,8 +134,10 @@ std::is_floating_point<FPType>::value>::type>
 {
     typedef std::array<FPType, SymD> StateVector;
 public:
-    StateVector newsv(const StateVector& svold)
+    template <class RNGCache>
+    StateVector newsv(const StateVector& svold, RNGCache& rng)
     {
+        return rnddir<RNGCache, double, SymD>(rng);
     }
 };
 
