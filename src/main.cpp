@@ -95,20 +95,21 @@ int main()
 	
 	// Parameters
 	const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-	auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
-	const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
-	const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
+	auto nreplicas  = registry.Get<int>("mc.ini", name, "rep" );
 	
 	
 	// Typedefs
 	typedef Phi4<double,double> Hamiltonian;
-	typedef Hyperbolic Lattice;
+	typedef GraphFromCSV Lattice;
 
-    Hyperbolic lat(42,42);
+	std::string latfile = "/home/schrauth/marqov/marqov-dev/src/geometry/7-3-8.csv";
+
+    GraphFromCSV lat(latfile);
     typedef typename std::tuple<Lattice&, MARQOV::Config, std::tuple<double,double,double> > ParameterType;
 	typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
- 	SchedulerType sched(1,1);
+	const int nthreads = 1;
+ 	SchedulerType sched(1,nthreads);
 
 	// prepare output
 	std::string outpath = outbasedir+"/hyperbolic/";
@@ -125,10 +126,10 @@ int main()
 
 	// form parameter triple and replicate
 	auto params  = finalize_parameter(lat, mp, hp);
-    auto rparams = replicator(params, 1);
+    auto rparams = replicator(params, nreplicas);
 
 	// schedule simulations
- 	for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
+ 	for (auto p: rparams) sched.createSimfromParameter(p, hyperfilter);
  	
 	sched.start(); // run!
 }

@@ -90,30 +90,25 @@ class ConstantCoordinationLattice
 
 #include "io.h"
 
-class Hyperbolic
+class GraphFromCSV
 {
 
 	public:
 	int npoints;
 
 	std::vector<std::vector<int>> neighbours;
-	std::vector<std::vector<double>> grid;
 
-	Hyperbolic(int a, int b) 
+	GraphFromCSV(std::string filename) 
 	{
-		npoints = import_geometry( "/home/schrauth/marqov/marqov-dev/src/geometry/7-3-8.csv", neighbours);
+		npoints = import_geometry(filename, neighbours);
 	}
 		
-		std::vector<int> nbrs(const int a, const int i) const
-		{
-			return neighbours[i];
-		}
-		std::vector<double> crds(const int i) const
-		{
-			return grid[i];
-		}
+	std::vector<int> nbrs(const int a, const int i) const
+	{
+		return neighbours[i];
+	}
 
-		std::size_t size() const {return npoints;}
+	std::size_t size() const {return npoints;}
 };
 
 
