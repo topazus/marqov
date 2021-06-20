@@ -120,7 +120,7 @@ std::is_signed<IntType>::value>::type>
     typedef std::array<IntType, 1> StateVector;
 public:
     template <class RNGCache>
-    StateVector newsv(const StateVector& svold, RNGCache& rng)
+    static StateVector newsv(const StateVector& svold, RNGCache& rng)
     {
 			StateVector retval(svold);
 			retval[0] = -retval[0];
@@ -128,25 +128,26 @@ public:
     }
 };
 
-template <typename FPType, int SymD>
-class SVInitializer<std::array<FPType, SymD>, typename std::enable_if<
+template <typename FPType>
+class SVInitializer<std::array<FPType, 3>, typename std::enable_if<
 std::is_floating_point<FPType>::value>::type>
 {
-    typedef std::array<FPType, SymD> StateVector;
+    typedef std::array<FPType, 3> StateVector;
 public:
     template <class RNGCache>
-    StateVector newsv(const StateVector& svold, RNGCache& rng)
+    static StateVector newsv(const StateVector& svold, RNGCache& rng)
     {
-        return rnddir<RNGCache, double, SymD>(rng);
+        return rnddir<RNGCache, double, 3>(rng);
     }
 };
 
 template <class Hamiltonian>
 class Initializer : public SVInitializer<typename Hamiltonian::StateVector>
 {
-//     typedef Hamiltonian::StateVector StateVector;
+//     typedef typename Hamiltonian::StateVector StateVector;
 // public:
-//     StateVector newsv(const StateVector& svold)
+//     template <class RNGCache>
+//     static StateVector newsv(const StateVector& svold, RNGCache&)
 //     {
 //     }
 };
