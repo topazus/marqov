@@ -20,6 +20,7 @@
 #define INITIALIZERS_H
 #include <array>
 #include <tuple>
+#include <type_traits>
 #include "randomdir.h"
 
 // ------------------------------ INITIALIZER ---------------------------
@@ -106,6 +107,42 @@ class Spin1_Initializer
 
 	private:
 		RNG& rng;
+};
+
+template <class SV, class Enable = void> class SVInitializer;
+
+
+template <typename IntType>
+class SVInitializer<std::array<IntType, 1>, typename std::enable_if<
+std::is_integral<IntType>::value &&
+std::is_signed<IntType>::value>::type>
+{
+    typedef std::array<IntType, 1> StateVector;
+public:
+    StateVector newsv(const StateVector& svold)
+    {
+    }
+};
+
+template <typename FPType, int SymD>
+class SVInitializer<std::array<FPType, SymD>, typename std::enable_if<
+std::is_floating_point<FPType>::value>::type>
+{
+    typedef std::array<FPType, SymD> StateVector;
+public:
+    StateVector newsv(const StateVector& svold)
+    {
+    }
+};
+
+template <class Hamiltonian>
+class Initializer : public SVInitializer<typename Hamiltonian::StateVector>
+{
+//     typedef Hamiltonian::StateVector StateVector;
+// public:
+//     StateVector newsv(const StateVector& svold)
+//     {
+//     }
 };
 
 #endif
