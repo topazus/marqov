@@ -2,6 +2,8 @@
 #define TIMETRACKER_H
 
 #include <chrono>
+#include <iostream>
+#include <iomanip>
 #include <utility>
 #include <unordered_map>
 #include <exception>
@@ -132,7 +134,7 @@ namespace marqovtime
 				// print timing results in a more verbose way using the full clock names
 				else
 				{
-					std::cout << "Timing results:" << endl;
+					std::cout << "Timing results:" << std::endl;
 					for (auto& x: clocks) 
 					{
 						auto dur_print = std::chrono::duration_cast<timeformat>(x.dur).count();
@@ -140,7 +142,7 @@ namespace marqovtime
 	
 						if (x.name != active_clock) // list all clocks
 						{
-							std::cout << "  " << x.name << "\t" << dur_print*print_mult << " " << print_unit << endl;
+							std::cout << "  " << x.name << "\t" << dur_print*print_mult << " " << print_unit << std::endl;
 						}
 						else
 						{
