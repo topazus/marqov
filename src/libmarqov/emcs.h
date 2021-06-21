@@ -40,16 +40,16 @@ namespace MARQOV
     template <class Hamiltonian, class Lattice>
     struct EMCS
     {
-        template <class RNGType, class M, class StateSpace, class Timer>
-        static inline double move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNGCache<RNGType>& rng, double beta, int ncluster, int nmetro, Timer&);
+        template <class RNGType, class StateSpace, class Timer>
+        static inline double move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNGCache<RNGType>& rng, double beta, int ncluster, int nmetro, Timer&);
     };
     
     template <class Hamiltonian, class Lattice>
-    template <class RNGType, class M, class StateSpace, class Timer>
+    template <class RNGType, class StateSpace, class Timer>
     double EMCS<Hamiltonian, Lattice>::move(const Hamiltonian& ham, 
     											const Lattice& grid, 
 												StateSpace& statespace, 
-												M& metro, RNGCache<RNGType>& rngcache, 
+												RNGCache<RNGType>& rngcache, 
 												double beta, int ncluster, int nmetro, Timer& mrqvt)
     {
         // cluster updates
@@ -73,7 +73,7 @@ namespace MARQOV
                 Metropolis<Hamiltonian, Lattice>::move(ham,
                                                 grid, 
                                                 statespace, 
-                                                metro, 
+  //                                              metro, 
                                                 rngcache, 
                                                 beta, 
                                                 rsite);
@@ -89,7 +89,6 @@ double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
     return EMCS<Hamiltonian, Grid>::move(this->ham,
 											this->grid, 
 											statespace, 
-											this->metro, 
 											this->rngcache, 
 											this->beta, mcfg.ncluster, mcfg.nmetro, mrqvt);
 	}

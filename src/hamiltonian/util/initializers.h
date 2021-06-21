@@ -19,73 +19,81 @@
 #ifndef INITIALIZERS_H
 #define INITIALIZERS_H
 #include <array>
-#include <tuple>
 #include <type_traits>
 #include "randomdir.h"
 
 // ------------------------------ INITIALIZER ---------------------------
 
+template <class SV, class Enable = void> class SVInitializer;
+
 /** Initializer for Ising-like models.
- * draws a random spin site +1/-2
+ * draws a random spin site +1/-1.
  *
- * @tparam StateVector the type of the state vector
- * @tparam RNG the type of the random number generator
+ * @tparam IntType the integer type used for storage.
  */
-template <class StateVector, class RNG> 
-class Ising_Initializer
+template <typename IntType>
+class SVInitializer<std::array<IntType, 1>, typename std::enable_if<
+std::is_integral<IntType>::value &&
+std::is_signed<IntType>::value>::type>
 {
-	public:
-		Ising_Initializer(RNG&) {}
-		StateVector newsv(const StateVector& svold)
-		{
-			StateVector retval(svold);
-			retval[0] = -retval[0];
-			return retval;
-		}
+    typedef std::array<IntType, 1> StateVector;
+public:
+    /** Flip the Ising spin.
+     * 
+     * @tparam RNGCache the Random Number Generator.
+     * 
+     * @param svold the old state vector.
+     * @param rng a reference to the RNG of the Monte Carlo simulation.
+     * @return the new state vector with flipped spin
+     */
+    template <class RNGCache>
+    static StateVector newsv(const StateVector& svold, RNGCache& rng)
+    {
+        StateVector retval(svold);
+        retval[0] = -retval[0];
+        return retval;
+    }
 };
 
-
-
-
-/** Initializer for O(N)-like models.
- * draws a random vector on the N-dimensional unit shell
- *
- * @tparam StateVector the type of the state vector
- * @tparam RNG the type of the random number generator
- */
-template <class StateVector, class RNG>
-class NVector_Initializer
+template <typename FPType, std::size_t SymD>
+class SVInitializer<std::array<FPType, SymD>, typename std::enable_if<
+std::is_floating_point<FPType>::value>::type>
 {
-    public:
-        // provide the spin dimension as a compile-time constant expression
-        static constexpr int SymD = std::tuple_size<StateVector>::value;
-
-        // constructor
-        NVector_Initializer(RNG& rn) : rng(rn) {}
-
-        // generate new statevector
-        StateVector newsv(const StateVector&)
-        {
-            return rnddir<RNG, double, SymD>(rng);
-        };
-
-    private:
-        RNG& rng;
+    typedef std::array<FPType, SymD> StateVector;
+public:
+    /** Flip the Ising spin.
+     * 
+     * @tparam RNGCache the Random Number Generator.
+     * 
+     * @param svold the old state vector.
+     * @param rng a reference to the RNG of the Monte Carlo simulation.
+     * @return the new state vector with flipped spin
+     */
+    template <class RNGCache>
+    static StateVector newsv(const StateVector& svold, RNGCache& rng)
+    {
+        return rnddir<RNGCache, double, SymD>(rng);
+    }
 };
-
 
 /** Initializer for models with integer spin states -1, 0, 1
 *
-* @tparam StateVector the type of the state vector
-* @tparam RNG the type of the random number generator
+* @tparam StateVector the type of the state vector.
 */
-template <class StateVector, class RNG>
+template <class StateVector>
 class Spin1_Initializer
 {
 	public:
-		Spin1_Initializer(RNG& rn) : rng(rn) {}
-
-		StateVector newsv(const StateVector& svold)
+        /** Draw a new state vector based on the old one.
+         * 
+         * @tparam RNG the Random Number Generator.
+         * 
+         * @param svold the old state vector.
+         * @param rng a reference to the RNG of the Monte Carlo simulation.
+         * @return the new state vector
+         */
+        template <class RNGCache>
+        static StateVector newsv(const StateVector& svold, RNGCache& rng)
 		{
 			StateVector retval(svold);
 			int state = retval[0];
@@ -104,52 +112,14 @@ class Spin1_Initializer
 			retval[0] = state;
 			return retval;
 		};
-
-	private:
-		RNG& rng;
 };
 
-template <class SV, class Enable = void> class SVInitializer;
-
-
-template <typename IntType>
-class SVInitializer<std::array<IntType, 1>, typename std::enable_if<
-std::is_integral<IntType>::value &&
-std::is_signed<IntType>::value>::type>
-{
-    typedef std::array<IntType, 1> StateVector;
-public:
-    template <class RNGCache>
-    static StateVector newsv(const StateVector& svold, RNGCache& rng)
-    {
-			StateVector retval(svold);
-			retval[0] = -retval[0];
-			return retval;
-    }
-};
-
-template <typename FPType, std::size_t SymD>
-class SVInitializer<std::array<FPType, SymD>, typename std::enable_if<
-std::is_floating_point<FPType>::value>::type>
-{
-    typedef std::array<FPType, SymD> StateVector;
-public:
-    template <class RNGCache>
-    static StateVector newsv(const StateVector& svold, RNGCache& rng)
-    {
-        return rnddir<RNGCache, double, SymD>(rng);
-    }
-};
-
+/** The generic case that can be specified by a user for a Hamiltonian.
+ * 
+ * @tparam Hamiltonian The Hamiltonian that you use.
+ */
 template <class Hamiltonian>
 class Initializer : public SVInitializer<typename Hamiltonian::StateVector>
-{
-//     typedef typename Hamiltonian::StateVector StateVector;
-// public:
-//     template <class RNGCache>
-//     static StateVector newsv(const StateVector& svold, RNGCache&)
-//     {
-//     }
-};
+{};
 
 #endif

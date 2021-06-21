@@ -74,9 +74,6 @@ class Heisenberg
 		//  ---- Definitions  -----
 
 		typedef std::array<SpinType, SymD> StateVector;
-		template <typename RNG>
-		using MetroInitializer =  NVector_Initializer<StateVector, RNG>; 
-
 
 		//  ----  Hamiltonian terms  ----
 
