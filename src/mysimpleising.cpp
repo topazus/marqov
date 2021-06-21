@@ -20,10 +20,7 @@ class MySimpleIsing
         //Define the StateVectors that this model will use. The Ising Model has Integers +-1, hence we go with plain ints
 		typedef std::array<int, 1> StateVector;
         constexpr static int SymD = 1; //FIXME: Are there cases where SymD is different from the length of the state vector?
-        // We need to get an initializer that defines how to initialize our state vectors.
-		template <typename RNG>
-		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
-
+        // For the Ising Modell default state vector initialization is sufficient.
 		//  ----  Parameters  ----
 		double J;
 		const std::string name;// Every Hamiltonian MUST have a name. Required for the HDF5 output

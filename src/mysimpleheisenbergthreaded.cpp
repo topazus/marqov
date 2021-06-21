@@ -29,10 +29,7 @@ class MySimpleHeisenberg
         //Define the StateVectors that this model will use. The Heisenberg Model has real three component vectors.
 		typedef std::array<double, 3> StateVector;
         constexpr static int SymD = 3; //FIXME: Are there cases where SymD is different from the length of the state vector?
-        // We need to get an initializer that defines how to initialize our state vectors.
-		template <typename RNG>
-		using MetroInitializer = NVector_Initializer<StateVector, RNG>;
-
+        // Default initialization is sufficient for the Heisenberg
 		//  ----  Parameters  ----
 		double J;
 		const std::string name;// Every Hamiltonian MUST have a name. Required for the HDF5 output
