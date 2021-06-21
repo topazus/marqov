@@ -73,7 +73,6 @@ namespace MARQOV
                 Metropolis<Hamiltonian, Lattice>::move(ham,
                                                 grid, 
                                                 statespace, 
-  //                                              metro, 
                                                 rngcache, 
                                                 beta, 
                                                 rsite);

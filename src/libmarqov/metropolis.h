@@ -73,7 +73,7 @@ namespace MARQOV
     int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, 
     											const Lattice& grid, 
 												StateSpace& statespace, 
-												 RNGCache<RNGType>& rng, 
+												RNGCache<RNGType>& rng, 
 												double beta, 
 												int rsite)
     {
@@ -87,7 +87,7 @@ namespace MARQOV
 		// old state vector at index rsite
 		StateVector& svold = statespace[rsite];
 		// propose new configuration
-        StateVector svnew(Initializer<Hamiltonian>::newsv(svold, rng) );
+		StateVector svnew(Initializer<Hamiltonian>::newsv(svold, rng) );
 
 		// I. interaction part
 		double interactionenergydiff = compute_interactionenergydiff(grid, ham, statespace, svnew, svold, rsite, HasInt());
