@@ -1,0 +1,3 @@
+#define HAVE_SCANDIR
+#define HAVE_ALPHASORT
+#define HAVE_READDIR_R
