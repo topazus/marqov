@@ -23,12 +23,17 @@
 #include <string>
 #include <functional>
 #include <vector>
-#include "../hamparts.h"
+#include "util/hamparts.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-// ...
+#include "util/observables.h"
+
+// ------------------------------ INITIALIZER ---------------------------
+
+#include "util/initializers.h"
+
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
@@ -41,44 +46,6 @@ class BlumeCapelBipartite_onsite
 		double get (const StateVector& phi) {return dot(phi, phi);};
 };
 
-
-template <class StateVector, class RNG>
-class BlumeCapelBipartite_Initializer
-{
-	public:
-		BlumeCapelBipartite_Initializer()   {}
-		BlumeCapelBipartite_Initializer(RNG& rn) : rng(rn) {}
-
-		// specifies how a random new state vector is generated
-		// in this case a simple spin flip
-		StateVector newsv(const StateVector& svold) 
-		{
-			StateVector retval(svold); 
-
-			int state = retval[0];
-
-			if (state == 0)
-			{
-				if (rng.real() < 0.5)  state = -1;
-				else				state = +1;
-			}
-			else // +1/-1
-			{
-				if (rng.real() < 0.5) state *= -1;
-				else state = 0;
-			}
-
-			retval[0] = state;
-
-			return retval;
-		};
-
-	private:
-		RNG& rng;
-};
-
-
-// ------------------------------ HAMILTONIAN ---------------------------
 
 template <typename SpinType = int>
 class BlumeCapelBipartite
@@ -95,16 +62,14 @@ class BlumeCapelBipartite
 		//  ----  Definitions  ----
 
 		typedef std::array<SpinType, SymD> StateVector;
-		template <typename RNG>
-		using MetroInitializer = BlumeCapelBipartite_Initializer<StateVector, RNG>;
-
+//		template <typename RNG>
+//		using MetroInitializer = Spin1_Initializer<StateVector, RNG>;
 
 		//  ----  Hamiltonian terms  ----
-        
+
         std::array<Standard_Interaction<StateVector>*,1> interactions = {new Standard_Interaction<StateVector>(J)};
         std::array<BlumeCapelBipartite_onsite<StateVector>*, 2> onsite = {new BlumeCapelBipartite_onsite<StateVector>(DA), new BlumeCapelBipartite_onsite<StateVector>(DB)};
-        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
-	
+
 		BlumeCapelBipartite(double J, double DA, double DB) : J(J), DA(DA), DB(DB), name("BlumeCapelBipartite"), observables(obs_m)
 		{
 		}
@@ -131,4 +96,7 @@ class BlumeCapelBipartite
 		}
 
 };
+
+template <typename SpinType>
+class Initializer<BlumeCapelBipartite<SpinType> > : public  Spin1_Initializer<typename BlumeCapelBipartite<SpinType>::StateVector > {};
 #endif

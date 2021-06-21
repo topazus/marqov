@@ -21,7 +21,7 @@
 #include <string>
 #include <functional>
 //#include "../hamparts.h" // not needed, see above
-#include "../metropolis.h"
+#include "../libmarqov/metropolis.h"
 
 
 
@@ -53,7 +53,7 @@ class AshkinTellerMag
 			double mag2 = 0.0;
 			double mag3 = 0.0;
 
-			for (int i=0; i<N; i++)
+			for (std::size_t i=0; i<N; i++)
 			{
 				mag1 += statespace[i][0];
 				mag2 += statespace[i][1];
@@ -101,10 +101,8 @@ class AshkinTeller_Initializer
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
-/**
- * Three-Color Ashkin-Teller Hamiltonian
+/** Three-Color Ashkin-Teller Hamiltonian
  */
-
 class AshkinTeller
 {
 	public:
@@ -121,8 +119,8 @@ class AshkinTeller
 		//  ---- Definitions  -----
 
 		typedef std::array<int, SymD> StateVector;
-		template <typename RNG>
-		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
+//		template <typename RNG>
+//		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
 
 
 		//  ---- Hamiltonian  -----
@@ -175,6 +173,14 @@ class AshkinTeller
 
 };
 
+template <>
+class Initializer<AshkinTeller>
+{
+typedef typename AshkinTeller::StateVector StateVector;
+template <class RNGCache>
+static StateVector newsv(const StateVector&, RNGCache&) {return StateVector();}
+};
+
 
 
 // ----------------------- UPDATE SPECIALIZATIONS ----------------------
@@ -184,11 +190,11 @@ namespace MARQOV
 {
 
 	template <class Lattice>
-	class Embedder<AshkinTeller,Lattice>
+	class Embedder<AshkinTeller, Lattice>
 	{
 		typedef AshkinTeller Hamiltonian;
 		typedef typename Hamiltonian::StateVector StateVector;
-		typedef StateVector* StateSpace;
+		typedef Space<StateVector, Lattice> StateSpace;
 		static constexpr int SymD = Hamiltonian::SymD;
 
 		private:
@@ -250,7 +256,7 @@ namespace MARQOV
 
 
 		// coupling of the embedded Ising model
-		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, AshkinTeller& ham)
+		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, const AshkinTeller& ham)
 		{
 			double retval = 0.0;
 			switch (color)
@@ -282,11 +288,11 @@ namespace MARQOV
 	
 	
 		// the actual Metropolis move attempt
-		template <class StateSpace, class M, class RNG>
-		static inline int move(AshkinTeller& ham, 
-						   Lattice& grid, 
+		template <class StateSpace/*, class M*/, class RNG>
+		static inline int move(const AshkinTeller& ham, 
+						   const Lattice& grid, 
 						   StateSpace& statespace, 
-						   M& metro, 
+//						   M& metro, 
 						   RNG& rng, 
 						   double beta, 
 						   int rsite)

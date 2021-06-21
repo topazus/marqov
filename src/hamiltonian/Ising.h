@@ -25,9 +25,9 @@
 #include <complex>
 #include <functional>
 #include <array>
-#include "../hamparts.h"
-#include "../obsparts.h"
-#include "termcollection.h"
+#include "util/hamparts.h"
+#include "util/observables.h"
+#include "util/termcollection.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
@@ -49,25 +49,6 @@ class IsingGenericVectorValuedObs
 };
 
 
-
-// ------------------------------ INITIALIZER ---------------------------
-
-template <class StateVector, class RNG>
-class Ising_Initializer
-{
-	public:
-		Ising_Initializer()   {}
-		Ising_Initializer(RNG&) {}
-
-		// specifies how a random new state vector is generated
-		// in this case a simple spin flip
-		StateVector newsv(const StateVector& svold) 
-		{
-			StateVector retval(svold); 
-			retval[0] = -retval[0];
-			return retval;
-		};
-};
 
 
 // ------------------------------ HAMILTONIAN ---------------------------
@@ -93,16 +74,10 @@ class Ising
 		//  ---- Definitions  -----
 
 		typedef std::array<SpinType, SymD> StateVector;
-		template <typename RNG>
-		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
-
 
 		//  ----  Hamiltonian terms  ---- 
 
         std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
-        std::array<OnSite<StateVector, int>*, 0> onsite;
-        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
-
 
 		Ising(double J) : J(J), name("Ising"), obs_e(*this), obs_fx(0), obs_fy(1)
 		{}
@@ -146,6 +121,8 @@ namespace MARQOV
 	* The principle structure is identical to the general version of the algorithm
 	* See metropolis.h for details
 	*/
+
+	/*
 	template <class Lattice>
 	struct Metropolis<Ising<int>, Lattice>
 	{
@@ -194,6 +171,7 @@ namespace MARQOV
 	    	return retval;
 	    }
 	};
+	*/
 
 
 	/** Specialization of the Wolff algorithm for the Ising model.

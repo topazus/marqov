@@ -3,15 +3,14 @@
 #include <array>
 #include <cmath>
 #include <vector>
-#include "../vectorhelpers.h"
-#include "../hamparts.h"
-#include "../obsparts.h"
-#include "termcollection.h" 
+#include "util/randomdir.h"
+#include "util/hamparts.h"
+#include "util/termcollection.h" 
 
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-// ...
+#include "util/observables.h"
 
 
 // ------------------------------ INITIALIZER ---------------------------
@@ -81,10 +80,7 @@ template <class StateVector>
 class Onsite_Fourth_Minus_One : public OnSite<StateVector, double> 
 {
 	public:
-		Onsite_Fourth_Minus_One(double constant)
-		{
-	 		this->h = constant;
-		}
+		Onsite_Fourth_Minus_One(double constant) : OnSite<StateVector,double>(constant) {}
 		inline double get (const StateVector& phi) {return pow(dot(phi,phi)-1.0, 2);}
 };
 
@@ -125,7 +121,6 @@ class Phi4
 
 		std::array<Standard_Interaction<StateVector>*, 1>      interactions = {new Standard_Interaction<StateVector>(J)};
 		std::vector<OnSite<StateVector, CouplingType>*>        onsite; // empty here, to be filled in the constructor!
-		std::array <FlexTerm<StateVector*,  StateVector>*, 0>  multisite;
 
 		Phi4(double beta, double lambda, double mass) : beta(beta), 
 												lambda(lambda), 
@@ -164,6 +159,12 @@ class Phi4
 
 		//  ---- Parameter Names ----
 
+		/** Allows to give the Hamiltonian parameter names
+		*
+		* @param i index of the parameter
+		*
+		* @return the parameter name (string)
+		*/
 		std::string paramname(int i)
 		{
 			std::string name;
@@ -177,4 +178,84 @@ class Phi4
 			return name;
 		}
 };
+
+
+namespace MARQOV
+{
+
+	/** Specialization of the Embedding class for the Phi4 model
+	*
+	* @tparam SpinType the type in which to store the magnetization values.
+	* @tparam CouplingType the type of the coupling of the on-site term (in case there is one)
+	*/
+
+	template <class SpinType, class CouplingType, class Lattice>
+	class Embedder<Phi4<SpinType, CouplingType>, Lattice>
+	{
+		typedef Phi4<SpinType,CouplingType> Hamiltonian;
+    	typedef typename Hamiltonian::StateVector StateVector;                  
+	    typedef Space<typename Hamiltonian::StateVector, Lattice> StateSpace;
+		static constexpr int SymD = Hamiltonian::SymD;
+
+		private:
+
+			const Hamiltonian& ham;
+			const Lattice& lat;
+			const StateSpace& statespace;
+
+			std::array<SpinType,SymD> rdir;
+
+		public:
+			/** Constructs a Heisenberg embedding object.
+			*
+			* @param ham The corresponding Hamiltonian
+			* @param lat The corresponding lattice
+			* @param statespace The statespace of the simulation
+			*/
+			Embedder(const Hamiltonian& ham, const Lattice& lat, StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
+
+
+			/** Set new embedding variable.
+			*
+			* Typically, this function is executed once before every cluster update. The variable
+			* can be drawn randomly (for which case an RNG is provided), but of course can also follow
+			* some sequential scheme.
+			*
+			* @tparam RNG the type of the random number generator
+			* @param rng reference to the random number generator
+			*/
+			template <class RNG>
+			void draw(RNG& rng)	{rdir = rnddir<RNG, double, SymD>(rng);}
+
+
+			/** Computes the Wolff coupling when attempting to add a spin to the cluster
+			*
+			* @param pos1 The position (index) of the current state vector (which is already in the cluster)
+			* @param pos2 The position (index) of a neighbour being checked whether it will become part of the cluster as well
+			*
+			* @return The scalar Wolff coupling (a double)
+			*/
+			double coupling(int pos1, int pos2) const
+			{
+				return dot(statespace[pos1], rdir) * dot(statespace[pos2], rdir);
+			}
+
+
+
+			/** Specifies how a spin flip in the embedded (reduced) model is performed
+			*
+			* @param sv the spin to flipped
+			*/
+			void flip(StateVector& sv)
+			{
+				const double dotp = dot(sv, rdir);
+				for (int i=0; i<SymD; i++) sv[i] -= 2*dotp*rdir[i];
+			}
+	};
+
+
+}
+
+
+
 #endif

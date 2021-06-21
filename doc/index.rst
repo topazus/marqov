@@ -30,6 +30,9 @@ Welcome to the official documentation of the pyMARQOV package!
    getting_started
    observables
 
+.. doxygenfunction:: MARQOV::get_terms
+
+.. doxygenstruct:: MARQOV::has_nbrs
 
 
 

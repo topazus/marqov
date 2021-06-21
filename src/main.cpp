@@ -30,25 +30,14 @@ using std::endl;
 using std::flush;
 using std::ofstream;
 
-#include "timetracker.h"
-#include "helpers.h"
-#include "vectorhelpers.h"
-#include "cartprod.h"
-#include "registry.h"
-#include "systemtools.h"
-#include "replicate.h"
-#include "svmath.h"
-#include "filters.h"
-//#include "embedder.h"
-#include "marqovscheduler.h"
-#include "util.h"
+// MARQOV
+#include "libmarqov/libmarqov.h"
 
-// Geometry
-#include "geometry/regular_lattice.h"
-#include "geometry/ssh_lattice.h"
-#include "geometry/grid.h"
-#include "geometry/neighbourclass.h"
-#include "geometry/io.h"
+// Lattices
+#include "lattice/regular_hypercubic.h"
+#include "lattice/constant_coordination.h"
+#include "lattice/regular_random_bond.h"
+#include "lattice/simple_bipartite.h"
 
 
 // Hamiltonians
@@ -56,6 +45,7 @@ using std::ofstream;
 #include "hamiltonian/Ising.h"
 #include "hamiltonian/Phi4.h"
 #include "hamiltonian/BlumeCapel.h"
+#include "hamiltonian/BlumeEmeryGriffiths.h"
 #include "hamiltonian/XXZAntiferro.h"
 #include "hamiltonian/XXZAntiferroSingleAniso.h"
 #include "hamiltonian/AshkinTeller.h"
@@ -68,14 +58,21 @@ using namespace MARQOV;
 
 
 
+bool startswith(const std::string longword, const std::string shortword)
+{
+	if (longword.rfind(shortword, 0) == 0) return true;
+	else return false; 
+}
+
+
 std::string selectsim_startup(RegistryDB& registry)
 {
-	const auto ham        = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-	const auto dim 	    = registry.Get<int>("mc.ini", ham, "dim" );
-	const auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", ham, "rep" );
-	const auto nreplicass = registry.Get<std::string>("mc.ini", ham, "rep" );
-	const auto nL  	    = registry.Get<std::vector<int>>("mc.ini", ham, "L" );
-	const auto nLs 	    = registry.Get<std::string>("mc.ini", ham, "L" );
+	const auto ham        = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
+	const auto dim 	      = registry.Get<int>(ham+".ini", ham, "dim" );
+	const auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", ham, "rep" );
+	const auto nreplicass = registry.Get<std::string>(ham+".ini", ham, "rep" );
+	const auto nL  	      = registry.Get<std::vector<int>>(ham+".ini", ham, "L" );
+	const auto nLs 	      = registry.Get<std::string>(ham+".ini", ham, "L" );
 
 	cout << endl;
 	cout << "Hamiltonian: \t" << ham << endl;
@@ -94,16 +91,22 @@ std::string selectsim_startup(RegistryDB& registry)
 
 // ---------------------------------------
 
-void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbasedir)
+void selectsim()
 {
 
-	auto ham = selectsim_startup(registry);
+	RegistryDB registry("../src/config", "ini");
+	const auto ham = selectsim_startup(registry);
 
+	std::string outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
+
+	// delete previous output // fixme: don't do that by default!
+	std::string command;
+	command = "rm -r " + outbasedir;
+	system(command.c_str());
+	makeDir(outbasedir);
 
 
 	// ----------------- select simulation ------------------
-
-
 
 	if (ham == "Ising")
 	{
@@ -113,7 +116,6 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
  		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
-
 
 
 	else if (ham == "AshkinTeller")
@@ -127,11 +129,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	}
 
 
-
 	else if (ham == "Heisenberg")
 	{
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
 		auto parameters = cart_prod(beta, J);
 
 		RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
@@ -139,12 +140,12 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-
 	else if (ham == "Phi4")
 	{
-		auto beta   = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto lambda = registry.Get<std::vector<double> >("mc.ini", ham, "lambda");
-		auto mass   = registry.Get<std::vector<double> >("mc.ini", ham, "mass");
+
+		auto beta   = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto lambda = registry.Get<std::vector<double> >(ham+".ini", ham, "lambda");
+		auto mass   = registry.Get<std::vector<double> >(ham+".ini", ham, "mass");
 		
 		// we need "beta" as an explicit parameter in the Hamiltonian
 		// this requires some gymnastics ...
@@ -158,12 +159,11 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-
 	else if (ham == "BlumeCapel")
 	{
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-		auto D    = registry.Get<std::vector<double> >("mc.ini", ham, "D");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
+		auto D    = registry.Get<std::vector<double> >(ham+".ini", ham, "D");
 		auto parameters = cart_prod(beta, J, D);
 		
 		RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
@@ -171,11 +171,24 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
+	else if (ham == "BlumeEmeryGriffiths")
+	{
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
+		auto D    = registry.Get<std::vector<double> >(ham+".ini", ham, "D");
+		auto K    = registry.Get<std::vector<double> >(ham+".ini", ham, "K");
+		auto parameters = cart_prod(beta, J, D, K);
+		
+		RegularLatticeLoop<BlumeEmeryGriffiths<int>>(registry, outbasedir, parameters, defaultfilter);
+	}
+
+
+
 	else if (ham == "XXZAntiferro")
 	{
-		auto beta     = registry.Get<std::vector<double>>("mc.ini", ham, "beta");
-		auto extfield = registry.Get<std::vector<double>>("mc.ini", ham, "extfield");
-		auto aniso    = registry.Get<std::vector<double>>("mc.ini", ham, "aniso");
+		auto beta     = registry.Get<std::vector<double>>(ham+".ini", ham, "beta");
+		auto extfield = registry.Get<std::vector<double>>(ham+".ini", ham, "extfield");
+		auto aniso    = registry.Get<std::vector<double>>(ham+".ini", ham, "aniso");
 		auto parameters = cart_prod(beta, aniso, extfield);
 		
 		RegularLatticeLoop<XXZAntiferro<double>>(registry, outbasedir, parameters, defaultfilter);
@@ -183,18 +196,16 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 
-
 	else if (ham == "XXZAntiferroSingleAniso")
 	{
-		auto beta        = registry.Get<std::vector<double>>("mc.ini", ham, "beta");
-		auto extfield    = registry.Get<std::vector<double>>("mc.ini", ham, "extfield");
-		auto aniso       = registry.Get<std::vector<double>>("mc.ini", ham, "aniso");
-		auto singleaniso = registry.Get<std::vector<double>>("mc.ini", ham, "singleaniso");
+		auto beta        = registry.Get<std::vector<double>>(ham+".ini", ham, "beta");
+		auto extfield    = registry.Get<std::vector<double>>(ham+".ini", ham, "extfield");
+		auto aniso       = registry.Get<std::vector<double>>(ham+".ini", ham, "aniso");
+		auto singleaniso = registry.Get<std::vector<double>>(ham+".ini", ham, "singleaniso");
 		auto parameters = cart_prod(beta, extfield, aniso, singleaniso);
 
 		RegularLatticeLoop<XXZAntiferroSingleAniso<double>>(registry, outbasedir, parameters, xxzfilter);
 	}
-
 
 
 	else if (startswith(ham, "EdwardsAnderson-Ising"))
@@ -230,11 +241,10 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		typedef RegularRandomBond<GaussianPDF> Lattice;
         //typedef RegularRandomBond<BimodalPDF> Lattice;
 
-		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTripleType;
-		typedef typename ParameterTripleType::value_type ParameterType;
+        typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
-		SchedulerType sched(1);
+		SchedulerType sched(1, nthreads);
 
 		// Lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
@@ -247,25 +257,23 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	
 			// Monte Carlo parameters
 			MARQOV::Config mp(outpath);
-			mp.setnsweeps(50);
+			mp.setnmetro(50);
 			mp.setncluster(0);
 			mp.setwarmupsteps(200);
 			mp.setgameloopsteps(1000);
 
 			// lattice parameters
-			auto lp = std::make_tuple(L,dim);
+// 			auto lp = std::make_tuple(L, dim);
 
 			// form parameter triple and replicate
-			auto params  = finalize_parameter_triple(lp, mp, hp);
-			auto rparams = replicator(params, nreplicas[j]);
+			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);//this particular form is required to happify PGI-19.10
+            auto rparams = replicator(params, nreplicas[j]);
 
 			// schedule simulations
-			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter_triple);
+ 			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
 		}
-		sched.start(); // run!
+ 		sched.start(); // run!
 	}
-
-
 
 	else if (ham == "IsingCC")
 	{
@@ -295,13 +303,12 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
 		auto J    = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "J");
 		auto hp = cart_prod(beta, J);
-        
 
 		// Typedefs
 		typedef Ising<int> Hamiltonian;
 		typedef ConstantCoordinationLattice<Poissonian> Lattice;
-		typedef decltype(finalize_parameter_triple(std::declval<std::tuple<int, int> >() ,std::declval<MARQOV::Config>(), hp)) ParameterTripleType;
-		typedef typename ParameterTripleType::value_type ParameterType;
+
+        typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
 
 
@@ -319,27 +326,22 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 	
 			// Monte Carlo parameters
 			MARQOV::Config mp(outpath);
-			mp.setnsweeps(5);
+			mp.setnmetro(5);
 			mp.setncluster(15);
 			mp.setwarmupsteps(500);
 			mp.setgameloopsteps(1500);
 
-			// lattice parameters
-			auto lp = std::make_tuple(L,dim);
-
-			// form parameter triple and replicate
-			auto params  = finalize_parameter_triple(lp, mp, hp);
+			// form parameter triple with lattice parameters and replicate
+			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);
 			auto rparams = replicator(params, nreplicas[j]);
 
 			// feed scheduler
-			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter_triple);
+			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
 
 			// run!
 			sched.start();
 		}
 	}
-
-
 
 	else if (ham == "BlumeCapelBipartite")
 	{
@@ -363,7 +365,7 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 
 
 		// Replicas
-		if (nreplicas.size() == 1) { for (int i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+		if (nreplicas.size() == 1) { for (std::size_t i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 
 		// import parameters
@@ -376,12 +378,9 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 		typedef BlumeCapelBipartite<int> Hamiltonian;
 		typedef SimpleBipartite Lattice;
 
-
-		typedef decltype(finalize_parameter_pair(std::declval<MARQOV::Config>(), hp)) ParameterPairType;
-		typedef typename ParameterPairType::value_type ParameterType;
+        typedef typename std::tuple<SimpleBipartite&, MARQOV::Config, std::tuple<double, double, double, double> > ParameterType;
 		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
-		
-		
+
 		// Prepare Geometry
 		std::vector<SimpleBipartite> latts;
 		for (std::size_t j=0; j<nL.size(); j++) latts.emplace_back(nL[j], dim);
@@ -401,22 +400,20 @@ void selectsim(RegistryDB& registry, std::string outbasedir, std::string logbase
 			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 	
 			MARQOV::Config mp(outpath);
-			mp.setnsweeps(10);
+			mp.setnmetro(10);
 			mp.setncluster(int(L/2));
 			mp.setwarmupsteps(200);
 			mp.setgameloopsteps(500);
 			
 			makeDir(mp.outpath);
 			
-			auto params = finalize_parameter_pair(mp, hp);
-			auto rparams = replicator_pair(params, nreplicas[j]);
-			
 			// set up and execute        
 			Lattice& latt = latts[j];
-			auto f = [&latt](auto p){return defaultfilter(latt, p);}; //partially apply filter
+			auto params = finalize_parameter(latt, mp, hp);
+            auto rparams = replicator(params, nreplicas[j]);
 	
 			// feed the scheduler
-			for(auto p: rparams) sched.createSimfromParameter(p, f);
+			for(auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
 		}
 		sched.start();
 	}
@@ -434,22 +431,5 @@ int main()
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;
     std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;
 
-	// read config files
-	RegistryDB registry("../src/config", "ini");
-
-	// remove old output and prepare new one
-	std::string outbasedir = registry.Get<std::string>("mc.ini", "IO", "outdir" );
-	std::string logbasedir = registry.Get<std::string>("mc.ini", "IO", "logdir" );
-
-	//FIXME: NEVER DELETE USER DATA
-	std::string command;
-	command = "rm -r " + outbasedir;
-	system(command.c_str());
-	command = "rm -r " + logbasedir;
-	system(command.c_str());
-
-	makeDir(outbasedir);
-	makeDir(logbasedir);
-
-	selectsim(registry, outbasedir, logbasedir);
+	selectsim();
 }

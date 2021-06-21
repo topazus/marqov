@@ -24,41 +24,19 @@
 #include <functional>
 #include <array>
 #include <vector>
-#include "../vectorhelpers.h"
-#include "../hamparts.h"
-#include "../obsparts.h"
-#include "termcollection.h"
+#include "util/randomdir.h"
+#include "util/hamparts.h"
+#include "util/termcollection.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
 
-// ...
-
+#include "util/observables.h"
 
 
 // ------------------------------ INITIALIZER ---------------------------
 
-template <class StateVector, class RNG>
-class Heisenberg_Initializer
-{
-	public:
-		// provide the spin dimension as a compile-time constant expression
-		static constexpr int SymD = std::tuple_size<StateVector>::value;
-
-		// constructors
-		Heisenberg_Initializer()   {}
-		Heisenberg_Initializer(RNG& rn) : rng(rn) {}
-
-		// generate new statevector
-		StateVector newsv(const StateVector&) 
-		{
-			return rnddir<RNG, double, SymD>(rng);
-		};
-
-	private:
-		RNG& rng;
-};
-
+#include "util/initializers.h"
 
 
 // ------------------------------ HAMILTONIAN ---------------------------
@@ -68,8 +46,8 @@ template <class StateVector>
 class Heisenberg_interaction
 {
 	public:
-		Heisenberg_interaction(const double myJ) : J(-myJ) {}
-		StateVector get (const StateVector& phi) {return phi;};
+		Heisenberg_interaction(const double myJ) : J(myJ) {}
+		StateVector get (const StateVector& phi) noexcept {return phi;};
         const double J;
 };
 
@@ -96,15 +74,10 @@ class Heisenberg
 		//  ---- Definitions  -----
 
 		typedef std::array<SpinType, SymD> StateVector;
-		template <typename RNG>
-		using MetroInitializer =  Heisenberg_Initializer<StateVector, RNG>; 
-
 
 		//  ----  Hamiltonian terms  ----
 
         std::vector<Heisenberg_interaction<StateVector>*> interactions;
-        std::array<OnSite<StateVector, CouplingType>*, 0> onsite;
-        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
 		Heisenberg(double J) : J(J), name("Heisenberg"), observables(obs_m)
         {
@@ -147,11 +120,11 @@ namespace MARQOV
 	*/
 
 	template <class SpinType, class CouplingType, class Lattice>
-	class Embedder<Heisenberg<SpinType,CouplingType>,Lattice>
+	class Embedder<Heisenberg<SpinType, CouplingType>, Lattice>
 	{
 		typedef Heisenberg<SpinType,CouplingType> Hamiltonian;
 		typedef typename Hamiltonian::StateVector StateVector;
-		typedef StateVector* StateSpace;
+		typedef Space<typename Hamiltonian::StateVector, Lattice> StateSpace;
 		static constexpr int SymD = Hamiltonian::SymD;
 
 		private:

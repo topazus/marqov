@@ -22,8 +22,8 @@
 #include <string>
 #include <complex>
 #include <functional>
-#include "../hamparts.h"
-#include "../metropolis.h"
+#include "util/hamparts.h"
+#include "../libmarqov/metropolis.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
@@ -306,7 +306,6 @@ class EdwardsAndersonIsing
 
 		std::array<EdwardsAndersonIsing_interaction<StateVector>*, 1> interactions = {new EdwardsAndersonIsing_interaction<StateVector>(J)};
         std::array<OnSite<StateVector, int>*, 0> onsite;
-        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
 		EdwardsAndersonIsing(double J) : J(J), 
 										 name("EdwardsAndersonIsing"), 
@@ -352,6 +351,7 @@ namespace MARQOV
 	  * Identical to the specialization for the regular Ising model in "ising.h"
 	  * @see "metropolis.h"
 	  */
+	  /*
 	template <class Lattice>
 	struct Metropolis<EdwardsAndersonIsing<int>, Lattice>
 	{
@@ -400,6 +400,7 @@ namespace MARQOV
 	    	return retval;
 	    }
 	};
+	*/
 
 }
 #endif

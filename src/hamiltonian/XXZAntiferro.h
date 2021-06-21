@@ -4,8 +4,8 @@
 #include <cmath>
 #include <string>
 #include <functional>
-#include "../vectorhelpers.h"
-#include "../hamparts.h"
+#include "util/randomdir.h"
+#include "util/hamparts.h"
 
 // ------------------------------ OBSERVABLES ---------------------------
 
@@ -123,24 +123,7 @@ class XXZAntiferroStaggeredMagXY
 
 // ------------------------------ INITIALIZER ---------------------------
 
-template <class StateVector, class RNG>
-class XXZAntiferro_Initializer
-{
-	public:
-		// constructors
-		XXZAntiferro_Initializer(RNG& rn) : rng(rn) {}
-
-		// generate new statevector
-		StateVector newsv(const StateVector&) 
-		{
-			return rnddir<RNG, double, 3>(rng);
-		};
-
-	private:
-		RNG& rng;
-};
-
-
+#include "util/initializers.h"
 
 
 
@@ -178,12 +161,11 @@ template <class StateVector>
 class XXZAntiferro_extfield : public OnSite<StateVector, double>
 {
 	public:
-        const double& h;
 		/** Constructor of anisotropic external field term
 		*
 		* @param H the coupling constant of the field in z-direction
 		*/
-		XXZAntiferro_extfield(const double& H) : h(H) {}
+		XXZAntiferro_extfield(const double& H) : OnSite<StateVector,double>(H) {}
 		double get (const StateVector& phi) {return phi[2];};
 };
 
@@ -208,15 +190,11 @@ class XXZAntiferro
 		//  ---- Definitions  -----
 		
 		typedef std::array<SpinType, SymD> StateVector;
-		template <typename RNG>
-		using MetroInitializer =  XXZAntiferro_Initializer<StateVector, RNG>; 
-
 
 		//  ----  Hamiltonian terms  ----
 
         std::array<XXZAntiferro_interaction<StateVector>*, 1> interactions = {new XXZAntiferro_interaction<StateVector>(Delta)};
         std::array<XXZAntiferro_extfield<StateVector>*, 1> onsite = {new XXZAntiferro_extfield<StateVector>(H)};
-        std::array<FlexTerm<StateVector*,  StateVector>*, 0> multisite;
 
 		XXZAntiferro(double Delta, double H) : Delta(Delta), H(H), name("XXZAntiferro") {}
 
