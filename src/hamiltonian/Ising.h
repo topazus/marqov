@@ -74,9 +74,6 @@ class Ising
 		//  ---- Definitions  -----
 
 		typedef std::array<SpinType, SymD> StateVector;
-		template <typename RNG>
-		using MetroInitializer = Ising_Initializer<StateVector, RNG>;
-
 
 		//  ----  Hamiltonian terms  ---- 
 

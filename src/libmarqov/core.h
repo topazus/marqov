@@ -551,8 +551,7 @@ class Core : public RefType<Grid>
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
 		obs(ham.observables),
-		rngcache(time(NULL)+std::random_device{}()),
-		metro(rngcache)
+		rngcache(time(NULL)+std::random_device{}())
 		{
 			hdf5lock.unlock();
 
@@ -590,8 +589,7 @@ class Core : public RefType<Grid>
 		stategroup(dump.openGroup("/step"+std::to_string(step)+"/state")),
 		obscache(ObsTupleToObsCacheTuple<ObsTs>::getargtuple(obsgroup, ham.observables)),
 		obs(ham.observables),
-		rngcache(time(NULL)+std::random_device{}()), 
-		metro(rngcache)
+		rngcache(time(NULL)+std::random_device{}())
 		{
 			hdf5lock.unlock();
 
@@ -1196,10 +1194,6 @@ class Core : public RefType<Grid>
 //		typedef std::ranlux48_base RNGType;
 		typedef std::mt19937_64 RNGType; ///< Here the type of the RNG is set.
 		RNGCache<RNGType> rngcache;///< The caching RNG
-
-
-		//Get the MetroInitializer from the user, It's required to have one template argument left, the RNG.
-		typename Hamiltonian::template MetroInitializer<RNGCache<RNGType> > metro;
 };
 
 

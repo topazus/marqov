@@ -96,8 +96,8 @@ class BlumeEmeryGriffiths
 		//  ---- Definitions  -----
 
 		typedef std::array<SpinType, SymD> StateVector;
-		template <typename RNG>
-		using MetroInitializer = Spin1_Initializer<StateVector, RNG>;
+//		template <typename RNG>
+//		using MetroInitializer = Spin1_Initializer<StateVector, RNG>;
 
 
 
@@ -152,7 +152,8 @@ class BlumeEmeryGriffiths
 		}
 };
 
-
+template <typename SpinType>
+class Initializer<BlumeEmeryGriffiths<SpinType> > : public  Spin1_Initializer<typename BlumeEmeryGriffiths<SpinType>::StateVector > {};
 
 
 // ------------------------------ SPECIALIZATIONS ---------------------------
