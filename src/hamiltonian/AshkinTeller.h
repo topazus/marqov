@@ -119,8 +119,8 @@ class AshkinTeller
 		//  ---- Definitions  -----
 
 		typedef std::array<int, SymD> StateVector;
-		template <typename RNG>
-		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
+//		template <typename RNG>
+//		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
 
 
 		//  ---- Hamiltonian  -----
@@ -171,6 +171,14 @@ class AshkinTeller
 			}
 		}
 
+};
+
+template <>
+class Initializer<AshkinTeller>
+{
+typedef typename AshkinTeller::StateVector StateVector;
+template <class RNGCache>
+static StateVector newsv(const StateVector&, RNGCache&) {return StateVector();}
 };
 
 
@@ -280,11 +288,11 @@ namespace MARQOV
 	
 	
 		// the actual Metropolis move attempt
-		template <class StateSpace, class M, class RNG>
+		template <class StateSpace/*, class M*/, class RNG>
 		static inline int move(const AshkinTeller& ham, 
 						   const Lattice& grid, 
 						   StateSpace& statespace, 
-						   M& metro, 
+//						   M& metro, 
 						   RNG& rng, 
 						   double beta, 
 						   int rsite)

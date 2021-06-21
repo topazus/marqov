@@ -59,8 +59,8 @@ class BlumeCapel
 		//  ---- Definitions  -----
 
 		typedef std::array<SpinType, SymD> StateVector;
-		template <typename RNG>
-		using MetroInitializer = Spin1_Initializer<StateVector, RNG>;
+//		template <typename RNG>
+//		using MetroInitializer = Spin1_Initializer<StateVector, RNG>;
 
 
 
@@ -151,6 +151,9 @@ namespace MARQOV
 
 	};
 }
+
+template <typename SpinType>
+class Initializer<BlumeCapel<SpinType> > : public  Spin1_Initializer<typename BlumeCapel<SpinType>::StateVector > {};
 
 
 #endif

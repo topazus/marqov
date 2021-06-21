@@ -22,6 +22,7 @@
 #include <cmath>
 #include "rngcache.h"
 #include "metropolishelpers.h"
+#include "../hamiltonian/util/initializers.h"
 
 // -------------------------- Metropolis Algorithm -----------------------------
 
@@ -38,19 +39,20 @@ namespace MARQOV
 	template <class Hamiltonian, class Lattice>
 	struct Metropolis
 	{
-		template <class StateSpace, class M, class RNGType>
+		template <class StateSpace, class RNGType>
 		static int move(const Hamiltonian& ham, 
 		   				const Lattice& grid, 
 						StateSpace& statespace, 
-						M& metro, 
 						RNGCache<RNGType>& rng, 
 						double beta, 
 						int rsite);
 	};
 
 	/**
-	 * The actual Metropolis move attempt
+	 * The actual Metropolis move attempt.
 	 *
+     * The behaviour of the basic local MARQOV step, how to generate a new state vector
+     * from an old one, can be set by the initializers, @see initializers.h
 	 * @tparam Hamiltonian the type of the Hamiltonian
 	 * @tparam Lattice the type of the lattice
 	 * @tparam StateSpace the type of the state space
@@ -60,7 +62,6 @@ namespace MARQOV
 	 * @param ham the Hamiltonian
 	 * @param grid the lattice
 	 * @param statespace the statespace
-	 * @param metro initalizer, proposes new state vector configuration
 	 * @param rng the random number generator
 	 * @param beta inverse temperature
 	 * @param rsite site to be considered for an update
@@ -68,11 +69,11 @@ namespace MARQOV
 	 * @return integer, encoding whether the update was accepted or rejected
 	 */
     template <class Hamiltonian, class Lattice>
-    template <class StateSpace, class M, class RNGType>
+    template <class StateSpace/*, class M*/, class RNGType>
     int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, 
     											const Lattice& grid, 
 												StateSpace& statespace, 
-												M& metro, RNGCache<RNGType>& rng, 
+												RNGCache<RNGType>& rng, 
 												double beta, 
 												int rsite)
     {
@@ -86,8 +87,7 @@ namespace MARQOV
 		// old state vector at index rsite
 		StateVector& svold = statespace[rsite];
 		// propose new configuration
-		StateVector svnew = metro.newsv(svold);
-		        
+		StateVector svnew(Initializer<Hamiltonian>::newsv(svold, rng) );
 
 		// I. interaction part
 		double interactionenergydiff = compute_interactionenergydiff(grid, ham, statespace, svnew, svold, rsite, HasInt());

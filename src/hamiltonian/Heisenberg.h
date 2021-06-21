@@ -46,7 +46,7 @@ template <class StateVector>
 class Heisenberg_interaction
 {
 	public:
-		Heisenberg_interaction(const double myJ) : J(-myJ) {}
+		Heisenberg_interaction(const double myJ) : J(myJ) {}
 		StateVector get (const StateVector& phi) noexcept {return phi;};
         const double J;
 };
@@ -74,9 +74,6 @@ class Heisenberg
 		//  ---- Definitions  -----
 
 		typedef std::array<SpinType, SymD> StateVector;
-		template <typename RNG>
-		using MetroInitializer =  NVector_Initializer<StateVector, RNG>; 
-
 
 		//  ----  Hamiltonian terms  ----
 
