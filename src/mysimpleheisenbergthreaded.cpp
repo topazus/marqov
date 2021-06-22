@@ -39,7 +39,7 @@ class MySimpleHeisenberg
 
 		// Hamiltonian terms
 		// here this is only the canonical O(3) interaction, defined above
-        std::array<MyHeisenberg_interaction*, 1> interactions = {new MyHeisenberg_interaction(J)};
+		std::array<MyHeisenberg_interaction*, 1> interactions = {new MyHeisenberg_interaction(J)};
         
 		// Constructor
 		MySimpleHeisenberg(double J) : J(J), name("MySimpleHeisenberg"), obs_e(*this){}
@@ -62,7 +62,7 @@ int main()
     RegularHypercubic mylatt(L, dim);
 
 	// Set Monte Carlo parameters using MARQOV::Config
-	MARQOV::Config mp("."); // output path 
+	MARQOV::Config mp("./"); // output path 
 	mp.setnmetro(5); // number of Metropolis sweeps per EMCS
 	mp.setncluster(10); // number of Wolff updates per EMCS
 	mp.setwarmupsteps(500); // number of EMCS for warmup
