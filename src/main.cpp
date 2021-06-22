@@ -108,10 +108,10 @@ void selectsim()
 
 	// ----------------- select simulation ------------------
 
-	if (ham == "Ising")
+	if (startswith(ham,"Ising"))
 	{
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
 		auto parameters = cart_prod(beta, J);
 
  		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
@@ -120,9 +120,9 @@ void selectsim()
 
 	else if (ham == "AshkinTeller")
 	{
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-		auto K    = registry.Get<std::vector<double> >("mc.ini", ham, "K");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
+		auto K    = registry.Get<std::vector<double> >(ham+".ini", ham, "K");
 		auto parameters = cart_prod(beta, J, K);
 
 		RegularLatticeLoop<AshkinTeller>(registry, outbasedir, parameters, defaultfilter);
