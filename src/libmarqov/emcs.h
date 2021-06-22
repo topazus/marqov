@@ -82,8 +82,8 @@ namespace MARQOV
         return avgclustersize/ncluster;
     }
     
-template <class Grid, class Hamiltonian, template<class> class RefType>
-double Core<Grid, Hamiltonian, RefType>::elementaryMCstep()
+template <class Grid, class Hamiltonian, class MutexType, template<class> class RefType>
+double Core<Grid, Hamiltonian, MutexType, RefType>::elementaryMCstep()
 {
     return EMCS<Hamiltonian, Grid>::move(this->ham,
 											this->grid, 

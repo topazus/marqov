@@ -7,6 +7,9 @@
 #include <utility>
 #include <unordered_map>
 #include <exception>
+#include <iostream>
+#include <vector>
+#include <iomanip>
 #include <unistd.h> // provides usleep, only for testing purposes
 
 typedef std::chrono::high_resolution_clock Time;
@@ -160,7 +163,7 @@ namespace marqovtime
 					auto dur_print = std::chrono::duration_cast<timeformat>(wallclock.dur).count();
 
 					if (minimal) std::cout << "wall " << dur_print*print_mult << std::endl;
-					else std::cout << "  wallclock     " << dur_print*print_mult << " " << print_unit << endl << endl;
+					else std::cout << "  wallclock     " << dur_print*print_mult << " " << print_unit << std::endl << std::endl;
 				}
 		}
 	
