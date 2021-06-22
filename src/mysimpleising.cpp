@@ -51,7 +51,7 @@ int main()
     RegularHypercubic mylatt(L, dim);
 
     // Set Monte Carlo parameters using MARQOV::Config
-    MARQOV::Config mp("."); // output path
+    MARQOV::Config mp("out"); // output filename: will be out.h5
     mp.setnmetro(5); // number of Metropolis sweeps per EMCS
     mp.setncluster(10); // number of Wolff updates per EMCS
     mp.setwarmupsteps(500); // number of EMCS for warmup
@@ -71,5 +71,6 @@ int main()
     // Eexecute the Core routines of MARQOV.
     auto mysim = makeCore<RegularHypercubic, MySimpleIsing>(args);
     mysim.init();
+    mysim.wrmploop();
     mysim.gameloop();
 }
