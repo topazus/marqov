@@ -43,6 +43,7 @@ using std::ofstream;
 // Hamiltonians
 #include "hamiltonian/Heisenberg.h"
 #include "hamiltonian/Ising.h"
+#include "hamiltonian/Potts.h"
 #include "hamiltonian/Phi4.h"
 #include "hamiltonian/BlumeCapel.h"
 #include "hamiltonian/BlumeEmeryGriffiths.h"
@@ -117,6 +118,15 @@ void selectsim()
  		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
 
+	if (startswith(ham,"Potts"))
+	{
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto q    = registry.Get<std::vector<int> >(ham+".ini", ham, "q");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
+		auto parameters = cart_prod(beta, q, J);
+
+ 		RegularLatticeLoop<Potts<int>>(registry, outbasedir, parameters, defaultfilter);
+	}
 
 	else if (ham == "AshkinTeller")
 	{
