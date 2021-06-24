@@ -33,6 +33,37 @@
 // ------------------------------ OBSERVABLES ---------------------------
 
 
+template <int Q>
+class PottsMagnetization
+{
+	public:
+	std::string name, desc;
+
+	template <class StateSpace, class Grid>
+	double measure(const StateSpace& statespace, const Grid& grid)
+	{
+		const auto N = grid.size();
+
+		std::array<int,Q> magarray;
+
+		for (int i=0; i<Q; i++) magarray[i] = 0;
+		
+		for (std::size_t i=0; i<N; i++)
+		{
+			magarray[statespace[i][0]]++;
+		}
+
+		int maxelem = *std::max_element(magarray.begin(), magarray.end());
+
+		return double(Q*maxelem-N)/double(N*(Q-1));
+	}
+
+	PottsMagnetization() : name("m"), desc("Magnetization of the Q-color Potts model") {}
+
+};
+			
+
+
 // ------------------------------ HAMILTONIAN ---------------------------
 
 template <class StateSpace, class StateVector>
@@ -106,7 +137,7 @@ class Potts
 
 		//  ----  Observables ----
 
-		Magnetization  obs_m;
+		PottsMagnetization<Q>  obs_m;
         decltype(std::make_tuple(obs_m)) observables = {std::make_tuple(obs_m)};
 
 
