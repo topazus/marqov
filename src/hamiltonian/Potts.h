@@ -35,6 +35,34 @@
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
+template <class StateSpace, class StateVector>
+class PottsInteraction : public FlexTerm<StateSpace, StateVector>
+{
+	public:
+		PottsInteraction(const double k) : FlexTerm<StateSpace, StateVector>(k) {}
+		~PottsInteraction() {};
+
+		double diff (const int rsite,
+					const StateVector& svold,
+					const StateVector& svnew,
+					std::vector<int>& nbrs,
+					StateSpace& s)
+		{
+			double energy_before = 0;
+			double energy_after  = 0;
+
+			for (std::size_t i=0; i<nbrs.size(); ++i)
+			{
+				auto idx = nbrs[i];
+				auto nbr = s[idx]; 
+				 if (svold[0] == nbr[0]) energy_before += 1; // Dirac delta interaction
+				 if (svnew[0] == nbr[0]) energy_after  += 1; // Dirac delta interaction
+				}
+			return energy_after-energy_before;
+		}
+
+};
+
 /**
  * Ising Hamiltonian
  * This defines the Ising Hamiltonian. It only consists of a single part,
@@ -60,11 +88,20 @@ class Potts
 
 		//  ----  Hamiltonian terms  ---- 
 
-        std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
+		// we need this only for the Wolff algorithm to access ham.interactions[0]->J
+		std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
+		// can be avoided by providing an explicit specialization of the Wolff algorithm for this model
 
-		Potts(double J) : J(J), name("Ising")
-		{}
-		~Potts() {delete interactions[0];}
+		// now this is very the actual physics happens:
+		PottsInteraction<MARQOV::Space<StateVector, RegularHypercubic>, StateVector> potts_interaction;
+
+		std::vector<FlexTerm<MARQOV::Space<StateVector, RegularHypercubic>, StateVector>*> multisite;
+
+		Potts(double J) : J(J), name("Potts"), potts_interaction(J)
+		{
+			multisite.push_back(&potts_interaction);
+		}
+		~Potts() {}
 
 
 		//  ----  Observables ----
