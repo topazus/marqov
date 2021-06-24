@@ -41,14 +41,14 @@
  * namely the interaction.
  * @tparam SpinType the type in which to store the binary magnetization values.
  */
-template <typename SpinType = int>
+template <int Q>
 class Potts
 {
 	public:
 		
 		//  ----  Parameters  ----
 
-		int q;
+		static constexpr int q = Q;
 		double J;
 		static constexpr int SymD = 1;
 		const std::string name;
@@ -56,13 +56,13 @@ class Potts
 
 		//  ---- Definitions  -----
 
-		typedef std::array<SpinType, SymD> StateVector;
+		typedef std::array<int, SymD> StateVector;
 
 		//  ----  Hamiltonian terms  ---- 
 
         std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
 
-		Potts(int q, double J) : q(q), J(J), name("Ising")
+		Potts(double J) : J(J), name("Ising")
 		{}
 		~Potts() {delete interactions[0];}
 
@@ -88,17 +88,17 @@ class Potts
 };
 
 
-template <typename SpinType>
-class Initializer<Potts<SpinType>>
+template <int Q>
+class Initializer<Potts<Q>>
 {
 	public:
 
 		template <class RNGCache>
-		static typename Potts<SpinType>::StateVector newsv(typename Potts<SpinType>::StateVector& svold, RNGCache& rng) 
+		static typename Potts<Q>::StateVector newsv(typename Potts<Q>::StateVector& svold, RNGCache& rng) 
 		{
-			typedef typename Potts<SpinType>::StateVector StateVector;
+			typedef typename Potts<Q>::StateVector StateVector;
 			StateVector retval(svold);
-			retval[0] = rng.integer(Potts<SpinType>::q);
+			retval[0] = rng.integer(Q);
 			return retval;
 		}
 };

@@ -121,11 +121,10 @@ void selectsim()
 	if (startswith(ham,"Potts"))
 	{
 		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
-		auto q    = registry.Get<std::vector<int> >(ham+".ini", ham, "q");
 		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
-		auto parameters = cart_prod(beta, q, J);
+		auto parameters = cart_prod(beta, J);
 
- 		RegularLatticeLoop<Potts<int>>(registry, outbasedir, parameters, defaultfilter);
+ 		RegularLatticeLoop<Potts<3>>(registry, outbasedir, parameters, defaultfilter);
 	}
 
 	else if (ham == "AshkinTeller")
