@@ -139,7 +139,7 @@ void selectsim()
 				RegularLatticeLoop<Potts<8>>(registry, outbasedir, parameters, defaultfilter);
 				break;
 			default:
-				std::cout<<"[MARQOV::main] Potts: unsupported q!"
+				std::cout<<"[MARQOV::main] Potts: unsupported q!";
 		}
 	}
 
