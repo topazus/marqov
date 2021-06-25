@@ -118,7 +118,7 @@ void selectsim()
  		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
 
-	if (startswith(ham,"Potts"))
+	else if (startswith(ham,"Potts"))
 	{
 		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
 		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");

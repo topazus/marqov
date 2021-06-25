@@ -33,6 +33,10 @@
 // ------------------------------ OBSERVABLES ---------------------------
 
 
+/** Magnetization of the Q-state Potts model
+*
+* @tparam Q the number of spin values
+*/
 template <int Q>
 class PottsMagnetization
 {
@@ -44,17 +48,15 @@ class PottsMagnetization
 	{
 		const auto N = grid.size();
 
+		// count different states
 		std::array<int,Q> magarray;
-
 		for (int i=0; i<Q; i++) magarray[i] = 0;
-		
-		for (std::size_t i=0; i<N; i++)
-		{
-			magarray[statespace[i][0]]++;
-		}
+		for (std::size_t i=0; i<N; i++) magarray[statespace[i][0]]++;
 
+		// find maximum
 		int maxelem = *std::max_element(magarray.begin(), magarray.end());
 
+		// definition of the magnetization
 		return double(Q*maxelem-N)/double(N*(Q-1));
 	}
 
@@ -66,6 +68,14 @@ class PottsMagnetization
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
+/** The Potts interaction term
+*
+* @tparam StateSpace the type of the state space
+* @tparam StateVector the type of the state vector
+*
+* @note This term does not match the required canonical interaction form and his
+* hence implented as a Flex Term
+*/
 template <class StateSpace, class StateVector>
 class PottsInteraction : public FlexTerm<StateSpace, StateVector>
 {
@@ -97,11 +107,11 @@ class PottsInteraction : public FlexTerm<StateSpace, StateVector>
 
 };
 
+
 /**
- * Ising Hamiltonian
- * This defines the Ising Hamiltonian. It only consists of a single part,
- * namely the interaction.
- * @tparam SpinType the type in which to store the binary magnetization values.
+ * Potts Hamiltonian with Q states.
+ *
+ * @tparam Q defines the number of spin values 0,1,...,Q-1 
  */
 template <int Q>
 class Potts
@@ -110,8 +120,8 @@ class Potts
 		
 		//  ----  Parameters  ----
 
-		static constexpr int q = Q;
-		double J;
+		static constexpr int q = Q; // number of states
+		double J; // coupling constant
 		static constexpr int SymD = 1;
 		const std::string name;
 
@@ -122,15 +132,11 @@ class Potts
 
 		//  ----  Hamiltonian terms  ---- 
 
-		// we need this only for the Wolff algorithm to access ham.interactions[0]->J
-		// FIXME!! computing the standard interaction and multiplying by a zero constant is ugly ...
-		// can be avoided by providing an explicit specialization of the Wolff algorithm for this model
-		// but is this the way ... ?
-		std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(0)};
+		// note: since this Hamilitonian has no standard interaction term, a specialization of
+		// the Wolff algorithm necessarily has to be provided // FIXME
 
-		// now this is very the actual physics happens:
+		// The Potts interaction is not of the standard form and hence categorized as a Flex Term
 		PottsInteraction<MARQOV::Space<StateVector, RegularHypercubic>, StateVector> potts_interaction;
-
 		std::vector<FlexTerm<MARQOV::Space<StateVector, RegularHypercubic>, StateVector>*> multisite;
 
 		Potts(double J) : J(J), name("Potts"), potts_interaction(J)
@@ -160,6 +166,10 @@ class Potts
 };
 
 
+/** Specialization of the Metropolis initialier for the Q-state Potts model
+*
+* @tparam Q the number of the spin values
+*/
 template <int Q>
 class Initializer<Potts<Q>>
 {
@@ -174,6 +184,158 @@ class Initializer<Potts<Q>>
 			return retval;
 		}
 };
+
+
+
+namespace MARQOV
+{
+	/** Specialization of the Embedding class for the Potts model 
+	*
+	* @tparam Q number of spin values
+	* @tparam Lattice the type of the lattice
+	*/
+	template <int Q, class Lattice>
+	class Embedder<Potts<Q>, Lattice>
+	{
+		typedef Potts<Q> Hamiltonian;
+		typedef typename Hamiltonian::StateVector StateVector;
+		typedef Space<typename Hamiltonian::StateVector, Lattice> StateSpace;
+		static constexpr int SymD = Hamiltonian::SymD;
+
+		private:
+			const Hamiltonian& ham;
+			const Lattice& lat;
+			const StateSpace& statespace;
+
+			int newq = -1;
+			int oldq;
+
+		public:
+			/** Constructs a Potts embedding object
+			*
+			* @param ham The corresponding Hamiltonian
+			* @param lat The corresponding lattice
+			* @param statespace The statespace of the simulation
+			*/
+			Embedder(const Hamiltonian& ham, const Lattice& lat, StateSpace& statespace) : ham(ham), lat(lat), statespace(statespace) {};
+
+
+			/** Set new embedding variable.
+			* @tparam RNG the type of the random number generator
+			* @param rng reference to the random number generator 
+			* @param sv current state of the cluster seed
+			*/
+			template <class RNG>
+			void draw(RNG& rng, StateVector& sv) 
+			{
+				// store old spin value
+				oldq = sv[0];
+
+				// draw new spin state which is different (!) from the old one
+				do {newq = rng.integer(Q);}
+				while (newq == oldq);
+			}
+
+			/** Computes the Wolff coupling when attempting to add a spin to the cluster
+			*
+			* @param pos1 The position (index) of the current state vector
+			* @param pos2 The position (index) of a neighbour being checked whether it will become part of the cluster
+			* @return The scalar Wolff coupling (a double)
+			*/
+			double coupling(int pos1, int pos2) const
+			{
+				// compare against original q-value of the seed
+				if (oldq != statespace[pos2][0]) return 0;
+				else return -0.5;
+			}
+
+			/** Specifies how a spin flip in the embedded (reduced) model is performed
+			*
+			* @param sv the spin to flipped
+			*/
+			void flip(StateVector& sv) const
+			{
+				sv[0] = newq;
+			}
+		};
+
+
+                
+                
+		/** Specialization of the Wolff cluster algorithm for the Q-state Potts model
+		*
+		* @tparam Lattice the type of the lattice
+		* @tparam Q number of spin values
+		*
+		* @note this is an example how you can apply a Wolff update to a flex term
+		*/
+        template <class Lattice, int Q>
+        struct Wolff<Potts<Q>, Lattice>
+        {
+            template <class RNG, class StateSpace>
+            static inline int move(const Potts<Q>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
+            {
+				typedef Potts<Q> Hamiltonian;
+				typedef typename Hamiltonian::StateVector StateVector;
+				constexpr static int SymD = Hamiltonian::SymD;
+                            
+				// set up embedder
+				Embedder<Hamiltonian, Lattice> embd(ham, grid, statespace);
+				embd.draw(rng,statespace[rsite]);
+		
+		        // prepare stack
+		        typedef typename Hamiltonian::StateVector StateVector;
+		        std::vector<int> cstack(grid.size(), 0);
+		
+		        // add cluster seed and flip it
+		        int q = 0;
+		        cstack[q] = rsite;
+		        int clustersize = 1;
+				embd.flip(statespace[rsite]);
+		
+		        // loop over stack as long as non-empty
+		        while (q>=0)
+		        {
+		            // extract last sv in stack
+		            const int currentidx = cstack[q];
+		            q--;
+		            
+		            // get its neighbours
+					const int c = 0;
+					{
+		        		const double gcpl = ham.multisite[c]->k;
+		            	auto nbrs = grid.flexnbrs(c, currentidx);
+		
+		            	// loop over neighbours
+		            	for (std::size_t i = 0; i < nbrs.size(); ++i)
+		            	{
+		            	    // extract corresponding sv
+		            	    const auto currentnbr = nbrs[i];
+		            	    StateVector& candidate = statespace[currentnbr];
+		            	    
+							const auto lcpl = embd.coupling(currentidx, currentnbr);
+							const double cpl = gcpl*lcpl;
+		
+							
+		            	    // test whether site is added to the cluster
+		            	    if (cpl > 0)
+		            	    {
+		            	        if (rng.real() < -std::expm1(-2.0*beta*cpl))
+		            	        {
+		            	            q++;
+		            	            cstack[q] = currentnbr;
+		            	            clustersize++;
+		            	            embd.flip(candidate);
+		            	        }
+		            	    }
+		            	}
+		            }
+		        }
+		        return clustersize;
+		    }    
+                            
+        };
+}
 
 
 #endif

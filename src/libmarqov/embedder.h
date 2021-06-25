@@ -64,7 +64,7 @@ class Embedder
 		  * @param rng the random number generator
 		  */
 		template <class RNG>
-		void draw(RNG& rng)
+		void draw(RNG& rng, StateVector& sv)
 		{
 			rdir = rng.integer(SymD);
 		}
