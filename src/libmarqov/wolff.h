@@ -68,10 +68,8 @@ namespace MARQOV
             q--;
             
             // get its neighbours
-//			const int a = 0;
 			for (decltype(ham.interactions.size()) a = 0; a < ham.interactions.size(); a++)
 			{
-//        		const double gcpl = ham.multisite[a]->k;
         		const double gcpl = ham.interactions[a]->J;
             	auto nbrs = grid.nbrs(a, currentidx);
 
