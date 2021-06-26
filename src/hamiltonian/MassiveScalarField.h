@@ -132,21 +132,24 @@ class MassiveScalarField
 
 // ------------------------------ INITIALIZER ---------------------------
 
-template <class StateVector>
+//template <class StateVector>
+template <>
 class Initializer<MassiveScalarField>
 {
 	public:
 		Initializer() {}
 
 		template <class RNGCache>
-		static StateVector newsv(const StateVector& svold, RNGCache& rng)
+//		static StateVector newsv(const StateVector& svold, RNGCache& rng)
+		static typename MassiveScalarField::StateVector newsv(const typename MassiveScalarField::StateVector& svold, RNGCache& rng)
 		{
 			double amp = 0.5; // Amplitude (TODO: make me a class parameter)
 			double r = rng.real(-1.0, 1.0);
-			double oldval = osv[0];
+
+			double oldval = svold[0];
 			double newval = oldval + amp*r;
-			auto nsv = osv
-			nsv[comp] = newval;
+			auto nsv = svold;
+			nsv[0] = newval;
 			return nsv;
 		}
 };

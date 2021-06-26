@@ -78,7 +78,7 @@ int main()
 	std::string latfile = "/home/schrauth/marqov/marqov-dev/src/geometry/7-3-8.csv";
     GraphFromCSV lat(latfile);
 
-    typedef typename std::tuple<Lattice&, MARQOV::Config, std::tuple<double,double> > ParameterType;
+    typedef typename std::tuple<Lattice&, MARQOV::Config, std::tuple<double,double,double> > ParameterType;
 	typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
  	SchedulerType sched(1,nthreads);
 
