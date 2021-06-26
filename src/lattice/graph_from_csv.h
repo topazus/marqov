@@ -58,7 +58,7 @@ class GraphFromCSVwithCoords
     std::vector<std::vector<int>> neighbours;
     std::vector<std::vector<double>> grid;
 
-    GraphFromCSV(std::string filename, ncoords) 
+    GraphFromCSVwithCoords(std::string filename, int ncoords) 
     {
         npoints = import_geometry(filename, grid, neighbours, ncoords);
     }
