@@ -14,6 +14,12 @@ target_include_directories(mysimpleheisenbergthreaded PUBLIC ${MYHDF5INCLUDES})
 target_link_libraries(mysimpleheisenbergthreaded libmarqov)
 set_target_properties(mysimpleheisenbergthreaded PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
+# configuration for the Klein-Gordon case
+add_executable(kleingordon kleingordon.cpp libmarqov/marqov.cpp)
+target_include_directories(kleingordon PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(kleingordon libmarqov)
+set_target_properties(kleingordon PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+
 # configuration of the main parts.
 
 SET(MARQOVTARGETS MARQOV mpiMARQOV)

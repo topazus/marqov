@@ -1,0 +1,156 @@
+#ifndef PHI4_H
+#define PHI4_H
+#include <array>
+#include <cmath>
+#include <vector>
+#include "util/randomdir.h"
+#include "util/hamparts.h"
+#include "util/termcollection.h" 
+
+
+auto hyperfilter = [](auto p)
+{
+	auto& mp = std::get<1>(p);
+	auto& hp = std::get<2>(p);
+
+	std::string str_repid = std::to_string(mp.repid);
+	std::string str_mass  = "mass"+std::to_string(std::get<2>(hp));
+	mp.outname = str_mass + "_" + str_repid;
+
+	return p;
+};
+
+
+// ------------------------------ OBSERVABLES ---------------------------
+
+#include "util/observables.h"
+
+
+
+
+// ------------------------------ HAMILTONIAN --------------------------
+
+
+template <class StateSpace, class StateVector> 
+class FiniteDifferencesInteraction
+{
+
+	public:
+		const double k;
+		FiniteDifferencesInteraction(double k) : k(k) {}
+		~FiniteDifferencesInteraction() {}
+
+        double diff (const int rsite,
+						const StateVector& svold,
+						const StateVector& svnew,
+						std::vector<int>& nbrs,
+						StateSpace& s) 
+
+		{
+			double energy_old = 0;
+			double energy_new  = 0;
+			for (std::size_t i=0; i<nbrs.size(); ++i)
+			{                                     
+				auto idx = nbrs[i];                
+				auto nbr = s[idx];                  
+
+				energy_old += pow((svold[0]-nbr[0]),2);
+				energy_new += pow((svnew[0]-nbr[0]),2);
+			}
+			return energy_new-energy_old;
+		}
+
+};
+
+
+
+
+/** Action of a massive scalar field
+ */
+class MassiveScalarField
+{
+	public:
+		//  ----  Parameters  ----
+
+		double beta, k, mass;
+		static constexpr int SymD = 1;
+		const std::string name = "MassiveScalarField";
+
+
+		//  ---- Definitions  -----
+
+		typedef std::array<double, SymD> StateVector;
+
+
+
+		//  ----  Hamiltonian terms  ----
+
+		Onsite_Quadratic<StateVector> onsite_standard;
+		FiniteDifferencesInteraction<MARQOV::Space<StateVector,GraphFromCSV>, StateVector> maininteraction;
+
+		std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(0)};
+		std::vector<OnSite<StateVector, double>*>        onsite; // empty here, to be filled in the constructor!
+		std::vector<FiniteDifferencesInteraction<MARQOV::Space<StateVector,GraphFromCSV>,StateVector>*> multisite;
+
+		MassiveScalarField(double k, double mass) : 
+				k(k), mass(mass), name("MassiveScalarField"), onsite_standard(mass), maininteraction(k)
+		{
+			onsite.push_back(&onsite_standard);
+			multisite.push_back(&maininteraction);
+		}
+
+
+
+		//  ----  Observables  ----
+
+		Magnetization obs_m;
+        decltype(std::make_tuple(obs_m)) observables = {std::make_tuple(obs_m)};
+
+
+
+		//  ---- Parameter Names ----
+
+		/** Allows to give the Hamiltonian parameter names
+		*
+		* @param i index of the parameter
+		*
+		* @return the parameter name (string)
+		*/
+		std::string paramname(int i)
+		{
+			std::string name;
+			switch (i)
+			{
+				case (0): name = "k"; break;
+				case (1): name = "mass"; break;
+				default: break;
+			}
+			return name;
+		}
+};
+
+
+// ------------------------------ INITIALIZER ---------------------------
+
+template <class StateVector>
+class Initializer<MassiveScalarField>
+{
+	public:
+		Initializer() {}
+
+		template <class RNGCache>
+		static StateVector newsv(const StateVector& svold, RNGCache& rng)
+		{
+			double amp = 0.5; // Amplitude (TODO: make me a class parameter)
+			double r = rng.real(-1.0, 1.0);
+			double oldval = osv[0];
+			double newval = oldval + amp*r;
+			auto nsv = osv
+			nsv[comp] = newval;
+			return nsv;
+		}
+};
+
+
+
+#endif
