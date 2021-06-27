@@ -43,6 +43,10 @@ class GraphFromCSV
         return neighbours[i];
     }
 
+    std::vector<int> flexnbrs(const int a, const int i) const
+    {
+        return neighbours[i];
+    }
     std::size_t size() const {return npoints;}
 };
 

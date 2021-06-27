@@ -14,7 +14,7 @@ auto hyperfilter = [](auto p)
 	auto& hp = std::get<2>(p);
 
 	std::string str_repid = std::to_string(mp.repid);
-	std::string str_mass  = "mass"+std::to_string(std::get<2>(hp));
+	std::string str_mass  = "mass"+std::to_string(std::get<3>(hp));
 	mp.outname = str_mass + "_" + str_repid;
 
 	return p;
@@ -72,7 +72,7 @@ class MassiveScalarField
 	public:
 		//  ----  Parameters  ----
 
-		double beta, k, mass;
+		double beta, k, mass, sqrtg;
 		static constexpr int SymD = 1;
 		const std::string name = "MassiveScalarField";
 
@@ -80,20 +80,25 @@ class MassiveScalarField
 		//  ---- Definitions  -----
 
 		typedef std::array<double, SymD> StateVector;
+		typedef MARQOV::Space<StateVector,GraphFromCSV> StateSpace;
 
 
 
 		//  ----  Hamiltonian terms  ----
 
 		Onsite_Quadratic<StateVector> onsite_standard;
-		FiniteDifferencesInteraction<MARQOV::Space<StateVector,GraphFromCSV>, StateVector> maininteraction;
+		FiniteDifferencesInteraction<StateSpace, StateVector> maininteraction;
 
 		std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(0)};
 		std::vector<OnSite<StateVector, double>*>        onsite; // empty here, to be filled in the constructor!
-		std::vector<FiniteDifferencesInteraction<MARQOV::Space<StateVector,GraphFromCSV>,StateVector>*> multisite;
+		std::vector<FiniteDifferencesInteraction<StateSpace,StateVector>*> multisite;
 
-		MassiveScalarField(double k, double mass) : 
-				k(k), mass(mass), name("MassiveScalarField"), onsite_standard(mass), maininteraction(k)
+		MassiveScalarField(double k, double sqrtg, double mass) : k(k), 
+																  mass(-mass), 
+																  sqrtg(sqrtg),
+																  name("MassiveScalarField"), 
+																  onsite_standard(-0.5*sqrtg*mass), 
+																  maininteraction(0.5*k)
 		{
 			onsite.push_back(&onsite_standard);
 			multisite.push_back(&maininteraction);
@@ -122,10 +127,25 @@ class MassiveScalarField
 			switch (i)
 			{
 				case (0): name = "k"; break;
-				case (1): name = "mass"; break;
+				case (1): name = "sqrtg"; break;
+				case (2): name = "mass"; break;
 				default: break;
 			}
 			return name;
+		}
+
+
+		//  ----  Initializer  ----
+
+		template <class StateSpace, class Lattice, class RNG>
+		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
+		{
+			for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
+			{
+				auto nnbrs = grid.nbrs(0,i).size();
+				if (nnbrs < 7) statespace[i][0] = 1;
+				else statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
+			}
 		}
 };
 

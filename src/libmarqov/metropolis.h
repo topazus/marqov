@@ -78,6 +78,10 @@ namespace MARQOV
 												int rsite)
     {
 
+
+		auto neighs = grid.nbrs(0,rsite);
+		if (neighs.size() < 7) return 0;
+
 		// definitions
 		typedef typename Hamiltonian::StateVector StateVector;
 		typedef typename HasInteractions<Hamiltonian>::type HasInt;

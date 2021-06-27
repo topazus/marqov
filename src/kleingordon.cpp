@@ -51,7 +51,7 @@ int main()
     
     
 	// remove old output and prepare new one
-	std::string outbasedir = "../out/hyperbolic";
+	std::string outbasedir = "../out";
 	std::string command;
 	command = "rm -r " + outbasedir;
 	system(command.c_str());
@@ -61,12 +61,13 @@ int main()
 
 	// Parameters
 	std::vector<double> beta = {1.0};
-	std::vector<double> K = {-1.0};
-	std::vector<double> mass = {2,4,6,8};
+	std::vector<double> K = {0.50315223}; // geometric factor
+	std::vector<double> sqrtg = {1.0471975511}; // geometric factor
+	std::vector<double> mass = {0.3, 0.4, 0.5, 0.6, 0.7};	// negative mass squared
 
-	auto hp = cart_prod(beta, K, mass);
+	auto hp = cart_prod(beta, K, sqrtg, mass);
 
-	const int nthreads = 1;	
+	const int nthreads = 3;	
 	const int nreplicas = 1;
 	
 	
@@ -75,10 +76,10 @@ int main()
 	typedef MassiveScalarField Hamiltonian;
 	typedef GraphFromCSV Lattice;
 
-	std::string latfile = "/home/schrauth/marqov/marqov-dev/src/geometry/7-3-8.csv";
+	std::string latfile = "/home/schrauth/hyperbolic-7-3-9.csv";
     GraphFromCSV lat(latfile);
 
-    typedef typename std::tuple<Lattice&, MARQOV::Config, std::tuple<double,double,double> > ParameterType;
+    typedef typename std::tuple<Lattice&, MARQOV::Config, std::tuple<double,double,double,double> > ParameterType;
 	typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
  	SchedulerType sched(1,nthreads);
 
@@ -91,7 +92,7 @@ int main()
 	mp.setnmetro(1);
 	mp.setncluster(0);
 	mp.setwarmupsteps(0);
-	mp.setgameloopsteps(1000);
+	mp.setgameloopsteps(3000);
 
 	// lattice parameters
 	// form parameter triple and replicate
