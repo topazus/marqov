@@ -49,7 +49,7 @@ namespace MARQOV
 {
     /** Marqov Config.
      * 
-     * We have a global marqov object that collects parameters that are special
+     * We have a global marqov object that collects runtime parameters that are special
      * for MARQOV. Hamiltonian and lattice parameters are elsewhere.
      */
 	struct Config
@@ -361,7 +361,7 @@ namespace MARQOV
 	
 	//forward declaration of Core.
 	//FIXME think about proper placement of docs and where...
-    template <class Grid, class Hamiltonian, class MutexType, template<class> class RefType>
+    template <class Grid, class Hamiltonian, class MutexType, class RNGType, template<class> class RefType>
     class Core;
 
     /** A class to encapsulate the state space of a hamiltonian.
@@ -377,7 +377,7 @@ namespace MARQOV
         StateVectorT *const myspace; ///< the storage of the state space.
         const std::size_t size_; ///< how many state vectors are in our state space
         
-        template <class G, class Hamiltonian, class MutexType, template<class> class RefType>
+        template <class G, class Hamiltonian, class MutexType, class RNGType, template<class> class RefType>
         friend class Core;
         
     public:
@@ -431,6 +431,8 @@ namespace MARQOV
  * The RNGCache will be initialized.
  * @tparam Grid the Lattice that we should use.
  * @tparam Hamiltonian The Hamiltonian that we should use.
+ * @tparam MutexType The type of the mutex that we use for locking.
+ * @tparam RNGType The type of the Random Number Generator that we use.
  * @tparam RefType used internally to distinguish, whether MARQOV::Core should
  *                 create the lattice or whether it is user provided.
  */
@@ -442,7 +444,7 @@ struct TrivialMutex
 
 static TrivialMutex tm;
 
-template <class Grid, class Hamiltonian, class MutexType, template<class> class RefType = detail::Ref >
+template <class Grid, class Hamiltonian, class MutexType, class RNGType = std::mt19937_64, template<class> class RefType = detail::Ref >
 class Core : public RefType<Grid>
 {
 	public:
@@ -1190,9 +1192,6 @@ class Core : public RefType<Grid>
 		typedef decltype(std::declval<Hamiltonian>().observables) ObsTs; ///< This type is mostly a tuple of other observables.
 		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache; ///< The HDF5 caches for each observable.
         ObsTs& obs; ///<the actual observables defined in the hamiltonians.
-
-//		typedef std::ranlux48_base RNGType;
-		typedef std::mt19937_64 RNGType; ///< Here the type of the RNG is set.
 		RNGCache<RNGType> rngcache;///< The caching RNG
 };
 
@@ -1215,7 +1214,7 @@ class Core : public RefType<Grid>
 template <class Grid, class H, class... LArgs, class... HArgs, size_t... S>
 inline constexpr auto makeCore_with_latt(const Config& mc, std::mutex& mtx, std::tuple<LArgs...>&& largs, const std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
-    return Core<Grid, H, std::mutex, detail::NonRef>(std::forward<std::tuple<LArgs...>>(largs), mc, mtx, std::get<S>(hargs)...);
+    return Core<Grid, H, std::mutex, std::mt19937_64, detail::NonRef>(std::forward<std::tuple<LArgs...>>(largs), mc, mtx, std::get<S>(hargs)...);
 }
 
 /** Instantiate Core and use a reference to a precreated lattice.
@@ -1236,7 +1235,7 @@ inline constexpr auto makeCore_with_latt(const Config& mc, std::mutex& mtx, std:
 template <class Grid, class H, class MutexType, class ...HArgs, size_t... S>
 inline constexpr auto makeCore_using_latt(Grid&& latt, const Config& mc, MutexType& mtx, std::tuple<HArgs...> hargs, std::index_sequence<S...>)
 {
-    return Core<Grid, H, MutexType, detail::Ref>(std::forward<Grid>(latt), mc, mtx, std::get<S>(hargs)...);
+    return Core<Grid, H, MutexType, std::mt19937_64, detail::Ref>(std::forward<Grid>(latt), mc, mtx, std::get<S>(hargs)...);
 }
 
 /** Instantiate Core with a reference to a precreated lattice.
