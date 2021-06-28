@@ -225,7 +225,7 @@ namespace MARQOV
 			* @param rng reference to the random number generator
 			*/
 			template <class RNG>
-			void draw(RNG& rng)	{rdir = rnddir<RNG, double, SymD>(rng);}
+			void draw(RNG& rng, StateVector& sv)	{rdir = rnddir<RNG, double, SymD>(rng);}
 
 
 			/** Computes the Wolff coupling when attempting to add a spin to the cluster
