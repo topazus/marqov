@@ -352,12 +352,13 @@ namespace MARQOV
      * @tparam Lattice The type of the lattice.
      * @tparam Parameters The type of the parameters. We instantiate Hamiltonian
      *                    and probably lattice in Marqov, hence the params.
+     * @tparam RNGType The type of the Random Number Generator. Must conform to C++11 Interface.
      */
-    template <class Hamiltonian, class Lattice, class Parameters>
+    template <class Hamiltonian, class Lattice, class Parameters, class RNGType = std::mt19937_64>
     struct GetSchedulerType
     {
         typedef std::mutex& mtxref;
-        typedef decltype(makeCore<Lattice, Hamiltonian>(std::declval<Parameters>(), std::declval<mtxref>())) MarqovType;
+        typedef decltype(makeCore<Lattice, Hamiltonian, RNGType>(std::declval<Parameters>(), std::declval<mtxref>())) MarqovType;
         typedef Scheduler<MarqovType> MarqovScheduler; ///< Holds the type of a scheduler for these simulations.
     };
 };
