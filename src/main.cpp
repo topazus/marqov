@@ -43,6 +43,7 @@ using std::ofstream;
 // Hamiltonians
 #include "hamiltonian/Heisenberg.h"
 #include "hamiltonian/Ising.h"
+#include "hamiltonian/Potts.h"
 #include "hamiltonian/Phi4.h"
 #include "hamiltonian/BlumeCapel.h"
 #include "hamiltonian/BlumeEmeryGriffiths.h"
@@ -108,21 +109,45 @@ void selectsim()
 
 	// ----------------- select simulation ------------------
 
-	if (ham == "Ising")
+	if (startswith(ham,"Ising"))
 	{
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
 		auto parameters = cart_prod(beta, J);
 
  		RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 	}
 
+	else if (startswith(ham,"Potts"))
+	{
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
+		auto parameters = cart_prod(beta, J);
+
+		switch(registry.Get<int>(ham+".ini", ham, "q"))
+		{
+			case 3:
+				RegularLatticeLoop<Potts<3>>(registry, outbasedir, parameters, defaultfilter);
+				break;
+			case 4:
+				RegularLatticeLoop<Potts<4>>(registry, outbasedir, parameters, defaultfilter);
+				break;
+			case 6:
+				RegularLatticeLoop<Potts<6>>(registry, outbasedir, parameters, defaultfilter);
+				break;
+			case 8:
+				RegularLatticeLoop<Potts<8>>(registry, outbasedir, parameters, defaultfilter);
+				break;
+			default:
+				std::cout<<"[MARQOV::main] Potts: unsupported q!";
+		}
+	}
 
 	else if (ham == "AshkinTeller")
 	{
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-		auto K    = registry.Get<std::vector<double> >("mc.ini", ham, "K");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
+		auto K    = registry.Get<std::vector<double> >(ham+".ini", ham, "K");
 		auto parameters = cart_prod(beta, J, K);
 
 		RegularLatticeLoop<AshkinTeller>(registry, outbasedir, parameters, defaultfilter);

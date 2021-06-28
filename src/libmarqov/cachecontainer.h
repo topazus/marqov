@@ -30,12 +30,13 @@ SOFTWARE.
 #include <type_traits>
 #include <utility>
 #include <tuple>
+#include <stdexcept>
 #include <H5Cpp.h>
 #include <H5File.h>
 
-/*some predefined HDF5 helpers --------------------------------*/
+/* Some predefined HDF5 helpers --------------------------------*/
 
-/** A Class that Maps basic, POD C++ Types to HDF5 types.
+/** A Class that maps basic, POD C++ Types to HDF5 types.
  */
 template <class T>
 struct H5MapperBase;
@@ -221,6 +222,7 @@ public:
      */
     CacheContainer(H5::Group& hfile, const std::string& name, std::string desc = std::string(), std::size_t cachesize=4194304) : cachepos(0)
     {
+            if(name.empty()) throw std::runtime_error("[MARQOV::CacheContainer] ERROR: Name of time series not specified!");
             cachemaxelems = cachesize/sizeof(T);
             constexpr int rank = H5Mapper<T>::rank;
             std::array<hsize_t, rank> maxdims, chunk_dims;
@@ -321,7 +323,9 @@ public:
      *  @param cs the memory size in bytes to use for caching. Will be rounded to integers of datatypes
      */
     CacheContainer(H5::Group& hf, const std::string& n, std::string d = std::string(), std::size_t cs=4194304) : hfile(hf), dssize(0), cachepos(0), unused(true), cachesize(cs), name(n), desc(d)
-    {}
+    {
+        if(n.empty()) throw std::runtime_error("[MARQOV::CacheContainer] ERROR: Name of time series not specified!");
+    }
     /** A helper constructor that forwards to the main constructor.
      * 
      * @param args the Argument helper structure

@@ -20,6 +20,7 @@
 #define METROPOLISHELPERS_H
 #include <utility>
 #include <type_traits>
+#include <cstdlib>
 
 namespace MARQOV
 {
@@ -179,8 +180,8 @@ namespace MARQOV
 	template <class Grid>
 	auto getnbrs_helper(const Grid& grid, int fam, int idx, std::false_type hasnbrs)
 	{
-		cout << "[MARQOV::Lattice] function nbrs not implement!" << flush;
-		exit(0); // improve me
+		std::cout << "[MARQOV::Lattice] function nbrs not implement!" << std::flush;
+		exit(-1); // improve me
 		return std::vector<int>{};
 	}
 
@@ -214,8 +215,8 @@ namespace MARQOV
 	template <class Grid>
 	auto getflexnbrs_helper(const Grid& grid, int fam, int idx, std::false_type hasflexnbrs)
 	{
-		cout << "[MARQOV::Lattice] function flexnbrs not implement!" << flush;
-		exit(0); // improve me
+		std::cout << "[MARQOV::Lattice] function flexnbrs not implement!" << std::flush;
+		exit(-1); // improve me
 		return std::vector<int>{};
 	}
 
@@ -246,8 +247,8 @@ namespace MARQOV
 	template <class Grid>
 	auto getbnds_helper(const Grid& grid, int fam, int idx, std::false_type hasbonds)
 	{
-		cout << "[MARQOV::Lattice] function bnds not implemented" << endl;
-		exit(0);
+		std::cout << "[MARQOV::Lattice] function bnds not implemented" << std::endl;
+		exit(-1);
 	}
 
 	template <class Grid>
@@ -448,10 +449,10 @@ namespace MARQOV
 												  std::false_type hasnbrs, 
 												  std::false_type hasbonds) 
 	{
-		cout << "[MARQOV] Error: The lattice does not provide the following function: nbrs" << endl;
-		cout << "In order to use the general Metropolis algorithm, this function must be implemented" << endl;
-		cout << "Alternatively, you can write you own specialization of the Metropolis algorithm" << endl;
-		exit(0);
+		std::cout << "[MARQOV] Error: The lattice does not provide the following function: nbrs" << std::endl;
+		std::cout << "In order to use the general Metropolis algorithm, this function must be implemented" << std::endl;
+		std::cout << "Alternatively, you can write you own specialization of the Metropolis algorithm" << std::endl;
+		exit(-1);
 	}
 
 
