@@ -25,7 +25,47 @@ auto hyperfilter = [](auto p)
 
 #include "util/observables.h"
 
+class BulkMagnetization
+{
+	public:
+		std::string name; ///< The name of the observable
+        std::string desc; ///< A helpful description that will be used in the HDF5 output files.
 
+        /** Construct a bulk magnetization object
+         * 
+         */
+		BulkMagnetization() : name("mb"), desc("bulk magnetization") {}
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+		 	// q used to distinguish boundary and bulk sites; bulk sites have q neighbours, boundary ones less
+			const int q = 7; // hard-coded (fixme)
+
+			const/*expr static*/ int SymD = statespace[0].size();
+			std::vector<double> mag(SymD, 0);
+			int counter = 0;
+
+			for (decltype(grid.size()) i = 0; i < grid.size(); i++) 
+			{
+				auto nbrs = grid.nbrs(i,0);
+				int nnbrs = nbrs.size();
+				if (nnbrs == q)
+				{
+					counter++;
+					for (int j=0; j<SymD; j++)
+					{
+						mag[j] += statespace[i][j]; 
+					}
+				}
+			}
+
+			double retval = 0;
+			for (int j=0; j<SymD; j++) retval += mag[j]*mag[j];
+
+			return sqrt(retval)/double(counter);
+		}
+};
 
 
 // ------------------------------ HAMILTONIAN --------------------------
@@ -109,7 +149,8 @@ class MassiveScalarField
 		//  ----  Observables  ----
 
 		Magnetization obs_m;
-        decltype(std::make_tuple(obs_m)) observables = {std::make_tuple(obs_m)};
+		BulkMagnetization obs_mb;
+        decltype(std::make_tuple(obs_m, obs_mb)) observables = {std::make_tuple(obs_m, obs_mb)};
 
 
 
@@ -145,6 +186,7 @@ class MassiveScalarField
 				auto nnbrs = grid.nbrs(0,i).size();
 				if (nnbrs < 7) statespace[i][0] = 1;
 				else statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
+//				statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
 			}
 		}
 };

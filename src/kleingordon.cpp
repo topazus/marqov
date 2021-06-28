@@ -49,13 +49,14 @@ int main()
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;
     std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;
     
+
     
 	// remove old output and prepare new one
 	std::string outbasedir = "../out";
-	std::string command;
-	command = "rm -r " + outbasedir;
-	system(command.c_str());
-	makeDir(outbasedir);
+//	std::string command;
+//	command = "rm -r " + outbasedir;
+//	system(command.c_str());
+//	makeDir(outbasedir);
 
 	
 
@@ -63,36 +64,38 @@ int main()
 	std::vector<double> beta = {1.0};
 	std::vector<double> K = {0.50315223}; // geometric factor
 	std::vector<double> sqrtg = {1.0471975511}; // geometric factor
-	std::vector<double> mass = {0.3, 0.4, 0.5, 0.6, 0.7};	// negative mass squared
+	std::vector<double> mass = {.33, .34, .35};	// negative mass squared
 
 	auto hp = cart_prod(beta, K, sqrtg, mass);
-
+	
 	const int nthreads = 3;	
 	const int nreplicas = 1;
-	
-	
+
 	
 	// Typedefs
 	typedef MassiveScalarField Hamiltonian;
 	typedef GraphFromCSV Lattice;
 
-	std::string latfile = "/home/schrauth/hyperbolic-7-3-9.csv";
+	// Lattice
+	int nlayers = 12; 
+	std::string latfile = "/home/schrauth/hyperbolic-7-3-"+std::to_string(nlayers)+".csv";
     GraphFromCSV lat(latfile);
 
+	// Scheduler
     typedef typename std::tuple<Lattice&, MARQOV::Config, std::tuple<double,double,double,double> > ParameterType;
 	typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
  	SchedulerType sched(1,nthreads);
 
-	// prepare output
-	std::string outpath = outbasedir+"/hyperbolic/";
+	// Output
+	std::string outpath = outbasedir+"/hyperbolic-"+std::to_string(nlayers)+"/";
 	makeDir(outpath);
 	
-	// Monte Carlo parameters
+	// Monte Carlo
 	MARQOV::Config mp(outpath);
-	mp.setnmetro(1);
+	mp.setnmetro(10);
 	mp.setncluster(0);
 	mp.setwarmupsteps(0);
-	mp.setgameloopsteps(3000);
+	mp.setgameloopsteps(500);
 
 	// lattice parameters
 	// form parameter triple and replicate
