@@ -117,6 +117,7 @@ namespace MARQOV
 	*
 	* @tparam SpinType the type in which to store the magnetization values.
 	* @tparam CouplingType the type of the coupling of the on-site term (in case there is one)
+	* @tparam Lattice the type of the lattice
 	*/
 
 	template <class SpinType, class CouplingType, class Lattice>
