@@ -353,6 +353,8 @@ namespace MARQOV
      * @tparam Parameters The type of the parameters. We instantiate Hamiltonian
      *                    and probably lattice in Marqov, hence the params.
      * @tparam RNGType The type of the Random Number Generator. Must conform to C++11 Interface.
+     *                 If you intend to use it for a non-STL RNG, have a look at @see rngcache.h
+     *                 to have a proper name dumped for it in the HDF5 files.
      */
     template <class Hamiltonian, class Lattice, class Parameters, class RNGType = std::mt19937_64>
     struct GetSchedulerType
