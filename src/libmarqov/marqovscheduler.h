@@ -168,10 +168,13 @@ namespace MARQOV
         {
             //create dummy data for the ptplan
             for (int i = 0; i < maxpt; ++i)
-                ptplan.emplace_back(-1, -1 );
+                ptplan.emplace_back(i, i+1 );
             
-            //         std::cout<<"Starting up master"<<std::endl;
+            std::cout<<"Starting up master"<<std::endl;
             Simstate itm;
+            
+            for (int i = 0; i < maxpt; ++i)
+                std::cout<<ptplan[i].first<<" "<<ptplan[i].second<<std::endl;
             
             while(!masterstop)
             {
@@ -186,7 +189,7 @@ namespace MARQOV
                 });
                 if(busy) //there really is sth. to do
                 {
-                    // std::cout<<"dealing with work"<<std::endl;
+                    std::cout<<"dealing with work"<<std::endl;
                     if(ptplan[itm.npt].first == itm.id || ptplan[itm.npt].second == itm.id) // check if this sim is selected for PT in this time step. This should usually be the case since we do as many steps as necessary
                     {
                         ptstep(itm);
@@ -239,9 +242,8 @@ namespace MARQOV
            Simstate() : id(-1), npt(-100) {}
            Simstate(int i) : id(i), npt(0) {}
            Simstate(int i, int np) : id(i), npt(np) {}
-//             std::function<void(Simstate, int)> looper;
-            int id;
-            int npt;
+           int id;///< my id
+           int npt;///< which will be my next parallel tempering step.
         };
         
         /**
@@ -275,9 +277,9 @@ namespace MARQOV
          * @param itm The Sim which is chosen for PT
          */
         void ptstep(Simstate itm) {
-            //         std::cout<<"Parallel Tempering!"<<std::endl;
-            //         std::cout<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
-            //         std::cout<<"Expected pairing for this time step: "<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
+                    std::cout<<"Parallel Tempering!"<<std::endl;
+                    std::cout<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
+                    std::cout<<"Expected pairing for this time step: "<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
             
             int partner = ptplan[itm.npt].first;
             if (partner == itm.id) partner = ptplan[itm.npt].second;//it must be the other. no exchanges with myself
@@ -285,7 +287,7 @@ namespace MARQOV
             
             if (partnerinfo != ptqueue.cend())
             {// partner is at the same stage, hence we can PT exchange
-                //             std::cout<<"Partner found in queue"<<std::endl;
+                            std::cout<<"Partner found in queue"<<std::endl;
                 ptqueue.erase(partnerinfo);
                 calcprob();
                 exchange();
@@ -295,7 +297,7 @@ namespace MARQOV
             }
             else
             {//we have to wait for the PT partner
-                //             std::cout<<"Partner not in queue"<<std::endl;
+                std::cout<<"Partner not in queue"<<std::endl;
                 ptqueue.push_back(itm);
             }
         }
@@ -308,7 +310,7 @@ namespace MARQOV
         void movesimtotaskqueue(Simstate itm)
         {
             int newnpt = findnextnpt(itm.id, itm.npt);
-            //         std::cout<<"Putting a new item "<<itm.id<<" with "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue"<< std::endl;
+            std::cout<<"Putting a new item with id "<<itm.id<<" with npt = "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue"<< std::endl;
             taskqueue.enqueue(
                 [&,itm, newnpt]{gamekernels[itm.id](itm, newnpt);} //Get the required kernel from the array of gamekernels and execute it.
             );
@@ -331,7 +333,7 @@ namespace MARQOV
         
         int maxpt; ///< how many pt steps do we do
         std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
-        std::vector<std::pair<int, int> > ptplan; ///< who exchanges with whom in each step
+        std::vector<std::pair<int, int> > ptplan; ///< An array of who exchanges with whom in each step
         bool masterstop; ///< A global flag to denote that the master has decided to stop.
         ThreadPool::Semaphore masterwork; ///< The semaphore that triggers the master process
         ThreadPool::ThreadSafeQueue<Simstate> workqueue; ///< This is the queue where threads put their finished work and the master does PT.

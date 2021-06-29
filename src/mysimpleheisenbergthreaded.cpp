@@ -88,7 +88,7 @@ int main()
 
     // Set up the MARQOV schedular
     typedef typename GetSchedulerType<MySimpleHeisenberg, RegularHypercubic, decltype(args)>::MarqovScheduler SchedulerType;
-    SchedulerType sched(1); //MARQOV makes use of all available threads by default.
+    SchedulerType sched(10,1); //MARQOV makes use of all available threads by default.
     
 	// Feed parameters to the scheduler which creates the simulations
     for(auto p : v)
