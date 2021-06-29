@@ -42,6 +42,22 @@ struct RNGName
 /** Specialization for ranlux48.
  */
 template <>
+struct RNGName<std::ranlux48>
+{
+    std::string name = "ranlux48"; ///< name of the RNG available as a plain string.
+};
+
+/** Specialization for knuth_b.
+ */
+template <>
+struct RNGName<std::knuth_b>
+{
+    std::string name = "knuth_b"; ///< name of the RNG available as a plain string.
+};
+
+/** Specialization for ranlux48_base.
+ */
+template <>
 struct RNGName<std::ranlux48_base>
 {
     std::string name = "ranlux48_base"; ///< name of the RNG available as a plain string.
