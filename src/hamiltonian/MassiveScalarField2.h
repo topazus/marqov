@@ -32,7 +32,7 @@ class MassiveScalarField2
 		//  ---- Definitions  -----
 
 		typedef std::array<double, SymD> StateVector;
-		typedef MARQOV::Space<StateVector,GraphFromCSV> StateSpace;
+		typedef MARQOV::Space<StateVector,HyperbolicRegularFromCSV> StateSpace;
 
 
 

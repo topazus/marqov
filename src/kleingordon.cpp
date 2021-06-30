@@ -76,13 +76,16 @@ int main()
 	
 	// Typedefs
 	typedef MassiveScalarField Hamiltonian;
-	typedef GraphFromCSV Lattice;
+	typedef HyperbolicRegularFromCSV Lattice;
+
 
 	// Lattice
+	int p = 3;
+	int q = 7; 
 	int nlayers = 8; 
-	std::string latfile = "/home/schrauth/hyperbolic-7-3-"+std::to_string(nlayers)+".csv";
-    GraphFromCSV lat(latfile);
 
+	std::string filebase = "/home/schrauth/hyperbolic-";
+	HyperbolicRegularFromCSV lat(filebase, p, q, nlayers);
 
 
 	// Scheduler
@@ -90,10 +93,12 @@ int main()
 	typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
  	SchedulerType sched(1,nthreads);
 
+
 	// Output
 	std::string outpath = outbasedir+"/test-"+std::to_string(nlayers)+"/";
 	makeDir(outpath);
 	
+
 	// Monte Carlo
 	MARQOV::Config mp(outpath);
 	mp.setnmetro(10);
@@ -101,15 +106,11 @@ int main()
 	mp.setwarmupsteps(0);
 	mp.setgameloopsteps(500);
 
-	// lattice parameters
-	// form parameter triple and replicate
+
+	// Schedule and Run
 	auto params  = finalize_parameter(lat, mp, hp);
     auto rparams = replicator(params, nreplicas);
-
-	// schedule simulations
  	for (auto p: rparams) sched.createSimfromParameter(p, hyperfilter);
- 	
-	// run!
 	sched.start();
 
 }

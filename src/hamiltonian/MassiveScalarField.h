@@ -121,7 +121,7 @@ class MassiveScalarField
 		//  ---- Definitions  -----
 
 		typedef std::array<double, SymD> StateVector;
-		typedef MARQOV::Space<StateVector,GraphFromCSV> StateSpace;
+		typedef MARQOV::Space<StateVector,HyperbolicRegularFromCSV> StateSpace;
 
 
 
@@ -136,8 +136,7 @@ class MassiveScalarField
 		MassiveScalarField(double k, double sqrtg, double mass) : k(k), 
 																  mass(mass), 
 																  sqrtg(sqrtg),
-																  name("MassiveScalarField")
-		{}
+																  name("MassiveScalarField") {}
 
 
 
@@ -178,10 +177,12 @@ class MassiveScalarField
 		{
 			for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
 			{
-//				auto nnbrs = grid.nbrs(0,i).size();
-//				if (nnbrs < 7) statespace[i][0] = 1;
-//				else statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
-				statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
+				double boundary_value = 1;
+				auto nnbrs = grid.nbrs(0,i).size();
+				if (nnbrs < 7) statespace[i][0] = boundary_value;
+				else statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
+
+//				statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
 			}
 		}
 };
@@ -196,10 +197,9 @@ class Initializer<MassiveScalarField>
 		Initializer() {}
 
 		template <class RNGCache>
-		// auto?
 		static typename MassiveScalarField::StateVector newsv(const typename MassiveScalarField::StateVector& svold, RNGCache& rng)
 		{
-			double amp = 0.5; // Amplitude (TODO: make me a class parameter)
+			double amp = 0.5;
 			double r = rng.real(-1.0, 1.0);
 
 			double oldval = svold[0];

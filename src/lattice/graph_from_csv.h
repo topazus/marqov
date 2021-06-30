@@ -43,11 +43,33 @@ class GraphFromCSV
         return neighbours[i];
     }
 
-    std::vector<int> flexnbrs(const int a, const int i) const
-    {
-        return neighbours[i];
-    }
     std::size_t size() const {return npoints;}
+};
+
+
+
+class HyperbolicRegularFromCSV : public GraphFromCSV
+{
+	public:
+		int p, q, nlayers;
+		HyperbolicRegularFromCSV(std::string filebasename, int p, int q, int nlayers) : p(p), q(q), nlayers(nlayers), 
+		GraphFromCSV(filebasename+std::to_string(p)+"-"+std::to_string(q)+"-"+std::to_string(nlayers)+".csv")
+		{}
+
+		// check whether site is boundary site
+		bool is_boundary_site(const int idx)
+		{
+			auto nnbrs = this->neighbours[idx].size();
+			if (nnbrs < q) return true;
+			else return false;
+		}
+
+		// implement flexnbrs
+    	std::vector<int> flexnbrs(const int a, const int i) const
+    	{
+    	    return this->neighbours[i];
+    	}
+
 };
 
 
