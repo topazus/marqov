@@ -284,8 +284,8 @@ class FlexEnergy
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			typedef typename MARQOV::HasOnsite<Hamiltonian>::type HasOns;
-			return measure_helper(statespace,grid,HasOns());
+			typedef typename MARQOV::HasFlexTerms<Hamiltonian>::type HasFlex;
+			return measure_helper(statespace,grid,HasFlex());
 		}
 };
 
