@@ -65,7 +65,7 @@ int main()
 	std::vector<double> beta = {1.0};
 	std::vector<double> K = {0.50315223}; // geometric factor
 	std::vector<double> sqrtg = {1.0471975511}; // geometric factor
-	std::vector<double> mass = { -10, -1, -0.1, 0, 0.1, 1, 10};	// mass squared
+	std::vector<double> mass = { -10, -7, -5, -3, -1, 0, 3, 10};	// mass squared
 	// note that the geometric factors are only valid for the bulk region!
 
 	auto hp = cart_prod(beta, K, sqrtg, mass);
@@ -99,7 +99,7 @@ int main()
 	mp.setnmetro(10);
 	mp.setncluster(0);
 	mp.setwarmupsteps(0);
-	mp.setgameloopsteps(200);
+	mp.setgameloopsteps(500);
 
 	// lattice parameters
 	// form parameter triple and replicate

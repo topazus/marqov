@@ -71,14 +71,15 @@ class BulkMagnetization
 // ------------------------------ HAMILTONIAN --------------------------
 
 
+// Finite Differences Interaction
 template <class StateSpace, class StateVector> 
-class FiniteDifferencesInteraction
+class FinDiffInt
 {
 
 	public:
 		const double k;
-		FiniteDifferencesInteraction(double k) : k(k) {}
-		~FiniteDifferencesInteraction() {}
+		FinDiffInt(double k) : k(k) {}
+		~FinDiffInt() {}
 
         double diff (const int rsite,
 						const StateVector& svold,
@@ -126,26 +127,17 @@ class MassiveScalarField
 
 		//  ----  Hamiltonian terms  ----
 
-		Onsite_Quadratic<StateVector> onsite_standard;
-		FiniteDifferencesInteraction<StateSpace, StateVector> maininteraction;
-
-
-		// write specialization for Wolff in order to get rid of "interactions"
-
-		std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(0)};
-		std::vector<OnSite<StateVector, double>*>        onsite; // empty here, to be filled in the constructor!
-		std::vector<FiniteDifferencesInteraction<StateSpace,StateVector>*> multisite;
+		std::array<OnSite<StateVector, double>*,1> onsite 
+			= {new Onsite_Quadratic<StateVector>(0.5*sqrtg*mass)};
+		
+		std::array<FinDiffInt<StateSpace,StateVector>*,1> multisite 
+			= {new FinDiffInt<StateSpace, StateVector>(0.5*k)};
 
 		MassiveScalarField(double k, double sqrtg, double mass) : k(k), 
 																  mass(mass), 
 																  sqrtg(sqrtg),
-																  name("MassiveScalarField"), 
-																  onsite_standard(0.5*sqrtg*mass), 
-																  maininteraction(0.5*k)
-		{
-			onsite.push_back(&onsite_standard);
-			multisite.push_back(&maininteraction);
-		}
+																  name("MassiveScalarField")
+		{}
 
 
 
@@ -229,9 +221,14 @@ namespace MARQOV
 	    template <class StateSpace, class RNG>
 	    static int move(const MassiveScalarField& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
 	    {
+
+			// boundary cells are not being updated
+			auto neighs = grid.nbrs(0,rsite);
+			if (neighs.size() < 7) return 0;
+
+			// typedefs
 			typedef MassiveScalarField Hamiltonian;
 			typedef typename Hamiltonian::StateVector StateVector;
-
 
 			// old state vector at index rsite
 			StateVector& svold = statespace[rsite];
@@ -240,12 +237,13 @@ namespace MARQOV
 
 			// no interaction term
 
-
-			const int b = 0; // only one on-site term
+			// only one on-site term
+			const int b = 0;
 			auto diffb = ham.onsite[b]->get(svnew) - ham.onsite[b]->get(svold);
 			double onsiteenergydiff = dot(ham.onsite[b]->h, diffb);
 
-			const int c = 0; // one flex term
+			// one flex term
+			const int c = 0; 
 			auto nbrs = getflexnbrs<Lattice>(grid, c, rsite);
 			auto diffc = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace);
 			double flexenergydiff = dot(ham.multisite[c]->k, diffc);
@@ -267,6 +265,21 @@ namespace MARQOV
 	    	    retval = 1;
 	    	}
 	    	return retval;
+	    }
+	};
+
+
+
+	// write specialization for Wolff in order to get rid of "interactions" in Hamiltonian
+
+	template <class Lattice>
+	struct Wolff<MassiveScalarField, Lattice>
+	{
+	    template <class StateSpace, class RNG>
+	    static int move(const MassiveScalarField& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
+	    {
+
+			return 0;
 	    }
 	};
 }
