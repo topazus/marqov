@@ -178,8 +178,7 @@ class MassiveScalarField
 			for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
 			{
 				double boundary_value = 1;
-				auto nnbrs = grid.nbrs(0,i).size();
-				if (nnbrs < 7) statespace[i][0] = boundary_value;
+				if (grid.is_boundary_site(i)) statespace[i][0] = boundary_value;
 				else statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
 
 //				statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
@@ -223,8 +222,7 @@ namespace MARQOV
 	    {
 
 			// boundary cells are not being updated
-			auto neighs = grid.nbrs(0,rsite);
-			if (neighs.size() < 7) return 0;
+			if (grid.is_boundary_site(rsite)) return 0;
 
 			// typedefs
 			typedef MassiveScalarField Hamiltonian;
