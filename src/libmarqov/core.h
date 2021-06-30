@@ -209,43 +209,7 @@ namespace MARQOV
         template <int i, class Tup>
         inline auto createCArgTuple(H5::Group& h5loc, Tup& t) {return detail::createCArgTuple_impl<i>(h5loc, t, typename obs_has_desc<typename std::tuple_element<i, Tup>::type>::type() );}
     };
-    /** Implementation function to call an objects' member function with a tuple of arguments.
-     * 
-     * This call actually performs the function call.
-     * @tparam Function Which member function to call.
-     * @tparam Object The type of the object
-     * @tparam Tuple The type of the Tuple of arguments.
-     * @tparam I an index sequence
-     * 
-     * @param f the name of the function.
-     * @param obj the object.
-     * @param t the arguments to f.
-     * @returns the return value of the function call.
-     */
-	template<typename Function, typename Object, typename Tuple, size_t ... I>
-	inline auto _call(Function f, Object& obj, Tuple t, std::index_sequence<I ...>) 
-	{
-		return (obj.*f)(std::get<I>(t) ...);
-	}
-	
-	/** A helper function to call an objects' member function with a tuple of arguments.
-     * 
-     * @tparam Function Which member function to call.
-     * @tparam Object The type of the object
-     * @tparam Tuple The type of the Tuple of arguments.
-     * 
-     * @param f the name of the function.
-     * @param obj the object.
-     * @param t the arguments to f.
-     * @returns the return value of the function call.
-     */
-	template<typename Function, typename Object, typename Tuple>
-	inline auto _call(Function f, Object& obj, Tuple t) 
-	{
-		static constexpr auto size = std::tuple_size<Tuple>::value;
-		return _call(f, obj, t, std::make_index_sequence<size>{});
-	}
-	
+
 	//forward declaration of Core.
 	//FIXME think about proper placement of docs and where...
     template <class Grid, class Hamiltonian, class MutexType, template<class> class RefType>
@@ -908,7 +872,7 @@ class Core : public RefType<Grid>
         inline typename std::enable_if_t<N < sizeof...(Ts), void>
         marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid)
         {
-            auto retval = _call(&std::tuple_element<N, 
+            auto retval = detail::_call(&std::tuple_element<N, 
                             std::tuple<Ts...> >::type::template measure<StateSpace, G>,
                             std::get<N>(t), 
                             std::forward_as_tuple(s, grid) );
