@@ -220,4 +220,56 @@ class Initializer<MassiveScalarField>
 
 
 
+namespace MARQOV
+{
+
+	template <class Lattice>
+	struct Metropolis<MassiveScalarField, Lattice>
+	{
+	    template <class StateSpace, class RNG>
+	    static int move(const MassiveScalarField& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
+	    {
+			typedef MassiveScalarField Hamiltonian;
+			typedef typename Hamiltonian::StateVector StateVector;
+
+
+			// old state vector at index rsite
+			StateVector& svold = statespace[rsite];
+			// propose new configuration
+			StateVector svnew(Initializer<Hamiltonian>::newsv(svold, rng) );
+
+			// no interaction term
+
+
+			const int b = 0; // only one on-site term
+			auto diffb = ham.onsite[b]->get(svnew) - ham.onsite[b]->get(svold);
+			double onsiteenergydiff = dot(ham.onsite[b]->h, diffb);
+
+			const int c = 0; // one flex term
+			auto nbrs = getflexnbrs<Lattice>(grid, c, rsite);
+			auto diffc = ham.multisite[c]->diff(rsite, svold, svnew, nbrs, statespace);
+			double flexenergydiff = dot(ham.multisite[c]->k, diffc);
+
+
+
+	    	// sum up energy differences
+	    	double dE 	= onsiteenergydiff + flexenergydiff;
+	
+	    	int retval = 0;
+	    	if ( dE <= 0 )
+	    	{
+	    	    svold = svnew;
+	    	    retval = 1;
+	    	}
+	    	else if (rng.real() < exp(-beta*dE))
+	    	{
+	    	    svold = svnew;
+	    	    retval = 1;
+	    	}
+	    	return retval;
+	    }
+	};
+}
+
+
 #endif

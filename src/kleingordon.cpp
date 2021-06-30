@@ -66,6 +66,7 @@ int main()
 	std::vector<double> K = {0.50315223}; // geometric factor
 	std::vector<double> sqrtg = {1.0471975511}; // geometric factor
 	std::vector<double> mass = { -10, -1, -0.1, 0, 0.1, 1, 10};	// mass squared
+	// note that the geometric factors are only valid for the bulk region!
 
 	auto hp = cart_prod(beta, K, sqrtg, mass);
 	
@@ -74,7 +75,7 @@ int main()
 
 	
 	// Typedefs
-	typedef MassiveScalarField2 Hamiltonian;
+	typedef MassiveScalarField Hamiltonian;
 	typedef GraphFromCSV Lattice;
 
 	// Lattice

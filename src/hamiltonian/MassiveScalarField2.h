@@ -127,8 +127,6 @@ class Initializer<MassiveScalarField2>
 namespace MARQOV
 {
 
-//	/*
-	// unfinished!
 	template <class Lattice>
 	struct Metropolis<MassiveScalarField2, Lattice>
 	{
@@ -138,8 +136,6 @@ namespace MARQOV
 
 			typedef MassiveScalarField2 Hamiltonian;
 			typedef typename Hamiltonian::StateVector StateVector;
-
-			cout << "here" << endl;
 
 
 			// old state vector at index rsite
@@ -169,8 +165,14 @@ namespace MARQOV
 
 
 
+			const int b = 0; // only one on-site term
+			auto diff = ham.onsite[b]->get(svnew) - ham.onsite[b]->get(svold);
+			double onsiteenergydiff = dot(ham.onsite[b]->h, diff);
+
+
+
 	    	// sum up energy differences
-	    	double dE 	= interactionenergydiff; // + onsite
+	    	double dE 	= interactionenergydiff + onsiteenergydiff;
 	
 	    	int retval = 0;
 	    	if ( dE <= 0 )
@@ -186,11 +188,6 @@ namespace MARQOV
 	    	return retval;
 	    }
 	};
-
-//*/
-
-
-
 }
 
 
