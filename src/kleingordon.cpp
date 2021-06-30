@@ -74,7 +74,7 @@ int main()
 
 	
 	// Typedefs
-	typedef MassiveScalarField Hamiltonian;
+	typedef MassiveScalarField2 Hamiltonian;
 	typedef GraphFromCSV Lattice;
 
 	// Lattice

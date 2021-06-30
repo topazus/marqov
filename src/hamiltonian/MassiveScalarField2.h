@@ -123,4 +123,77 @@ class Initializer<MassiveScalarField2>
 
 
 
+
+namespace MARQOV
+{
+
+//	/*
+	// unfinished!
+	template <class Lattice>
+	struct Metropolis<MassiveScalarField2, Lattice>
+	{
+	    template <class StateSpace, class RNG>
+	    static int move(const MassiveScalarField2& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
+	    {
+
+			typedef MassiveScalarField2 Hamiltonian;
+			typedef typename Hamiltonian::StateVector StateVector;
+
+			cout << "here" << endl;
+
+
+			// old state vector at index rsite
+			StateVector& svold = statespace[rsite];
+			// propose new configuration
+			StateVector svnew(Initializer<Hamiltonian>::newsv(svold, rng) );
+
+			const int a = 0; // only one interaction term
+			const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
+
+			StateVector neighbourhood = {0};
+
+			// sum over neighbours
+			for (std::size_t i=0; i<nbrs.size(); ++i)
+			{	
+				// index of the neighbour
+				auto idx = nbrs[i];
+
+				// configuration of the neighbour after applying the interaction
+				auto nbr = ham.interactions[a]->get(statespace[idx]);
+
+				// sum up contributions from neighbourbood
+				neighbourhood = neighbourhood + nbr;
+			}
+
+			double interactionenergydiff = ham.interactions[a]->J * (dot(svnew-svold, neighbourhood));
+
+
+
+	    	// sum up energy differences
+	    	double dE 	= interactionenergydiff; // + onsite
+	
+	    	int retval = 0;
+	    	if ( dE <= 0 )
+	    	{
+	    	    svold = svnew;
+	    	    retval = 1;
+	    	}
+	    	else if (rng.real() < exp(-beta*dE))
+	    	{
+	    	    svold = svnew;
+	    	    retval = 1;
+	    	}
+	    	return retval;
+	    }
+	};
+
+//*/
+
+
+
+}
+
+
+
+
 #endif
