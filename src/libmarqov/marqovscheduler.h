@@ -73,6 +73,7 @@ namespace MARQOV
                         //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
                         sim.gameloop();
                     }
+                    double myen = sim.calcAction(sim.statespace);
                 }
                 if (mywork.npt < maxpt) // determine whether this itm needs more work
                 {
@@ -344,7 +345,10 @@ namespace MARQOV
         std::vector<std::function<void(Simstate, int)> > gamekernels; ///< prefabricated workitems that get executed to move a simulation forward.
         
         //FIXME fill those functions for proper PT
-        void calcprob() {}
+        void calcprob()
+        {
+            
+        }
         void exchange() {}
     };
 

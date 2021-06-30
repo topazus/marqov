@@ -1033,7 +1033,7 @@ class Core : public RefType<Grid>
             Energy<Hamiltonian> en(ham);
             return beta * en.measure(space, this->grid);
         }
-	private:
+// 	private:
 		double beta; ///< The inverse temperature.
 		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.
 		Config mcfg; ///< An instance of all our MARQOV related parameters.
