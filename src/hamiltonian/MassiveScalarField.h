@@ -1,5 +1,5 @@
-#ifndef PHI4_H
-#define PHI4_H
+#ifndef MASSIVESCALARFIELD_H
+#define MASSIVESCALARFIELD_H
 #include <array>
 #include <cmath>
 #include <vector>
@@ -129,15 +129,18 @@ class MassiveScalarField
 		Onsite_Quadratic<StateVector> onsite_standard;
 		FiniteDifferencesInteraction<StateSpace, StateVector> maininteraction;
 
+
+		// write specialization for Wolff in order to get rid of "interactions"
+
 		std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(0)};
 		std::vector<OnSite<StateVector, double>*>        onsite; // empty here, to be filled in the constructor!
 		std::vector<FiniteDifferencesInteraction<StateSpace,StateVector>*> multisite;
 
 		MassiveScalarField(double k, double sqrtg, double mass) : k(k), 
-																  mass(-mass), 
+																  mass(mass), 
 																  sqrtg(sqrtg),
 																  name("MassiveScalarField"), 
-																  onsite_standard(-0.5*sqrtg*mass), 
+																  onsite_standard(0.5*sqrtg*mass), 
 																  maininteraction(0.5*k)
 		{
 			onsite.push_back(&onsite_standard);
@@ -183,10 +186,10 @@ class MassiveScalarField
 		{
 			for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
 			{
-				auto nnbrs = grid.nbrs(0,i).size();
-				if (nnbrs < 7) statespace[i][0] = 1;
-				else statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
-//				statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
+//				auto nnbrs = grid.nbrs(0,i).size();
+//				if (nnbrs < 7) statespace[i][0] = 1;
+//				else statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
+				statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
 			}
 		}
 };
@@ -194,7 +197,6 @@ class MassiveScalarField
 
 // ------------------------------ INITIALIZER ---------------------------
 
-//template <class StateVector>
 template <>
 class Initializer<MassiveScalarField>
 {
@@ -202,7 +204,7 @@ class Initializer<MassiveScalarField>
 		Initializer() {}
 
 		template <class RNGCache>
-//		static StateVector newsv(const StateVector& svold, RNGCache& rng)
+		// auto?
 		static typename MassiveScalarField::StateVector newsv(const typename MassiveScalarField::StateVector& svold, RNGCache& rng)
 		{
 			double amp = 0.5; // Amplitude (TODO: make me a class parameter)

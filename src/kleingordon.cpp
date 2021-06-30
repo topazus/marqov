@@ -38,6 +38,7 @@ using std::ofstream;
 
 // Hamiltonians
 #include "hamiltonian/MassiveScalarField.h"
+#include "hamiltonian/MassiveScalarField2.h"
 
 using namespace MARQOV;
 
@@ -64,11 +65,11 @@ int main()
 	std::vector<double> beta = {1.0};
 	std::vector<double> K = {0.50315223}; // geometric factor
 	std::vector<double> sqrtg = {1.0471975511}; // geometric factor
-	std::vector<double> mass = {.33, .34, .35};	// negative mass squared
+	std::vector<double> mass = { -10, -1, -0.1, 0, 0.1, 1, 10};	// mass squared
 
 	auto hp = cart_prod(beta, K, sqrtg, mass);
 	
-	const int nthreads = 3;	
+	const int nthreads = 2;	
 	const int nreplicas = 1;
 
 	
@@ -77,9 +78,11 @@ int main()
 	typedef GraphFromCSV Lattice;
 
 	// Lattice
-	int nlayers = 12; 
+	int nlayers = 8; 
 	std::string latfile = "/home/schrauth/hyperbolic-7-3-"+std::to_string(nlayers)+".csv";
     GraphFromCSV lat(latfile);
+
+
 
 	// Scheduler
     typedef typename std::tuple<Lattice&, MARQOV::Config, std::tuple<double,double,double,double> > ParameterType;
@@ -87,7 +90,7 @@ int main()
  	SchedulerType sched(1,nthreads);
 
 	// Output
-	std::string outpath = outbasedir+"/hyperbolic-"+std::to_string(nlayers)+"/";
+	std::string outpath = outbasedir+"/test-"+std::to_string(nlayers)+"/";
 	makeDir(outpath);
 	
 	// Monte Carlo
@@ -95,7 +98,7 @@ int main()
 	mp.setnmetro(10);
 	mp.setncluster(0);
 	mp.setwarmupsteps(0);
-	mp.setgameloopsteps(500);
+	mp.setgameloopsteps(200);
 
 	// lattice parameters
 	// form parameter triple and replicate
