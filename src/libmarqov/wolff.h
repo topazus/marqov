@@ -48,7 +48,7 @@ namespace MARQOV
     {
 		// set up embedder
 		Embedder<Hamiltonian, Lattice> embd(ham, grid, statespace);
-		embd.draw(rng);
+		embd.draw(rng,statespace[rsite]);
 
         // prepare stack
         typedef typename Hamiltonian::StateVector StateVector;

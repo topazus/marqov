@@ -211,7 +211,7 @@ namespace MARQOV
 
 
 			template <class RNG>
-			void draw(RNG& rng)	{ rcolor = rng.integer(3); }
+			void draw(RNG& rng, StateVector& sv)	{ rcolor = rng.integer(3); }
 
 
 			double coupling(int pos1, int pos2) const

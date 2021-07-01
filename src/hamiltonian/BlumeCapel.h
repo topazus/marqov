@@ -124,7 +124,7 @@ namespace MARQOV
 			  * @note For this specific model this is not necessary, as the embedding is fixed
 			  */
 			template <class RNG>
-			void draw(RNG& rng) { } // nothing to draw 
+			void draw(RNG& rng, StateVector& sv) { } // nothing to draw 
 
 
 			/** Computes the Wolff coupling when attempting to add a spin to the cluster
