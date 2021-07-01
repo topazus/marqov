@@ -88,6 +88,8 @@ namespace MARQOV
 //                 std::cout<<"finished gamekernel closing file"<<std::endl;
             };
             
+            
+            
             gamekernelmutex.lock();
             gamekernels.push_back(gamekernel);
             gamekernelmutex.unlock();
@@ -313,7 +315,7 @@ namespace MARQOV
             int newnpt = findnextnpt(itm.id, itm.npt);
             std::cout<<"Putting a new item with id "<<itm.id<<" with npt = "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue"<< std::endl;
             taskqueue.enqueue(
-                [&,itm, newnpt]{gamekernels[itm.id](itm, newnpt);} //Get the required kernel from the array of gamekernels and execute it.
+                [&, itm, newnpt]{gamekernels[itm.id](itm, newnpt);} //Get the required kernel from the array of gamekernels and execute it.
             );
         }
         /** Determine the next PT step.
