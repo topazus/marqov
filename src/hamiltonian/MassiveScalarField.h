@@ -39,31 +39,19 @@ class BulkMagnetization
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-		 	// q used to distinguish boundary and bulk sites; bulk sites have q neighbours, boundary ones less
-			const int q = 7; // hard-coded (fixme)
-
-			const/*expr static*/ int SymD = statespace[0].size();
-			std::vector<double> mag(SymD, 0);
+			double mag = 0;
 			int counter = 0;
 
-			for (decltype(grid.size()) i = 0; i < grid.size(); i++) 
+			for (decltype(grid.size()) i=0; i<grid.size(); i++) 
 			{
-				auto nbrs = grid.nbrs(i,0);
-				int nnbrs = nbrs.size();
-				if (nnbrs == q)
+				if (!grid.is_boundary_site(i))
 				{
 					counter++;
-					for (int j=0; j<SymD; j++)
-					{
-						mag[j] += statespace[i][j]; 
-					}
+					mag += statespace[i][0]; 
 				}
 			}
 
-			double retval = 0;
-			for (int j=0; j<SymD; j++) retval += mag[j]*mag[j];
-
-			return sqrt(retval)/double(counter);
+			return sqrt(mag*mag)/double(counter);
 		}
 };
 
@@ -186,7 +174,7 @@ class MassiveScalarField
 				else 
 				{
 					statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
-					statespace[i][0] += boundary_value;
+					statespace[i][0] += 10000; // boundary_value;
 				}
 			}
 		}

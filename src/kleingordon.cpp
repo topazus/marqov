@@ -65,12 +65,12 @@ int main()
 	std::vector<double> beta = {1.0};
 	std::vector<double> K = {0.50315223}; // geometric factor
 	std::vector<double> sqrtg = {1.0471975511}; // geometric factor
-	std::vector<double> mass = { -10, -7, -5, -4, -3, -2, -1, -0.5, -0.25, 0, 1, 3, 10};	// mass squared
+	std::vector<double> mass = {-3, -2, -1, -0.7, -0.6, -0.55, -0.50, -0.45, -0.40};	// mass squared
 	// note that the geometric factors are only valid for the bulk region!
 
 	auto hp = cart_prod(beta, K, sqrtg, mass);
 	
-	const int nthreads = 2;	
+	const int nthreads = 3;	
 	const int nreplicas = 1;
 
 	
@@ -95,7 +95,7 @@ int main()
 
 
 	// Output
-	std::string outpath = outbasedir+"/test-"+std::to_string(nlayers)+"/";
+	std::string outpath = outbasedir+"/testlong-"+std::to_string(nlayers)+"/";
 	makeDir(outpath);
 	
 
@@ -104,7 +104,7 @@ int main()
 	mp.setnmetro(5);
 	mp.setncluster(0);
 	mp.setwarmupsteps(0);
-	mp.setgameloopsteps(300);
+	mp.setgameloopsteps(10000);
 
 
 	// Schedule and Run
