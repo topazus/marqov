@@ -61,19 +61,25 @@ namespace MARQOV
             auto t = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
             bool needswarmup = !Sim::dumppresent(std::get<1>(t));
             int idx = gamekernels.size();
-
+            
+            auto loadkernel = [&, t]()
+            {
+                    return makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
+            };
+            
             std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
             {
 //                 std::cout<<"Beginning gamekernel"<<std::endl;
                 {
-                    auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
+//                     auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
+                    auto sim = kernelloaders[mywork.id]();
                     // We loop until the next PT step
                     for(; mywork.npt < npt; ++mywork.npt)
                     {
                         //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
                         sim.gameloop();
                     }
-                    double myen = sim.calcAction(sim.statespace);
+                    std::cout<<"Final action of id "<<mywork.id<<" : "<<sim.calcAction(sim.statespace)<<std::endl;
                 }
                 if (mywork.npt < maxpt) // determine whether this itm needs more work
                 {
@@ -92,6 +98,7 @@ namespace MARQOV
             
             gamekernelmutex.lock();
             gamekernels.push_back(gamekernel);
+            kernelloaders.push_back(loadkernel);
             gamekernelmutex.unlock();
             if(needswarmup)
             {
@@ -292,7 +299,7 @@ namespace MARQOV
             {// partner is at the same stage, hence we can PT exchange
                             std::cout<<"Partner found in queue"<<std::endl;
                 ptqueue.erase(partnerinfo);
-                calcprob();
+                double mhratio = calcprob(itm.id, partnerinfo->id);
                 exchange();
                 //put both sims back into the taskqueue for more processing until their next PT step
                 movesimtotaskqueue(itm);
@@ -345,12 +352,26 @@ namespace MARQOV
         std::vector<Sim*> simvector; ///< An array for the full state of the simulations.
         ThreadPool::Queue taskqueue; ///< This is the queue where threads pull their work from.
         std::vector<std::function<void(Simstate, int)> > gamekernels; ///< prefabricated workitems that get executed to move a simulation forward.
-        
-        //FIXME fill those functions for proper PT
-        void calcprob()
+        std::vector<std::function<Sim(void)> > kernelloaders;
+        double calcprob(int ida, int idb)
         {
+            auto sima = kernelloaders[ida]();
+            auto simb = kernelloaders[idb]();
+            double enaa = sima.calcAction(sima.statespace);
+            double enbb = simb.calcAction(simb.statespace);
+            double enab = sima.calcAction(simb.statespace);
+            double enba = simb.calcAction(sima.statespace);
+            std::cout<<"Action of id "<<ida<<" : "<<enaa<<std::endl;
+            std::cout<<"Action of id "<<idb<<" : "<<enbb<<std::endl;
             
+            std::cout<<"Action of id with other statespace"<<ida<<" : "<<enab<<std::endl;
+            std::cout<<"Action of id with other statespace"<<idb<<" : "<<enba<<std::endl;
+            //calculate actual metropolis transition ratio from the propability densities
+            double mhratio = std::exp(-enab)*std::exp(-enba)/std::exp(-enaa)/std::exp(-enbb);
+            std::cout<<"M-H Ratio: "<<mhratio<<std::endl;
+            return mhratio;
         }
+        //FIXME fill this function for proper PT
         void exchange() {}
     };
 
