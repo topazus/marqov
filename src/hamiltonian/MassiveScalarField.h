@@ -175,13 +175,19 @@ class MassiveScalarField
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
+			double boundary_value = 5;
+
 			for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
 			{
-				double boundary_value = 1;
-				if (grid.is_boundary_site(i)) statespace[i][0] = boundary_value;
-				else statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
+				// random initialization with mean zero is not a good idea!
+				// it can introduce frustration effects to the system
 
-//				statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
+				if (grid.is_boundary_site(i)) statespace[i][0] = boundary_value;
+				else 
+				{
+					statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
+					statespace[i][0] += boundary_value;
+				}
 			}
 		}
 };
