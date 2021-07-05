@@ -282,8 +282,8 @@ namespace MARQOV
         /** Do a parallel tempering step. 
          * 
          * This function is called when the current simulation is up for a parallel tempering (PT) step.
-         * If its partner is already waiting we do the parallel tempering, if not we got moved into 
-         * a queue and wait for a partner
+         * If its partner is already waiting we do the parallel tempering, if not we get moved into 
+         * a queue and wait for a partner.
          * @param itm The Sim which is chosen for PT
          */
         void ptstep(Simstate itm) {
@@ -295,9 +295,9 @@ namespace MARQOV
             if (partner == itm.id) partner = ptplan[itm.npt].second;//it must be the other. no exchanges with myself
             auto partnerinfo = findpartner(partner);
             
-            if (partnerinfo != ptqueue.cend())
+            if ((partnerinfo != ptqueue.cend()) && (itm.npt == partnerinfo->npt) )
             {// partner is at the same stage, hence we can PT exchange
-                            std::cout<<"Partner found in queue"<<std::endl;
+                            std::cout<<"Partner "<<partner<<" found in queue"<<std::endl;
                 ptqueue.erase(partnerinfo);
                 double mhratio = calcprob(itm.id, partnerinfo->id);
                 exchange();
@@ -307,7 +307,7 @@ namespace MARQOV
             }
             else
             {//we have to wait for the PT partner
-                std::cout<<"Partner not in queue"<<std::endl;
+                std::cout<<"Partner "<<partner<<" not in queue"<<std::endl;
                 ptqueue.push_back(itm);
             }
         }
@@ -364,8 +364,8 @@ namespace MARQOV
             std::cout<<"Action of id "<<ida<<" : "<<enaa<<std::endl;
             std::cout<<"Action of id "<<idb<<" : "<<enbb<<std::endl;
             
-            std::cout<<"Action of id with other statespace"<<ida<<" : "<<enab<<std::endl;
-            std::cout<<"Action of id with other statespace"<<idb<<" : "<<enba<<std::endl;
+            std::cout<<"Action of id "<<ida<<" with other statespace"<<" : "<<enab<<std::endl;
+            std::cout<<"Action of id "<<idb<<" with other statespace"<<" : "<<enba<<std::endl;
             //calculate actual metropolis transition ratio from the propability densities
             double mhratio = std::exp(-enab)*std::exp(-enba)/std::exp(-enaa)/std::exp(-enbb);
             std::cout<<"M-H Ratio: "<<mhratio<<std::endl;
