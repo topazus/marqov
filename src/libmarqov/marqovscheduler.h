@@ -178,7 +178,7 @@ namespace MARQOV
         {
             //create dummy data for the ptplan
             for (int i = 0; i < maxpt; ++i)
-                ptplan.emplace_back(i, i+1 );
+                ptplan.emplace_back(i%gamekernels.size(), (i+1)%gamekernels.size() );
             
             std::cout<<"Starting up master"<<std::endl;
             Simstate itm;
@@ -294,13 +294,14 @@ namespace MARQOV
             int partner = ptplan[itm.npt].first;
             if (partner == itm.id) partner = ptplan[itm.npt].second;//it must be the other. no exchanges with myself
             auto partnerinfo = findpartner(partner);
-            
+
             if ((partnerinfo != ptqueue.cend()) && (itm.npt == partnerinfo->npt) )
             {// partner is at the same stage, hence we can PT exchange
-                            std::cout<<"Partner "<<partner<<" found in queue"<<std::endl;
-                ptqueue.erase(partnerinfo);
+
+                std::cout<<"Partner "<<partner<<" found in queue"<<std::endl;
                 double mhratio = calcprob(itm.id, partnerinfo->id);
                 exchange();
+                ptqueue.erase(partnerinfo);
                 //put both sims back into the taskqueue for more processing until their next PT step
                 movesimtotaskqueue(itm);
                 movesimtotaskqueue(Simstate(partner, itm.npt));
