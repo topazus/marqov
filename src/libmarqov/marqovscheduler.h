@@ -64,7 +64,7 @@ namespace MARQOV
             
             auto loadkernel = [&, t]()
             {
-                    return makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
+                    return makeCore<typename Sim::Lattice, typename Sim::HamiltonianType, typename Sim::RNGT>(t, mutexes.hdf);
             };
             
             std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)

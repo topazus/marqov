@@ -319,6 +319,7 @@ class Core : public RefType<Grid>
         typedef Grid Lattice; ///< The Type of the Lattice
 		typedef typename Hamiltonian::StateVector StateVector; ///< The type of the StateVector as retrieved from the Hamiltonian.
 		typedef Space<StateVector, Lattice> StateSpace; ///< the type of the state space.
+		typedef RNGType RNGT;
 		marqovtime::timetracker mrqvt; ///< The TimeTracker for tracking times.
 
 		// Local classes. We gain access to all Types of MARQOV::Core
