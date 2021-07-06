@@ -269,7 +269,18 @@ namespace MARQOV
          * @return the state vector at memory position j
          */
         const StateVector& operator[] (int j) const {return myspace[j];}
+        template <class A, class B>
+        friend void swap(Space<A, B>& a, Space<A, B>& b);
     };
+    
+    template <class StateVectorT, class Grid>
+    void swap(Space<StateVectorT, Grid>& a, Space<StateVectorT, Grid>& b)
+    {
+        if(a.size_ != b.size_) throw std::runtime_error("[MARQOV::Core] can't assign statespaces of different sizes.");
+        auto temp = a.myspace;
+        a.myspace = b.myspace;
+        b.myspace = temp;
+    }
 
 // --------------------------- MARQOV::Core class -------------------------------
 
@@ -1040,14 +1051,14 @@ class Core : public RefType<Grid>
 		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.
 		Config mcfg; ///< An instance of all our MARQOV related parameters.
 		int step; ///< The current step of the simulation. Used for HDF5 paths.
-        std::unique_lock<MutexType> hdf5lock; ///< The global lock to synchronize access to the HDF5 *library*.
+		std::unique_lock<MutexType> hdf5lock; ///< The global lock to synchronize access to the HDF5 *library*.
 		H5::H5File dump; ///< The handle for the HDF5 file. Must be before the obscaches and the statespace.
 		StateSpace statespace; ///< The statespace. It holds the current configuration space.
 		H5::Group obsgroup; ///< The HDF5 Group of all our observables.
 		H5::Group stategroup; ///< The HDF5 Group where to dump the statespace.
 		typedef decltype(std::declval<Hamiltonian>().observables) ObsTs; ///< This type is mostly a tuple of other observables.
 		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache; ///< The HDF5 caches for each observable.
-        ObsTs& obs; ///<the actual observables defined in the hamiltonians.
+		ObsTs& obs; ///<the actual observables defined in the hamiltonians.
 		RNGCache<RNGType> rngcache;///< The caching RNG
 };
 
