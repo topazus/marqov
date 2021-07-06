@@ -299,8 +299,11 @@ namespace MARQOV
             {// partner is at the same stage, hence we can PT exchange
 
                 std::cout<<"Partner "<<partner<<" found in queue"<<std::endl;
-                double mhratio = calcprob(itm.id, partnerinfo->id);
-                exchange();
+                auto sima = kernelloaders[itm.id]();
+                auto simb = kernelloaders[partnerinfo->id]();
+                double mhratio = calcprob(sima, simb);
+                if(rng.real() < std::min(1.0, mhratio))
+            	    exchange(sima, simb);
                 ptqueue.erase(partnerinfo);
                 //put both sims back into the taskqueue for more processing until their next PT step
                 movesimtotaskqueue(itm);
@@ -354,26 +357,31 @@ namespace MARQOV
         ThreadPool::Queue taskqueue; ///< This is the queue where threads pull their work from.
         std::vector<std::function<void(Simstate, int)> > gamekernels; ///< prefabricated workitems that get executed to move a simulation forward.
         std::vector<std::function<Sim(void)> > kernelloaders;
-        double calcprob(int ida, int idb)
+        RNGCache<std::mt19937_64> rng;
+        template <class T>
+        double calcprob(T& sima, T& simb)
         {
-            auto sima = kernelloaders[ida]();
-            auto simb = kernelloaders[idb]();
+//            auto sima = kernelloaders[ida]();
+//            auto simb = kernelloaders[idb]();
             double enaa = sima.calcAction(sima.statespace);
             double enbb = simb.calcAction(simb.statespace);
             double enab = sima.calcAction(simb.statespace);
             double enba = simb.calcAction(sima.statespace);
-            std::cout<<"Action of id "<<ida<<" : "<<enaa<<std::endl;
-            std::cout<<"Action of id "<<idb<<" : "<<enbb<<std::endl;
+            std::cout<<"Action of id 1"<<" : "<<enaa<<std::endl;
+            std::cout<<"Action of id 2"<<" : "<<enbb<<std::endl;
             
-            std::cout<<"Action of id "<<ida<<" with other statespace"<<" : "<<enab<<std::endl;
-            std::cout<<"Action of id "<<idb<<" with other statespace"<<" : "<<enba<<std::endl;
+            std::cout<<"Action of id 1"<<" with other statespace"<<" : "<<enab<<std::endl;
+            std::cout<<"Action of id 2"<<" with other statespace"<<" : "<<enba<<std::endl;
             //calculate actual metropolis transition ratio from the propability densities
             double mhratio = std::exp(-enab)*std::exp(-enba)/std::exp(-enaa)/std::exp(-enbb);
             std::cout<<"M-H Ratio: "<<mhratio<<std::endl;
             return mhratio;
         }
-        //FIXME fill this function for proper PT
-        void exchange() {}
+        template <class T>
+        void exchange(T& sima, T& simb) 
+        {
+    	    swap(sima.statespace, simb.statespace);
+        }
     };
 
     /** A helper class to figure out the type of the scheduler.
