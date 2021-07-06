@@ -277,9 +277,14 @@ namespace MARQOV
     void swap(Space<StateVectorT, Grid>& a, Space<StateVectorT, Grid>& b)
     {
         if(a.size_ != b.size_) throw std::runtime_error("[MARQOV::Core] can't assign statespaces of different sizes.");
-        auto temp = a.myspace;
-        a.myspace = b.myspace;
-        b.myspace = temp;
+        auto temp = new StateVectorT[a.size_];
+        for (int i = 0; i < a.size_; ++i)
+            temp[i] = a.myspace[i];
+        for (int i = 0; i < a.size_; ++i)
+            a.myspace[i] = b.myspace[i];
+        for (int i = 0; i < a.size_; ++i)
+            b.myspace[i] = temp[i];
+        delete [] temp;
     }
 
 // --------------------------- MARQOV::Core class -------------------------------
