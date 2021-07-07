@@ -267,7 +267,7 @@ void selectsim()
         //typedef RegularRandomBond<BimodalPDF> Lattice;
 
         typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
-		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
+		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType, std::ranlux48>::MarqovScheduler SchedulerType;
 
 		SchedulerType sched(1, nthreads);
 
@@ -334,7 +334,7 @@ void selectsim()
 		typedef ConstantCoordinationLattice<Poissonian> Lattice;
 
         typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
-		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
+		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType, std::knuth_b>::MarqovScheduler SchedulerType;
 
 
 		// Lattice size loop
