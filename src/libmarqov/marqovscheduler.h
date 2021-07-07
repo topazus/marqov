@@ -268,7 +268,7 @@ namespace MARQOV
          * 
          * @param id find the next partner that this id has.
          */
-        auto findpartner(uint id)
+        auto findpartner(uint id) const
         {
             return std::find_if(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == static_cast<int>(id);});
         }
@@ -335,7 +335,7 @@ namespace MARQOV
          * @param curnpt current PT time
          * @return the next PT step where this simulation is selected for PT.
          */
-        uint findnextnpt(int idx, uint curnpt)
+        uint findnextnpt(int idx, uint curnpt) const
         {
             uint retval = curnpt+1;
             while ((retval < static_cast<uint>(maxpt)) && (ptplan[retval].first != idx) && (ptplan[retval].second != idx))
@@ -359,7 +359,7 @@ namespace MARQOV
         std::vector<std::function<Sim(void)> > kernelloaders;
         RNGCache<std::mt19937_64> rng;
         template <class T>
-        double calcprob(T& sima, T& simb)
+        double calcprob (T& sima, T& simb) const
         {
 //            auto sima = kernelloaders[ida]();
 //            auto simb = kernelloaders[idb]();
