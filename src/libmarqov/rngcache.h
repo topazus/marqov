@@ -128,7 +128,12 @@ public:
             throw std::runtime_error("[RNGCache] error while allocating memory");
         fillcache();
     }
-    RNGCache(RNGCache&& other) = default;//FIXME: think about it...
+    RNGCache(RNGCache&& other) noexcept : data(std::exchange(other.data, nullptr)), pos(std::move(other.pos)), rng(std::move(other.rng))
+    {}
+    RNGCache() = delete;
+    RNGCache(RNGCache& other) = delete;
+    RNGCache& operator=(RNGCache&&) = delete;
+    RNGCache& operator=(RNGCache&) = delete;
     /** Frees the memory of the cache.
      */
     ~RNGCache()
@@ -194,7 +199,7 @@ public:
     }
     /** The maximum integer that we support.
      */
-    static constexpr auto max() {return RNG::max();}
+    static constexpr auto max() noexcept{return RNG::max();}
     /** Fill the cache.
      * 
      * Can also be used to flush the cache,
@@ -244,12 +249,12 @@ public:
     }
 private:
     static constexpr int pagesize = 4096;///< The pagesize of the OS. A common value.
-    static constexpr int nrpages = 2; ///< how many memory pages we use.
-    typedef decltype(std::declval<RNG>().operator()()) result_type;///< the Type that the RNG returns
+    static constexpr int nrpages = 2; ///< How many memory pages we use.
+    typedef decltype(std::declval<RNG>().operator()()) result_type;///< the type that the RNG returns.
     static constexpr int nelems = pagesize*nrpages/sizeof(result_type); ///< How many elements we store in the cache.
-    result_type* data; ///< The memory we use for the cache.
-    int pos; ///< at which integer are we currently.
-    RNG rng; ///< the RNG.
+    result_type* data{nullptr}; ///< The memory we use for the cache.
+    int pos{0}; ///< at which integer are we currently.
+    RNG rng{}; ///< the RNG.
 };
 
 #endif

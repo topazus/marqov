@@ -227,7 +227,7 @@ namespace MARQOV
          */
         Scheduler(int maxptsteps, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
-        taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads))
+        taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads)), rng(time(0) + std::random_device{}())
         {}
         /** Tidy up scheduler.
          * 
