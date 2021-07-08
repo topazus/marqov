@@ -196,9 +196,4 @@ marqov_sphinx_docs:
     script:
       - apt-get update && apt-get install -y doxygen graphviz pdf2svg python3-breathe python3-sphinx python3-sphinx-rtd-theme git python3-numpy python3-colorama python3-h5py python3-matplotlib
       - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.physik.uni-wuerzburg.de/marqov/pymarqov.git
-      - rm pymarqov/doc/conf.py
-      - cd doc
-      - cp -rn ../pymarqov/doc python
-      - echo "sys.path.insert(0, os.path.abspath('../pymarqov/'))" >> conf.py
-      - doxygen Doxyfile-marqov-breathe.cfg
-      - make html
+      - ./compilefulldocs.sh
