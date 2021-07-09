@@ -28,6 +28,30 @@
 
 // ------------------------------ OBSERVABLES ---------------------------
 
+// Important Notes:
+
+// Spin glass observables typically require local thermal averages
+// which means that first, spin are _individually_ averaged over the
+// thermal history of the (properly thermalized) system;
+// then the average over the system is performed;
+// and then a configuration/replica average
+
+// Definitions:
+// Katzgraber et. al, PRB 73, 224432 (2006)
+// or Parisi, PRL 50.24 (1983): 1946.
+
+// since keeping track of the thermal history of every site 
+// or even every pair of sites (in the susceptibilities) is 
+// expensive, we implement the absorvables as "running" averages
+
+// note that for the susceptibility is does not match the
+// strict definition!
+
+// IMPROVE ME!
+
+
+
+
 /** Edwards-Anderson order parameter */
 class EdwardsAndersonOrderParameter
 {
@@ -41,6 +65,8 @@ class EdwardsAndersonOrderParameter
 		{
 			const int size = grid.size();
 
+			// prepare large enough vector where the running thermal average
+			// of every spin can be stored
 			if (local_sum.size() == 0) 
 			{
 				local_sum.resize(size);
@@ -49,6 +75,8 @@ class EdwardsAndersonOrderParameter
 
 			double retval = 0;
 
+			// compute and store running thermal average of every site
+			// and compute current total average 
 			counter++;
 			for (int i=0; i<size; i++)
 			{
@@ -56,11 +84,101 @@ class EdwardsAndersonOrderParameter
 				retval += pow(local_sum[i],2);
 			}
 
+			// working with running averages requires some normalization
 			return retval / double(size) / double(counter) / double(counter);
 		}
 
 		EdwardsAndersonOrderParameter() : name("qEA") {}
 };
+
+
+
+
+
+//* Spin glass susceptibility */
+// compare general remarks above!
+class Susceptibility
+{
+	public:
+		int counter = 0;
+		double kx;
+		std::string name;
+		std::vector<int> sum_i;
+		std::vector<std::vector<int>> sum_ij;
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& statespace, const Grid& grid)
+		{
+			const int size = grid.size();
+			std::complex<double> jj(0,1); 
+			const double norml = 1. /  double(size) / double(size) / double(counter) / double(counter);
+
+			// prepare large enough vector where the running thermal average
+			// of every pair of spins can be stored
+			if (sum_ij.size() == 0) 
+			{
+				sum_ij.resize(size);
+				for (int i=0; i<size; i++)
+				{
+					sum_ij[i].resize(size);
+					for (int j=0; j<size; j++)
+					{
+						sum_ij[i][j] = 0;
+					}
+				}
+			}
+
+			if (sum_i.size() == 0) 
+			{
+				sum_i.resize(size);
+				for (int i=0; i<size; i++) sum_i[i] = 0;
+			}
+
+			std::complex<double> retval = 0;
+			counter++;
+
+			for (int i=0; i<size; i++)
+			{
+				sum_i[i] += statespace[i][0];
+
+				for (int j=0; j<size; j++)
+				{
+					sum_ij[i][j] += statespace[i][0]*statespace[j][0];
+				}
+			}
+
+
+			// perform system average and add proper phase factors
+			for (int i=0; i<size; i++)
+			{
+				for (int j=0; j<size; j++)
+				{
+					const int dir = 0; // we consider only the first spatial component
+
+					const std::vector<double> xi = {grid.crds(i)[dir]};
+					const std::vector<double> xj = {grid.crds(j)[dir]};
+					auto diff = xi[0] - xj[0];
+
+					if (fabs(diff)>0.5) diff = 1.0 - fabs(diff); // account for PBC
+					std::complex<double> phase = std::exp(kx*diff*jj);
+					retval += pow(sum_ij[i][j],2) * phase;
+				}
+			}
+
+			return norml * std::abs(retval);
+
+			// open questions (TODO):
+			// - should the distance vector account for PBC? -> most likely yes
+			// - correct normalization -> almost ;)
+			// - order of averages correct? -> think so
+			// - what to return? absolute value, real part, ...?
+		}
+
+		Susceptibility(double kx, std::string name) : kx(kx), name(name) {}
+};
+
+
+
 
 
 
@@ -117,6 +235,8 @@ class LinkOverlap /// not working so far!!!! TODO
 };
 
 
+
+
 class InternalEnergy /// not working so far!!!! TODO
 {
 	public:
@@ -168,85 +288,6 @@ class InternalEnergy /// not working so far!!!! TODO
 };
 		
 
-
-
-//* Spin glass susceptibility */
-class Susceptibility
-{
-	public:
-		int counter = 0;
-		double kx;
-		std::string name;
-		std::vector<int> sum_i;
-		std::vector<std::vector<int>> sum_ij;
-
-		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
-		{
-			const int size = grid.size();
-			std::complex<double> jj(0,1); 
-			const double norml = 1. /  double(size) / double(size) / double(counter) / double(counter);
-
-			if (sum_ij.size() == 0) 
-			{
-				sum_ij.resize(size);
-				for (int i=0; i<size; i++)
-				{
-					sum_ij[i].resize(size);
-					for (int j=0; j<size; j++)
-					{
-						sum_ij[i][j] = 0;
-					}
-				}
-			}
-
-			if (sum_i.size() == 0) 
-			{
-				sum_i.resize(size);
-				for (int i=0; i<size; i++) sum_i[i] = 0;
-			}
-
-			std::complex<double> retval = 0;
-			counter++;
-
-			for (int i=0; i<size; i++)
-			{
-				sum_i[i] += statespace[i][0];
-
-				for (int j=0; j<size; j++)
-				{
-					sum_ij[i][j] += statespace[i][0]*statespace[j][0];
-				}
-			}
-
-
-			for (int i=0; i<size; i++)
-			{
-				for (int j=0; j<size; j++)
-				{
-					const int dir = 0; // we consider only the first spatial component
-
-					const std::vector<double> xi = {grid.crds(i)[dir]};
-					const std::vector<double> xj = {grid.crds(j)[dir]};
-					auto diff = xi[0] - xj[0];
-
-					if (fabs(diff)>0.5) diff = 1.0 - fabs(diff); // account for PBC
-					std::complex<double> phase = std::exp(kx*diff*jj);
-					retval += pow(sum_ij[i][j],2) * phase;
-				}
-			}
-
-			return norml * std::abs(retval);
-
-			// open questions (TODO):
-			// - should the distance vector account for PBC? -> most likely yes
-			// - correct normalization -> almost ;)
-			// - order of averages correct? -> think so
-			// - what to return? absolute value, real part, ...?
-		}
-
-		Susceptibility(double kx, std::string name) : kx(kx), name(name) {}
-};
 
 
 // ------------------------------ INITIALIZER ---------------------------
@@ -304,7 +345,8 @@ class EdwardsAndersonIsing
 
 		//  ----  Hamiltonian terms  ----
 
-		std::array<EdwardsAndersonIsing_interaction<StateVector>*, 1> interactions = {new EdwardsAndersonIsing_interaction<StateVector>(J)};
+		std::array<EdwardsAndersonIsing_interaction<StateVector>*, 1> interactions 
+			= {new EdwardsAndersonIsing_interaction<StateVector>(J)};
 
 		EdwardsAndersonIsing(double J) : J(J), 
 										 name("EdwardsAndersonIsing"), 
@@ -320,7 +362,8 @@ class EdwardsAndersonIsing
 		Susceptibility					obs_chi;
 		Susceptibility					obs_chiKmin;
 		InternalEnergy					obs_U;
-        decltype(std::make_tuple(obs_qEA, obs_chi, obs_chiKmin, obs_U)) observables = {std::make_tuple(obs_qEA, obs_chi, obs_chiKmin, obs_U)};
+        decltype(std::make_tuple(obs_qEA, obs_chi, obs_chiKmin)) observables 
+			= {std::make_tuple(obs_qEA, obs_chi, obs_chiKmin)};
 
 
 		//  ----  Initializer  ----
@@ -337,69 +380,4 @@ class EdwardsAndersonIsing
 };
 
 
-
-
-
-// ------------------------------ SPECIALIZATIONS ---------------------------
-
-
-namespace MARQOV 
-{
-
-	/** Specialization of the Metropolis algorithm for an Ising spin glass.
-	  * Identical to the specialization for the regular Ising model in "ising.h"
-	  * @see "metropolis.h"
-	  */
-	  /*
-	template <class Lattice>
-	struct Metropolis<EdwardsAndersonIsing<int>, Lattice>
-	{
-	    template <class StateSpace, class M, class RNG>
-	    static int move(const EdwardsAndersonIsing<int>& ham, const Lattice& grid, StateSpace& statespace, M& metro, RNG& rng, double beta, int rsite)
-	    {
-			typedef typename EdwardsAndersonIsing<int>::StateVector StateVector;
-		    // old state vector at rsite
-			StateVector& svold = statespace[rsite];
-			// propose new configuration
-			StateVector svnew = metro.newsv(svold);
-			
-			// interaction part
-			double interactionenergydiff = 0;
-			for(std::size_t a = 0; a < ham.interactions.size(); ++a)
-			{
-				auto nbrs = grid.nbrs(a, rsite);
-				typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
-				typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
-				typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};
-
-				// sum over neighbours
-				for (std::size_t i = 0; i < nbrs.size(); ++i)
-				{
-					auto idx = nbrs[i];
-					auto nbr = ham.interactions[a]->get(statespace[idx]);
-					averagevector = averagevector + MARQOV::callbonds<Lattice>(grid, a, rsite, i, nbr);
-				}
-				interactionenergydiff += ham.interactions[a]->J * (dot(svnew - svold, averagevector));
-			}
-
-	    	// sum up energy differences
-	    	double dE 	= interactionenergydiff;
-	
-	    	int retval = 0;
-	    	if ( dE <= 0 )
-	    	{
-	    	    svold = svnew;
-	    	    retval = 1;
-	    	}
-	    	else if (rng.real() < exp(-beta*dE))
-	    	{
-	    	    svold = svnew;
-	    	    retval = 1;
-	    	}
-	    	return retval;
-	    }
-	};
-	*/
-
-}
 #endif

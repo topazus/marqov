@@ -236,17 +236,17 @@ void selectsim()
 	else if (startswith(ham, "EdwardsAnderson-Ising"))
 	{
 		// Parameters
-		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
-		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
-		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
+		const auto name = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
+		auto nreplicas  = registry.Get<std::vector<int>>(name+".ini", name, "rep" );
+		const auto nL   = registry.Get<std::vector<int>>(name+".ini", name, "L" );
+		const auto dim  = registry.Get<int>(name+".ini", name, "dim" );
 	
 	
 		// Number of threads
 		int nthreads = 0;
 		try 
 		{
-			nthreads = registry.template Get<int>("mc.ini", "General", "threads_per_node" );
+			nthreads = registry.template Get<int>(name+".ini", "General", "threads_per_node" );
 		}
 		catch (const Registry_Key_not_found_Exception&) 
 		{
@@ -256,8 +256,8 @@ void selectsim()
 		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 		// Physical parameters
-		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "J");
+		auto beta = registry.Get<std::vector<double> >(name+".ini", name, "beta");
+		auto J    = registry.Get<std::vector<double> >(name+".ini", name, "J");
 		auto hp = cart_prod(beta, J);
         
 
@@ -267,7 +267,8 @@ void selectsim()
         //typedef RegularRandomBond<BimodalPDF> Lattice;
 
         typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
-		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType, std::ranlux48>::MarqovScheduler SchedulerType;
+		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
+//		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType, std::ranlux48>::MarqovScheduler SchedulerType;
 
 		SchedulerType sched(1, nthreads);
 
@@ -284,8 +285,8 @@ void selectsim()
 			MARQOV::Config mp(outpath);
 			mp.setnmetro(50);
 			mp.setncluster(0);
-			mp.setwarmupsteps(200);
-			mp.setgameloopsteps(1000);
+			mp.setwarmupsteps(10);
+			mp.setgameloopsteps(100);
 
 			// lattice parameters
 // 			auto lp = std::make_tuple(L, dim);
@@ -464,8 +465,8 @@ int main(int argc, char* argv[])
 	RegistryDB registry("../src/config", "ini");
 
 	// remove old output and prepare new one
-	std::string outbasedir = registry.Get<std::string>("mc.ini", "IO", "outdir" );
-	std::string logbasedir = registry.Get<std::string>("mc.ini", "IO", "logdir" );
+	std::string outbasedir = "../out";
+	std::string logbasedir = "../log";
 
 	//FIXME: NEVER DELETE USER DATA
 	std::string command;
