@@ -93,8 +93,87 @@ class EdwardsAndersonOrderParameter
 
 
 
+// another attempt at the spin glass susceptibility
+// now we actually track everything
+// however the phase factors are already included in the system average
+// is that correct?
+class RealSusceptibility
+{
+	public:
+		double kx;
+		std::string name;
+		int counter = 0;
+		std::vector<std::vector<std::vector<int>>> sisj;
+		std::vector<std::vector<std::complex<double>>> phases;
+
+		template <class StateSpace, class Grid>
+		double measure(const StateSpace& s, const Grid& grid)
+		{
+			const int size = grid.size();
+			std::complex<double> jj(0,1); 
+
+			// when this function is executed for the first time
+			// we do some preparations
+			if (this->counter == 0)
+			{	
+				sisj.resize(size);
+				phases.resize(size);
+				for (int i=0; i<size; i++)
+				{
+					sisj[i].resize(size);
+					phases[i].resize(size);
+				}
+			
+
+				// compute and store phase factors
+				const int dir = 0; // we consider only the first spatial component
+				for (int i=0; i<size; i++) 
+				{
+					for (int j=0; j<size; j++) 
+					{
+						const std::vector<double> xi = {grid.crds(i)[dir]};
+						const std::vector<double> xj = {grid.crds(j)[dir]};
+						auto diff = xi[0] - xj[0];
+
+						if (fabs(diff)>0.5) diff = 1.0 - fabs(diff); // account for PBC
+						phases[i][j] = std::exp(kx*diff*jj);
+					}
+				}
+			}
 
 
+			// store current values
+			for (int i=0; i<size; i++) for (int j=0; j<size; j++) sisj[i][j].push_back(s[i][0]*s[j][0]);
+
+			// compute actually observable only every n-th time the function is executed
+			std::complex<double> system_average = 0;
+
+			if ((counter-1)%10 == 0)
+			{
+				// loop over pairs of sites
+				for (int i=0; i<size; i++) 
+				{
+					for (int j=0; j<size; j++) 
+					{
+						// compute thermal average for current pair s_i*s_j
+						double current_site_average = 0;
+						const int nmeas = sisj[i][j].size();
+						for (int t=0; t<nmeas; t++) current_site_average += sisj[i][j][t];
+						current_site_average /= double(nmeas);
+						
+						system_average += pow(current_site_average,2) * phases[i][j];
+					}
+				}
+			}
+
+			counter++;
+			return std::abs(system_average) / double(size);
+		}
+
+		RealSusceptibility(double kx, std::string name) : kx(kx), name(name) {}
+
+};
+		
 //* Spin glass susceptibility */
 // compare general remarks above!
 class Susceptibility
@@ -359,8 +438,8 @@ class EdwardsAndersonIsing
 		//  ----  Observables ----
 		
 		EdwardsAndersonOrderParameter	obs_qEA;
-		Susceptibility					obs_chi;
-		Susceptibility					obs_chiKmin;
+		RealSusceptibility					obs_chi;
+		RealSusceptibility					obs_chiKmin;
 		InternalEnergy					obs_U;
         decltype(std::make_tuple(obs_qEA, obs_chi, obs_chiKmin)) observables 
 			= {std::make_tuple(obs_qEA, obs_chi, obs_chiKmin)};
