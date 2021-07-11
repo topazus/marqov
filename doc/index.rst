@@ -1,28 +1,59 @@
-.. Marqov_test2 documentation master file, created by
-   sphinx-quickstart on Fri May 14 13:40:47 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. Copyright (c) 2021, Manuel Schrauth, Florian Goth
 
-.. default-domain:: cpp
-.. highlight:: cpp
+.. raw:: html
 
-Welcome to Marqov's documentation!
-========================================
-Table of Contents
+   <style>
+   .rst-content .section>img {
+       width: 40px;
+       margin-bottom: 0;
+       margin-top: 0;
+       margin-right: 10px;
+       margin-left: 10px;
+       float: left;
+   }
+   </style>
+
+The pyMARQOV documentation
+==========================
+
+Welcome to the official documentation of the pyMARQOV package!
+
+
+.. image:: ./_static/icon_regular.svg
 
 .. toctree::
    :maxdepth: 2
+   :caption: Contents
 
-   self
-   api/index
-   overview/index
+   installation
+   changelog
+   getting_started
+   observables
 
 .. doxygenfunction:: MARQOV::get_terms
 
 .. doxygenstruct:: MARQOV::has_nbrs
 
+
+
+.. toctree::
+   :caption: API reference
+   :maxdepth: 2
+
+   api/core
+   api/container
+   api/parameters
+   api/api
+   python/index
+
+.. image:: ./_static/icon_regular.svg
+
 Indices and tables
 ==================
+
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+
