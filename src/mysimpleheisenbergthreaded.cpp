@@ -80,7 +80,7 @@ int main()
     vector<decltype(args)> v;
 
 	// Fill
-    for(int j = 0; j < 7; ++j)
+    for(int j = 0; j < 13; ++j)
     {
         hp = make_tuple(beta+j*0.1, J);
         v.push_back(make_tuple(std::ref(mylatt), mp, hp));
@@ -88,7 +88,7 @@ int main()
 
     // Set up the MARQOV schedular
     typedef typename GetSchedulerType<MySimpleHeisenberg, RegularHypercubic, decltype(args)>::MarqovScheduler SchedulerType;
-    SchedulerType sched(10,1); //MARQOV makes use of all available threads by default.
+    SchedulerType sched(100,1); //MARQOV makes use of all available threads by default.
     
 	// Feed parameters to the scheduler which creates the simulations
     for(auto p : v)

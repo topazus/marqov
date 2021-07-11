@@ -69,7 +69,7 @@ namespace MARQOV
             
             std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
             {
-//                 std::cout<<"Beginning gamekernel"<<std::endl;
+                 std::cout<<"Beginning gamekernel of "<<mywork.id<<std::endl;
                 {
 //                     auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                     auto sim = kernelloaders[mywork.id]();
