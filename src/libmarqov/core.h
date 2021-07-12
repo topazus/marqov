@@ -34,6 +34,7 @@
 #include <chrono>
 #include <mutex>
 #include <thread>
+#include <memory>
 #include "marqov_detail.h"
 #include "cachecontainer.h"
 #include "util/svmath.h"
@@ -225,7 +226,8 @@ namespace MARQOV
     class Space
     {
     private:
-        StateVectorT *const myspace; ///< the storage of the state space.
+        std::unique_ptr<StateVectorT[]> myspace;
+//         StateVectorT *const myspace; ///< the storage of the state space.
         const std::size_t size_; ///< how many state vectors are in our state space
         
         template <class G, class Hamiltonian, class MutexType, class RNGType, template<class> class RefType>
@@ -239,15 +241,17 @@ namespace MARQOV
          * 
          * @param size the size of the state space.
          */
-        Space(int size) : myspace(new StateVector[size]), size_(size) {}
+        explicit Space(int size) : myspace(std::make_unique<StateVectorT>(size))
+      /*  myspace(new StateVector[size])*/, size_(size) {}
         /** A constructor where we basically get the memory from somewhere else.
          * 
          * @param arg a pair of a pointer and the length of the memory.
          */
         Space(std::pair<StateVectorT*, std::size_t> arg) : myspace(arg.first), size_(arg.second) {}
+        StateVectorT *const getptr() const {return myspace.get();}
         /** The destructor frees the memory.
          */
-        ~Space() {delete [] myspace;}
+//         ~Space() {delete [] myspace;}
         
         /** Query the size of the statespace
          * 
@@ -277,7 +281,7 @@ namespace MARQOV
     void swap(Space<StateVectorT, Grid>& a, Space<StateVectorT, Grid>& b)
     {
         if(a.size_ != b.size_) throw std::runtime_error("[MARQOV::Core] can't assign statespaces of different sizes.");
-        std::swap_ranges(a.myspace, a.myspace + a.size_, b.myspace);
+        std::swap_ranges(a.getptr(), a.getptr() + a.size_, b.getptr());
     }
 
 // --------------------------- MARQOV::Core class -------------------------------
@@ -822,7 +826,7 @@ class Core : public RefType<Grid>
             std::array<hsize_t, rank> count;
             count.fill(static_cast<hsize_t>(this->grid.size()));
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
-            dataset.write(statespace.myspace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
+            dataset.write(statespace.getptr(), H5Mapper<StateVector>::H5Type(), mspace1, filespace);
         }
 
         /** Destructor.
