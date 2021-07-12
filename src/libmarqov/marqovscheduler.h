@@ -299,11 +299,13 @@ namespace MARQOV
             {// partner is at the same stage, hence we can PT exchange
 
                 std::cout<<"Partner "<<partner<<" found in queue"<<std::endl;
-                auto sima = kernelloaders[itm.id]();
-                auto simb = kernelloaders[partnerinfo->id]();
-                double mhratio = calcprob(sima, simb);
-                if(rng.real() < std::min(1.0, mhratio))
-            	    exchange(sima, simb);
+                {
+                    auto sima = kernelloaders[itm.id]();
+                    auto simb = kernelloaders[partnerinfo->id]();
+                    double mhratio = calcprob(sima, simb);
+                    if(rng.real() < std::min(1.0, mhratio))
+                        exchange_statespace(sima, simb);
+                }
                 ptqueue.erase(partnerinfo);
                 //put both sims back into the taskqueue for more processing until their next PT step
                 movesimtotaskqueue(itm);
@@ -378,7 +380,7 @@ namespace MARQOV
             return mhratio;
         }
         template <class T>
-        void exchange(T& sima, T& simb) 
+        void exchange_statespace(T& sima, T& simb) 
         {
     	    swap(sima.statespace, simb.statespace);
         }
