@@ -241,7 +241,7 @@ namespace MARQOV
          * 
          * @param size the size of the state space.
          */
-        explicit Space(int size) : myspace(std::make_unique<StateVectorT>(size))
+        explicit Space(int size) : myspace(std::make_unique<StateVectorT[]>(size))
       /*  myspace(new StateVector[size])*/, size_(size) {}
         /** A constructor where we basically get the memory from somewhere else.
          * 
@@ -276,7 +276,7 @@ namespace MARQOV
         template <class A, class B>
         friend void swap(Space<A, B>& a, Space<A, B>& b);
     };
-    
+
     template <class StateVectorT, class Grid>
     void swap(Space<StateVectorT, Grid>& a, Space<StateVectorT, Grid>& b)
     {
