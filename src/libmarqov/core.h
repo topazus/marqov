@@ -227,12 +227,11 @@ namespace MARQOV
     {
     private:
         std::unique_ptr<StateVectorT[]> myspace;
-//         StateVectorT *const myspace; ///< the storage of the state space.
         const std::size_t size_; ///< how many state vectors are in our state space
-        
+
         template <class G, class Hamiltonian, class MutexType, class RNGType, template<class> class RefType>
         friend class Core;
-        
+
     public:
         typedef Grid Lattice; ///< The Type of the lattice 
         typedef StateVectorT StateVector; ///< a typedef for the state vector
@@ -241,24 +240,23 @@ namespace MARQOV
          * 
          * @param size the size of the state space.
          */
-        explicit Space(std::size_t size) : myspace(std::make_unique<StateVectorT[]>(size))
-      /*  myspace(new StateVector[size])*/, size_(size) {}
+        explicit Space(std::size_t size) : myspace(std::make_unique<StateVectorT[]>(size)), size_(size) {}
         /** A constructor where we basically get the memory from somewhere else.
          * 
          * @param arg a pair of a pointer and the length of the memory.
          */
         Space(std::pair<StateVectorT*, std::size_t> arg) : myspace(arg.first), size_(arg.second) {}
-        StateVectorT *const getptr() const {return myspace.get();}
-        /** The destructor frees the memory.
+        /** Get access to the internal pointer.
+         *
+         * @return the internal pointer to the memory.
          */
-//         ~Space() {delete [] myspace;}
-        
+        StateVectorT *const getptr() const {return myspace.get();}
         /** Query the size of the statespace
          * 
          * @return the size of the state space.
          */
         int size() const {return size_;}
-        
+
         /** Access a single state vector by index.
          * 
          * non-const version
