@@ -241,7 +241,7 @@ namespace MARQOV
          * 
          * @param size the size of the state space.
          */
-        explicit Space(int size) : myspace(std::make_unique<StateVectorT[]>(size))
+        explicit Space(std::size_t size) : myspace(std::make_unique<StateVectorT[]>(size))
       /*  myspace(new StateVector[size])*/, size_(size) {}
         /** A constructor where we basically get the memory from somewhere else.
          * 
