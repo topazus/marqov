@@ -179,7 +179,7 @@ class InteractionEnergy
 
 				ene += ham.interactions[a]->J * enepart;
 			}
-			return ene/double(N);
+			return 0.5*ene/double(N); // account for double counting
 		}
 
 		template <class StateSpace, class Grid>
