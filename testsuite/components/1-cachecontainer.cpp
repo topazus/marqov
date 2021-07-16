@@ -8,7 +8,7 @@ int main()
     {
     std::string filename("test.h5");
     auto flag = H5F_ACC_TRUNC;
-    H5::H5File retval(filename, flag);
+    H5::H5File file(filename, flag);
     H5::Group obs1(file.createGroup("obs1"));
     H5::Group obs2(file.createGroup("obs1"));
 
