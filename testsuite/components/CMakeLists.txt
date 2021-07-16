@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(HDF5 COMPONENTS CXX)
 
 add_executable(1-cachecontainer 1-cachecontainer.cpp)
+add_executable(2-cachecontainer-long-sim 1-cachecontainer-long-sim.cpp)
+add_executable(3-cachecontainer-long-obs 1-cachecontainer-long-obs.cpp)
 target_link_libraries(1-cachecontainer ${MYHDF5LIBS})
 target_include_directories(1-cachecontainer PUBLIC ${CMAKE_SOURCE_DIR}/src ${MYHDF5INCLUDES})
 enable_testing()
