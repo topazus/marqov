@@ -33,6 +33,7 @@
 
 #include "marqovqueue.h"
 #include "core.h"
+#include "util/filters.h"
 
 namespace MARQOV
 {
@@ -54,8 +55,8 @@ namespace MARQOV
          * @param p The full set of parameters that are relevant for your problem.
          * @param filter A filter that can be applied before the actual creation of MARQOV.
          */
-        template <typename ParamType, typename Callable>
-        void createSimfromParameter(ParamType& p, Callable filter)
+        template <typename ParamType, typename Callable = decltype(defaultfilter)>
+        void createSimfromParameter(ParamType& p, Callable filter = defaultfilter)
         {
             auto t = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
             bool needswarmup = !Sim::dumppresent(std::get<1>(t));
@@ -63,7 +64,7 @@ namespace MARQOV
 
             std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
             {
-                std::cout<<"Beginning gamekernel"<<std::endl;
+//                 std::cout<<"Beginning gamekernel"<<std::endl;
                 {
                     auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                     // We loop until the next PT step
@@ -83,7 +84,7 @@ namespace MARQOV
                     //                 std::cout<<"no more work required on "<<mywork.id<<std::endl;
                     masterwork.notify_all();//trigger those waiting for signals from the taskqueue. since we don't push_back anything they would not be notified.
                 }
-                std::cout<<"finished gamekernel closing file"<<std::endl;
+//                 std::cout<<"finished gamekernel closing file"<<std::endl;
             };
             
             gamekernelmutex.lock();
@@ -93,7 +94,7 @@ namespace MARQOV
             {
                 std::function<void()> warmupkernel = [&, t, idx]
                 {
-                    std::cout<<"Beginning warmup of "<<idx<<std::endl;
+//                     std::cout<<"Beginning warmup of "<<idx<<std::endl;
                     {
                         auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                         sim.init();
@@ -101,7 +102,7 @@ namespace MARQOV
                     }
                     //enqueue the next full work item into the workqueue immediately
                     workqueue.push_back(Simstate(idx));
-                    std::cout<<"finished warmup closing file"<<std::endl;
+//                     std::cout<<"finished warmup closing file"<<std::endl;
                 };
                 taskqueue.enqueue(warmupkernel);
             }
@@ -351,12 +352,15 @@ namespace MARQOV
      * @tparam Lattice The type of the lattice.
      * @tparam Parameters The type of the parameters. We instantiate Hamiltonian
      *                    and probably lattice in Marqov, hence the params.
+     * @tparam RNGType The type of the Random Number Generator. Must conform to C++11 Interface.
+     *                 If you intend to use it for a non-STL RNG, have a look at @see rngcache.h
+     *                 to have a proper name dumped for it in the HDF5 files.
      */
-    template <class Hamiltonian, class Lattice, class Parameters>
+    template <class Hamiltonian, class Lattice, class Parameters, class RNGType = std::mt19937_64>
     struct GetSchedulerType
     {
         typedef std::mutex& mtxref;
-        typedef decltype(makeCore<Lattice, Hamiltonian>(std::declval<Parameters>(), std::declval<mtxref>())) MarqovType;
+        typedef decltype(makeCore<Lattice, Hamiltonian, RNGType>(std::declval<Parameters>(), std::declval<mtxref>())) MarqovType;
         typedef Scheduler<MarqovType> MarqovScheduler; ///< Holds the type of a scheduler for these simulations.
     };
 };

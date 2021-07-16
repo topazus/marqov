@@ -179,7 +179,7 @@ class InteractionEnergy
 
 				ene += ham.interactions[a]->J * enepart;
 			}
-			return ene/double(N);
+			return ene/double(2*N); // account for double counting
 		}
 
 		template <class StateSpace, class Grid>
@@ -283,8 +283,8 @@ class FlexEnergy
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
 		{
-			typedef typename MARQOV::HasOnsite<Hamiltonian>::type HasOns;
-			return measure_helper(statespace,grid,HasOns());
+			typedef typename MARQOV::HasFlexTerms<Hamiltonian>::type HasFlex;
+			return measure_helper(statespace,grid,HasFlex());
 		}
 };
 

@@ -63,7 +63,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 	{
 		// prepare
 		int L = nL[j];
-		cout << endl << "L = " << L << endl << endl;
+		std::cout << std::endl << "L = " << L << std::endl << std::endl;
 
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 

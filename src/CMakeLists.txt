@@ -2,6 +2,20 @@ INCLUDE(CheckFunctionExists)
 
 add_subdirectory(libmarqov)
 
+# configuration for the simple ising test case
+add_executable(mysimpleising mysimpleising.cpp libmarqov/marqov.cpp)
+target_include_directories(mysimpleising PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(mysimpleising libmarqov)
+set_target_properties(mysimpleising PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+
+# configuration for the Heisenberg test case with threading
+add_executable(mysimpleheisenbergthreaded mysimpleheisenbergthreaded.cpp libmarqov/marqov.cpp)
+target_include_directories(mysimpleheisenbergthreaded PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(mysimpleheisenbergthreaded libmarqov)
+set_target_properties(mysimpleheisenbergthreaded PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+
+# configuration of the main parts.
+
 SET(MARQOVTARGETS MARQOV mpiMARQOV)
 
 foreach(target ${MARQOVTARGETS})

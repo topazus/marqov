@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="44"
+   height="44"
+   viewBox="0 0 44.000002 43.999999"
+   version="1.1"
+   id="base_icon"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
+   sodipodi:docname="logo_parallel.svg">
+  <defs
+     id="base_defs1148" />
+  <sodipodi:namedview
+     id="base_base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="10"
+     inkscape:cx="-5.567891"
+     inkscape:cy="13.836661"
+     inkscape:document-units="px"
+     inkscape:current-layer="base_icon"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1051"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     scale-x="1"
+     inkscape:pagecheckerboard="false"
+     units="px"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0">
+    <inkscape:grid
+       type="xygrid"
+       id="base_grid1718"
+       dotted="false"
+       units="px"
+       spacingx="0.2"
+       spacingy="0.2"
+       originx="0"
+       originy="36" />
+  </sodipodi:namedview>
+  <metadata
+     id="base_meta">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="base_Layer" />
+  <g
+     id="layer_middle"
+     transform="matrix(0.86363636,0,0,0.86363636,2.9454545,3.0636365)"
+     style="stroke-width:1.15789473;opacity:0.6">
+    <path
+       inkscape:connector-curvature="0"
+       id="base_v1-6"
+       d="M 4,40 V 4"
+       style="stroke:#3f3f3f;stroke-width:1.62105262" />
+    <path
+       inkscape:connector-curvature="0"
+       id="base_v2-7"
+       d="M 16,40 V 4"
+       style="stroke:#3f3f3f;stroke-width:1.62105262" />
+    <path
+       inkscape:connector-curvature="0"
+       id="base_v3-5"
+       d="M 28,40 V 4"
+       style="stroke:#3f3f3f;stroke-width:1.62105262" />
+    <path
+       inkscape:connector-curvature="0"
+       id="base_v4-3"
+       d="M 40,40 V 4"
+       style="stroke:#3f3f3f;stroke-width:1.62105262" />
+    <path
+       inkscape:connector-curvature="0"
+       id="base_h1-5"
+       d="M 4,4 H 40"
+       style="stroke:#3f3f3f;stroke-width:1.62105262" />
+    <path
+       inkscape:connector-curvature="0"
+       id="base_h2-6"
+       d="M 4,16 H 40"
+       style="stroke:#3f3f3f;stroke-width:1.62105262" />
+    <path
+       inkscape:connector-curvature="0"
+       id="base_h3-2"
+       d="M 4,28 H 40"
+       style="stroke:#3f3f3f;stroke-width:1.62105262" />
+    <path
+       inkscape:connector-curvature="0"
+       id="base_h4-9"
+       d="M 4,40 H 40"
+       style="stroke:#3f3f3f;stroke-width:1.62105262" />
+    <circle
+       r="4"
+       cy="4"
+       cx="4"
+       id="base_c1-1"
+       style="fill:#4080bf;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="4"
+       cx="16"
+       id="base_c2-2"
+       style="fill:#d14747;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="4"
+       cx="28"
+       id="base_c3-7"
+       style="fill:#d14747;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="4"
+       cx="40"
+       id="base_c4-0"
+       style="fill:#d14747;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="16"
+       cx="4"
+       id="base_c5-9"
+       style="fill:#d14747;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="16"
+       cx="16"
+       id="base_c6-3"
+       style="fill:#4080bf;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="16"
+       cx="28"
+       id="base_c7-6"
+       style="fill:#d14747;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="16"
+       cx="40"
+       id="base_c8-0"
+       style="fill:#4080bf;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="28"
+       cx="4"
+       id="base_c9-6"
+       style="fill:#d14747;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="28"
+       cx="16"
+       id="base_c10-2"
+       style="fill:#4080bf;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="28"
+       cx="28"
+       id="base_c11-6"
+       style="fill:#4080bf;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="28"
+       cx="40"
+       id="base_c12-1"
+       style="fill:#4080bf;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="40"
+       cx="4"
+       id="base_c13-8"
+       style="fill:#d14747;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="40"
+       cx="16"
+       id="base_c14-7"
+       style="fill:#d14747;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="40"
+       cx="28"
+       id="base_c15-9"
+       style="fill:#4080bf;stroke-width:1.15789473" />
+    <circle
+       r="4"
+       cy="40"
+       cx="40"
+       id="base_c16-2"
+       style="fill:#4080bf;stroke-width:1.15789473" />
+  </g>
+  <g
+     id="layer_rear"
+     transform="matrix(0.72727273,0,0,0.72727273,5.9000001,6)"
+     style="stroke-width:1.375;opacity:0.32">
+    <path
+       inkscape:connector-curvature="0"
+       id="base_v1-6-2"
+       d="M 4,40 V 4"
+       style="stroke:#3f3f3f;stroke-width:1.92499995" />
+    <path
+       inkscape:connector-curvature="0"
+       id="base_v2-7-3"
+       d="M 16,40 V 4"
+       style="stroke:#3f3f3f;stroke-width:1.92499995" />
+    <path
+       inkscape:connector-curvature="0"
+       id="base_v3-5-7"
+       d="M 28,40 V 4"
+       style="stroke:#3f3f3f;stroke-width:1.92499995" />
+    <path
+       inkscape:connector-curvature="0"
+       id="base_v4-3-5"
+       d="M 40,40 V 4"
+       style="stroke:#3f3f3f;stroke-width:1.92499995" />
+    <path
+       inkscape:connector-curvature="0"
+       id="base_h1-5-9"
+       d="M 4,4 H 40"
+       style="stroke:#3f3f3f;stroke-width:1.92499995" />
+    <path
+       inkscape:connector-curvature="0"
+       id="base_h2-6-2"
+       d="M 4,16 H 40"
+       style="stroke:#3f3f3f;stroke-width:1.92499995" />
+    <path
+       inkscape:connector-curvature="0"
+       id="base_h3-2-2"
+       d="M 4,28 H 40"
+       style="stroke:#3f3f3f;stroke-width:1.92499995" />
+    <path
+       inkscape:connector-curvature="0"
+       id="base_h4-9-8"
+       d="M 4,40 H 40"
+       style="stroke:#3f3f3f;stroke-width:1.92499995" />
+    <circle
+       r="4"
+       cy="4"
+       cx="4"
+       id="base_c1-1-9"
+       style="fill:#4080bf;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="4"
+       cx="16"
+       id="base_c2-2-7"
+       style="fill:#d14747;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="4"
+       cx="28"
+       id="base_c3-7-3"
+       style="fill:#d14747;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="4"
+       cx="40"
+       id="base_c4-0-6"
+       style="fill:#d14747;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="16"
+       cx="4"
+       id="base_c5-9-1"
+       style="fill:#d14747;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="16"
+       cx="16"
+       id="base_c6-3-2"
+       style="fill:#4080bf;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="16"
+       cx="28"
+       id="base_c7-6-9"
+       style="fill:#d14747;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="16"
+       cx="40"
+       id="base_c8-0-3"
+       style="fill:#4080bf;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="28"
+       cx="4"
+       id="base_c9-6-1"
+       style="fill:#d14747;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="28"
+       cx="16"
+       id="base_c10-2-9"
+       style="fill:#4080bf;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="28"
+       cx="28"
+       id="base_c11-6-4"
+       style="fill:#4080bf;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="28"
+       cx="40"
+       id="base_c12-1-7"
+       style="fill:#4080bf;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="40"
+       cx="4"
+       id="base_c13-8-8"
+       style="fill:#d14747;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="40"
+       cx="16"
+       id="base_c14-7-4"
+       style="fill:#d14747;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="40"
+       cx="28"
+       id="base_c15-9-5"
+       style="fill:#4080bf;stroke-width:1.375" />
+    <circle
+       r="4"
+       cy="40"
+       cx="40"
+       id="base_c16-2-0"
+       style="fill:#4080bf;stroke-width:1.375" />
+  </g>
+  <g
+     id="layer_front">
+    <path
+       id="base_v1"
+       d="M 4,40 V 4"
+       style="stroke:#3f3f3f;stroke-width:1.4;" />
+    <path
+       id="base_v2"
+       d="M 16,40 V 4"
+       style="stroke:#3f3f3f;stroke-width:1.4;" />
+    <path
+       id="base_v3"
+       d="M 28,40 V 4"
+       style="stroke:#3f3f3f;stroke-width:1.4;" />
+    <path
+       id="base_v4"
+       d="M 40,40 V 4"
+       style="stroke:#3f3f3f;stroke-width:1.4;" />
+    <path
+       id="base_h1"
+       d="M 4,4 H 40"
+       style="stroke:#3f3f3f;stroke-width:1.4;" />
+    <path
+       id="base_h2"
+       d="M 4,16 H 40"
+       style="stroke:#3f3f3f;stroke-width:1.4;" />
+    <path
+       id="base_h3"
+       d="M 4,28 H 40"
+       style="stroke:#3f3f3f;stroke-width:1.4;" />
+    <path
+       id="base_h4"
+       d="M 4,40 H 40"
+       style="stroke:#3f3f3f;stroke-width:1.4;" />
+    <circle
+       r="4"
+       cy="4"
+       cx="4"
+       id="base_c1"
+       style="fill:#4080bf" />
+    <circle
+       r="4"
+       cy="4"
+       cx="16"
+       id="base_c2"
+       style="fill:#d14747" />
+    <circle
+       r="4"
+       cy="4"
+       cx="28"
+       id="base_c3"
+       style="fill:#d14747" />
+    <circle
+       r="4"
+       cy="4"
+       cx="40"
+       id="base_c4"
+       style="fill:#d14747" />
+    <circle
+       r="4"
+       cy="16"
+       cx="4"
+       id="base_c5"
+       style="fill:#d14747" />
+    <circle
+       r="4"
+       cy="16"
+       cx="16"
+       id="base_c6"
+       style="fill:#4080bf" />
+    <circle
+       r="4"
+       cy="16"
+       cx="28"
+       id="base_c7"
+       style="fill:#d14747" />
+    <circle
+       r="4"
+       cy="16"
+       cx="40"
+       id="base_c8"
+       style="fill:#4080bf" />
+    <circle
+       r="4"
+       cy="28"
+       cx="4"
+       id="base_c9"
+       style="fill:#d14747" />
+    <circle
+       r="4"
+       cy="28"
+       cx="16"
+       id="base_c10"
+       style="fill:#4080bf" />
+    <circle
+       r="4"
+       cy="28"
+       cx="28"
+       id="base_c11"
+       style="fill:#4080bf" />
+    <circle
+       r="4"
+       cy="28"
+       cx="40"
+       id="base_c12"
+       style="fill:#4080bf" />
+    <circle
+       r="4"
+       cy="40"
+       cx="4"
+       id="base_c13"
+       style="fill:#d14747" />
+    <circle
+       r="4"
+       cy="40"
+       cx="16"
+       id="base_c14"
+       style="fill:#d14747" />
+    <circle
+       r="4"
+       cy="40"
+       cx="28"
+       id="base_c15"
+       style="fill:#4080bf" />
+    <circle
+       r="4"
+       cy="40"
+       cx="40"
+       id="base_c16"
+       style="fill:#4080bf" />
+  </g>
+</svg>

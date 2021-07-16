@@ -34,9 +34,28 @@ SOFTWARE.
  * @tparam T the used RNG.
  */
 template <typename T>
-struct RNGName;
+struct RNGName
+{
+    std::string name = "RNG NAME NOT SPECIFIED!!!!!!!!!!!"; ///< name of the RNG available as a plain string.
+};
 
 /** Specialization for ranlux48.
+ */
+template <>
+struct RNGName<std::ranlux48>
+{
+    std::string name = "ranlux48"; ///< name of the RNG available as a plain string.
+};
+
+/** Specialization for knuth_b.
+ */
+template <>
+struct RNGName<std::knuth_b>
+{
+    std::string name = "knuth_b"; ///< name of the RNG available as a plain string.
+};
+
+/** Specialization for ranlux48_base.
  */
 template <>
 struct RNGName<std::ranlux48_base>
@@ -88,7 +107,7 @@ struct RNGName<std::minstd_rand0>
  * 
  * This implements a cache for random values.
  * If the cache is empty we refill it with new random values from a user
- * defined RNG.
+ * defined RNG. Also RNGName how to get a proper name for I/O.
  * @tparam RNG The RNG that the user wishes to use.
  */
 

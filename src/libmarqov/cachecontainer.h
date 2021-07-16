@@ -30,12 +30,13 @@ SOFTWARE.
 #include <type_traits>
 #include <utility>
 #include <tuple>
+#include <stdexcept>
 #include <H5Cpp.h>
 #include <H5File.h>
 
-/*some predefined HDF5 helpers --------------------------------*/
+/* Some predefined HDF5 helpers --------------------------------*/
 
-/** A Class that Maps basic, POD C++ Types to HDF5 types.
+/** A Class that maps basic, POD C++ Types to HDF5 types.
  */
 template <class T>
 struct H5MapperBase;
@@ -221,6 +222,7 @@ public:
      */
     CacheContainer(H5::Group& hfile, const std::string& name, std::string desc = std::string(), std::size_t cachesize=4194304) : cachepos(0)
     {
+            if(name.empty()) throw std::runtime_error("[MARQOV::CacheContainer] ERROR: Name of time series not specified!");
             cachemaxelems = cachesize/sizeof(T);
             constexpr int rank = H5Mapper<T>::rank;
             std::array<hsize_t, rank> maxdims, chunk_dims;
@@ -314,14 +316,16 @@ class CacheContainer<std::vector<T>, Cont>
 {
 public:
     /** Construct a container for C++ vectors.
-     * 
-     * @param hf the HDF5 File that we use to dump the data
+     *
+     *  @param hf the HDF5 File that we use to dump the data
      *  @param n the name of the data set in HDF5
      *  @param d A description of the data
      *  @param cs the memory size in bytes to use for caching. Will be rounded to integers of datatypes
      */
     CacheContainer(H5::Group& hf, const std::string& n, std::string d = std::string(), std::size_t cs=4194304) : hfile(hf), dssize(0), cachepos(0), unused(true), cachesize(cs), name(n), desc(d)
-    {}
+    {
+        if(n.empty()) throw std::runtime_error("[MARQOV::CacheContainer] ERROR: Name of time series not specified!");
+    }
     /** A helper constructor that forwards to the main constructor.
      * 
      * @param args the Argument helper structure
@@ -366,7 +370,8 @@ private:
      */
     void initdataspace(const std::vector<T>& t)
     {
-        cachemaxelems = cachesize/sizeof(T);
+        cachemaxelems = (cachesize/sizeof(T)/t.size())*t.size();//properly determine the cache size for vector observables that are non-commensurate with the default cache size
+        if (cachemaxelems == 0) cachemaxelems = sizeof(T)*t.size();//If a single measurement of the observable does not fit into the cache, just make it big enough.
         constexpr int rank = H5Mapper<T>::rank;
         std::array<hsize_t, rank> maxdims, chunk_dims;
         hsize_t fdims[rank] = {0};
@@ -374,15 +379,18 @@ private:
         
         H5::DataSpace mspace1(rank, fdims, maxdims.data());
         H5::DSetCreatPropList cparms;
-        auto fv = H5Mapper<T>::fillval;
 
-        chunk_dims.fill(4096*1024/H5Mapper<T>::bytecount/t.size());//4MB chunking
+        chunk_dims.fill(4096*1024/H5Mapper<T>::bytecount/t.size() + 1);//4MB chunking, irrespective of the length of the vector
         cparms.setChunk(rank, chunk_dims.data() );
         cparms.setDeflate(9);//Best (1-9) compression
 
         hsize_t dims[1] = {t.size()};
         arrtype = H5::ArrayType(H5Mapper<T>::H5Type(), rank, dims);
-        cparms.setFillValue(arrtype, &fv);
+        if(t.size() < 8192)//FIXME: This seems to be the practical limit on my Debian Buster system.
+        {
+            auto fv = std::vector<T>(t.size(), T(H5Mapper<T>::fillval));//The T in front triggers an instantiation...
+            cparms.setFillValue(arrtype, fv.data());
+        }
 
         dataset = hfile.createDataSet(name, arrtype, mspace1, cparms);
         if(!desc.empty())
