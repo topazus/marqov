@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="44"
+   height="44"
+   viewBox="0 0 44.000002 43.999999"
+   version="1.1"
+   id="dsrd_icon"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)"
+   sodipodi:docname="sauber.svg">
+  <defs
+     id="dsrd_defs1148" />
+  <sodipodi:namedview
+     id="dsrd_base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="10"
+     inkscape:cx="21.082109"
+     inkscape:cy="13.836661"
+     inkscape:document-units="px"
+     inkscape:current-layer="icon"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="971"
+     inkscape:window-x="0"
+     inkscape:window-y="1080"
+     inkscape:window-maximized="1"
+     scale-x="1"
+     inkscape:pagecheckerboard="false"
+     units="px"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0">
+    <inkscape:grid
+       type="xygrid"
+       id="dsrd_grid1718"
+       dotted="false"
+       units="px"
+       spacingx="0.2"
+       spacingy="0.2"
+       originx="0"
+       originy="36" />
+  </sodipodi:namedview>
+  <metadata
+     id="dsrd_meta">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="dsrd_Layer" />
+  <path
+     style="stroke:#3f3f3f;stroke-width:1.4;"
+     d="M 4,4 V 16"
+     id="dsrd_v1"/>
+  <path
+     style="stroke:#3f3f3f;stroke-width:1.4;"
+     d="M 16,40 V 4"
+     id="dsrd_v2"/>
+  <path
+     style="stroke:#3f3f3f;stroke-width:1.4;"
+     d="M 28,28 V 40"
+     id="dsrd_v3"/>
+  <path
+     style="stroke:#3f3f3f;stroke-width:1.4;"
+     d="M 40,4 V 16"
+     id="dsrd_v4"/>
+  <path
+     style="stroke:#3f3f3f;stroke-width:1.4;"
+     d="M 4,4 H 16"
+     id="dsrd_h1"/>
+  <path
+     style="stroke:#3f3f3f;stroke-width:1.4;"
+     d="M 4,16 H 16"
+     id="dsrd_h2"/>
+  <path
+     style="stroke:#3f3f3f;stroke-width:1.4;"
+     d="M 16,28 H 28"
+     id="dsrd_h3"/>
+  <path
+     style="stroke:#3f3f3f;stroke-width:1.4;"
+     d="M 4,40 H 40"
+     id="dsrd_h4"/>
+  <circle
+     style="fill:#4080bf"
+     id="dsrd_c1"
+     cx="4"
+     cy="4"
+     r="4" />
+  <circle
+     style="fill:#d14747"
+     id="dsrd_c2"
+     cx="16"
+     cy="4"
+     r="4" />
+  <circle
+     style="fill:#d14747"
+     id="dsrd_c4"
+     cx="40"
+     cy="4"
+     r="4" />
+  <circle
+     style="fill:#d14747"
+     id="dsrd_c5"
+     cx="4"
+     cy="16"
+     r="4" />
+  <circle
+     style="fill:#4080bf"
+     id="dsrd_c6"
+     cx="16"
+     cy="16"
+     r="4" />
+  <circle
+     style="fill:#4080bf"
+     id="dsrd_c8"
+     cx="40"
+     cy="16"
+     r="4" />
+  <circle
+     style="fill:#4080bf"
+     id="dsrd_c10"
+     cx="16"
+     cy="28"
+     r="4" />
+  <circle
+     style="fill:#4080bf"
+     id="dsrd_c11"
+     cx="28"
+     cy="28"
+     r="4" />
+  <circle
+     style="fill:#d14747"
+     id="dsrd_c13"
+     cx="4"
+     cy="40"
+     r="4" />
+  <circle
+     style="fill:#d14747"
+     id="dsrd_c14"
+     cx="16"
+     cy="40"
+     r="4" />
+  <circle
+     style="fill:#4080bf"
+     id="dsrd_c15"
+     cx="28"
+     cy="40"
+     r="4" />
+  <circle
+     style="fill:#4080bf"
+     id="dsrd_c16"
+     cx="40"
+     cy="40"
+     r="4" />
+</svg>
