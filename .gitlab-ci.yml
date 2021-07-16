@@ -38,6 +38,7 @@ stages:
   stage: test
   <<: *src_except_definition
   script:
+    - apt-get update && apt-get install -y cmake libhdf5-dev
     - cmake -E make_directory build
     - cd build
     - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ..
