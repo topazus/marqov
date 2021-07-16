@@ -1,6 +1,4 @@
 #include <vector>
-#include <iostream>
-
 #include "cachecontainer.h"
 
 using namespace std;
