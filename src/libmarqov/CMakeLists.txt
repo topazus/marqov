@@ -40,7 +40,7 @@ if( (NOT HDF5_FOUND) )
         endif()
 
         set(MYHDF5INCLUDES ${HDF5_INCLUDE_DIR} ${libhdf5_BINARY_DIR})
-	set(MYHDF5LIBS hdf5_cpp-static)
+        set(MYHDF5LIBS hdf5_cpp-static)
     else()
         message(FATAL_ERROR "HDF5 not found and environment(cmake < 3.12) unsuited for automatic retrieval!")
     endif()
