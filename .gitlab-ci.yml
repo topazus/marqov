@@ -141,16 +141,12 @@ marqov_Buster_pgi:
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="/opt/pgi/linux86-64/2019/bin/pgc++" ..
       - make MARQOV VERBOSE=1
 
-MARQOVtest_Ubuntu_bionic:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack
-    <<: *test_definition
-
 MARQOVtest_Stretch:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gfortran-blas-lapack
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gxx
     <<: *test_definition
 
 MARQOVtest_Buster:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gfortran-blas-lapack
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gxx
     <<: *test_definition
 
 marqovtest_Buster_clang:
