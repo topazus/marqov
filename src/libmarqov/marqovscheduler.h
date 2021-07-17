@@ -365,17 +365,17 @@ namespace MARQOV
         {
 //            auto sima = kernelloaders[ida]();
 //            auto simb = kernelloaders[idb]();
-            double enaa = sima.calcAction(sima.statespace);
-            double enbb = simb.calcAction(simb.statespace);
-            double enab = sima.calcAction(simb.statespace);
-            double enba = simb.calcAction(sima.statespace);
-            std::cout<<"Action of id 1"<<" : "<<enaa<<std::endl;
-            std::cout<<"Action of id 2"<<" : "<<enbb<<std::endl;
+            double actionaa = sima.calcAction(sima.statespace);
+            double actionbb = simb.calcAction(simb.statespace);
+            double actionab = sima.calcAction(simb.statespace);
+            double actionba = simb.calcAction(sima.statespace);
+            std::cout<<"Action of id 1"<<" : "<<actionaa<<std::endl;
+            std::cout<<"Action of id 2"<<" : "<<actionbb<<std::endl;
             
-            std::cout<<"Action of id 1"<<" with other statespace"<<" : "<<enab<<std::endl;
-            std::cout<<"Action of id 2"<<" with other statespace"<<" : "<<enba<<std::endl;
+            std::cout<<"Action of id 1"<<" with other statespace"<<" : "<<actionab<<std::endl;
+            std::cout<<"Action of id 2"<<" with other statespace"<<" : "<<actionba<<std::endl;
             //calculate actual metropolis transition ratio from the propability densities
-            double mhratio = std::exp(-enab)*std::exp(-enba)/std::exp(-enaa)/std::exp(-enbb);
+            double mhratio = std::exp(-actionab)*std::exp(-actionba)/std::exp(-actionaa)/std::exp(-actionbb);
             std::cout<<"M-H Ratio: "<<mhratio<<std::endl;
             return mhratio;
         }
