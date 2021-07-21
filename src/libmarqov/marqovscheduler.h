@@ -381,7 +381,7 @@ namespace MARQOV
             //prevent under/overflow
             if (endiff > std::log(std::numeric_limits<double>::min()))
             {
-                if (endiff < std::log(std::numeric_limits<double>::max()))
+                if (endiff > std::log(std::numeric_limits<double>::max()))
                     mhratio = std::numeric_limits<double>::max();
                 else
                     mhratio = std::exp(endiff);
