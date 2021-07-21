@@ -79,7 +79,7 @@ namespace MARQOV
                         //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
                         sim.gameloop();
                     }
-                    std::cout<<"Final action of id "<<mywork.id<<" : "<<sim.calcAction(sim.statespace)<<std::endl;
+//                    std::cout<<"Final action of id "<<mywork.id<<" : "<<sim.calcAction(sim.statespace)<<std::endl;
                 }
                 if (mywork.npt < maxpt) // determine whether this itm needs more work
                 {
@@ -375,7 +375,19 @@ namespace MARQOV
             std::cout<<"Action of id 1"<<" with other statespace"<<" : "<<actionab<<std::endl;
             std::cout<<"Action of id 2"<<" with other statespace"<<" : "<<actionba<<std::endl;
             //calculate actual metropolis transition ratio from the propability densities
-            double mhratio = std::exp(-actionab)*std::exp(-actionba)/std::exp(-actionaa)/std::exp(-actionbb);
+//             double mhratio = std::exp(-actionab)*std::exp(-actionba)/std::exp(-actionaa)/std::exp(-actionbb);
+            double endiff = actionaa - actionab + actionbb - actionba;
+            double mhratio = 0;
+            //prevent under/overflow
+            if (endiff > std::log(std::numeric_limits<double>::min()))
+            {
+                if (endiff < std::log(std::numeric_limits<double>::max()))
+                    mhratio = std::numeric_limits<double>::max();
+                else
+                    mhratio = std::exp(endiff);
+            }
+            
+//             double mhratio = std::exp(actionaa - actionab + actionbb - actionba);
             std::cout<<"M-H Ratio: "<<mhratio<<std::endl;
             return mhratio;
         }
