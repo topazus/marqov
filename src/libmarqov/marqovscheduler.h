@@ -37,6 +37,20 @@
 
 namespace MARQOV
 {
+    template <typename FPType>
+    auto calcMHratio(FPType en)
+    {
+        FPType mhratio = 0;
+        //prevent under/overflow
+        if (en > std::log(std::numeric_limits<FPType>::min()))
+        {
+            if (en > std::log(std::numeric_limits<FPType>::max()))
+                mhratio = std::numeric_limits<FPType>::max();
+            else
+                mhratio = std::exp(en);
+        }
+        return mhratio;
+    }
     /** The Marqov internal scheduler.
      * 
      * It encapsulates the creation of simulations, the parallel tempering
@@ -377,16 +391,7 @@ namespace MARQOV
             //calculate actual metropolis transition ratio from the propability densities
 //             double mhratio = std::exp(-actionab)*std::exp(-actionba)/std::exp(-actionaa)/std::exp(-actionbb);
             double endiff = actionaa - actionab + actionbb - actionba;
-            double mhratio = 0;
-            //prevent under/overflow
-            if (endiff > std::log(std::numeric_limits<double>::min()))
-            {
-                if (endiff > std::log(std::numeric_limits<double>::max()))
-                    mhratio = std::numeric_limits<double>::max();
-                else
-                    mhratio = std::exp(endiff);
-            }
-            
+            double mhratio = calcMHratio(endiff);
 //             double mhratio = std::exp(actionaa - actionab + actionbb - actionba);
             std::cout<<"M-H Ratio: "<<mhratio<<std::endl;
             return mhratio;
