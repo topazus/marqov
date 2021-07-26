@@ -1045,7 +1045,9 @@ class Core : public RefType<Grid>
         double calcAction(StateSpace& space)
         {
             Energy<Hamiltonian> en(ham);
-            return beta * en.measure(space, this->grid);
+            auto energy = en.measure(space, this->grid)*this->grid.size();
+            std::cout<<"Temperature: "<<1.0/beta<<" "<<energy/this->grid.size()<<std::endl;
+            return beta * energy;
         }
 // 	private:
 		double beta; ///< The inverse temperature.
