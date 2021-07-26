@@ -186,19 +186,38 @@ namespace MARQOV
                 workqueue.push_back(Simstate(idx));
             }
         }
+
+        //FIXME...
+        static bool exchangepossible(Sim& sima, Sim& simb)
+        {
+           return true;
+        }
+
+        template <class F>
+        void createPTplan(F f)
+        {
+            auto len = gamekernels.size();
+            auto adapter = [&f, &len](){auto t = f(); return std::make_pair(t.first%len, t.second%len);};
+            std::generate_n(std::back_inserter(ptplan), maxpt, adapter);
+            
+            for (int i = 0; i < maxpt; ++i)
+                std::cout<<ptplan[i].first<<" "<<ptplan[i].second<<std::endl;
+        }
+        
         /** Start the simulations! GoGoGo...!
          */
         void start()
         {
+//             class Seq
+//             {
+//                 int i = 0;
+//                 auto operator()(){return std::make_pair(i,i++);}
+//             } seq;
+            auto ran = [&] {return std::make_pair(rng.integer(), rng.integer());};
+            createPTplan(ran);
             //create dummy data for the ptplan
-            for (int i = 0; i < maxpt; ++i)
-                ptplan.emplace_back(i%gamekernels.size(), (i+1)%gamekernels.size() );
-            
             std::cout<<"Starting up master"<<std::endl;
             Simstate itm;
-            
-            for (int i = 0; i < maxpt; ++i)
-                std::cout<<ptplan[i].first<<" "<<ptplan[i].second<<std::endl;
             
             while(!masterstop)
             {
@@ -255,6 +274,7 @@ namespace MARQOV
                 });
             }
             masterstop = true;
+            std::cout<<"PT acceptance: "<<acceptedmoves/static_cast<double>(maxpt)<<std::endl;
         }
     private:
         /**
@@ -263,11 +283,12 @@ namespace MARQOV
          */
         struct Simstate
         {
-           Simstate() : id(-1), npt(-100) {}
+           Simstate() = default;
            Simstate(int i) : id(i), npt(0) {}
            Simstate(int i, int np) : id(i), npt(np) {}
-           int id;///< my id
-           int npt;///< which will be my next parallel tempering step.
+           int id = -1;///< my id
+           int statespacesize = 0;
+           int npt = -100;///< which will be my next parallel tempering step.
         };
         
         /**
@@ -304,7 +325,12 @@ namespace MARQOV
                     std::cout<<"Parallel Tempering!"<<std::endl;
                     std::cout<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
                     std::cout<<"Expected pairing for this time step: "<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
-            
+            std::cout<<"ptstep begin"<<std::endl;
+            if (ptplan[itm.npt].first == ptplan[itm.npt].second)
+            {//this can happen and is not prevented
+                std::cout<<"self swap..."<<std::endl;
+                movesimtotaskqueue(itm);
+            }
             int partner = ptplan[itm.npt].first;
             if (partner == itm.id) partner = ptplan[itm.npt].second;//it must be the other. no exchanges with myself
             auto partnerinfo = findpartner(partner);
@@ -317,8 +343,8 @@ namespace MARQOV
                     auto sima = kernelloaders[itm.id]();
                     auto simb = kernelloaders[partnerinfo->id]();
                     double mhratio = calcprob(sima, simb);
-                    if(rng.real() < std::min(1.0, mhratio))
-                        exchange_statespace(sima, simb);
+                    if(rng.real() < std::min(1.0, mhratio)){
+                        exchange_statespace(sima, simb);++acceptedmoves;}
                 }
                 ptqueue.erase(partnerinfo);
                 //put both sims back into the taskqueue for more processing until their next PT step
@@ -360,7 +386,7 @@ namespace MARQOV
             }
             return retval;
         }
-        
+        int acceptedmoves = 0;
         int maxpt; ///< how many pt steps do we do
         std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
         std::vector<std::pair<int, int> > ptplan; ///< An array of who exchanges with whom in each step
