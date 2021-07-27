@@ -37,6 +37,20 @@
 
 namespace MARQOV
 {
+    template <typename FPType>
+    auto calcMHratio(FPType en)
+    {
+        FPType mhratio = 0;
+        //prevent under/overflow
+        if (en > std::log(std::numeric_limits<FPType>::min()))
+        {
+            if (en > std::log(std::numeric_limits<FPType>::max()))
+                mhratio = std::numeric_limits<FPType>::max();
+            else
+                mhratio = std::exp(en);
+        }
+        return mhratio;
+    }
     /** The Marqov internal scheduler.
      * 
      * It encapsulates the creation of simulations, the parallel tempering
@@ -172,19 +186,38 @@ namespace MARQOV
                 workqueue.push_back(Simstate(idx));
             }
         }
+
+        //FIXME...
+        static bool exchangepossible(Sim& sima, Sim& simb)
+        {
+           return true;
+        }
+
+        template <class F>
+        void createPTplan(F f)
+        {
+            auto len = gamekernels.size();
+            auto adapter = [&f, &len](){auto t = f(); return std::make_pair(t.first%len, t.second%len);};
+            std::generate_n(std::back_inserter(ptplan), maxpt, adapter);
+            
+            for (int i = 0; i < maxpt; ++i)
+                std::cout<<ptplan[i].first<<" "<<ptplan[i].second<<std::endl;
+        }
+        
         /** Start the simulations! GoGoGo...!
          */
         void start()
         {
+//             class Seq
+//             {
+//                 int i = 0;
+//                 auto operator()(){return std::make_pair(i,i++);}
+//             } seq;
+            auto ran = [&] {return std::make_pair(rng.integer(), rng.integer());};
+            createPTplan(ran);
             //create dummy data for the ptplan
-            for (int i = 0; i < maxpt; ++i)
-                ptplan.emplace_back(i%gamekernels.size(), (i+1)%gamekernels.size() );
-            
             std::cout<<"Starting up master"<<std::endl;
             Simstate itm;
-            
-            for (int i = 0; i < maxpt; ++i)
-                std::cout<<ptplan[i].first<<" "<<ptplan[i].second<<std::endl;
             
             while(!masterstop)
             {
@@ -241,7 +274,7 @@ namespace MARQOV
                 });
             }
             masterstop = true;
-std::cout<<"M-H acceptance ratio: "<<acceptedmoves/double(maxpt)<<std::endl;
+            std::cout<<"PT acceptance: "<<acceptedmoves/static_cast<double>(maxpt)<<std::endl;
         }
     private:
         /**
@@ -250,11 +283,12 @@ std::cout<<"M-H acceptance ratio: "<<acceptedmoves/double(maxpt)<<std::endl;
          */
         struct Simstate
         {
-           Simstate() : id(-1), npt(-100) {}
+           Simstate() = default;
            Simstate(int i) : id(i), npt(0) {}
            Simstate(int i, int np) : id(i), npt(np) {}
-           int id;///< my id
-           int npt;///< which will be my next parallel tempering step.
+           int id = -1;///< my id
+           int statespacesize = 0;
+           int npt = -100;///< which will be my next parallel tempering step.
         };
         
         /**
@@ -291,7 +325,12 @@ std::cout<<"M-H acceptance ratio: "<<acceptedmoves/double(maxpt)<<std::endl;
                     std::cout<<"Parallel Tempering!"<<std::endl;
                     std::cout<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
                     std::cout<<"Expected pairing for this time step: "<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
-            
+            std::cout<<"ptstep begin"<<std::endl;
+            if (ptplan[itm.npt].first == ptplan[itm.npt].second)
+            {//this can happen and is not prevented
+                std::cout<<"self swap..."<<std::endl;
+                movesimtotaskqueue(itm);
+            }
             int partner = ptplan[itm.npt].first;
             if (partner == itm.id) partner = ptplan[itm.npt].second;//it must be the other. no exchanges with myself
             auto partnerinfo = findpartner(partner);
@@ -349,8 +388,7 @@ std::cout<<"M-H acceptance ratio: "<<acceptedmoves/double(maxpt)<<std::endl;
             }
             return retval;
         }
-        
-int acceptedmoves = 0;
+        int acceptedmoves = 0;
         int maxpt; ///< how many pt steps do we do
         std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
         std::vector<std::pair<int, int> > ptplan; ///< An array of who exchanges with whom in each step
@@ -380,17 +418,8 @@ int acceptedmoves = 0;
             std::cout<<"Action of id 2"<<" with other statespace"<<" : "<<actionba<<std::endl;
             //calculate actual metropolis transition ratio from the propability densities
 //             double mhratio = std::exp(-actionab)*std::exp(-actionba)/std::exp(-actionaa)/std::exp(-actionbb);
-            double endiff = (actionaa - actionab + actionbb - actionba);
-            double mhratio = 0;
-            //prevent under/overflow
-            if (endiff > std::log(std::numeric_limits<double>::min()))
-            {
-                if (endiff > std::log(std::numeric_limits<double>::max()))
-                    mhratio = std::numeric_limits<double>::max();
-                else
-                    mhratio = std::exp(endiff);
-            }
-            
+            double endiff = actionaa - actionab + actionbb - actionba;
+            double mhratio = calcMHratio(endiff);
 //             double mhratio = std::exp(actionaa - actionab + actionbb - actionba);
             std::cout<<"M-H Ratio: "<<mhratio<<std::endl;
             return mhratio;
