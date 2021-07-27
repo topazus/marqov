@@ -213,7 +213,9 @@ namespace MARQOV
 //                 int i = 0;
 //                 auto operator()(){return std::make_pair(i,i++);}
 //             } seq;
-            auto ran = [&] {return std::make_pair(rng.integer(), rng.integer());};
+            auto ran = [&] {
+                return std::make_pair(rng.integer(), rng.integer());
+            };
             createPTplan(ran);
             //create dummy data for the ptplan
             std::cout<<"Starting up master"<<std::endl;
@@ -328,8 +330,9 @@ namespace MARQOV
             std::cout<<"ptstep begin"<<std::endl;
             if (ptplan[itm.npt].first == ptplan[itm.npt].second)
             {//this can happen and is not prevented
-                std::cout<<"self swap..."<<std::endl;
+                std::cout<<"[MARQOV::Scheduler] self swap in PT..."<<std::endl;
                 movesimtotaskqueue(itm);
+                return;
             }
             int partner = ptplan[itm.npt].first;
             if (partner == itm.id) partner = ptplan[itm.npt].second;//it must be the other. no exchanges with myself
@@ -401,7 +404,7 @@ namespace MARQOV
         ThreadPool::Queue taskqueue; ///< This is the queue where threads pull their work from.
         std::vector<std::function<void(Simstate, int)> > gamekernels; ///< prefabricated workitems that get executed to move a simulation forward.
         std::vector<std::function<Sim(void)> > kernelloaders;
-        RNGCache<std::mt19937_64> rng;
+        RNGCache<std::mt19937_64> rng{static_cast<std::mt19937_64::result_type>(0)};
         template <class T>
         double calcprob (T& sima, T& simb) const
         {
