@@ -241,6 +241,7 @@ namespace MARQOV
                 });
             }
             masterstop = true;
+std::cout<<"M-H acceptance ratio: "<<acceptedmoves/double(maxpt)<<std::endl;
         }
     private:
         /**
@@ -303,8 +304,10 @@ namespace MARQOV
                     auto sima = kernelloaders[itm.id]();
                     auto simb = kernelloaders[partnerinfo->id]();
                     double mhratio = calcprob(sima, simb);
-                    if(rng.real() < std::min(1.0, mhratio))
+                    if(rng.real() < std::min(1.0, mhratio)){
                         exchange_statespace(sima, simb);
+++acceptedmoves;
+}
                 }
                 ptqueue.erase(partnerinfo);
                 //put both sims back into the taskqueue for more processing until their next PT step
@@ -347,6 +350,7 @@ namespace MARQOV
             return retval;
         }
         
+int acceptedmoves = 0;
         int maxpt; ///< how many pt steps do we do
         std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
         std::vector<std::pair<int, int> > ptplan; ///< An array of who exchanges with whom in each step
@@ -376,7 +380,7 @@ namespace MARQOV
             std::cout<<"Action of id 2"<<" with other statespace"<<" : "<<actionba<<std::endl;
             //calculate actual metropolis transition ratio from the propability densities
 //             double mhratio = std::exp(-actionab)*std::exp(-actionba)/std::exp(-actionaa)/std::exp(-actionbb);
-            double endiff = actionaa - actionab + actionbb - actionba;
+            double endiff = (actionaa - actionab + actionbb - actionba);
             double mhratio = 0;
             //prevent under/overflow
             if (endiff > std::log(std::numeric_limits<double>::min()))
