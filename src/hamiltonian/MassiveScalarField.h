@@ -163,19 +163,32 @@ class MassiveScalarField
 		template <class StateSpace, class Lattice, class RNG>
 		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
 		{
-			double boundary_value = 5;
+			double boundary_value = 1000;
+			double central_value = 10;
 
 			for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
 			{
 				// random initialization with mean zero is not a good idea!
-				// it can introduce frustration effects to the system
+				// it can introduce frustration effects!
 
+				/*
+				// boundary values
 				if (grid.is_boundary_site(i)) statespace[i][0] = boundary_value;
-				else 
+				// remaining sites
+				else statespace[i][0] = rng.real(0, 2*boundary_value);
+				*/
+
+
+				// central value
+				auto firstlayer = grid.flexnbrs(0,0);
+				if (i==0) statespace[i][0] = central_value;
+				else if (std::find(firstlayer.begin(), firstlayer.end(), i) != firstlayer.end()) 
 				{
-					statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
-					statespace[i][0] += 10000; // boundary_value;
+					statespace[i][0] = central_value;
 				}
+				// remaining sites
+				else statespace[i][0] = rng.real(0, 2*central_value);
+
 			}
 		}
 };
@@ -216,7 +229,14 @@ namespace MARQOV
 	    {
 
 			// boundary cells are not being updated
-			if (grid.is_boundary_site(rsite)) return 0;
+//			if (grid.is_boundary_site(rsite)) return 0;
+			// central cell is not being updated
+			if (rsite == 0) return 0;
+				auto firstlayer = grid.flexnbrs(0,0);
+			if (std::find(firstlayer.begin(), firstlayer.end(), rsite) != firstlayer.end()) 
+				{
+				return 0;
+				}
 
 			// typedefs
 			typedef MassiveScalarField Hamiltonian;

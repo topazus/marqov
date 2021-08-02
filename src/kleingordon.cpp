@@ -65,12 +65,12 @@ int main()
 	std::vector<double> beta = {1.0};
 	std::vector<double> K = {0.50315223}; // geometric factor
 	std::vector<double> sqrtg = {1.0471975511}; // geometric factor
-	std::vector<double> mass = {-3, -2, -1, -0.7, -0.6, -0.55, -0.50, -0.45, -0.40};	// mass squared
+	std::vector<double> mass = {-10, -3, -1, -0.3, -0.1, -0.03, -0.01, 0, 1, 3, 10};	// mass squared
 	// note that the geometric factors are only valid for the bulk region!
 
 	auto hp = cart_prod(beta, K, sqrtg, mass);
 	
-	const int nthreads = 3;	
+	const int nthreads = 4;	
 	const int nreplicas = 1;
 
 	
@@ -95,16 +95,16 @@ int main()
 
 
 	// Output
-	std::string outpath = outbasedir+"/testlong-"+std::to_string(nlayers)+"/";
+	std::string outpath = outbasedir+"/fixedcentral-"+std::to_string(nlayers)+"/";
 	makeDir(outpath);
 	
 
 	// Monte Carlo
 	MARQOV::Config mp(outpath);
-	mp.setnmetro(5);
+	mp.setnmetro(10);
 	mp.setncluster(0);
 	mp.setwarmupsteps(0);
-	mp.setgameloopsteps(10000);
+	mp.setgameloopsteps(1000);
 
 
 	// Schedule and Run

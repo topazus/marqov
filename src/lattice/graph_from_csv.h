@@ -53,7 +53,17 @@ class HyperbolicRegularFromCSV : public GraphFromCSV
 	public:
 		int p, q, nlayers;
 		HyperbolicRegularFromCSV(std::string filebasename, int p, int q, int nlayers) : p(p), q(q), nlayers(nlayers), 
-		GraphFromCSV(filebasename+std::to_string(p)+"-"+std::to_string(q)+"-"+std::to_string(nlayers)+".csv") {}
+		GraphFromCSV(filebasename+std::to_string(p)+"-"+std::to_string(q)+"-"+std::to_string(nlayers)+".csv") 
+		{
+			// subtract neighbour indices by one
+			for (int i=0; i<neighbours.size(); i++)
+			{
+				for (int j=0; j<neighbours[i].size(); j++)
+				{
+					neighbours[i][j]--;
+				}
+			}
+		}
 
 		// check whether site is boundary site
 		bool is_boundary_site(int idx) const

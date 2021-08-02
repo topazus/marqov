@@ -64,13 +64,14 @@ namespace MARQOV
 
         // Metropolis sweeps
         mrqvt.switch_clock("metrop");
+		double avgacceptance;
         for (int j=0; j < nmetro; j++)
         {
             // loop sites
             for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
             {
                 const int rsite = rngcache.integer(grid.size());
-                Metropolis<Hamiltonian, Lattice>::move(ham,
+                int avgacceptance = Metropolis<Hamiltonian, Lattice>::move(ham,
                                                 grid, 
                                                 statespace, 
                                                 rngcache, 
@@ -79,7 +80,8 @@ namespace MARQOV
             }
         }
 
-        return avgclustersize/ncluster;
+        return avgacceptance/grid.size()/double(nmetro);
+//        return avgclustersize/ncluster;
     }
     
 template <class Grid, class Hamiltonian, class MutexType, class RNGType, template<class> class RefType>
