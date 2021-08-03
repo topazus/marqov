@@ -68,7 +68,7 @@ class Heisenberg
 
 		double J;
 		static constexpr int SymD = 3;
-		const std::string name;
+		const std::string name = "Heisenberg";
 
 
 		//  ---- Definitions  -----
@@ -79,7 +79,7 @@ class Heisenberg
 
         std::vector<Heisenberg_interaction<StateVector>*> interactions;
 
-		Heisenberg(double J) : J(J), name("Heisenberg"), observables(obs_m)
+		Heisenberg(double J) : J(J), observables(obs_m)
         {
             interactions.push_back(new Heisenberg_interaction<StateVector>(J));
         }
