@@ -62,7 +62,7 @@ namespace MARQOV
              * @param args additional arguments that just get eaten.
              */
             template<class... Args>
-            Ref(const L&& lattice, Args&& ... args) : grid(lattice) {}
+            Ref(const L& lattice, Args&& ... args) : grid(lattice) {}
             const L& grid; ///< A reference to the external lattice. Note that the name is the same as in NonRef.
         };
         
@@ -83,20 +83,24 @@ namespace MARQOV
              * @param args the actual lattice Arguments.
              */
             template <class ...Args>
-            NonRef(std::tuple<Args...>&& args ) : NonRef(std::forward<std::tuple<Args...>>(args), 
-                                                         std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<Args...>>::type>::value>()) {}
+            NonRef(std::tuple<Args...> args ) : NonRef(std::forward<std::tuple<Args...>>(args), 
+                                                         std::make_index_sequence<std::tuple_size<
+//                                                         typename std::remove_reference<
+                                                         std::tuple<Args...>
+//                                                         >::type
+                                                         >::value>()) {}
                                                          
                                                          /** Constructor to do the parameter unpacking..
                                                           * 
                                                           * @tparam Args The parameter pack of the lattice parameters.
-                                                          * @tparam S an integer pack.
+                                                          * @tparam S an integer sequence.
                                                           * 
                                                           * @param args the actual lattice Arguments.
                                                           */
                                                          template <class ...Args, size_t... S>
-                                                         NonRef(std::tuple<Args...>&& args, std::index_sequence<S...>) : grid(std::get<S>(std::forward<std::tuple<Args...>>(args))... ) {}
+                                                         NonRef(std::tuple<Args...> args, std::index_sequence<S...>) : grid(std::get<S>(args)... ) {}
                                                          
-                                                         const L grid;///< The storage of the Lattice. Note that the name is the same as in Ref.
+                                                         const L grid;///< The storage of the Lattice. Note that the name of the variable is the same as in detail::Ref.
         };
         
         /** Helper to decide whether a Hamiltonian provides an init function.

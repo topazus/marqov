@@ -403,8 +403,8 @@ class Core : public RefType<Grid>
      * @param hargs A template parameter pack for the Hamiltonian.
      */
 	template <class ...HArgs>
-	Core(Grid&& lattice, Config mc, MutexType& mtx, double mybeta, HArgs&& ... hargs) : 
-		RefType<Grid>(std::forward<Grid>(lattice)),
+	Core(const Grid& lattice, Config mc, MutexType& mtx, double mybeta, HArgs&& ... hargs) : 
+		RefType<Grid>(lattice),
 		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
@@ -441,8 +441,8 @@ class Core : public RefType<Grid>
 	 * @param hargs the arguemts for the Hamiltonian.
 	 */
 	template <class ...HArgs, class ... LArgs>
-	Core(std::tuple<LArgs...>&& largs, Config mc, MutexType& mtx, double mybeta, HArgs&& ... hargs) : 
-		RefType<Grid>(std::forward<std::tuple<LArgs...>>(largs)),
+	Core(std::tuple<LArgs...> largs, Config mc, MutexType& mtx, double mybeta, HArgs&& ... hargs) : 
+		RefType<Grid>(largs),
 		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
 		mcfg(mc),
@@ -1083,9 +1083,9 @@ class Core : public RefType<Grid>
  * @param hargs The hamiltonian arguments.
  */
 template <class Grid, class H, class RNGType = std::mt19937_64, class MutexType, class... LArgs, class... HArgs, size_t... S>
-inline constexpr auto makeCore_with_latt(const Config& mc, MutexType& mtx, std::tuple<LArgs...>&& largs, const std::tuple<HArgs...> hargs, std::index_sequence<S...> )
+inline constexpr auto makeCore_with_latt(const Config& mc, MutexType& mtx, const std::tuple<LArgs...>& largs, const std::tuple<HArgs...> hargs, std::index_sequence<S...> )
 {
-    return Core<Grid, H, MutexType, RNGType, detail::NonRef>(std::forward<std::tuple<LArgs...>>(largs), mc, mtx, std::get<S>(hargs)...);
+    return Core<Grid, H, MutexType, RNGType, detail::NonRef>(largs, mc, mtx, std::get<S>(hargs)...);
 }
 
 /** Instantiate Core and use a reference to a precreated lattice.
@@ -1104,7 +1104,7 @@ inline constexpr auto makeCore_with_latt(const Config& mc, MutexType& mtx, std::
  * @param hargs The hamiltonian arguments.
  */
 template <class Grid, class H, class RNGType = std::mt19937_64, class MutexType, class ...HArgs, size_t... S>
-inline constexpr auto makeCore_using_latt(Grid&& latt, const Config& mc, MutexType& mtx, std::tuple<HArgs...> hargs, std::index_sequence<S...>)
+inline constexpr auto makeCore_using_latt(Grid&& latt, const Config& mc, MutexType& mtx, const std::tuple<HArgs...>& hargs, std::index_sequence<S...>)
 {
     return Core<Grid, H, MutexType, RNGType, detail::Ref>(std::forward<Grid>(latt), mc, mtx, std::get<S>(hargs)...);
 }
@@ -1120,13 +1120,11 @@ inline constexpr auto makeCore_using_latt(Grid&& latt, const Config& mc, MutexTy
  * @param mtx The mutex that synchronizes access to the HDF5 files.
  */
 template <class Grid, class H, class RNGType = std::mt19937_64, class MutexType = TrivialMutex, typename... HArgs>
-inline auto makeCore(const std::tuple<Grid&, Config, std::tuple<HArgs...> > t, MutexType& mtx=tm)
+inline auto makeCore(const std::tuple<Grid&, Config, std::tuple<HArgs...> >& t, MutexType& mtx=tm)
 {
     //The first argument is a Lattice-like type -> from this we infer that 
     //we get a reference to sth. already allocated
-    return makeCore_using_latt<Grid, H, RNGType>(std::forward<Grid>(std::get<0>(t)), std::get<1>(t), mtx, std::get<2>(t),
-                                 std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
-                                 );
+    return makeCore_using_latt<Grid, H, RNGType>(std::forward<Grid>(std::get<0>(t)), std::get<1>(t), mtx, std::get<2>(t), std::make_index_sequence<std::tuple_size<std::tuple<HArgs...>>::value>());
 }
 
 /** Instantiate Core and let it create the lattice. 
@@ -1140,49 +1138,10 @@ inline auto makeCore(const std::tuple<Grid&, Config, std::tuple<HArgs...> > t, M
  * @param mtx The mutex that synchronizes access to the HDF5 files.
  */
 template <class Grid, class H, class RNGType = std::mt19937_64, typename... LArgs, typename... HArgs>
-inline auto makeCore(std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
+inline auto makeCore(const std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs...> >& t, std::mutex& mtx)
 {
-    return makeCore_with_latt<Grid, H, RNGType>(std::get<1>(t), mtx, std::forward<std::tuple<LArgs...> >(std::get<0>(t)), std::get<2>(t), 
-                                 std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
-                                 );
-}
-
-/** Instantiate Core and let it create the lattice. 
- * 
- * @tparam H the type of Hamiltonian
- * @tparam Grid the type of the lattice
- * @tparam LArgs The arguments of the lattice.
- * @tparam HArgs the arguments of the hamiltonian.
- * 
- * @param t a tuple of a reference of lattice parameters, a config object and the hamiltonian parameters.
- * @param mtx The mutex that synchronizes access to the HDF5 files.
- */
-template <class Grid, class H, class RNGType = std::mt19937_64, typename... LArgs, typename... HArgs>
-inline constexpr auto makeCore(std::tuple<std::tuple<LArgs...>&, Config, std::tuple<HArgs...> > t, std::mutex& mtx)
-{
-    return makeCore_with_latt<Grid, H, RNGType>(std::get<1>(t), mtx, std::forward<std::tuple<LArgs...> >(std::get<0>(t)), std::get<2>(t), 
-                                 std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
-                                 );
-}
-
-/** Instantiate Core and let it create the lattice. 
- * 
- * This overload improves compatibility with decltype and gives a more
- * consistent user experience.
- * @tparam H the type of Hamiltonian
- * @tparam Grid the type of the lattice
- * @tparam LArgs The arguments of the lattice.
- * @tparam HArgs the arguments of the hamiltonian.
- * 
- * @param t a tuple of the lattice parameters, a config object and the hamiltonian parameters.
- * @param mtx The mutex that synchronizes access to the HDF5 files.
- */
-template <class Grid, class H, class RNGType = std::mt19937_64, typename... LArgs, typename... HArgs>
-inline auto makeCore(std::tuple<std::tuple<LArgs...>, Config, std::tuple<HArgs...>& > t, std::mutex& mtx)
-{
-    return makeCore_with_latt<Grid, H, RNGType>(std::get<1>(t), mtx, std::forward<std::tuple<LArgs...> >(std::get<0>(t)), std::get<2>(t), 
-                                 std::make_index_sequence<std::tuple_size<typename std::remove_reference<std::tuple<HArgs...>>::type>::value>()
-                                 );
+    return makeCore_with_latt<Grid, H, RNGType>(std::get<1>(t), mtx, std::get<0>(t), std::get<2>(t), 
+                                 std::make_index_sequence<std::tuple_size<std::tuple<HArgs...>>::value>());
 }
 
 }
