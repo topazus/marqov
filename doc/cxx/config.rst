@@ -1,8 +1,7 @@
 .. Copyright (c) 2021, Manuel Schrauth, Florian Goth
 
-Core Classes
+MARQOVConfig
 ============
 
-.. doxygenclass:: MARQOV::Core
-   :project: Marqov
+.. doxygenclass:: MARQOV::Config
    :members:

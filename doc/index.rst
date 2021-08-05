@@ -13,10 +13,14 @@
    }
    </style>
 
-The pyMARQOV documentation
+The MARQOV Frameqork documentation
 ==========================
 
-Welcome to the official documentation of the pyMARQOV package!
+Welcome to the official documentation of the MARQOV Framework!
+
+MARQOV is made up of two components:
+* The MARQOV High Performance Code
+* The pyMARQOV Easy Analysis Toolkit
 
 
 .. image:: ./_static/icon_regular.svg
