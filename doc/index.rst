@@ -23,27 +23,20 @@ Welcome to the official documentation of the pyMARQOV package!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
+   :caption: Introduction
 
    installation
    changelog
    getting_started
    observables
 
-.. doxygenfunction:: MARQOV::get_terms
-
-.. doxygenstruct:: MARQOV::has_nbrs
-
-
 
 .. toctree::
    :caption: API reference
    :maxdepth: 2
+   :titlesonly:
 
-   api/core
-   api/container
-   api/parameters
-   api/api
+   cxx/cxx
    python/index
 
 .. image:: ./_static/icon_regular.svg

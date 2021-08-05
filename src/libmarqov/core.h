@@ -47,7 +47,7 @@
  */
 namespace MARQOV
 {
-    /** Marqov Config.
+    /** @class Config core.h
      * 
      * We have a global marqov object that collects runtime parameters that are special
      * for MARQOV. Hamiltonian and lattice parameters are elsewhere.
@@ -419,9 +419,20 @@ namespace MARQOV
         const StateVector& operator[] (int j) const {return myspace[j];}
     };
 
+    /**
+    A trivial mutex for threadless support.
+    */
+    struct TrivialMutex
+    {
+	constexpr void lock() {}
+	constexpr void unlock() {}
+    };
+
+    static TrivialMutex tm;
 // --------------------------- MARQOV::Core class -------------------------------
 
-/** The MARQOV Core class.
+/** @class Core
+ * The MARQOV Core class.
  *
  * This class fuses all the parts that the user has specified and calls them to
  * life if needed. The Hamiltonian and the lattice will be instantiated
@@ -435,14 +446,6 @@ namespace MARQOV
  * @tparam RefType used internally to distinguish, whether MARQOV::Core should
  *                 create the lattice or whether it is user provided.
  */
-struct TrivialMutex
-{
-    constexpr void lock() {}
-    constexpr void unlock() {}
-};
-
-static TrivialMutex tm;
-
 template <class Grid, class Hamiltonian, class MutexType, class RNGType = std::mt19937_64, template<class> class RefType = detail::Ref >
 class Core : public RefType<Grid>
 {
