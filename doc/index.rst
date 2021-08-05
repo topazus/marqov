@@ -13,14 +13,14 @@
    }
    </style>
 
-The MARQOV Frameqork documentation
+The MARQOV Framework documentation
 ==========================
 
 Welcome to the official documentation of the MARQOV Framework!
 
 MARQOV is made up of two components:
-* The MARQOV High Performance Code
-* The pyMARQOV Easy Analysis Toolkit
+  * The MARQOV High Performance Code
+  * The pyMARQOV Easy Analysis Toolkit
 
 
 .. image:: ./_static/icon_regular.svg
@@ -34,6 +34,7 @@ MARQOV is made up of two components:
    getting_started
    observables
 
+.. image:: ./_static/icon_regular.svg
 
 .. toctree::
    :caption: API reference
