@@ -11,4 +11,5 @@ Welcome to the API Overview of the C++ Part of MARQOV.
    config
    scheduler
    hamiltonians
-   registry
+   lattices
+   utilities
