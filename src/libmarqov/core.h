@@ -380,9 +380,12 @@ namespace MARQOV
         friend class Core;
         
     public:
+        using size_t = std::size_t;
         typedef Grid Lattice; ///< The Type of the lattice 
         typedef StateVectorT StateVector; ///< a typedef for the state vector
-        typedef StateVectorT value_type; ///< a typedef for better STL conformance
+        using value_type = StateVectorT; ///< An alias for better STL conformance
+        using iterator = value_type*; ///< An alias for the exposed iterator type
+        using const_iterator = const value_type*; ///< An alias for the exposed iterator type
         /** A constructor where we allocate the memory ourselves.
          * 
          * @param size the size of the state space.
@@ -401,7 +404,7 @@ namespace MARQOV
          * 
          * @return the size of the state space.
          */
-        int size() const {return size_;}
+        size_t size() const {return size_;}
         
         /** Access a single state vector by index.
          * 
@@ -417,6 +420,29 @@ namespace MARQOV
          * @return the state vector at memory position j
          */
         const StateVector& operator[] (int j) const {return myspace[j];}
+        
+        /** An iterator to the beginning
+         * 
+         * @return An iterator pointing to the beginning
+         */
+        iterator begin() {return myspace;}
+        
+        /** An iterator to the end
+         * 
+         * @return An iterator pointing to the end
+         */
+        iterator end() {return myspace + size_;}
+        /** A const iterator to the beginning
+         * 
+         * @return An iterator pointing to the beginning
+         */
+        const_iterator begin() const {return myspace;}
+        
+        /** A const iterator to the end
+         * 
+         * @return An iterator pointing to the end
+         */
+        const_iterator end() const {return myspace + size_;}
     };
 
     /**
