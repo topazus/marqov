@@ -22,8 +22,11 @@ MARQOV is made up of two components:
   * The MARQOV High Performance Code
   * The pyMARQOV Easy Analysis Toolkit
 
+for which you can find API documentation below.
 
 .. image:: ./_static/icon_regular.svg
+   :width: 24
+   :align: left
 
 .. toctree::
    :maxdepth: 2
@@ -35,6 +38,8 @@ MARQOV is made up of two components:
    observables
 
 .. image:: ./_static/icon_regular.svg
+   :width: 24
+   :align: left
 
 .. toctree::
    :caption: API reference
@@ -45,6 +50,8 @@ MARQOV is made up of two components:
    python/index
 
 .. image:: ./_static/icon_regular.svg
+   :width: 32
+   :align: left
 
 Indices and tables
 ==================
@@ -52,6 +59,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-
 
