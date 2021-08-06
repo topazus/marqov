@@ -404,7 +404,7 @@ namespace MARQOV
          * 
          * @return the size of the state space.
          */
-        size_t size() const {return size_;}
+        size_t size() const noexcept {return size_;}
         
         /** Access a single state vector by index.
          * 
@@ -425,24 +425,24 @@ namespace MARQOV
          * 
          * @return An iterator pointing to the beginning
          */
-        iterator begin() {return myspace;}
+        iterator begin() noexcept {return myspace;}
         
         /** An iterator to the end
          * 
          * @return An iterator pointing to the end
          */
-        iterator end() {return myspace + size_;}
+        iterator end() noexcept {return myspace + size_;}
         /** A const iterator to the beginning
          * 
          * @return An iterator pointing to the beginning
          */
-        const_iterator begin() const {return myspace;}
+        const_iterator begin() const noexcept {return myspace;}
         
         /** A const iterator to the end
          * 
          * @return An iterator pointing to the end
          */
-        const_iterator end() const {return myspace + size_;}
+        const_iterator end() const noexcept {return myspace + size_;}
     };
 
     /**
