@@ -13,40 +13,45 @@
    }
    </style>
 
-The pyMARQOV documentation
+The MARQOV Framework documentation
 ==========================
 
-Welcome to the official documentation of the pyMARQOV package!
+Welcome to the official documentation of the MARQOV Framework!
 
+MARQOV is made up of two components:
+  * The MARQOV High Performance Code
+  * The pyMARQOV Easy Analysis Toolkit
+
+for which you can find API documentation below.
 
 .. image:: ./_static/icon_regular.svg
+   :width: 24
+   :align: left
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
+   :caption: Introduction
 
    installation
    changelog
    getting_started
    observables
 
-.. doxygenfunction:: MARQOV::get_terms
-
-.. doxygenstruct:: MARQOV::has_nbrs
-
-
+.. image:: ./_static/icon_regular.svg
+   :width: 24
+   :align: left
 
 .. toctree::
    :caption: API reference
    :maxdepth: 2
+   :titlesonly:
 
-   api/core
-   api/container
-   api/parameters
-   api/api
+   cxx/cxx
    python/index
 
 .. image:: ./_static/icon_regular.svg
+   :width: 32
+   :align: left
 
 Indices and tables
 ==================
@@ -54,6 +59,4 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-
 
