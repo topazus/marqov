@@ -72,7 +72,9 @@ public:
     template <class RNGCache>
     static StateVector newsv(const StateVector& svold, RNGCache& rng)
     {
-        return rnddir<RNGCache, double, SymD>(rng);
+        StateVector retval;
+        set_to_rnddir(rng, retval);
+        return retval;
     }
 };
 
