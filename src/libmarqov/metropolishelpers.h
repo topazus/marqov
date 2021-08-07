@@ -402,7 +402,7 @@ namespace MARQOV
 		// gather neighbours
 		const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
 	
-		StateVector neighbourhood = {0};
+		StateVector neighbourhood{0};
 	
 		// sum over neighbours
 		for (std::size_t i=0; i<nbrs.size(); ++i)
