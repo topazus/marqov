@@ -108,7 +108,7 @@ namespace ThreadPool
             Toggle stop;///< A flag for denoting that the threads should stop.
             Toggle prune;///< A flag for denoting that the threads should terminate.
             Flags() noexcept : stop(false), prune(false) {}
-            Flags(const Flags&) noexcept = default;
+            Flags(const Flags& rhs) noexcept : stop(rhs.stop.load()), prune(rhs.prune.load()) {}
         } flags;///< flags
         
         /** A helper structure for some threadpool statistics.
