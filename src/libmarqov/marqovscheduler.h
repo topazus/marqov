@@ -212,7 +212,7 @@ namespace MARQOV
          * @param maxptsteps How many parallel tempering steps do we do.
          * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
          */
-        Scheduler(int maxptsteps, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
+        Scheduler(uint maxptsteps = 1, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
         taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads))
         {}
@@ -229,8 +229,8 @@ namespace MARQOV
             }
             masterstop = true;
         }
-        
-        Scheduler() = delete;
+
+//        Scheduler() = delete; //FIXME: If this would be present, the call to Scheduler() would be ambiguous
         Scheduler(const Scheduler&) = delete;
         /** Move Copy Constructor
          * 
@@ -387,11 +387,23 @@ namespace MARQOV
         typedef decltype(makeCore<Lattice, Hamiltonian, RNGType>(std::declval<Parameters>(), std::declval<mtxref>())) MarqovType;
         typedef Scheduler<MarqovType> MarqovScheduler; ///< Holds the type of a scheduler for these simulations.
     };
-    
-    template <class Hamiltonian, class Lattice, class RNGType = std::mt19937_64, class Parameters>
-    auto makeScheduler(const Parameters& args, uint t)
+
+    /** A helper function to figure out the type of the scheduler and actually create it.
+     *
+     * @tparam Hamiltonian The Hamiltonian to use for the simulations.
+     * @tparam Lattice The lattice to use for the simulations.
+     * @tparam RNGType The Random Number Generator to use.
+     * @tparam Parameters the tuple that makes up the arguments for a simulation.
+     * @tparam Ts a parameter pack of the remaining arguements to the scheduler.
+     *
+     * @param args A dummy parameter to get rid of template magic on the user end.
+     * @param ts The remaining arguments for the scheduler.
+     *
+     */
+    template <class Hamiltonian, class Lattice, class RNGType = std::mt19937_64, class Parameters, typename ...Ts>
+    auto makeScheduler(const Parameters& args, Ts&&... ts)
     {
-        return typename GetSchedulerType<Hamiltonian, Lattice, Parameters>::MarqovScheduler(1);
+        return typename GetSchedulerType<Hamiltonian, Lattice, Parameters>::MarqovScheduler(std::forward<Ts>(ts)...);
     }
 };
 #endif
