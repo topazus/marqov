@@ -241,7 +241,7 @@ namespace MARQOV
          */
         
         Scheduler(Scheduler&& rhs) : mutexes{}, maxpt(rhs.maxpt), ptqueue(std::move(rhs.ptqueue)), ptplan{}, masterstop(rhs.masterstop),
-        masterwork{}, workqueue(masterwork), imvector(std::move(rhs.simvector)),taskqueue{std::move(rhs.taskqueue)}, gamekernels{}
+        masterwork{}, workqueue(masterwork), simvector(std::move(rhs.simvector)),taskqueue{std::move(rhs.taskqueue)}, gamekernels{}
         {
             
             std::swap(ptplan, rhs.ptplan);
