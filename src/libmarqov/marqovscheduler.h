@@ -229,6 +229,30 @@ namespace MARQOV
             }
             masterstop = true;
         }
+        
+        Scheduler() = delete;
+        Scheduler(const Scheduler&) = delete;
+        /** Move Copy Constructor
+         * 
+         * The other object over whose resources we take ownership.
+         * mutexes are a bit odd here. We don't reuse the other mutexes but use our own.
+         * 
+         * @param rhs the other object
+         */
+        
+        Scheduler(Scheduler&& rhs) : mutexes{}, maxpt(rhs.maxpt), ptqueue(std::move(rhs.ptqueue)), ptplan{}, masterstop(rhs.masterstop),
+        masterwork{}, workqueue(masterwork), imvector(std::move(rhs.simvector)),taskqueue{std::move(rhs.taskqueue)}, gamekernels{}
+        {
+            
+            std::swap(ptplan, rhs.ptplan);
+            std::swap(simvector, rhs.simvector);
+            
+            std::swap(gamekernels, rhs.gamekernels);
+            if (rhs.taskqueue.tasks_enqueued() > 0 || rhs.taskqueue.tasks_assigned() > 0)
+                throw std::runtime_error("[MARQOV::Scheduler] invalid assignment");
+        }
+        Scheduler& operator=(const Scheduler&) = delete;
+        Scheduler& operator=(Scheduler&& ) = delete;
     private:
         /**
          * Simstate helper class
@@ -363,5 +387,11 @@ namespace MARQOV
         typedef decltype(makeCore<Lattice, Hamiltonian, RNGType>(std::declval<Parameters>(), std::declval<mtxref>())) MarqovType;
         typedef Scheduler<MarqovType> MarqovScheduler; ///< Holds the type of a scheduler for these simulations.
     };
+    
+    template <class Hamiltonian, class Lattice, class RNGType = std::mt19937_64, class Parameters>
+    auto makeScheduler(const Parameters& args, uint t)
+    {
+        return typename GetSchedulerType<Hamiltonian, Lattice, Parameters>::MarqovScheduler(1);
+    }
 };
 #endif

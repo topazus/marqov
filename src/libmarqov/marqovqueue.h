@@ -29,6 +29,10 @@ namespace ThreadPool
         {
             resize(initc);
         }
+        /** Move constructor of queue.
+         *
+         */
+        Queue(Queue&& rhs) : semaphores{}, queue(semaphores.work), workers{std::move(rhs.workers)} {}
         ~Queue()
         {
             flags.stop.store(true);
@@ -103,7 +107,8 @@ namespace ThreadPool
         {
             Toggle stop;///< A flag for denoting that the threads should stop.
             Toggle prune;///< A flag for denoting that the threads should terminate.
-            Flags() : stop(false), prune(false) {}
+            Flags() noexcept : stop(false), prune(false) {}
+            Flags(const Flags&) noexcept = default;
         } flags;///< flags
         
         /** A helper structure for some threadpool statistics.
@@ -112,11 +117,11 @@ namespace ThreadPool
         {
             auint enqueued; ///< count how many threads are in the queue.
             auint assigned; ///< count how many threads are worked on.
-            /** Construct our statistics with initial values.
+            /** Construct our statistics with initial zero values.
              */
-            Stats() : enqueued(0), assigned(0) {}
+            Stats() noexcept : enqueued(0), assigned(0) {}
         } stats;///< Actual instance for our statistics.
-        
+
         /** A helper structure to bundle the bookkeeping of workers.
          */
         struct Workers
@@ -129,9 +134,19 @@ namespace ThreadPool
              * 
              * @param tc How many workers do we intend to have.
              */
-            Workers(const uint tc) : count(0), target_count(tc) {}
+            Workers(const uint tc) noexcept : busy_mtx{}, busy{}, count(0), target_count(tc) {}
+            /** Move Constructor
+             *
+             * Takes ownership of other threads.
+             */
+            Workers(Workers&& rhs) : busy_mtx{}, busy{}, count(rhs.count.load()), target_count(rhs.target_count.load())
+            {
+        	std::lock_guard<std::mutex> lk(rhs.busy_mtx);
+        	std::swap(busy, rhs.busy);
+        	rhs.count.store(0);
+            }
         } workers; ///< An instance of the worker bookkeeping structure.
-        
+
         /** trigger synchronization
          */
         void sync()
