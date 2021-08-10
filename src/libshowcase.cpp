@@ -15,9 +15,9 @@
 using namespace std;
 using namespace MARQOV;
 
-int pyising(std::string path, int len, double beta, double J)
+int pyIsing(std::string path, int dim, int len, double beta, double J)
 {
-    RegularHypercubic mylatt(len, 2); //2D len x len lattice
+    RegularHypercubic mylatt(len, dim); //2D len x len lattice
     
     //MARQOV::Config stores a set of Monte Carlo related parameters
     MARQOV::Config mp(path);
@@ -40,9 +40,9 @@ int pyising(std::string path, int len, double beta, double J)
     return 0;
 }
 
-int pyHeisenberg(std::string path, int len, double beta, double J)
+int pyHeisenberg(std::string path, int dim, int len, double beta, double J)
 {
-     RegularHypercubic mylatt(len, 2); //2D len x len lattice
+     RegularHypercubic mylatt(len, dim); //2D len x len lattice
 //MARQOV::Config stores a set of Monte Carlo related parameters
      MARQOV::Config mp(path);
      mp.setnmetro(5);
@@ -64,7 +64,7 @@ int pyHeisenberg(std::string path, int len, double beta, double J)
     return 0;
 }
  
-int pyPhi4(std::string path, int len, double beta, double lambda, double mass)
+int pyPhi4(std::string path, int dim, int len, double beta, double lambda, double mass)
 {
      RegularHypercubic mylatt(len, 2); //2D len x len lattice
  
@@ -88,4 +88,3 @@ int pyPhi4(std::string path, int len, double beta, double lambda, double mass)
      mysim.gameloop();
      return 0;
 }
-//}
