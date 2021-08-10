@@ -48,3 +48,16 @@ CHECK_FUNCTION_EXISTS(alphasort HAVE_ALPHASORT)
 CHECK_FUNCTION_EXISTS(readdir_r HAVE_READDIR_R)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmarqov/util/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/libmarqov/util/config.h)
+
+# Let's check whether we have SWIG and can hence build the language bindings.
+
+if(CMAKE_VERSION VERSION_GREATER 3.7)
+    find_package(SWIG 3.0 COMPONENTS python)
+    if(SWIG_FOUND)
+      message("SWIG found: ${SWIG_EXECUTABLE}.")
+    #specific language queries not supported in cmake 3-16...
+    #  if(NOT SWIG_python_FOUND)
+    #    message(WARNING "SWIG python bindings cannot be generated")
+    #  endif()
+    endif()
+endif
