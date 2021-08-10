@@ -17,7 +17,7 @@ using namespace MARQOV;
 
 int pyIsing(std::string path, int dim, int len, double beta, double J)
 {
-    RegularHypercubic mylatt(len, dim); //2D len x len lattice
+    RegularHypercubic mylatt(len, dim); //nD len x len lattice
     
     //MARQOV::Config stores a set of Monte Carlo related parameters
     MARQOV::Config mp(path);
@@ -28,7 +28,6 @@ int pyIsing(std::string path, int dim, int len, double beta, double J)
     
     // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
     auto hp = make_tuple(beta, J);
-    //Let's create some parameters, a temperature scan for the scheduler to work on.
     //prepare the arguments
     auto args = make_tuple(std::ref(mylatt), mp, hp);
 
@@ -42,7 +41,7 @@ int pyIsing(std::string path, int dim, int len, double beta, double J)
 
 int pyHeisenberg(std::string path, int dim, int len, double beta, double J)
 {
-     RegularHypercubic mylatt(len, dim); //2D len x len lattice
+     RegularHypercubic mylatt(len, dim); //nD len x len lattice
 //MARQOV::Config stores a set of Monte Carlo related parameters
      MARQOV::Config mp(path);
      mp.setnmetro(5);
@@ -52,7 +51,6 @@ int pyHeisenberg(std::string path, int dim, int len, double beta, double J)
 
      // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
      auto hp = make_tuple(beta, J);
-     //Let's create some parameters, a temperature scan for the scheduler to work on.
      //prepare the arguments
      auto args = make_tuple(std::ref(mylatt), mp, hp);
  
@@ -66,7 +64,7 @@ int pyHeisenberg(std::string path, int dim, int len, double beta, double J)
  
 int pyPhi4(std::string path, int dim, int len, double beta, double lambda, double mass)
 {
-     RegularHypercubic mylatt(len, 2); //2D len x len lattice
+     RegularHypercubic mylatt(len, dim); //nD len x len lattice
  
      //MARQOV::Config stores a set of Monte Carlo related parameters
      MARQOV::Config mp(path);
@@ -77,7 +75,6 @@ int pyPhi4(std::string path, int dim, int len, double beta, double lambda, doubl
  
      // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
      auto hp = make_tuple(beta, beta, lambda, mass);
-     //Let's create some parameters, a temperature scan for the scheduler to work on.
      //prepare the arguments
      auto args = make_tuple(std::ref(mylatt), mp, hp);
  
@@ -86,5 +83,136 @@ int pyPhi4(std::string path, int dim, int len, double beta, double lambda, doubl
      mysim.init();
      mysim.wrmploop();
      mysim.gameloop();
+     return 0;
+}
+
+int pyAshkinTeller(std::string path, int dim, int len, double beta, double J, double K)
+{
+     RegularHypercubic mylatt(len, dim); //nD len x len lattice
+ 
+     //MARQOV::Config stores a set of Monte Carlo related parameters
+     MARQOV::Config mp(path);
+     mp.setnmetro(5);
+     mp.setncluster(8/2);
+     mp.setwarmupsteps(500);
+     mp.setgameloopsteps(3000);
+ 
+     // A section for setting our Hamiltonian parameters, and beta
+     auto hp = make_tuple(beta, beta, J, K);
+
+     //prepare the arguments
+     auto args = make_tuple(std::ref(mylatt), mp, hp);
+ 
+     //execute core
+     auto mysim = makeCore<RegularHypercubic, AshkinTeller>(args);
+     mysim.init();
+     mysim.wrmploop();
+     mysim.gameloop();
+     return 0;
+}
+
+int pyBlumeCapel(std::string path, int dim, int len, double beta, double J, double D)
+{
+     RegularHypercubic mylatt(len, dim); //nD len x len lattice
+ 
+     //MARQOV::Config stores a set of Monte Carlo related parameters
+     MARQOV::Config mp(path);
+     mp.setnmetro(5);
+     mp.setncluster(8/2);
+     mp.setwarmupsteps(500);
+     mp.setgameloopsteps(3000);
+ 
+     // A section for setting our Hamiltonian parameters, and beta
+     auto hp = make_tuple(beta, beta, J, D);
+
+     //prepare the arguments
+     auto args = make_tuple(std::ref(mylatt), mp, hp);
+ 
+     //execute core
+     auto mysim = makeCore<RegularHypercubic, pyBlumeCapel<int> >(args);
+     mysim.init();
+     mysim.wrmploop();
+     mysim.gameloop();
+     return 0;
+}
+
+int pyBEG(std::string path, int dim, int len, double beta, double J, double D, double K)
+{
+     RegularHypercubic mylatt(len, dim); //nD len x len lattice
+ 
+     //MARQOV::Config stores a set of Monte Carlo related parameters
+     MARQOV::Config mp(path);
+     mp.setnmetro(5);
+     mp.setncluster(8/2);
+     mp.setwarmupsteps(500);
+     mp.setgameloopsteps(3000);
+ 
+     // A section for setting our Hamiltonian parameters, and beta
+     auto hp = make_tuple(beta, beta, J, D, K);
+
+     //prepare the arguments
+     auto args = make_tuple(std::ref(mylatt), mp, hp);
+ 
+     //execute core
+     auto mysim = makeCore<RegularHypercubic,BlumeEmeryGriffiths<int> >(args);
+     mysim.init();
+     mysim.wrmploop();
+     mysim.gameloop();
+     return 0;
+}
+
+int pyPotts(int q, std::string path, int dim, int len, double beta, double J)
+{
+     RegularHypercubic mylatt(len, dim); //nD len x len lattice
+ 
+     //MARQOV::Config stores a set of Monte Carlo related parameters
+     MARQOV::Config mp(path);
+     mp.setnmetro(5);
+     mp.setncluster(8/2);
+     mp.setwarmupsteps(500);
+     mp.setgameloopsteps(3000);
+ 
+     // A section for setting our Hamiltonian parameters, and beta
+     auto hp = make_tuple(beta, beta, J);
+
+     //prepare the arguments
+     auto args = make_tuple(std::ref(mylatt), mp, hp);
+ 
+     //execute core
+     switch (q)
+     {
+         case 3:
+         {
+     auto mysim = makeCore<RegularHypercubic, Potts<3> >(args);
+     mysim.init();
+     mysim.wrmploop();
+     mysim.gameloop();
+         }
+             break;
+         case 4:
+         {
+     auto mysim = makeCore<RegularHypercubic, Potts<4> >(args);
+     mysim.init();
+     mysim.wrmploop();
+     mysim.gameloop();
+         }
+             break;
+         case 6:
+         {
+     auto mysim = makeCore<RegularHypercubic, Potts<6> >(args);
+     mysim.init();
+     mysim.wrmploop();
+     mysim.gameloop();
+         }
+             break;
+         case 8:
+         {
+     auto mysim = makeCore<RegularHypercubic, Potts<8> >(args);
+     mysim.init();
+     mysim.wrmploop();
+     mysim.gameloop();
+         }
+             break;
+     }
      return 0;
 }
