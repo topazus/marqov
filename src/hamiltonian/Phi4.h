@@ -30,8 +30,9 @@ class Phi4_Initializer_Radial
 		{
 			double amp = 0.5; // Amplitude (TODO: make me a class parameter)
 
-			auto newdir = rnddir<RNG, double, SymD>(rng);
-			auto nsv = osv + mult(amp,newdir);
+			StateVector newdir;
+            set_to_rnddir(rng, newdir);
+			auto nsv = osv + mult(amp, newdir);
 			return nsv;
 		};
 
@@ -224,7 +225,7 @@ namespace MARQOV
 			* @param rng reference to the random number generator
 			*/
 			template <class RNG>
-			void draw(RNG& rng, StateVector& sv)	{rdir = rnddir<RNG, double, SymD>(rng);}
+			void draw(RNG& rng, StateVector& sv) noexcept {set_to_rnddir(rng, rdir);}
 
 
 			/** Computes the Wolff coupling when attempting to add a spin to the cluster

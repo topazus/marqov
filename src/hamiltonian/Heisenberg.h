@@ -95,11 +95,11 @@ class Heisenberg
 		//  ----  Initializer  ----
 
 		template <class StateSpace, class Lattice, class RNG>
-		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const
+		void initstatespace(StateSpace& statespace, Lattice& grid, RNG& rng) const noexcept
 		{
 			for(decltype(grid.size()) i = 0; i < grid.size(); ++i)
 			{
-				statespace[i] = rnddir<RNG, typename StateVector::value_type, SymD>(rng);
+                set_to_rnddir(rng, statespace[i]);
 			}
 		}
 };
@@ -156,7 +156,7 @@ namespace MARQOV
 			* @param rng reference to the random number generator
 			*/
 			template <class RNG>
-			void draw(RNG& rng)	{rdir = rnddir<RNG, double, SymD>(rng);}
+			void draw(RNG& rng) noexcept {set_to_rnddir(rng, rdir);}
 
 
 			/** Computes the Wolff coupling when attempting to add a spin to the cluster

@@ -50,7 +50,7 @@
  */
 namespace MARQOV
 {
-    /** Marqov Config.
+    /** @class Config core.h
      * 
      * We have a global marqov object that collects runtime parameters that are special
      * for MARQOV. Hamiltonian and lattice parameters are elsewhere.
@@ -233,9 +233,12 @@ namespace MARQOV
         friend class Core;
 
     public:
+        using size_t = std::size_t;
         typedef Grid Lattice; ///< The Type of the lattice 
         typedef StateVectorT StateVector; ///< a typedef for the state vector
-        typedef StateVectorT value_type; ///< a typedef for better STL conformance
+        using value_type = StateVectorT; ///< An alias for better STL conformance
+        using iterator = value_type*; ///< An alias for the exposed iterator type
+        using const_iterator = const value_type*; ///< An alias for the exposed iterator type
         /** A constructor where we allocate the memory ourselves.
          * 
          * @param size the size of the state space.
@@ -255,8 +258,8 @@ namespace MARQOV
          * 
          * @return the size of the state space.
          */
-        int size() const {return size_;}
-
+        size_t size() const noexcept {return size_;}
+        
         /** Access a single state vector by index.
          * 
          * non-const version
@@ -271,10 +274,38 @@ namespace MARQOV
          * @return the state vector at memory position j
          */
         const StateVector& operator[] (int j) const {return myspace[j];}
+        
+        /** An iterator to the beginning
+         * 
+         * @return An iterator pointing to the beginning
+         */
+        iterator begin() noexcept {return myspace;}
+        
+        /** An iterator to the end
+         * 
+         * @return An iterator pointing to the end
+         */
+        iterator end() noexcept {return myspace + size_;}
+        /** A const iterator to the beginning
+         * 
+         * @return An iterator pointing to the beginning
+         */
+        const_iterator begin() const noexcept {return myspace;}
+        
+        /** A const iterator to the end
+         * 
+         * @return An iterator pointing to the end
+         */
+        const_iterator end() const noexcept {return myspace + size_;}
+        
         template <class A, class B>
         friend void swap(Space<A, B>& a, Space<A, B>& b);
     };
-
+    
+    /** Swap two state spaces and their content
+     * @param a
+     * @param b
+     */
     template <class StateVectorT, class Grid>
     void swap(Space<StateVectorT, Grid>& a, Space<StateVectorT, Grid>& b)
     {
@@ -282,9 +313,21 @@ namespace MARQOV
         std::swap_ranges(a.getptr(), a.getptr() + a.size_, b.getptr());
     }
 
+    /**
+    A trivial mutex for threadless support.
+    */
+    struct TrivialMutex
+    {
+	constexpr void lock() {}
+	constexpr void unlock() {}
+    };
+
+    static TrivialMutex tm;
+
 // --------------------------- MARQOV::Core class -------------------------------
 
-/** The MARQOV Core class.
+/** @class Core
+ * The MARQOV Core class.
  *
  * This class fuses all the parts that the user has specified and calls them to
  * life if needed. The Hamiltonian and the lattice will be instantiated
@@ -298,14 +341,6 @@ namespace MARQOV
  * @tparam RefType used internally to distinguish, whether MARQOV::Core should
  *                 create the lattice or whether it is user provided.
  */
-struct TrivialMutex
-{
-    constexpr void lock() {}
-    constexpr void unlock() {}
-};
-
-static TrivialMutex tm;
-
 template <class Grid, class Hamiltonian, class MutexType, class RNGType = std::mt19937_64, template<class> class RefType = detail::Ref >
 class Core : public RefType<Grid>
 {
@@ -704,7 +739,8 @@ class Core : public RefType<Grid>
             constexpr int SymD = std::tuple_size<StateVector>::value;
             for (decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
             {
-                statespace[i] = rnddir<RNGCache<RNGType>, typename StateVector::value_type, SymD>(rngcache);
+                set_to_rnddir(rngcache, statespace[i]);
+//                 statespace[i] = rnddir<RNGCache<RNGType>, typename StateVector::value_type, SymD>(rngcache);
             }
         }
 

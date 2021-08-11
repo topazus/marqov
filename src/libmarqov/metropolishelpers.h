@@ -285,7 +285,7 @@ namespace MARQOV
 	* @param idx the site to be considered
 	* @param hasterms encodes whether the lattice provides the termselector function 
 	*
-	* @return integer sequence (0,1,2,...) with lengt corresponding to number of on-site terms
+	* @return integer sequence (0,1,2,...) with length corresponding to number of on-site terms
 	*/
 	template <class Grid, class Hamiltonian>
 	std::vector<int> get_terms(const Grid& grid, const Hamiltonian& ham, int idx, std::false_type hasterms)
@@ -402,7 +402,7 @@ namespace MARQOV
 		// gather neighbours
 		const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
 	
-		StateVector neighbourhood = {0};
+		StateVector neighbourhood{0};
 	
 		// sum over neighbours
 		for (std::size_t i=0; i<nbrs.size(); ++i)
