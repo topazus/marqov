@@ -19,11 +19,11 @@ set_target_properties(mysimpleheisenbergthreaded PROPERTIES CXX_STANDARD 14 CXX_
 SET(MARQOVTARGETS MARQOV mpiMARQOV)
 
 foreach(target ${MARQOVTARGETS})
-add_executable (${target} libmarqov/util/registry.cpp main.cpp)
-target_link_libraries(${target} libmarqov)
-set_target_properties(${target} PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+    add_executable (${target} libmarqov/util/registry.cpp main.cpp)
+    target_link_libraries(${target} libmarqov)
+    set_target_properties(${target} PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
-set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DHAVE_CONFIG_H -DGIT_SHA1=\"${GIT_SHA1}\" -DGIT_BRANCH=\"${GIT_BRANCH}\"" )
+    set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DHAVE_CONFIG_H -DGIT_SHA1=\"${GIT_SHA1}\" -DGIT_BRANCH=\"${GIT_BRANCH}\"" )
 
 endforeach(target)
 
@@ -42,7 +42,7 @@ if(MPI_CXX_FOUND)
 	target_compile_options(mpiMARQOV PUBLIC ${MPI_CXX_COMPILE_OPTIONS})
 	target_compile_definitions(mpiMARQOV PUBLIC ${MPI_CXX_COMPILE_DEFINITIONS})
 
-endif()
+    endif()
 endif(MPI_CXX_FOUND)
 
 CHECK_FUNCTION_EXISTS(scandir HAVE_SCANDIR)
