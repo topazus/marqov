@@ -90,9 +90,9 @@ class AshkinTeller_Initializer
 		  */
 		StateVector newsv(const StateVector& svold) 	
 		{
-			cout << "This should not have happened!" << endl;
-			cout << "This Hamiltonian is not supposed to work with the generic Metropolis algorithm." << endl;
-			cout << "Use a specialized implementation instead!" << endl;
+			std::cout << "This should not have happened!" << std::endl;
+			std::cout << "This Hamiltonian is not supposed to work with the generic Metropolis algorithm." << std::endl;
+			std::cout << "Use a specialized implementation instead!" << std::endl;
 		};
 };
 
@@ -227,7 +227,7 @@ namespace MARQOV
 						case 0: retval = ham.J - ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]); break;
 						case 1: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]); break;
 						case 2: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]); break;
-						default: cout << "invalid color!" << rcolor << endl;
+                        default: std::cout << "invalid color!" << rcolor << std::endl;
 //						default: throw std::invalid_argument("invalid color!"); // catch me!
 					}
 				}
@@ -264,7 +264,7 @@ namespace MARQOV
 				case 0: retval = ham.J - ham.K * (sv1[1]*sv2[1] + sv1[2]*sv2[2]); break;
 				case 1: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[2]*sv2[2]); break;
 				case 2: retval = ham.J - ham.K * (sv1[0]*sv2[0] + sv1[1]*sv2[1]); break;
-				default: cout << "invalid color!" << color << endl;
+                default: std::cout << "invalid color!" << color << std::endl;
 //				default: throw std::invalid_argument("invalid color!"); // catch me!
 			}
 			return retval;
