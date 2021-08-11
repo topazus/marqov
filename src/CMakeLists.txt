@@ -52,10 +52,24 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmarqov/util/config.h.in ${CMAKE_CU
 # Let's check whether we have SWIG and can hence build the language bindings.
 
 if(CMAKE_VERSION VERSION_GREATER 3.7)
+    cmake_policy(SET CMP0086 NEW)
+    cmake_policy(SET CMP0078 NEW)
     find_package(SWIG 3.0 COMPONENTS python)
     if(SWIG_FOUND)
+      FIND_PACKAGE(PythonLibs)
+      INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
+      INCLUDE(${SWIG_USE_FILE})
       message("SWIG found: ${SWIG_EXECUTABLE}.")
+      set_property(SOURCE libshowcase.i PROPERTY CPLUSPLUS ON)
+
+      message("PYTHONLIBS_VERSION_STRING: ${PYTHONLIBS_VERSION_STRING}")
+      message("CMAKE_SWIG_FLAGS: ${CMAKE_SWIG_FLAGS}")
+
+      swig_add_library(showcase TYPE SHARED LANGUAGE python SOURCES libshowcase.i)
+      SWIG_LINK_LIBRARIES(showcase ${PYTHON_LIBRARIES})
     endif()
+
+
     # specific language queries not supported in cmake 3-16...
     #  if(NOT SWIG_python_FOUND)
     #    message(WARNING "SWIG python bindings cannot be generated")
