@@ -3,17 +3,18 @@
 Prerequisites
 =============
 MARQOV is light on dependencies:
-* A C++14 compiler
-* HDF5
-* optionally MPI
+
+  * A C++14 compiler
+  * HDF5
+  * optionally MPI
 
 and cmake for executing the build and configure step.
 If you intend to build the documentation doxygen, breathe and sphinx are required.
 
 Compiling the Examples
-============
-Assuming you have retrieved the most recent version of `MARQOV https://git.physik.uni-wuerzburg.de/marqov/marqov`_
-the default way to compile is with the help of `cmake https://cmake.org/`_ .
+======================
+Assuming you have retrieved the most recent version of `MARQOV <https://git.physik.uni-wuerzburg.de/marqov/marqov>`_
+the default way to compile is with the help of `cmake <https://cmake.org/>`_ .
 
 The build step follows the basic cmake procedure:
 
