@@ -11,13 +11,18 @@
 #include "hamiltonian/Heisenberg.h"
 #include "hamiltonian/Ising.h"
 #include "hamiltonian/Phi4.h"
+#include "hamiltonian/AshkinTeller.h"
+#include "hamiltonian/BlumeCapel.h"
+#include "hamiltonian/BlumeEmeryGriffiths.h"
+#include "hamiltonian/Potts.h"
 
 using namespace std;
 using namespace MARQOV;
 
-int pyIsing(std::string path, int dim, int len, double beta, double J)
+template <class Lattice, class Ham, typename HamParameter>
+static int instantiatesim(const std::string& path, Lattice& mylatt, const HamParameter& hp)
 {
-    RegularHypercubic mylatt(len, dim); //nD len x len lattice
+//     Lattice mylatt(len, dim); //nD len x len lattice
     
     //MARQOV::Config stores a set of Monte Carlo related parameters
     MARQOV::Config mp(path);
@@ -26,8 +31,32 @@ int pyIsing(std::string path, int dim, int len, double beta, double J)
     mp.setwarmupsteps(500);
     mp.setgameloopsteps(3000);
     
+    //prepare the arguments
+    auto args = make_tuple(std::ref(mylatt), mp, hp);
+
+    //execute core
+    auto mysim = makeCore<RegularHypercubic, Ising<int> >(args);
+    mysim.init();
+    mysim.wrmploop();
+    mysim.gameloop();
+    return 0;
+}
+
+int pyIsing(std::string path, int dim, int len, double beta, double J)
+{
+    RegularHypercubic mylatt(len, dim); //nD len x len lattice
     // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
     auto hp = make_tuple(beta, J);
+    return instantiatesim<RegularHypercubic, Ising<double>>(path, mylatt, hp);
+/*    
+    //MARQOV::Config stores a set of Monte Carlo related parameters
+    MARQOV::Config mp(path);
+    mp.setnmetro(5);
+    mp.setncluster(8/2);
+    mp.setwarmupsteps(500);
+    mp.setgameloopsteps(3000);
+    
+
     //prepare the arguments
     auto args = make_tuple(std::ref(mylatt), mp, hp);
 
@@ -36,7 +65,7 @@ int pyIsing(std::string path, int dim, int len, double beta, double J)
     mysim.init();
     mysim.wrmploop();
     mysim.gameloop();
-    return 0;
+    return 0;*/
 }
 
 int pyHeisenberg(std::string path, int dim, int len, double beta, double J)
@@ -98,7 +127,7 @@ int pyAshkinTeller(std::string path, int dim, int len, double beta, double J, do
      mp.setgameloopsteps(3000);
  
      // A section for setting our Hamiltonian parameters, and beta
-     auto hp = make_tuple(beta, beta, J, K);
+     auto hp = make_tuple(beta, J, K);
 
      //prepare the arguments
      auto args = make_tuple(std::ref(mylatt), mp, hp);
@@ -123,13 +152,13 @@ int pyBlumeCapel(std::string path, int dim, int len, double beta, double J, doub
      mp.setgameloopsteps(3000);
  
      // A section for setting our Hamiltonian parameters, and beta
-     auto hp = make_tuple(beta, beta, J, D);
+     auto hp = make_tuple(beta, J, D);
 
      //prepare the arguments
      auto args = make_tuple(std::ref(mylatt), mp, hp);
  
      //execute core
-     auto mysim = makeCore<RegularHypercubic, pyBlumeCapel<int> >(args);
+     auto mysim = makeCore<RegularHypercubic, BlumeCapel<int> >(args);
      mysim.init();
      mysim.wrmploop();
      mysim.gameloop();
@@ -148,7 +177,7 @@ int pyBEG(std::string path, int dim, int len, double beta, double J, double D, d
      mp.setgameloopsteps(3000);
  
      // A section for setting our Hamiltonian parameters, and beta
-     auto hp = make_tuple(beta, beta, J, D, K);
+     auto hp = make_tuple(beta, J, D, K);
 
      //prepare the arguments
      auto args = make_tuple(std::ref(mylatt), mp, hp);
@@ -173,7 +202,7 @@ int pyPotts(int q, std::string path, int dim, int len, double beta, double J)
      mp.setgameloopsteps(3000);
  
      // A section for setting our Hamiltonian parameters, and beta
-     auto hp = make_tuple(beta, beta, J);
+     auto hp = make_tuple(beta, J);
 
      //prepare the arguments
      auto args = make_tuple(std::ref(mylatt), mp, hp);
