@@ -55,24 +55,25 @@ public:
     }
 };
 
-template <typename FPType, std::size_t SymD>
-class SVInitializer<std::array<FPType, SymD>, typename std::enable_if<
-std::is_floating_point<FPType>::value>::type>
+template <typename T>
+class SVInitializer<T, typename std::enable_if<std::is_floating_point<typename T::value_type>::value>::type>
 {
-    typedef std::array<FPType, SymD> StateVector;
+    using StateVector = T;
 public:
-    /** Flip the Ising spin.
+    /** Flip the Spin.
      * 
      * @tparam RNGCache the Random Number Generator.
      * 
-     * @param svold the old state vector.
-     * @param rng a reference to the RNG of the Monte Carlo simulation.
-     * @return the new state vector with flipped spin
+     * @param svold The old state vector.
+     * @param rng A reference to the RNG of the Monte Carlo simulation.
+     * @return The new state vector with flipped spin
      */
     template <class RNGCache>
     static StateVector newsv(const StateVector& svold, RNGCache& rng)
     {
-        return rnddir<RNGCache, double, SymD>(rng);
+        StateVector retval;
+        set_to_rnddir(rng, retval);
+        return retval;
     }
 };
 
@@ -86,11 +87,11 @@ class Spin1_Initializer
 	public:
         /** Draw a new state vector based on the old one.
          * 
-         * @tparam RNG the Random Number Generator.
+         * @tparam RNG The Random Number Generator.
          * 
-         * @param svold the old state vector.
-         * @param rng a reference to the RNG of the Monte Carlo simulation.
-         * @return the new state vector
+         * @param svold The old state vector.
+         * @param rng A reference to the RNG of the Monte Carlo simulation.
+         * @return The new state vector
          */
         template <class RNGCache>
         static StateVector newsv(const StateVector& svold, RNGCache& rng)

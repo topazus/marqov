@@ -869,7 +869,8 @@ class Core : public RefType<Grid>
             constexpr int SymD = std::tuple_size<StateVector>::value;
             for (decltype(this->grid.size()) i = 0; i < this->grid.size(); ++i)
             {
-                statespace[i] = rnddir<RNGCache<RNGType>, typename StateVector::value_type, SymD>(rngcache);
+                set_to_rnddir(rngcache, statespace[i]);
+//                 statespace[i] = rnddir<RNGCache<RNGType>, typename StateVector::value_type, SymD>(rngcache);
             }
         }
 
