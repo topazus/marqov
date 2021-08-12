@@ -52,10 +52,11 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmarqov/util/config.h.in ${CMAKE_CU
 # Let's check whether we have SWIG and can hence build the language bindings.
 
 if(CMAKE_VERSION VERSION_GREATER 3.7)
-    cmake_policy(SET CMP0086 NEW)
-    cmake_policy(SET CMP0078 NEW)
-    find_package(SWIG 3.0 COMPONENTS python)
+    find_package(SWIG 3.0 OPTIONAL_COMPONENTS python)
+
     if(SWIG_FOUND)
+      cmake_policy(SET CMP0086 NEW)
+      cmake_policy(SET CMP0078 NEW)
       FIND_PACKAGE(PythonLibs)
       INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
       INCLUDE(${SWIG_USE_FILE})
