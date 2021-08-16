@@ -209,4 +209,17 @@ marqov_Bullseye_SWIG_python:
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ..
-      - make marqov_showcase VERBOSE=1
+      - make pyShowcase VERBOSE=1
+
+marqov_Bullseye_SWIG_optionals:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+    stage: SWIG
+    needs: ["MARQOV_Simple_Test"]
+    allow_failure: true
+    <<: *src_except_definition
+    script:
+      - apt-get update && apt-get install g++ swig lua5.4-dev default-jdk r-base-dev ocaml-4.11.1
+      - cmake -E make_directory build
+      - cd build
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ..
+      - make pyShowcase JNIShowcase LuaShowcase RShowcase ocamlShowcase VERBOSE=1
