@@ -35,7 +35,7 @@ static int instantiatesim(const std::string& path, Lattice& mylatt, const HamPar
     auto args = make_tuple(std::ref(mylatt), mp, hp);
 
     //execute core
-    auto mysim = makeCore<RegularHypercubic, Ham >(args);
+    auto mysim = makeCore<RegularHypercubic, Ham>(args);
     mysim.init();
     mysim.wrmploop();
     mysim.gameloop();
@@ -122,6 +122,9 @@ int pyPotts(int q, std::string path, int dim, int len, double beta, double J)
              break;
          case 8:
              return instantiatesim<RegularHypercubic, Potts<8> >(path, mylatt, hp);
+             break;
+         default:
+             throw(std::string("[MARQOV::Showcase] Supported q values 3,4,6, and 8. All others only from C++."));
              break;
      }
      return 0;
