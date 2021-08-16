@@ -96,7 +96,7 @@ if(CMAKE_VERSION VERSION_GREATER 3.7)
           if(SWIG_r_FOUND)
           message("R found, building R bindings")
 	  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
-#          INCLUDE_DIRECTORIES(${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})
+          INCLUDE_DIRECTORIES("/usr/share/R/include/") # Debian Bullseye path, could also carry over to Ubuntu
           INCLUDE(${SWIG_USE_FILE})
 
           swig_add_library(RShowcase TYPE SHARED LANGUAGE R SOURCES libshowcase.i libshowcase.cpp)
@@ -109,6 +109,7 @@ message("ocaml found, building OCaml bindings")
           INCLUDE(${SWIG_USE_FILE})
 
           swig_add_library(ocamlShowcase TYPE SHARED LANGUAGE ocaml SOURCES libshowcase.i libshowcase.cpp)
+          target_compile_options(ocamlShowcase PRIVATE "-fpermissive")# could work for gcc
 #          SWIG_LINK_LIBRARIES(JNIShowcase libmarqov ${JNI_LIBRARIES})
           endif()
       endif()
