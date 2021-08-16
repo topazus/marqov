@@ -205,7 +205,7 @@ marqov_Bullseye_SWIG_python:
     needs: ["MARQOV_Simple_Test"]
     <<: *src_except_definition
     script:
-      - apt-get update && apt-get install g++ swig
+      - apt-get update && apt-get install -y g++ swig
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ..
@@ -218,7 +218,7 @@ marqov_Bullseye_SWIG_optionals:
     allow_failure: true
     <<: *src_except_definition
     script:
-      - apt-get update && apt-get install g++ swig lua5.4-dev default-jdk r-base-dev ocaml-4.11.1
+      - apt-get update && apt-get install -y g++ swig lua5.4-dev default-jdk r-base-dev ocaml-4.11.1
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ..
