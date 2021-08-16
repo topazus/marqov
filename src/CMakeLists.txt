@@ -52,7 +52,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmarqov/util/config.h.in ${CMAKE_CU
 # Let's check whether we have SWIG and can hence build the language bindings.
 
 if(CMAKE_VERSION VERSION_GREATER 3.7)
-    find_package(SWIG 3.0 OPTIONAL_COMPONENTS python java lua)
+    find_package(SWIG 3.0 OPTIONAL_COMPONENTS python java lua r ocaml)
 
     if(SWIG_FOUND)
       cmake_policy(SET CMP0086 NEW)
@@ -90,6 +90,15 @@ if(CMAKE_VERSION VERSION_GREATER 3.7)
 
           swig_add_library(JNIShowcase TYPE SHARED LANGUAGE java SOURCES libshowcase.i libshowcase.cpp)
           SWIG_LINK_LIBRARIES(JNIShowcase libmarqov ${JNI_LIBRARIES})
+      endif()
+
+      if(CMAKE_VERSION VERSION_GREATER 3.18)
+          if(SWIG_r_FOUND)
+message("R found")
+          endif()
+          if(SWIG_ocaml_FOUND)
+message("ocaml found")
+          endif()
       endif()
     endif()
 
