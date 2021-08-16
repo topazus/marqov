@@ -66,8 +66,6 @@ if(CMAKE_VERSION VERSION_GREATER 3.7)
           INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
           INCLUDE(${SWIG_USE_FILE})
 
-          message("PYTHONLIBS_VERSION_STRING: ${PYTHONLIBS_VERSION_STRING}")
-#   	   message("CMAKE_SWIG_FLAGS: ${CMAKE_SWIG_FLAGS}")
           swig_add_library(pyShowcase TYPE SHARED LANGUAGE python SOURCES libshowcase.i libshowcase.cpp)
 	  SWIG_LINK_LIBRARIES(pyShowcase libmarqov ${PYTHON_LIBRARIES})
       endif()
@@ -92,7 +90,7 @@ if(CMAKE_VERSION VERSION_GREATER 3.7)
           SWIG_LINK_LIBRARIES(JNIShowcase libmarqov ${JNI_LIBRARIES})
       endif()
 
-      if(CMAKE_VERSION VERSION_GREATER 3.18)
+      if(CMAKE_VERSION VERSION_GREATER 3.18)# language specific checks from SWIG only available in newer cmake versions
           if(SWIG_r_FOUND)
           message("R found, building R bindings")
 	  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
@@ -113,10 +111,4 @@ message("ocaml found, building OCaml bindings")
           endif()
       endif()
     endif()
-
-
-    # specific language queries not supported in cmake 3-16...
-    #  if(NOT SWIG_python_FOUND)
-    #    message(WARNING "SWIG python bindings cannot be generated")
-    #  endif()
 endif()
