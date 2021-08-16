@@ -58,6 +58,7 @@ if(CMAKE_VERSION VERSION_GREATER 3.7)
       cmake_policy(SET CMP0086 NEW)
       cmake_policy(SET CMP0078 NEW)
       FIND_PACKAGE(PythonLibs)
+      INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
       INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
       INCLUDE(${SWIG_USE_FILE})
       message("SWIG found: ${SWIG_EXECUTABLE}.")
@@ -66,8 +67,8 @@ if(CMAKE_VERSION VERSION_GREATER 3.7)
       message("PYTHONLIBS_VERSION_STRING: ${PYTHONLIBS_VERSION_STRING}")
       message("CMAKE_SWIG_FLAGS: ${CMAKE_SWIG_FLAGS}")
 
-      swig_add_library(showcase TYPE SHARED LANGUAGE python SOURCES libshowcase.i)
-      SWIG_LINK_LIBRARIES(showcase ${PYTHON_LIBRARIES})
+      swig_add_library(marqov_showcase TYPE SHARED LANGUAGE python SOURCES libshowcase.i libshowcase.cpp)
+      SWIG_LINK_LIBRARIES(marqov_showcase libmarqov ${PYTHON_LIBRARIES})
     endif()
 
 
