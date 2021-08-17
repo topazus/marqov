@@ -429,6 +429,13 @@ namespace MARQOV
             MPI_Comm_size(marqov_COMM, &nr_nodes);
             MPI_Comm_rank(marqov_COMM, &myrank);
         }
+         /** Move Copy Constructor
+         * 
+         * The other object over whose resources we take ownership.
+         * 
+         * @param rhs the other object
+         */
+        MPIScheduler(MPIScheduler&& rhs) : rrctr(rhs.rrctr), marqov_COMM(rhs.marqov_COMM), MASTER(rhs.MASTER), myScheduler(std::move(rhs.myScheduler)), myrank(rhs.myrank), nr_nodes(rhs.nr_nodes), maxpt(rhs.maxpt) {}
         MPIScheduler(const MPIScheduler&) = delete;
         ~MPIScheduler() = default;
         MPIScheduler& operator=(const MPIScheduler&) = delete;
