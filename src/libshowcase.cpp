@@ -7,6 +7,8 @@
 
 //include the RegularLattice
 #include "lattice/regular_hypercubic.h"
+//include the CSV graph
+#include "lattice/graph_from_csv.h"
 
 #include "hamiltonian/Heisenberg.h"
 #include "hamiltonian/Ising.h"
@@ -22,8 +24,6 @@ using namespace MARQOV;
 template <class Lattice, class Ham, typename HamParameter>
 static int instantiatesim(const std::string& path, Lattice& mylatt, const HamParameter& hp)
 {
-//     Lattice mylatt(len, dim); //nD len x len lattice
-    
     //MARQOV::Config stores a set of Monte Carlo related parameters
     MARQOV::Config mp(path);
     mp.setnmetro(5);
@@ -50,10 +50,17 @@ int pyIsing(std::string path, int dim, int len, double beta, double J)
     return instantiatesim<RegularHypercubic, Ising<double>>(path, mylatt, hp);
 }
 
+int pyIsingGraph(std::string outpath, std::string graphpath, double beta, double J)
+{
+    GraphFromCSV graph(graphpath);//load lattice from a graph specification
+    // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
+    auto hp = make_tuple(beta, J);
+    return instantiatesim<GraphFromCSV, Ising<double>>(path, graph, hp);
+}
+
 int pyHeisenberg(std::string path, int dim, int len, double beta, double J)
 {
      RegularHypercubic mylatt(len, dim); //nD len x len lattice
-     
     // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
     auto hp = make_tuple(beta, J);
     return instantiatesim<RegularHypercubic, Heisenberg<double, double> >(path, mylatt, hp);
