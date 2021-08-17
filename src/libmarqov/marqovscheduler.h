@@ -234,7 +234,7 @@ namespace MARQOV
         }
 
 //        Scheduler() = delete; //FIXME: If this would be present, the call to Scheduler() would be ambiguous
-        Scheduler(const Scheduler&) = delete;
+        CXX11Scheduler(const CXX11Scheduler&) = delete;
         /** Move Copy Constructor
          * 
          * The other object over whose resources we take ownership.
@@ -429,16 +429,17 @@ namespace MARQOV
             MPI_Comm_size(marqov_COMM, &nr_nodes);
             MPI_Comm_rank(marqov_COMM, &myrank);
         }
+        MPIScheduler(const MPIScheduler&) = delete;
         ~MPIScheduler() {
 //             MPI_Finalize();
         }
     private:
         int rrctr;
-        MPI_Comm marqov_COMM;///< our own MPI communicator
+        MPI_Comm marqov_COMM;///< our own MPI communicator.
         static constexpr int MASTER = 0;
-        CXX11Scheduler<Sim> myScheduler;//MPI starts the program parallely on every node(if properly executed), hence every node needs his CXX11scheduler
-        int myrank;
-        int nr_nodes;
+        CXX11Scheduler<Sim> myScheduler;//MPI starts the program parallely on every node(if properly executed), hence every node needs his CXX11scheduler.
+        int myrank; ///< my MPI rank
+        int nr_nodes; ///< how many nodes are we actually executed on.
         int maxpt; ///< how many pt steps do we do
     };
 
