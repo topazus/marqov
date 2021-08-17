@@ -57,17 +57,15 @@ using std::ofstream;
 
 using namespace MARQOV;
 
-
-/** find out if a string starts with something.
- * @param longword
+/** Find out if a string starts with something.
+ * @param longword we search in this string
+ * @param shortword we look for this
+ * @return truen if longword strarts with shortword, else false
  */
 bool startswith(const std::string& longword, const std::string& shortword) noexcept
 {
-//     return longword.find(shortword) == 0;
-	if (longword.rfind(shortword, 0) == 0) return true;
-	else return false; 
+    return longword.find(shortword) == 0;
 }
-
 
 std::string selectsim_startup(RegistryDB& registry)
 {
