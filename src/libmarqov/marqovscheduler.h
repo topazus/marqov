@@ -111,7 +111,7 @@ namespace MARQOV
             }
             else
             {
-                std::cout<<"[MARQOV::Scheduler] Previous step found! Restarting!"<<std::endl;
+                std::cout<<"[MARQOV::CXX11Scheduler] Previous step found! Restarting!"<<std::endl;
                 workqueue.push_back(Simstate(idx));
             }
         }
@@ -238,12 +238,12 @@ namespace MARQOV
         /** Move Copy Constructor
          * 
          * The other object over whose resources we take ownership.
-         * mutexes are a bit odd here. We don't reuse the other mutexes but use our own.
+         * mutexes are a bit odd here. We don't reuse the other mutexes but use and create our own.
          * 
          * @param rhs the other object
          */
         
-        Scheduler(Scheduler&& rhs) : mutexes{}, maxpt(rhs.maxpt), ptqueue(std::move(rhs.ptqueue)), ptplan{}, masterstop(rhs.masterstop),
+        CXX11Scheduler(CXX11Scheduler&& rhs) : mutexes{}, maxpt(rhs.maxpt), ptqueue(std::move(rhs.ptqueue)), ptplan{}, masterstop(rhs.masterstop),
         masterwork{}, workqueue(masterwork), simvector(std::move(rhs.simvector)),taskqueue{std::move(rhs.taskqueue)}, gamekernels{}
         {
             
@@ -252,10 +252,10 @@ namespace MARQOV
             
             std::swap(gamekernels, rhs.gamekernels);
             if (rhs.taskqueue.tasks_enqueued() > 0 || rhs.taskqueue.tasks_assigned() > 0)
-                throw std::runtime_error("[MARQOV::Scheduler] invalid assignment");
+                throw std::runtime_error("[MARQOV::CXX11Scheduler] invalid assignment");
         }
-        Scheduler& operator=(const Scheduler&) = delete;
-        Scheduler& operator=(Scheduler&& ) = delete;
+        CXX11Scheduler& operator=(const CXX11Scheduler&) = delete;
+        CXX11Scheduler& operator=(CXX11Scheduler&& ) = delete;
     private:
         /**
          * Simstate helper class
@@ -430,9 +430,9 @@ namespace MARQOV
             MPI_Comm_rank(marqov_COMM, &myrank);
         }
         MPIScheduler(const MPIScheduler&) = delete;
-        ~MPIScheduler() {
-//             MPI_Finalize();
-        }
+        ~MPIScheduler() = default;
+        MPIScheduler& operator=(const MPIScheduler&) = delete;
+        MPIScheduler& operator=(MPIScheduler&& ) = delete;
     private:
         int rrctr;
         MPI_Comm marqov_COMM;///< our own MPI communicator.
