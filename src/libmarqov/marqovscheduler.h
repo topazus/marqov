@@ -2,7 +2,7 @@
 #define MARQOVSCHEDULER_H
 /* MIT License
  * 
- * Copyright (c) 2020-2021 Florian Goth
+ * Copyright (c) 2020 - 2021 Florian Goth
  * fgoth@physik.uni-wuerzburg.de
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,6 +33,10 @@
 
 #include "marqovqueue.h"
 #include "core.h"
+#ifdef MPIMARQOV
+#include <type_traits>
+#include <mpi.h>
+#endif
 #include "util/filters.h"
 
 namespace MARQOV
@@ -44,9 +48,8 @@ namespace MARQOV
      * @tparam Sim a fully specified Marqov type
      */
     template <class Sim>
-    class Scheduler
+    class CXX11Scheduler
     {
-    private:
     public:
         /** Create a full simulation from a parameter.
          * 
@@ -207,12 +210,12 @@ namespace MARQOV
             //      taskqueue.enqueue(master);
         }
         void waitforall() {}
-        /** Construct Scheduler
+        /** Construct Scheduler.
          * 
-         * @param maxptsteps How many parallel tempering steps do we do.
+         * @param maxptsteps How many parallel tempering steps do we do. Defaults to just a single PTstep and hence disables it.
          * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
          */
-        Scheduler(uint maxptsteps = 1, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
+        CXX11Scheduler(int maxptsteps = 1, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
         taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads))
         {}
@@ -220,7 +223,7 @@ namespace MARQOV
          * 
          * This frees all resources and waits until all threads have finished.
          */
-        ~Scheduler() {
+        ~CXX11Scheduler() {
             if (!nowork() && !masterstop && (taskqueue.tasks_enqueued() > 0) )
             {
                 masterwork.wait([&]{
@@ -370,6 +373,78 @@ namespace MARQOV
         void exchange() {}
     };
 
+#ifndef MPIMARQOV
+    template <class MarqovType>
+    using Scheduler = CXX11Scheduler<MarqovType>;
+#else
+    template <class Sim>
+    class MPIScheduler
+    {
+    public:
+        /** This gives us the parameters of a simulation and we are responsible for setting everything up.
+         * It has a template parameter, but of course all used parameters have to resolve to the same underlying MarqovType.
+         * FIXME: It is expected that all MPI ranks execute the same code until here!!! that makes it easier to have valid data on every node...
+         * @param p The full set of parameters that are relevant for your Problem
+         * @param filter A filter that can be applied before the actual creation of MARQOV
+         */
+        template <typename ParamType, typename Callable>
+        void createSimfromParameter(ParamType& p, Callable filter)
+        {
+            if (myrank == rrctr)
+                myScheduler.createSimfromParameter(p, filter);
+            if (myrank == MASTER)
+            {
+                rrctr = (rrctr + 1) % nr_nodes;
+            }
+            MPI_Bcast(&rrctr, 1, MPI_INT, MASTER, marqov_COMM);
+        }
+        void enqueuesim(Sim& sim)
+        {
+            if (myrank == rrctr)
+                myScheduler.enqueuesim(sim);
+            if (myrank == MASTER)
+            {
+                rrctr = (rrctr + 1) % nr_nodes;
+            }
+            MPI_Bcast(&rrctr, 1, MPI_INT, MASTER, marqov_COMM);
+        }
+        void start()
+        {
+            myScheduler.start();
+        }
+        void waitforall() {}
+        /** Construct MPI Scheduler.
+         * 
+         * We expect MPI to be initialized beforehand. The user should feel that he is writing MPI code.
+         * @param maxptsteps How many parallel tempering steps do we do
+         * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
+         */
+        MPIScheduler(int maxptsteps, uint nthreads = 0) : rrctr(0), maxpt(maxptsteps), myScheduler(maxptsteps, nthreads)
+        {
+            int mpi_inited;
+            MPI_Initialized(&mpi_inited);
+            if (!mpi_inited)
+                throw("MPI not initialized!");
+            MPI_Comm_dup(MPI_COMM_WORLD, &marqov_COMM);
+            MPI_Comm_size(marqov_COMM, &nr_nodes);
+            MPI_Comm_rank(marqov_COMM, &myrank);
+        }
+        ~MPIScheduler() {
+//             MPI_Finalize();
+        }
+    private:
+        int rrctr;
+        MPI_Comm marqov_COMM;///< our own MPI communicator
+        static constexpr int MASTER = 0;
+        CXX11Scheduler<Sim> myScheduler;//MPI starts the program parallely on every node(if properly executed), hence every node needs his CXX11scheduler
+        int myrank;
+        int nr_nodes;
+        int maxpt; ///< how many pt steps do we do
+    };
+
+    template <class MarqovType>
+    using Scheduler = MPIScheduler<MarqovType>;
+#endif
     /** A helper class to figure out the type of the scheduler.
      * 
      * @tparam Hamiltonian the type of the Hamiltonian.
