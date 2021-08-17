@@ -444,17 +444,49 @@ void selectsim()
 	}
 }
 
-
-
-
-
-
-int main()
+int main(int argc, char* argv[])
 {
 
     std::cout<<"MARQOV Copyright (C) 2020-2021, The MARQOV Project contributors"<<std::endl;
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;
     std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;
+#ifdef MPIMARQOV
+    int threadingsupport;
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &threadingsupport);//FIXME: maybe we get by with one level less.
+    if(threadingsupport < MPI_THREAD_SERIALIZED)
+    {
+        std::cout<<"couldn't initialize MPI! threading level not supported."<<std::endl;
+        return -1;
+    }
+#endif
 
-	selectsim();
+	// read config files
+	RegistryDB registry("../src/config", "ini");
+
+	// remove old output and prepare new one
+	std::string outbasedir = registry.Get<std::string>("mc.ini", "IO", "outdir" );
+	std::string logbasedir = registry.Get<std::string>("mc.ini", "IO", "logdir" );
+
+	//FIXME: NEVER DELETE USER DATA
+	std::string command;
+#ifdef MPIMARQOV
+    int myrank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+    if (myrank == 0) {
+#endif
+	command = "rm -r " + outbasedir;
+	system(command.c_str());
+	command = "rm -r " + logbasedir;
+	system(command.c_str());
+
+	makeDir(outbasedir);
+	makeDir(logbasedir);
+
+#ifdef MPIMARQOV
+    }
+#endif
+    selectsim();
+#ifdef MPIMARQOV
+    MPI_Finalize();
+#endif
 }
