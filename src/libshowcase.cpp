@@ -165,12 +165,3 @@ int pyPotts(int q, std::string path, int dim, int len, double beta, double J)
      
      return instantiatePotts(q, path, mylatt, hp);
 }
-
-int pyPottsGraph(int q, std::string outpath, std::string graphpath, double beta, double J)
-{
-     GraphFromCSV mylatt(graphpath); //nD len x len lattice
-     // A section for setting our Hamiltonian parameters, and beta
-     auto hp = make_tuple(beta, J);
-     
-     return instantiatePotts(q, outpath, mylatt, hp);
-}
