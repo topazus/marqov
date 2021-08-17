@@ -58,9 +58,12 @@ using std::ofstream;
 using namespace MARQOV;
 
 
-
-bool startswith(const std::string longword, const std::string shortword)
+/** find out if a string starts with something.
+ * @param longword
+ */
+bool startswith(const std::string& longword, const std::string& shortword) noexcept
 {
+//     return longword.find(shortword) == 0;
 	if (longword.rfind(shortword, 0) == 0) return true;
 	else return false; 
 }
@@ -81,21 +84,15 @@ std::string selectsim_startup(RegistryDB& registry)
 	cout << "Lattice sizes:\t" << nLs << endl;
 	cout << "Replicas:\t" << nreplicass << endl;
 
-	if ((nreplicas.size() != nL.size()) && (nreplicas.size() != 1)) throw std::invalid_argument("invalid replica configuration!");
+	if ((nreplicas.size() != nL.size()) && (nreplicas.size() != 1)) throw std::invalid_argument("[MARQOV] Invalid replica configuration!");
 
 	return ham;
 }
 
-
-
-
-
-// ---------------------------------------
-
-void selectsim()
+/** Select the respective simulation
+ */
+void selectsim(RegistryDB& registry, int myrank = 0)
 {
-
-	RegistryDB registry("../src/config", "ini");
 	const auto ham = selectsim_startup(registry);
 
 	std::string outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
@@ -446,7 +443,6 @@ void selectsim()
 
 int main(int argc, char* argv[])
 {
-
     std::cout<<"MARQOV Copyright (C) 2020-2021, The MARQOV Project contributors"<<std::endl;
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;
     std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;
@@ -455,38 +451,21 @@ int main(int argc, char* argv[])
     MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &threadingsupport);//FIXME: maybe we get by with one level less.
     if(threadingsupport < MPI_THREAD_SERIALIZED)
     {
-        std::cout<<"couldn't initialize MPI! threading level not supported."<<std::endl;
+        std::cout<<"[MARQOV] Couldn't initialize MPI! threading level not supported."<<std::endl;
         return -1;
     }
 #endif
 
 	// read config files
 	RegistryDB registry("../src/config", "ini");
-
-	// remove old output and prepare new one
-	std::string outbasedir = registry.Get<std::string>("mc.ini", "IO", "outdir" );
-	std::string logbasedir = registry.Get<std::string>("mc.ini", "IO", "logdir" );
-
-	//FIXME: NEVER DELETE USER DATA
-	std::string command;
+    int myrank = 0;
 #ifdef MPIMARQOV
-    int myrank;
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     if (myrank == 0) {
 #endif
-	command = "rm -r " + outbasedir;
-	system(command.c_str());
-	command = "rm -r " + logbasedir;
-	system(command.c_str());
-
-	makeDir(outbasedir);
-	makeDir(logbasedir);
-
+        selectsim(registry, myrank);
 #ifdef MPIMARQOV
     }
-#endif
-    selectsim();
-#ifdef MPIMARQOV
     MPI_Finalize();
 #endif
 }
