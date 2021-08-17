@@ -63,7 +63,7 @@ class GraphFromCSVwithCoords
 
     GraphFromCSVwithCoords(std::string filename, int ncoords) 
     {
-        npoints = import_geometry(filename, grid, neighbours, ncoords);
+        npoints = import_geometry(filename, grid, neighbours, ncoords, false);
     }
             
     std::vector<int> nbrs(const int a, const int i) const

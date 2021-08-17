@@ -35,7 +35,7 @@ static int instantiatesim(const std::string& path, Lattice& mylatt, const HamPar
     auto args = make_tuple(std::ref(mylatt), mp, hp);
 
     //execute core
-    auto mysim = makeCore<RegularHypercubic, Ham>(args);
+    auto mysim = makeCore<Lattice, Ham>(args);
     mysim.init();
     mysim.wrmploop();
     mysim.gameloop();
@@ -52,10 +52,10 @@ int pyIsing(std::string path, int dim, int len, double beta, double J)
 
 int pyIsingGraph(std::string outpath, std::string graphpath, double beta, double J)
 {
-    GraphFromCSV graph(graphpath);//load lattice from a graph specification
-    // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
-    auto hp = make_tuple(beta, J);
-    return instantiatesim<GraphFromCSV, Ising<double>>(path, graph, hp);
+//     GraphFromCSV graph(graphpath);//load lattice from a graph specification
+//     // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
+//     auto hp = make_tuple(beta, J);
+//     return instantiatesim<GraphFromCSV, Ising<double>>(outpath, graph, hp);
 }
 
 int pyHeisenberg(std::string path, int dim, int len, double beta, double J)
@@ -64,6 +64,14 @@ int pyHeisenberg(std::string path, int dim, int len, double beta, double J)
     // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
     auto hp = make_tuple(beta, J);
     return instantiatesim<RegularHypercubic, Heisenberg<double, double> >(path, mylatt, hp);
+}
+
+int pyHeisenbergGraph(std::string outpath, std::string graphpath, double beta, double J)
+{
+    GraphFromCSV graph(graphpath);//load lattice from a graph specification
+    // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
+    auto hp = make_tuple(beta, J);
+    return instantiatesim<GraphFromCSV, Heisenberg<double, double>>(outpath, graph, hp);
 }
  
 int pyPhi4(std::string path, int dim, int len, double beta, double lambda, double mass)
