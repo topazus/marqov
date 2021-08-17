@@ -49,18 +49,19 @@ int pyIsing(std::string path, int dim, int len, double beta, double J)
     auto hp = make_tuple(beta, J);
     return instantiatesim<RegularHypercubic, Ising<double>>(path, mylatt, hp);
 }
-
+/*
+/*
 int pyIsingGraph(std::string outpath, std::string graphpath, double beta, double J)
 {
-//     GraphFromCSV graph(graphpath);//load lattice from a graph specification
-//     // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
-//     auto hp = make_tuple(beta, J);
-//     return instantiatesim<GraphFromCSV, Ising<double>>(outpath, graph, hp);
-}
+    GraphFromCSV graph(graphpath);//load lattice from a graph specification
+    // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
+    auto hp = make_tuple(beta, J);
+    return instantiatesim<GraphFromCSV, Ising<double>>(outpath, graph, hp);
+}*/
 
 int pyHeisenberg(std::string path, int dim, int len, double beta, double J)
 {
-     RegularHypercubic mylatt(len, dim); //nD len x len lattice
+    RegularHypercubic mylatt(len, dim); //nD len x len lattice
     // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
     auto hp = make_tuple(beta, J);
     return instantiatesim<RegularHypercubic, Heisenberg<double, double> >(path, mylatt, hp);
@@ -91,12 +92,28 @@ int pyAshkinTeller(std::string path, int dim, int len, double beta, double J, do
      return instantiatesim<RegularHypercubic, AshkinTeller >(path, mylatt, hp);
 }
 
+int pyAshkinTellerGraph(std::string outpath, std::string graphpath, double beta, double J, double K)
+{
+     GraphFromCSV graph(graphpath);//load lattice from a graph specification
+     // A section for setting our Hamiltonian parameters, and beta
+     auto hp = make_tuple(beta, J, K);
+     return instantiatesim<GraphFromCSV, AshkinTeller >(outpath, graph, hp);
+}
+
 int pyBlumeCapel(std::string path, int dim, int len, double beta, double J, double D)
 {
      RegularHypercubic mylatt(len, dim); //nD len x len lattice
      // A section for setting our Hamiltonian parameters, and beta
      auto hp = make_tuple(beta, J, D);
      return instantiatesim<RegularHypercubic, BlumeCapel<int> >(path, mylatt, hp);
+}
+
+int pyBlumeCapelGraph(std::string outpath, std::string graphpath, double beta, double J, double D)
+{
+     GraphFromCSV graph(graphpath);//load lattice from a graph specification
+     // A section for setting our Hamiltonian parameters, and beta
+     auto hp = make_tuple(beta, J, D);
+     return instantiatesim<GraphFromCSV, BlumeCapel<int> >(outpath, graph, hp);
 }
 
 int pyBEG(std::string path, int dim, int len, double beta, double J, double D, double K)
@@ -107,12 +124,9 @@ int pyBEG(std::string path, int dim, int len, double beta, double J, double D, d
      return instantiatesim<RegularHypercubic, BlumeEmeryGriffiths<int> >(path, mylatt, hp);
 }
 
-int pyPotts(int q, std::string path, int dim, int len, double beta, double J)
-{
-     RegularHypercubic mylatt(len, dim); //nD len x len lattice
-     // A section for setting our Hamiltonian parameters, and beta
-     auto hp = make_tuple(beta, J);
- 
+template <class Lattice, class HamParms>
+static int instantiatePotts(int q, const std::string& path, Lattice&& mylatt, const HamParms& hp)
+{ 
      //MARQOV::Config stores a set of Monte Carlo related parameters
      MARQOV::Config mp(path);
      mp.setnmetro(5);
@@ -120,27 +134,43 @@ int pyPotts(int q, std::string path, int dim, int len, double beta, double J)
      mp.setwarmupsteps(500);
      mp.setgameloopsteps(3000);
 
-     //prepare the arguments
-     auto args = make_tuple(std::ref(mylatt), mp, hp);
- 
      //execute core
      switch (q)
      {
          case 3:
-             return instantiatesim<RegularHypercubic, Potts<3> >(path, mylatt, hp);
+             return instantiatesim<typename std::decay<Lattice>::type, Potts<3> >(path, std::forward<Lattice>(mylatt), hp);
              break;
          case 4:
-             return instantiatesim<RegularHypercubic, Potts<4> >(path, mylatt, hp);
+             return instantiatesim<typename std::decay<Lattice>::type, Potts<4> >(path, std::forward<Lattice>(mylatt), hp);
              break;
          case 6:
-             return instantiatesim<RegularHypercubic, Potts<6> >(path, mylatt, hp);
+             return instantiatesim<typename std::decay<Lattice>::type, Potts<6> >(path, std::forward<Lattice>(mylatt), hp);
              break;
          case 8:
-             return instantiatesim<RegularHypercubic, Potts<8> >(path, mylatt, hp);
+             return instantiatesim<typename std::decay<Lattice>::type, Potts<8> >(path, std::forward<Lattice>(mylatt), hp);
              break;
          default:
-             throw(std::string("[MARQOV::Showcase] Supported q values 3,4,6, and 8. All others only from C++."));
+             throw(std::string("[MARQOV::Showcase] Supported Potts(q) values are q=3,4,6, and 8. All others only from C++."));
              break;
      }
      return 0;
+    
+}
+
+int pyPotts(int q, std::string path, int dim, int len, double beta, double J)
+{
+     RegularHypercubic mylatt(len, dim); //nD len x len lattice
+     // A section for setting our Hamiltonian parameters, and beta
+     auto hp = make_tuple(beta, J);
+     
+     return instantiatePotts(q, path, mylatt, hp);
+}
+
+int pyPottsGraph(int q, std::string outpath, std::string graphpath, double beta, double J)
+{
+     GraphFromCSV mylatt(graphpath); //nD len x len lattice
+     // A section for setting our Hamiltonian parameters, and beta
+     auto hp = make_tuple(beta, J);
+     
+     return instantiatePotts(q, outpath, mylatt, hp);
 }
