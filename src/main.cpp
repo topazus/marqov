@@ -697,8 +697,8 @@ int main(int argc, char* argv[])
             throw;
         }
     }
-    int myrank = 0;
 #ifdef MPIMARQOV
+    int myrank = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     if (myrank == 0) {
 #endif
