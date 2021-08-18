@@ -119,7 +119,7 @@ void scheduleIsing(RegistryDB& registry)
         ofstream ising("./config/Ising.ini");
         ising<<"[Ising]\n"<<"L = 10\n"<<"rep = 2\n"<<"dim = 2\n"<<"beta = 0.3, 0.4\n"<<"J = -1.0\n";
         ising<<"[MC]\n"<<"nmetro = 10\n"<<"nclusteramp = 25\n"<<"nclusterexp = 0\n"<<"warmupsteps = 30\n"<<"measuresteps = 30\n";
-        ising<<"[IO]\n"<<"outdir = ../out\n"<<"[END]\n"<<std::endl;
+        ising<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
         registry.init("./config");
         outbasedir = registry.Get<std::string>("Ising.ini", "IO", "outdir" );
     }
@@ -143,10 +143,10 @@ void schedulePotts(RegistryDB& registry)
     {
         int q = std::stoi(ham.substr(5));
         std::cout<<"[MARQOV] Unable to find"<<ham<<" config! Generating new one in ./config/"<<ham<<".ini"<<std::endl;
-        ofstream ising("./config/" + ham + ".ini");
-        ising<<"["<<ham<<"]\n"<<"q = "<<q<<'\n'<<"L = 10\n"<<"rep = 5\n"<<"dim = 2\n"<<"beta = 1.05, 1.07, 1.09\n"<<"J = -1.0\n";
-        ising<<"[MC]\n"<<"nmetro = 2\n"<<"nclusteramp = 10\n"<<"nclusterexp = 0\n"<<"warmupsteps = 200\n"<<"measuresteps = 2000\n";
-        ising<<"[IO]\n"<<"outdir = ../out\n"<<"[END]\n"<<std::endl;
+        ofstream cfg("./config/" + ham + ".ini");
+        cfg<<"["<<ham<<"]\n"<<"q = "<<q<<'\n'<<"L = 10\n"<<"rep = 5\n"<<"dim = 2\n"<<"beta = 1.05, 1.07, 1.09\n"<<"J = -1.0\n";
+        cfg<<"[MC]\n"<<"nmetro = 2\n"<<"nclusteramp = 10\n"<<"nclusterexp = 0\n"<<"warmupsteps = 200\n"<<"measuresteps = 2000\n";
+        cfg<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
         registry.init("./config");
         outbasedir = registry.Get<std::string>(ham + ".ini", "IO", "outdir" );
     }
@@ -177,12 +177,27 @@ void schedulePotts(RegistryDB& registry)
 
 void scheduleAshkinTeller(RegistryDB& registry)
 {
-    std::string outbasedir = registry.Get<std::string>("AshkinTeller.ini", "IO", "outdir" );
+    const std::string fn{"Ashkin-Teller.ini"};
+    std::string outbasedir;
+    try
+    {
+        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+    }
+    catch(Registry_cfgfile_not_found_Exception& e) 
+    {
+        std::cout<<"[MARQOV] Unable to find Ashkin-Teller config! Generating new one in ./config/"<<fn<<std::endl;
+        ofstream cfg("./config/" + fn);
+        cfg<<"[AshkinTeller]\n"<<"L = 12\n"<<"rep = 10\n"<<"dim = 2\n"<<"beta = 0.312, 0.313\n"<<"J = -1.0\n"<<"K = 0.3\n";
+        cfg<<"[MC]\n"<<"nmetro = 2\n"<<"nclusteramp = 25\n"<<"nclusterexp = 0\n"<<"warmupsteps = 500\n"<<"measuresteps = 10000\n";
+        cfg<<"[IO]\n"<<"outdir = ../out\n"<<"[END]\n"<<std::endl;
+        registry.init("./config");
+        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+    }
     tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "AshkinTeller");
-    auto beta = registry.Get<std::vector<double> >("AshkinTeller.ini", "AshkinTeller", "beta");
-    auto J    = registry.Get<std::vector<double> >("AshkinTeller.ini", "AshkinTeller", "J");
-    auto K    = registry.Get<std::vector<double> >("AshkinTeller.ini", "AshkinTeller", "K");
+    auto beta = registry.Get<std::vector<double> >(fn, "AshkinTeller", "beta");
+    auto J    = registry.Get<std::vector<double> >(fn, "AshkinTeller", "J");
+    auto K    = registry.Get<std::vector<double> >(fn, "AshkinTeller", "K");
     auto parameters = cart_prod(beta, J, K);
 
     RegularLatticeLoop<AshkinTeller>(registry, outbasedir, parameters, defaultfilter);
@@ -190,11 +205,26 @@ void scheduleAshkinTeller(RegistryDB& registry)
 
 void scheduleHeisenberg(RegistryDB& registry)
 {
-    std::string outbasedir = registry.Get<std::string>("Heisenberg.ini", "IO", "outdir" );
+    const std::string fn{"Heisenberg.ini"};
+    std::string outbasedir;
+    try
+    {
+        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+    }
+    catch(Registry_cfgfile_not_found_Exception& e) 
+    {
+        std::cout<<"[MARQOV] Unable to find Heisenberg config! Generating new one in ./config/"<<fn<<std::endl;
+        ofstream cfg("./config/" + fn);
+        cfg<<"[Heisenberg]\n"<<"L = 8,10,12\n"<<"rep = 4\n"<<"dim = 3\n"<<"beta = 0.67,0.68\n"<<"J = -1.0\n";
+        cfg<<"[MC]\n"<<"nmetro = 2\n"<<"nclusteramp = 0.5\n"<<"nclusterexp = 1\n"<<"warmupsteps = 500\n"<<"measuresteps = 5000\n";
+        cfg<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
+        registry.init("./config");
+        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+    }
     tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "Heisenberg");
-    auto beta = registry.Get<std::vector<double> >("Heisenberg.ini", "Heisenberg", "beta");
-    auto J    = registry.Get<std::vector<double> >("Heisenberg.ini", "Heisenberg", "J");
+    auto beta = registry.Get<std::vector<double> >(fn, "Heisenberg", "beta");
+    auto J    = registry.Get<std::vector<double> >(fn, "Heisenberg", "J");
     auto parameters = cart_prod(beta, J);
     
     RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
@@ -202,12 +232,27 @@ void scheduleHeisenberg(RegistryDB& registry)
 
 void schedulePhi4(RegistryDB& registry)
 {
-    std::string outbasedir = registry.Get<std::string>("Phi4.ini", "IO", "outdir" );
+    const std::string fn{"Phi4.ini"};
+    std::string outbasedir;
+    try
+    {
+        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+    }
+    catch(Registry_cfgfile_not_found_Exception& e) 
+    {
+        std::cout<<"[MARQOV] Unable to find Phi4 config! Generating new one in ./config/"<<fn<<std::endl;
+        ofstream cfg("./config/" + fn);
+        cfg<<"[Phi4]\n"<<"L = 6,8,12\n"<<"rep = 10\n"<<"dim = 3\n"<<"beta = 0.681, 0.684, 0.687\n"<<"lambda = 4.5\n"<<"mass = 1.0\n";
+        cfg<<"[MC]\n"<<"nmetro = 5\n"<<"nclusteramp = 0.5\n"<<"nclusterexp = 1\n"<<"warmupsteps = 20\n"<<"measuresteps = 100\n";
+        cfg<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
+        registry.init("./config");
+        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+    }
     tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "Phi4");
-		auto beta   = registry.Get<std::vector<double> >("Phi4.ini", "Phi4", "beta");
-		auto lambda = registry.Get<std::vector<double> >("Phi4.ini", "Phi4", "lambda");
-		auto mass   = registry.Get<std::vector<double> >("Phi4.ini", "Phi4", "mass");
+    auto beta   = registry.Get<std::vector<double> >(fn, "Phi4", "beta");
+    auto lambda = registry.Get<std::vector<double> >(fn, "Phi4", "lambda");
+    auto mass   = registry.Get<std::vector<double> >(fn, "Phi4", "mass");
 		
 		// we need "beta" as an explicit parameter in the Hamiltonian
 		// this requires some gymnastics ...
@@ -221,12 +266,27 @@ void schedulePhi4(RegistryDB& registry)
 
 void scheduleBlumeCapel(RegistryDB& registry)
 {
-    std::string outbasedir = registry.Get<std::string>("BlumeCapel.ini", "IO", "outdir" );
+    const std::string fn{"BlumeCapel.ini"};
+    std::string outbasedir;
+    try
+    {
+        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+    }
+    catch(Registry_cfgfile_not_found_Exception& e) 
+    {
+        std::cout<<"[MARQOV] Unable to find BlumeCapel config! Generating new one in ./config/"<<fn<<std::endl;
+        ofstream cfg("./config/" + fn);
+        cfg<<"[BlumeCapel]\n"<<"L = 8,12\n"<<"rep = 2\n"<<"dim = 3\n"<<"beta = 0.32,0.33\n"<<"J = -1\n"<<"D = 0.655\n";
+        cfg<<"[MC]\n"<<"nmetro = 3\n"<<"nclusteramp = 0.5\n"<<"nclusterexp = 1\n"<<"warmupsteps = 100\n"<<"measuresteps = 1000\n";
+        cfg<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
+        registry.init("./config");
+        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+    }
     tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "BlumeCapel");
-    auto beta = registry.Get<std::vector<double> >("BlumeCapel.ini", "BlumeCapel", "beta");
-    auto J    = registry.Get<std::vector<double> >("BlumeCapel.ini", "BlumeCapel", "J");
-    auto D    = registry.Get<std::vector<double> >("BlumeCapel.ini", "BlumeCapel", "D");
+    auto beta = registry.Get<std::vector<double> >(fn, "BlumeCapel", "beta");
+    auto J    = registry.Get<std::vector<double> >(fn, "BlumeCapel", "J");
+    auto D    = registry.Get<std::vector<double> >(fn, "BlumeCapel", "D");
     auto parameters = cart_prod(beta, J, D);
     
     RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
@@ -234,13 +294,28 @@ void scheduleBlumeCapel(RegistryDB& registry)
 
 void scheduleBlumeEmeryGriffiths(RegistryDB& registry)
 {
-    std::string outbasedir = registry.Get<std::string>("BlumeEmeryGriffiths.ini", "IO", "outdir" );
+    const std::string fn{"BlumeEmeryGriffiths.ini"};
+    std::string outbasedir;
+    try
+    {
+        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+    }
+    catch(Registry_cfgfile_not_found_Exception& e) 
+    {
+        std::cout<<"[MARQOV] Unable to find BlumeEmeryGriffiths config! Generating new one in ./config/"<<fn<<std::endl;
+        ofstream cfg("./config/" + fn);
+        cfg<<"[BlumeEmeryGriffiths]\n"<<"L = 8,12\n"<<"rep = 4\n"<<"dim = 2\n"<<"beta = 0.42\n"<<"J = -1\n"<<"D = 1\n"<<"K = 1\n";
+        cfg<<"[MC]\n"<<"nmetro = 2\n"<<"nclusteramp = 0.5\n"<<"nclusterexp = 1\n"<<"warmupsteps = 300\n"<<"measuresteps = 3000\n";
+        cfg<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
+        registry.init("./config");
+        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+    }
     tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "BlumeEmeryGriffiths");
-		auto beta = registry.Get<std::vector<double> >("BlumeEmeryGriffiths.ini", "BlumeEmeryGriffiths", "beta");
-		auto J    = registry.Get<std::vector<double> >("BlumeEmeryGriffiths.ini", "BlumeEmeryGriffiths", "J");
-		auto D    = registry.Get<std::vector<double> >("BlumeEmeryGriffiths.ini", "BlumeEmeryGriffiths", "D");
-		auto K    = registry.Get<std::vector<double> >("BlumeEmeryGriffiths.ini", "BlumeEmeryGriffiths", "K");
+		auto beta = registry.Get<std::vector<double> >(fn, "BlumeEmeryGriffiths", "beta");
+		auto J    = registry.Get<std::vector<double> >(fn, "BlumeEmeryGriffiths", "J");
+		auto D    = registry.Get<std::vector<double> >(fn, "BlumeEmeryGriffiths", "D");
+		auto K    = registry.Get<std::vector<double> >(fn, "BlumeEmeryGriffiths", "K");
 		auto parameters = cart_prod(beta, J, D, K);
 
 		RegularLatticeLoop<BlumeEmeryGriffiths<int>>(registry, outbasedir, parameters, defaultfilter);
@@ -248,7 +323,22 @@ void scheduleBlumeEmeryGriffiths(RegistryDB& registry)
 
 void scheduleXXZAntiferro(RegistryDB& registry)
 {
-    std::string outbasedir = registry.Get<std::string>("XXZAntiferro.ini", "IO", "outdir" );
+    const std::string fn{"XXZAntiferro.ini"};
+    std::string outbasedir;
+    try
+    {
+        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+    }
+    catch(Registry_cfgfile_not_found_Exception& e) 
+    {
+        std::cout<<"[MARQOV] Unable to find XXZAntiferro config! Generating new one in ./config/"<<fn<<std::endl;
+        ofstream cfg("./config/" + fn);
+        cfg<<"[XXZAntiferro]\n"<<"L = 8,10,12\n"<<"rep = 10\n"<<"dim = 3\n"<<"beta = 0.92,0.93\n"<<"J = -1\n"<<"extfield = 1\n"<<"aniso = 0.8\n";
+        cfg<<"[MC]\n"<<"nmetro = 3\n"<<"nclusteramp = 0.0\n"<<"nclusterexp = 1\n"<<"warmupsteps = 500\n"<<"measuresteps = 1500\n";
+        cfg<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
+        registry.init("./config");
+        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+    }
     tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "XXZAntiferro");
 		auto beta     = registry.Get<std::vector<double>>("XXZAntiferro.ini", "XXZAntiferro", "beta");
