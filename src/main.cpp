@@ -277,7 +277,7 @@ void scheduleBlumeCapel(RegistryDB& registry)
     {
         std::cout<<"[MARQOV] Unable to find BlumeCapel config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
-        cfg<<"[BlumeCapel]\n"<<"L = 8,12\n"<<"rep = 2\n"<<"dim = 3\n"<<"beta = 0.32,0.33\n"<<"J = -1\n"<<"D = 0.655\n\";
+        cfg<<"[BlumeCapel]\n"<<"L = 8,12\n"<<"rep = 2\n"<<"dim = 3\n"<<"beta = 0.32,0.33\n"<<"J = -1\n"<<"D = 0.655\n\n";
         createcfgfooter(cfg, 3, 0.5, 1, 100, 1000);
         registry.init("./config");
         outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
@@ -332,7 +332,7 @@ void scheduleXXZAntiferro(RegistryDB& registry)
     {
         std::cout<<"[MARQOV] Unable to find XXZAntiferro config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
-        cfg<<"[XXZAntiferro]\n"<<"L = 8,10,12\n"<<"rep = 10\n"<<"dim = 3\n"<<"beta = 0.92,0.93\n"<<"J = -1\n"<<"extfield = 1\n"<<"aniso = 0.8\n";
+        cfg<<"[XXZAntiferro]\n"<<"L = 8,10,12\n"<<"rep = 10\n"<<"dim = 3\n"<<"beta = 0.92,0.93\n"<<"J = -1\n"<<"extfield = 1\n"<<"aniso = 0.8\n\n";
         createcfgfooter(cfg, 3, 0.0, 1, 500, 1500);
         registry.init("./config");
         outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
@@ -349,13 +349,27 @@ void scheduleXXZAntiferro(RegistryDB& registry)
 
 void scheduleXXZAntiferroSingleAniso(RegistryDB& registry)
 {
-    std::string outbasedir = registry.Get<std::string>("XXZAntiferroSingleAniso.ini", "IO", "outdir" );
+    const std::string fn{"XXZAntiferroSingleAniso.ini"};
+    std::string outbasedir;
+    try
+    {
+        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+    }
+    catch(Registry_cfgfile_not_found_Exception& e) 
+    {
+        std::cout<<"[MARQOV] Unable to find XXZAntiferroSingleAniso config! Generating new one in ./config/"<<fn<<std::endl;
+        ofstream cfg("./config/" + fn);
+        cfg<<"[XXZAntiferroSingleAniso]\n"<<"L = 8,10,12\n"<<"rep = 10\n"<<"dim = 3\n"<<"beta = 0.92,0.93\n"<<"J = -1\n"<<"extfield = 1\n"<<"aniso = 0.8\n"<<"singleaniso = 0.4\n\n";
+        createcfgfooter(cfg, 3, 0.0, 1, 500, 1500);
+        registry.init("./config");
+        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+    }
     tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "XXZAntiferroSingleAniso");
-        auto beta        = registry.Get<std::vector<double>>("XXZAntiferroSingleAniso.ini", "XXZAntiferroSingleAniso", "beta");
-		auto extfield    = registry.Get<std::vector<double>>("XXZAntiferroSingleAniso.ini", "XXZAntiferroSingleAniso", "extfield");
-		auto aniso       = registry.Get<std::vector<double>>("XXZAntiferroSingleAniso.ini", "XXZAntiferroSingleAniso", "aniso");
-		auto singleaniso = registry.Get<std::vector<double>>("XXZAntiferroSingleAniso.ini", "XXZAntiferroSingleAniso", "singleaniso");
+        auto beta        = registry.Get<std::vector<double>>(fn, "XXZAntiferroSingleAniso", "beta");
+		auto extfield    = registry.Get<std::vector<double>>(fn, "XXZAntiferroSingleAniso", "extfield");
+		auto aniso       = registry.Get<std::vector<double>>(fn, "XXZAntiferroSingleAniso", "aniso");
+		auto singleaniso = registry.Get<std::vector<double>>(fn, "XXZAntiferroSingleAniso", "singleaniso");
 		auto parameters = cart_prod(beta, extfield, aniso, singleaniso);
 
 		RegularLatticeLoop<XXZAntiferroSingleAniso<double>>(registry, outbasedir, parameters, xxzfilter);
