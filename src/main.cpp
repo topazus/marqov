@@ -66,10 +66,14 @@ bool startswith(const std::string& longword, const std::string& shortword) noexc
     return longword.find(shortword) == 0;
 }
 
-std::string selectsim_startup(RegistryDB& registry)
+void checkreplicaconfig(int nr, int nL)
 {
-	const auto ham        = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
-	const auto dim 	      = registry.Get<int>(ham+".ini", ham, "dim" );
+    if ((nr != nL) && (nr != 1)) throw std::invalid_argument("[MARQOV] Invalid replica configuration!");
+}
+
+void printInfoandcheckreplicaconfig(RegistryDB& registry, const std::string& ham)
+{
+    const auto dim 	      = registry.Get<int>(ham+".ini", ham, "dim" );
 	const auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", ham, "rep" );
 	const auto nreplicas_str = registry.Get<std::string>(ham+".ini", ham, "rep" );
 	const auto nL  	      = registry.Get<std::vector<int>>(ham+".ini", ham, "L" );
@@ -80,14 +84,13 @@ std::string selectsim_startup(RegistryDB& registry)
 	cout << "Dimension: \t" << dim << endl;
 	cout << "Lattice sizes:\t" << nLs << endl;
 	cout << "Replicas:\t" << nreplicas_str << endl;
-
-	if ((nreplicas.size() != nL.size()) && (nreplicas.size() != 1)) throw std::invalid_argument("[MARQOV] Invalid replica configuration!");
-
-	return ham;
+    
+    checkreplicaconfig(nreplicas.size(), nL.size());
 }
 
 void scheduleIsing(RegistryDB& registry, const std::string& outbasedir)
 {
+    printInfoandcheckreplicaconfig(registry, "Ising");
     auto beta = registry.Get<std::vector<double> >("Ising.ini", "Ising", "beta");
     auto J    = registry.Get<std::vector<double> >("Ising.ini", "Ising", "J");
     auto parameters = cart_prod(beta, J);
@@ -97,6 +100,7 @@ void scheduleIsing(RegistryDB& registry, const std::string& outbasedir)
 void schedulePotts(RegistryDB& registry, const std::string& outbasedir)
 {
     std::string ham = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
+    printInfoandcheckreplicaconfig(registry, ham);
     auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
     auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
     auto parameters = cart_prod(beta, J);
@@ -122,6 +126,7 @@ void schedulePotts(RegistryDB& registry, const std::string& outbasedir)
 
 void scheduleAshkinTeller(RegistryDB& registry, const std::string outbasedir)
 {
+    printInfoandcheckreplicaconfig(registry, "AshkinTeller");
     auto beta = registry.Get<std::vector<double> >("AshkinTeller.ini", "AshkinTeller", "beta");
     auto J    = registry.Get<std::vector<double> >("AshkinTeller.ini", "AshkinTeller", "J");
     auto K    = registry.Get<std::vector<double> >("AshkinTeller.ini", "AshkinTeller", "K");
@@ -132,15 +137,17 @@ void scheduleAshkinTeller(RegistryDB& registry, const std::string outbasedir)
 
 void scheduleHeisenberg(RegistryDB& registry, const std::string outbasedir)
 {
-		auto beta = registry.Get<std::vector<double> >("Heisenberg.ini", "Heisenberg", "beta");
-		auto J    = registry.Get<std::vector<double> >("Heisenberg.ini", "Heisenberg", "J");
-		auto parameters = cart_prod(beta, J);
-
-		RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
+    printInfoandcheckreplicaconfig(registry, "Heisenberg");
+    auto beta = registry.Get<std::vector<double> >("Heisenberg.ini", "Heisenberg", "beta");
+    auto J    = registry.Get<std::vector<double> >("Heisenberg.ini", "Heisenberg", "J");
+    auto parameters = cart_prod(beta, J);
+    
+    RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
 }
 
 void schedulePhi4(RegistryDB& registry, const std::string outbasedir)
 {
+    printInfoandcheckreplicaconfig(registry, "Phi4");
 		auto beta   = registry.Get<std::vector<double> >("Phi4.ini", "Phi4", "beta");
 		auto lambda = registry.Get<std::vector<double> >("Phi4.ini", "Phi4", "lambda");
 		auto mass   = registry.Get<std::vector<double> >("Phi4.ini", "Phi4", "mass");
@@ -157,16 +164,18 @@ void schedulePhi4(RegistryDB& registry, const std::string outbasedir)
 
 void scheduleBlumeCapel(RegistryDB& registry, const std::string outbasedir)
 {
-		auto beta = registry.Get<std::vector<double> >("BlumeCapel.ini", "BlumeCapel", "beta");
-		auto J    = registry.Get<std::vector<double> >("BlumeCapel.ini", "BlumeCapel", "J");
-		auto D    = registry.Get<std::vector<double> >("BlumeCapel.ini", "BlumeCapel", "D");
-		auto parameters = cart_prod(beta, J, D);
-
-		RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
+    printInfoandcheckreplicaconfig(registry, "BlumeCapel");
+    auto beta = registry.Get<std::vector<double> >("BlumeCapel.ini", "BlumeCapel", "beta");
+    auto J    = registry.Get<std::vector<double> >("BlumeCapel.ini", "BlumeCapel", "J");
+    auto D    = registry.Get<std::vector<double> >("BlumeCapel.ini", "BlumeCapel", "D");
+    auto parameters = cart_prod(beta, J, D);
+    
+    RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
 }
 
 void scheduleBlumeEmeryGriffiths(RegistryDB& registry, const std::string outbasedir)
 {
+    printInfoandcheckreplicaconfig(registry, "BlumeEmeryGriffiths");
 		auto beta = registry.Get<std::vector<double> >("BlumeEmeryGriffiths.ini", "BlumeEmeryGriffiths", "beta");
 		auto J    = registry.Get<std::vector<double> >("BlumeEmeryGriffiths.ini", "BlumeEmeryGriffiths", "J");
 		auto D    = registry.Get<std::vector<double> >("BlumeEmeryGriffiths.ini", "BlumeEmeryGriffiths", "D");
@@ -178,6 +187,7 @@ void scheduleBlumeEmeryGriffiths(RegistryDB& registry, const std::string outbase
 
 void scheduleXXZAntiferro(RegistryDB& registry, const std::string outbasedir)
 {
+    printInfoandcheckreplicaconfig(registry, "XXZAntiferro");
 		auto beta     = registry.Get<std::vector<double>>("XXZAntiferro.ini", "XXZAntiferro", "beta");
 		auto extfield = registry.Get<std::vector<double>>("XXZAntiferro.ini", "XXZAntiferro", "extfield");
 		auto aniso    = registry.Get<std::vector<double>>("XXZAntiferro.ini", "XXZAntiferro", "aniso");
@@ -188,6 +198,7 @@ void scheduleXXZAntiferro(RegistryDB& registry, const std::string outbasedir)
 
 void scheduleXXZAntiferroSingleAniso(RegistryDB& registry, const std::string outbasedir)
 {
+    printInfoandcheckreplicaconfig(registry, "XXZAntiferroSingleAniso");
         auto beta        = registry.Get<std::vector<double>>("XXZAntiferroSingleAniso.ini", "XXZAntiferroSingleAniso", "beta");
 		auto extfield    = registry.Get<std::vector<double>>("XXZAntiferroSingleAniso.ini", "XXZAntiferroSingleAniso", "extfield");
 		auto aniso       = registry.Get<std::vector<double>>("XXZAntiferroSingleAniso.ini", "XXZAntiferroSingleAniso", "aniso");
@@ -204,7 +215,7 @@ void scheduleEdwardsAndersonIsing(RegistryDB& registry, const std::string outbas
 		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
 		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
 		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
-	
+        printInfoandcheckreplicaconfig(registry, name);	
 	
 		// Number of threads
 		int nthreads = 0;
@@ -267,8 +278,8 @@ void scheduleIsingCC(RegistryDB& registry, const std::string outbasedir)
 		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
 		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
 		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
-	
-	
+        printInfoandcheckreplicaconfig(registry, name);
+
 		// Number of threads
 		int nthreads = 0;
 		try 
@@ -335,8 +346,8 @@ void scheduleBlumeCapelBiPartite(RegistryDB& registry, const std::string outbase
 		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
 		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
 		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
-	
-	
+        printInfoandcheckreplicaconfig(registry, name);
+
 		// Number of threads
 		int nthreads = 0;
 		try 
@@ -410,7 +421,7 @@ void scheduleBlumeCapelBiPartite(RegistryDB& registry, const std::string outbase
  */
 void selectsim(RegistryDB& registry, int myrank = 0)
 {
-	const auto ham = selectsim_startup(registry);
+	const auto ham = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
 
 	std::string outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
 
@@ -472,13 +483,36 @@ int main(int argc, char* argv[])
     MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &threadingsupport);//FIXME: maybe we get by with one level less.
     if(threadingsupport < MPI_THREAD_SERIALIZED)
     {
-        std::cout<<"[MARQOV] Couldn't initialize MPI! threading level not supported."<<std::endl;
+        std::cout<<"[MARQOV::main] Couldn't initialize MPI! Requested threading level not supported."<<std::endl;
         return -1;
     }
 #endif
 
 	// read config files
-	RegistryDB registry("../src/config", "ini");
+	RegistryDB registry;
+    try
+    {
+        registry.init("../src/config", "ini");
+    }
+    catch(Registry_Exception& re)
+    {
+        std::cout<<"[MARQOV::main] Configuration directory not found! Assuming you're starting the MARQOV demonstration binary for the first time!"<<std::endl;
+        std::cout<<"WELCOME TO MARQOV!"<<std::endl;
+        std::cout<<"[MARQOV::main] To get you going we will generate and populate a configuration directory locally under ./config"<<std::endl;
+        makeDir("./config");
+        const auto filename = std::string{"./config/select.ini"};
+        if(!fileexists(filename))
+        {
+            std::ofstream select(filename);
+            select<<"[General]"<<'\n'<<"Hamiltonian = Ising"<<'\n'<<"[END]"<<std::endl;
+            registry.init("./config", "ini");
+        }
+        else
+        {
+            std::cout<<"[MARQOV::main] "<<filename<<" already exists. I would overwrite its content, hence I'm terminating now"<<std::endl;
+            throw;
+        }
+    }
     int myrank = 0;
 #ifdef MPIMARQOV
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
