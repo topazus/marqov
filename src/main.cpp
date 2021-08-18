@@ -134,7 +134,22 @@ void scheduleIsing(RegistryDB& registry)
 void schedulePotts(RegistryDB& registry)
 {
     std::string ham = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
-    std::string outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
+    std::string outbasedir;
+    try
+    {
+        outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
+    }
+    catch(Registry_cfgfile_not_found_Exception& e) 
+    {
+        int q = std::stoi(ham.substr(5));
+        std::cout<<"[MARQOV] Unable to find"<<ham<<" config! Generating new one in ./config/"<<ham<<".ini"<<std::endl;
+        ofstream ising("./config/" + ham + ".ini");
+        ising<<"["<<ham<<"]\n"<<"q = "<<q<<'\n'<<"L = 10\n"<<"rep = 5\n"<<"dim = 2\n"<<"beta = 1.05, 1.07, 1.09\n"<<"J = -1.0\n";
+        ising<<"[MC]\n"<<"nmetro = 2\n"<<"nclusteramp = 10\n"<<"nclusterexp = 0\n"<<"warmupsteps = 200\n"<<"measuresteps = 2000\n";
+        ising<<"[IO]\n"<<"outdir = ../out\n"<<"[END]\n"<<std::endl;
+        registry.init("./config");
+        outbasedir = registry.Get<std::string>(ham + ".ini", "IO", "outdir" );
+    }
     tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, ham);
     auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
