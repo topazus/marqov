@@ -7,6 +7,7 @@ MARQOV is light on dependencies:
   * A C++14 compiler
   * HDF5
   * optionally MPI
+  * optionally SWIG, and a recent enough version of cmake(3.18) for generating the foreign language bindings.
 
 and cmake for executing the build and configure step.
 If you intend to build the documentation doxygen, breathe and sphinx are required.
@@ -26,4 +27,5 @@ The build step follows the basic cmake procedure:
    cmake -DCMAKE_BUILD_TYPE=Release ..
    cmake --build . --target all --config Release
 
-and you should find compiled examples in src.
+and you should find compiled examples in src. By executing the all target, we will greedily build as many tools as are supported on your system.
+Type ``make help`` after cmake has finished to see the available targets on your system.

@@ -57,8 +57,6 @@ using std::ofstream;
 
 using namespace MARQOV;
 
-
-
 bool startswith(const std::string longword, const std::string shortword)
 {
 	if (longword.rfind(shortword, 0) == 0) return true;
