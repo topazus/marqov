@@ -83,6 +83,7 @@ std::string selectsim_startup(RegistryDB& registry)
 
 	if ((nreplicas.size() != nL.size()) && (nreplicas.size() != 1)) throw std::invalid_argument("invalid replica configuration!");
 
+
 	return ham;
 }
 
@@ -236,17 +237,16 @@ void selectsim()
 	else if (startswith(ham, "EdwardsAnderson-Ising"))
 	{
 		// Parameters
-		const auto name = registry.Get<std::string>(ham+".ini", "General", "Hamiltonian" );
-		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", name, "rep" );
-		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", name, "L" );
-		const auto dim  = registry.Get<int>(ham+".ini", name, "dim" );
+		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", ham, "rep" );
+		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", ham, "L" );
+		const auto dim  = registry.Get<int>(ham+".ini", ham, "dim" );
 	
 	
 		// Number of threads
 		int nthreads = 0;
 		try 
 		{
-			nthreads = registry.template Get<int>(ham+".ini", "General", "threads_per_node" );
+			nthreads = registry.template Get<int>(ham+".ini", ham, "threads_per_node" );
 		}
 		catch (const Registry_Key_not_found_Exception&) 
 		{
@@ -256,8 +256,8 @@ void selectsim()
 		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 		// Physical parameters
-		auto beta = registry.Get<std::vector<double> >(ham+".ini", "IsingCC", "beta");
-		auto J    = registry.Get<std::vector<double> >(ham+".ini", "IsingCC", "J");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
 		auto hp = cart_prod(beta, J);
         
 
@@ -303,17 +303,16 @@ void selectsim()
 	else if (ham == "IsingCC")
 	{
 		// Parameters
-		const auto name = registry.Get<std::string>(ham+".ini", "General", "Hamiltonian" );
-		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", name, "rep" );
-		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", name, "L" );
-		const auto dim  = registry.Get<int>(ham+".ini", name, "dim" );
+		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", ham, "rep" );
+		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", ham, "L" );
+		const auto dim  = registry.Get<int>(ham+".ini", ham, "dim" );
 	
 	
 		// Number of threads
 		int nthreads = 0;
 		try 
 		{
-			nthreads = registry.template Get<int>(ham+".ini", "General", "threads_per_node" );
+			nthreads = registry.template Get<int>(ham+".ini", ham, "threads_per_node" );
 		}
 		catch (const Registry_Key_not_found_Exception&) 
 		{
@@ -325,8 +324,8 @@ void selectsim()
 		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 		// Physical parameters
-		auto beta = registry.Get<std::vector<double> >(ham+".ini", "IsingCC", "beta");
-		auto J    = registry.Get<std::vector<double> >(ham+".ini", "IsingCC", "J");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
 		auto hp = cart_prod(beta, J);
 
 		// Typedefs
@@ -371,17 +370,16 @@ void selectsim()
 	else if (ham == "BlumeCapelBipartite")
 	{
 		// Parameters
-		const auto name = registry.Get<std::string>(ham+".ini", "General", "Hamiltonian" );
-		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", name, "rep" );
-		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", name, "L" );
-		const auto dim  = registry.Get<int>(ham+".ini", name, "dim" );
+		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", ham, "rep" );
+		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", ham,  "L" );
+		const auto dim  = registry.Get<int>(ham+".ini", ham, "dim" );
 	
 	
 		// Number of threads
 		int nthreads = 0;
 		try 
 		{
-			nthreads = registry.template Get<int>(ham+".ini", "General", "threads_per_node" );
+			nthreads = registry.template Get<int>(ham+".ini", "ham", "threads_per_node" );
 		}
 		catch (const Registry_Key_not_found_Exception&) 
 		{
