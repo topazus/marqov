@@ -106,6 +106,12 @@ void printInfoandcheckreplicaconfig(RegistryDB& registry, const std::string& ham
     checkreplicaconfig(nreplicas.size(), nL.size());
 }
 
+void createcfgfooter(std::ostream& os, int nmetro, double nclusteramp, int nclusterexp, int warmupsteps, int measuresteps)
+{
+    os<<"[MC]\n"<<"nmetro = "<<nmetro<<"\nnclusteramp = "<<nclusteramp<<"\nnclusterexp = "<<nclusterexp<<"\nwarmupsteps = "<<warmupsteps<<"\nmeasuresteps = "<<measuresteps<<"\n";
+    os<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
+}
+
 void scheduleIsing(RegistryDB& registry)
 {
     std::string outbasedir;
@@ -117,9 +123,8 @@ void scheduleIsing(RegistryDB& registry)
     {
         std::cout<<"[MARQOV] Unable to find Ising config! Generating new one in ./config/Ising.ini"<<std::endl;
         ofstream ising("./config/Ising.ini");
-        ising<<"[Ising]\n"<<"L = 10\n"<<"rep = 2\n"<<"dim = 2\n"<<"beta = 0.3, 0.4\n"<<"J = -1.0\n";
-        ising<<"[MC]\n"<<"nmetro = 10\n"<<"nclusteramp = 25\n"<<"nclusterexp = 0\n"<<"warmupsteps = 30\n"<<"measuresteps = 30\n";
-        ising<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
+        ising<<"[Ising]\n"<<"L = 10\n"<<"rep = 2\n"<<"dim = 2\n"<<"beta = 0.3, 0.4\n"<<"J = -1.0\n\n";
+        createcfgfooter(ising, 10, 25, 0, 30, 30);
         registry.init("./config");
         outbasedir = registry.Get<std::string>("Ising.ini", "IO", "outdir" );
     }
@@ -144,9 +149,8 @@ void schedulePotts(RegistryDB& registry)
         int q = std::stoi(ham.substr(5));
         std::cout<<"[MARQOV] Unable to find"<<ham<<" config! Generating new one in ./config/"<<ham<<".ini"<<std::endl;
         ofstream cfg("./config/" + ham + ".ini");
-        cfg<<"["<<ham<<"]\n"<<"q = "<<q<<'\n'<<"L = 10\n"<<"rep = 5\n"<<"dim = 2\n"<<"beta = 1.05, 1.07, 1.09\n"<<"J = -1.0\n";
-        cfg<<"[MC]\n"<<"nmetro = 2\n"<<"nclusteramp = 10\n"<<"nclusterexp = 0\n"<<"warmupsteps = 200\n"<<"measuresteps = 2000\n";
-        cfg<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
+        cfg<<"["<<ham<<"]\n"<<"q = "<<q<<'\n'<<"L = 10\n"<<"rep = 5\n"<<"dim = 2\n"<<"beta = 1.05, 1.07, 1.09\n"<<"J = -1.0\n\n";
+        createcfgfooter(cfg, 2, 10, 0, 200, 200);
         registry.init("./config");
         outbasedir = registry.Get<std::string>(ham + ".ini", "IO", "outdir" );
     }
@@ -187,9 +191,8 @@ void scheduleAshkinTeller(RegistryDB& registry)
     {
         std::cout<<"[MARQOV] Unable to find Ashkin-Teller config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
-        cfg<<"[AshkinTeller]\n"<<"L = 12\n"<<"rep = 10\n"<<"dim = 2\n"<<"beta = 0.312, 0.313\n"<<"J = -1.0\n"<<"K = 0.3\n";
-        cfg<<"[MC]\n"<<"nmetro = 2\n"<<"nclusteramp = 25\n"<<"nclusterexp = 0\n"<<"warmupsteps = 500\n"<<"measuresteps = 10000\n";
-        cfg<<"[IO]\n"<<"outdir = ../out\n"<<"[END]\n"<<std::endl;
+        cfg<<"[AshkinTeller]\n"<<"L = 12\n"<<"rep = 10\n"<<"dim = 2\n"<<"beta = 0.312, 0.313\n"<<"J = -1.0\n"<<"K = 0.3\n\n";
+        createcfgfooter(cfg, 2, 25, 0, 500, 10000);
         registry.init("./config");
         outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
     }
@@ -215,9 +218,8 @@ void scheduleHeisenberg(RegistryDB& registry)
     {
         std::cout<<"[MARQOV] Unable to find Heisenberg config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
-        cfg<<"[Heisenberg]\n"<<"L = 8,10,12\n"<<"rep = 4\n"<<"dim = 3\n"<<"beta = 0.67,0.68\n"<<"J = -1.0\n";
-        cfg<<"[MC]\n"<<"nmetro = 2\n"<<"nclusteramp = 0.5\n"<<"nclusterexp = 1\n"<<"warmupsteps = 500\n"<<"measuresteps = 5000\n";
-        cfg<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
+        cfg<<"[Heisenberg]\n"<<"L = 8,10,12\n"<<"rep = 4\n"<<"dim = 3\n"<<"beta = 0.67,0.68\n"<<"J = -1.0\n\n";
+        createcfgfooter(cfg, 2, 0.5, 1, 500, 5000);
         registry.init("./config");
         outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
     }
@@ -242,9 +244,8 @@ void schedulePhi4(RegistryDB& registry)
     {
         std::cout<<"[MARQOV] Unable to find Phi4 config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
-        cfg<<"[Phi4]\n"<<"L = 6,8,12\n"<<"rep = 10\n"<<"dim = 3\n"<<"beta = 0.681, 0.684, 0.687\n"<<"lambda = 4.5\n"<<"mass = 1.0\n";
-        cfg<<"[MC]\n"<<"nmetro = 5\n"<<"nclusteramp = 0.5\n"<<"nclusterexp = 1\n"<<"warmupsteps = 20\n"<<"measuresteps = 100\n";
-        cfg<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
+        cfg<<"[Phi4]\n"<<"L = 6,8,12\n"<<"rep = 10\n"<<"dim = 3\n"<<"beta = 0.681, 0.684, 0.687\n"<<"lambda = 4.5\n"<<"mass = 1.0\n\n";
+        createcfgfooter(cfg, 5, 0.5, 1, 20, 100);
         registry.init("./config");
         outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
     }
@@ -276,9 +277,8 @@ void scheduleBlumeCapel(RegistryDB& registry)
     {
         std::cout<<"[MARQOV] Unable to find BlumeCapel config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
-        cfg<<"[BlumeCapel]\n"<<"L = 8,12\n"<<"rep = 2\n"<<"dim = 3\n"<<"beta = 0.32,0.33\n"<<"J = -1\n"<<"D = 0.655\n";
-        cfg<<"[MC]\n"<<"nmetro = 3\n"<<"nclusteramp = 0.5\n"<<"nclusterexp = 1\n"<<"warmupsteps = 100\n"<<"measuresteps = 1000\n";
-        cfg<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
+        cfg<<"[BlumeCapel]\n"<<"L = 8,12\n"<<"rep = 2\n"<<"dim = 3\n"<<"beta = 0.32,0.33\n"<<"J = -1\n"<<"D = 0.655\n\";
+        createcfgfooter(cfg, 3, 0.5, 1, 100, 1000);
         registry.init("./config");
         outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
     }
@@ -304,9 +304,8 @@ void scheduleBlumeEmeryGriffiths(RegistryDB& registry)
     {
         std::cout<<"[MARQOV] Unable to find BlumeEmeryGriffiths config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
-        cfg<<"[BlumeEmeryGriffiths]\n"<<"L = 8,12\n"<<"rep = 4\n"<<"dim = 2\n"<<"beta = 0.42\n"<<"J = -1\n"<<"D = 1\n"<<"K = 1\n";
-        cfg<<"[MC]\n"<<"nmetro = 2\n"<<"nclusteramp = 0.5\n"<<"nclusterexp = 1\n"<<"warmupsteps = 300\n"<<"measuresteps = 3000\n";
-        cfg<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
+        cfg<<"[BlumeEmeryGriffiths]\n"<<"L = 8,12\n"<<"rep = 4\n"<<"dim = 2\n"<<"beta = 0.42\n"<<"J = -1\n"<<"D = 1\n"<<"K = 1\n\n";
+        createcfgfooter(cfg, 2, 0.5, 1, 300, 3000);
         registry.init("./config");
         outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
     }
@@ -334,8 +333,7 @@ void scheduleXXZAntiferro(RegistryDB& registry)
         std::cout<<"[MARQOV] Unable to find XXZAntiferro config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
         cfg<<"[XXZAntiferro]\n"<<"L = 8,10,12\n"<<"rep = 10\n"<<"dim = 3\n"<<"beta = 0.92,0.93\n"<<"J = -1\n"<<"extfield = 1\n"<<"aniso = 0.8\n";
-        cfg<<"[MC]\n"<<"nmetro = 3\n"<<"nclusteramp = 0.0\n"<<"nclusterexp = 1\n"<<"warmupsteps = 500\n"<<"measuresteps = 1500\n";
-        cfg<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
+        createcfgfooter(cfg, 3, 0.0, 1, 500, 1500);
         registry.init("./config");
         outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
     }
