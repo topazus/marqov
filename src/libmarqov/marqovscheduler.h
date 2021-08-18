@@ -111,7 +111,7 @@ namespace MARQOV
             }
             else
             {
-                std::cout<<"[MARQOV::Scheduler] Previous step found! Restarting!"<<std::endl;
+                std::cout<<"[MARQOV::CXX11Scheduler] Previous step found! Restarting!"<<std::endl;
                 workqueue.push_back(Simstate(idx));
             }
         }
@@ -210,12 +210,12 @@ namespace MARQOV
             //      taskqueue.enqueue(master);
         }
         void waitforall() {}
-        /** Construct Scheduler
+        /** Construct Scheduler.
          * 
-         * @param maxptsteps How many parallel tempering steps do we do.
+         * @param maxptsteps How many parallel tempering steps do we do. Defaults to just a single PTstep and hence disables it.
          * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
          */
-        CXX11Scheduler(int maxptsteps, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
+        CXX11Scheduler(int maxptsteps = 1, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
         taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads))
         {}
@@ -232,6 +232,30 @@ namespace MARQOV
             }
             masterstop = true;
         }
+
+//        Scheduler() = delete; //FIXME: If this would be present, the call to Scheduler() would be ambiguous
+        CXX11Scheduler(const CXX11Scheduler&) = delete;
+        /** Move Copy Constructor
+         * 
+         * The other object over whose resources we take ownership.
+         * mutexes are a bit odd here. We don't reuse the other mutexes but use and create our own.
+         * 
+         * @param rhs the other object
+         */
+        
+        CXX11Scheduler(CXX11Scheduler&& rhs) : mutexes{}, maxpt(rhs.maxpt), ptqueue(std::move(rhs.ptqueue)), ptplan{}, masterstop(rhs.masterstop),
+        masterwork{}, workqueue(masterwork), simvector(std::move(rhs.simvector)),taskqueue{std::move(rhs.taskqueue)}, gamekernels{}
+        {
+            
+            std::swap(ptplan, rhs.ptplan);
+            std::swap(simvector, rhs.simvector);
+            
+            std::swap(gamekernels, rhs.gamekernels);
+            if (rhs.taskqueue.tasks_enqueued() > 0 || rhs.taskqueue.tasks_assigned() > 0)
+                throw std::runtime_error("[MARQOV::CXX11Scheduler] invalid assignment");
+        }
+        CXX11Scheduler& operator=(const CXX11Scheduler&) = delete;
+        CXX11Scheduler& operator=(CXX11Scheduler&& ) = delete;
     private:
         /**
          * Simstate helper class
@@ -405,16 +429,24 @@ namespace MARQOV
             MPI_Comm_size(marqov_COMM, &nr_nodes);
             MPI_Comm_rank(marqov_COMM, &myrank);
         }
-        ~MPIScheduler() {
-//             MPI_Finalize();
-        }
+         /** Move Copy Constructor
+         * 
+         * The other object over whose resources we take ownership.
+         * 
+         * @param rhs the other object
+         */
+        MPIScheduler(MPIScheduler&& rhs) : rrctr(rhs.rrctr), marqov_COMM(rhs.marqov_COMM), myScheduler(std::move(rhs.myScheduler)), myrank(rhs.myrank), nr_nodes(rhs.nr_nodes), maxpt(rhs.maxpt) {}
+        MPIScheduler(const MPIScheduler&) = delete;
+        ~MPIScheduler() = default;
+        MPIScheduler& operator=(const MPIScheduler&) = delete;
+        MPIScheduler& operator=(MPIScheduler&& ) = delete;
     private:
         int rrctr;
-        MPI_Comm marqov_COMM;///< our own MPI communicator
+        MPI_Comm marqov_COMM;///< our own MPI communicator.
         static constexpr int MASTER = 0;
-        CXX11Scheduler<Sim> myScheduler;//MPI starts the program parallely on every node(if properly executed), hence every node needs his CXX11scheduler
-        int myrank;
-        int nr_nodes;
+        CXX11Scheduler<Sim> myScheduler;//MPI starts the program parallely on every node(if properly executed), hence every node needs his CXX11scheduler.
+        int myrank; ///< my MPI rank
+        int nr_nodes; ///< how many nodes are we actually executed on.
         int maxpt; ///< how many pt steps do we do
     };
 
@@ -438,5 +470,23 @@ namespace MARQOV
         typedef decltype(makeCore<Lattice, Hamiltonian, RNGType>(std::declval<Parameters>(), std::declval<mtxref>())) MarqovType;
         typedef Scheduler<MarqovType> MarqovScheduler; ///< Holds the type of a scheduler for these simulations.
     };
+
+    /** A helper function to figure out the type of the scheduler and actually create it.
+     *
+     * @tparam Hamiltonian The Hamiltonian to use for the simulations.
+     * @tparam Lattice The lattice to use for the simulations.
+     * @tparam RNGType The Random Number Generator to use.
+     * @tparam Parameters the tuple that makes up the arguments for a simulation.
+     * @tparam Ts a parameter pack of the remaining arguements to the scheduler.
+     *
+     * @param args A dummy parameter to get rid of template magic on the user end.
+     * @param ts The remaining arguments for the scheduler.
+     *
+     */
+    template <class Hamiltonian, class Lattice, class RNGType = std::mt19937_64, class Parameters, typename ...Ts>
+    auto makeScheduler(const Parameters& args, Ts&&... ts)
+    {
+        return typename GetSchedulerType<Hamiltonian, Lattice, Parameters>::MarqovScheduler(std::forward<Ts>(ts)...);
+    }
 };
 #endif

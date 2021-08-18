@@ -332,16 +332,9 @@ void selectsim()
 		typedef Ising<int> Hamiltonian;
 		typedef ConstantCoordinationLattice<Poissonian> Lattice;
 
-        typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
-		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType, std::knuth_b>::MarqovScheduler SchedulerType;
-
-
 		// Lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
 		{
-			// init scheduler
-			SchedulerType sched(1, nthreads);
-
 			// prepare output
 			int L = nL[j];
 			cout << endl << "L = " << L << endl << endl;
@@ -359,6 +352,8 @@ void selectsim()
 			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);
 			auto rparams = replicator(params, nreplicas[j]);
 
+			// init scheduler            
+            auto sched = makeScheduler<Hamiltonian, Lattice, std::knuth_b>(params[0], 1, nthreads);
 			// feed scheduler
 			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
 
