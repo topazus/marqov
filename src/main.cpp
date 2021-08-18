@@ -71,6 +71,24 @@ void checkreplicaconfig(int nr, int nL)
     if ((nr != nL) && (nr != 1)) throw std::invalid_argument("[MARQOV] Invalid replica configuration!");
 }
 
+void tidyupoldsims(const std::string& outbasedir)
+{
+	// delete previous output // fixme: don't do that by default!
+#ifdef MPIMARQOV
+    int myrank = 0;
+    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+    if(myrank == 0)
+    {
+#endif
+        std::cout<<"[MARQOV::main] Erasing previous data!!!!!!!!!!!!!!!"<<std::endl;
+        std::string command = "rm -r " + outbasedir;
+        system(command.c_str());
+        makeDir(outbasedir);
+#ifdef MPIMARQOV
+    }
+#endif
+}
+
 void printInfoandcheckreplicaconfig(RegistryDB& registry, const std::string& ham)
 {
     const auto dim 	      = registry.Get<int>(ham+".ini", ham, "dim" );
@@ -88,8 +106,24 @@ void printInfoandcheckreplicaconfig(RegistryDB& registry, const std::string& ham
     checkreplicaconfig(nreplicas.size(), nL.size());
 }
 
-void scheduleIsing(RegistryDB& registry, const std::string& outbasedir)
+void scheduleIsing(RegistryDB& registry)
 {
+    std::string outbasedir;
+    try
+    {
+        outbasedir = registry.Get<std::string>("Ising.ini", "IO", "outdir" );
+    }
+    catch(Registry_cfgfile_not_found_Exception& e) 
+    {
+        std::cout<<"[MARQOV] Unable to find Ising config! Generating new one in ./config/Ising.ini"<<std::endl;
+        ofstream ising("./config/Ising.ini");
+        ising<<"[Ising]\n"<<"L = 10\n"<<"rep = 2\n"<<"dim = 2\n"<<"beta = 0.3, 0.4\n"<<"J = -1.0\n";
+        ising<<"[MC]\n"<<"nmetro = 10\n"<<"nclusteramp = 25\n"<<"nclusterexp = 0\n"<<"warmupsteps = 30\n"<<"measuresteps = 30\n";
+        ising<<"[IO]\n"<<"outdir = ../out\n"<<"[END]\n"<<std::endl;
+        registry.init("./config");
+        outbasedir = registry.Get<std::string>("Ising.ini", "IO", "outdir" );
+    }
+    tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "Ising");
     auto beta = registry.Get<std::vector<double> >("Ising.ini", "Ising", "beta");
     auto J    = registry.Get<std::vector<double> >("Ising.ini", "Ising", "J");
@@ -97,9 +131,11 @@ void scheduleIsing(RegistryDB& registry, const std::string& outbasedir)
     RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 }
 
-void schedulePotts(RegistryDB& registry, const std::string& outbasedir)
+void schedulePotts(RegistryDB& registry)
 {
     std::string ham = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
+    std::string outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
+    tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, ham);
     auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
     auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
@@ -124,8 +160,10 @@ void schedulePotts(RegistryDB& registry, const std::string& outbasedir)
     }
 }
 
-void scheduleAshkinTeller(RegistryDB& registry, const std::string outbasedir)
+void scheduleAshkinTeller(RegistryDB& registry)
 {
+    std::string outbasedir = registry.Get<std::string>("AshkinTeller.ini", "IO", "outdir" );
+    tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "AshkinTeller");
     auto beta = registry.Get<std::vector<double> >("AshkinTeller.ini", "AshkinTeller", "beta");
     auto J    = registry.Get<std::vector<double> >("AshkinTeller.ini", "AshkinTeller", "J");
@@ -135,8 +173,10 @@ void scheduleAshkinTeller(RegistryDB& registry, const std::string outbasedir)
     RegularLatticeLoop<AshkinTeller>(registry, outbasedir, parameters, defaultfilter);
 }
 
-void scheduleHeisenberg(RegistryDB& registry, const std::string outbasedir)
+void scheduleHeisenberg(RegistryDB& registry)
 {
+    std::string outbasedir = registry.Get<std::string>("Heisenberg.ini", "IO", "outdir" );
+    tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "Heisenberg");
     auto beta = registry.Get<std::vector<double> >("Heisenberg.ini", "Heisenberg", "beta");
     auto J    = registry.Get<std::vector<double> >("Heisenberg.ini", "Heisenberg", "J");
@@ -145,8 +185,10 @@ void scheduleHeisenberg(RegistryDB& registry, const std::string outbasedir)
     RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
 }
 
-void schedulePhi4(RegistryDB& registry, const std::string outbasedir)
+void schedulePhi4(RegistryDB& registry)
 {
+    std::string outbasedir = registry.Get<std::string>("Phi4.ini", "IO", "outdir" );
+    tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "Phi4");
 		auto beta   = registry.Get<std::vector<double> >("Phi4.ini", "Phi4", "beta");
 		auto lambda = registry.Get<std::vector<double> >("Phi4.ini", "Phi4", "lambda");
@@ -162,8 +204,10 @@ void schedulePhi4(RegistryDB& registry, const std::string outbasedir)
 		RegularLatticeLoop<Phi4<double, double> >(registry, outbasedir, parameters, defaultfilter);
 }
 
-void scheduleBlumeCapel(RegistryDB& registry, const std::string outbasedir)
+void scheduleBlumeCapel(RegistryDB& registry)
 {
+    std::string outbasedir = registry.Get<std::string>("BlumeCapel.ini", "IO", "outdir" );
+    tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "BlumeCapel");
     auto beta = registry.Get<std::vector<double> >("BlumeCapel.ini", "BlumeCapel", "beta");
     auto J    = registry.Get<std::vector<double> >("BlumeCapel.ini", "BlumeCapel", "J");
@@ -173,8 +217,10 @@ void scheduleBlumeCapel(RegistryDB& registry, const std::string outbasedir)
     RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
 }
 
-void scheduleBlumeEmeryGriffiths(RegistryDB& registry, const std::string outbasedir)
+void scheduleBlumeEmeryGriffiths(RegistryDB& registry)
 {
+    std::string outbasedir = registry.Get<std::string>("BlumeEmeryGriffiths.ini", "IO", "outdir" );
+    tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "BlumeEmeryGriffiths");
 		auto beta = registry.Get<std::vector<double> >("BlumeEmeryGriffiths.ini", "BlumeEmeryGriffiths", "beta");
 		auto J    = registry.Get<std::vector<double> >("BlumeEmeryGriffiths.ini", "BlumeEmeryGriffiths", "J");
@@ -185,8 +231,10 @@ void scheduleBlumeEmeryGriffiths(RegistryDB& registry, const std::string outbase
 		RegularLatticeLoop<BlumeEmeryGriffiths<int>>(registry, outbasedir, parameters, defaultfilter);
 }
 
-void scheduleXXZAntiferro(RegistryDB& registry, const std::string outbasedir)
+void scheduleXXZAntiferro(RegistryDB& registry)
 {
+    std::string outbasedir = registry.Get<std::string>("XXZAntiferro.ini", "IO", "outdir" );
+    tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "XXZAntiferro");
 		auto beta     = registry.Get<std::vector<double>>("XXZAntiferro.ini", "XXZAntiferro", "beta");
 		auto extfield = registry.Get<std::vector<double>>("XXZAntiferro.ini", "XXZAntiferro", "extfield");
@@ -196,8 +244,10 @@ void scheduleXXZAntiferro(RegistryDB& registry, const std::string outbasedir)
 		RegularLatticeLoop<XXZAntiferro<double>>(registry, outbasedir, parameters, defaultfilter);
 }
 
-void scheduleXXZAntiferroSingleAniso(RegistryDB& registry, const std::string outbasedir)
+void scheduleXXZAntiferroSingleAniso(RegistryDB& registry)
 {
+    std::string outbasedir = registry.Get<std::string>("XXZAntiferroSingleAniso.ini", "IO", "outdir" );
+    tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "XXZAntiferroSingleAniso");
         auto beta        = registry.Get<std::vector<double>>("XXZAntiferroSingleAniso.ini", "XXZAntiferroSingleAniso", "beta");
 		auto extfield    = registry.Get<std::vector<double>>("XXZAntiferroSingleAniso.ini", "XXZAntiferroSingleAniso", "extfield");
@@ -208,10 +258,12 @@ void scheduleXXZAntiferroSingleAniso(RegistryDB& registry, const std::string out
 		RegularLatticeLoop<XXZAntiferroSingleAniso<double>>(registry, outbasedir, parameters, xxzfilter);
 }
 
-void scheduleEdwardsAndersonIsing(RegistryDB& registry, const std::string outbasedir)
+void scheduleEdwardsAndersonIsing(RegistryDB& registry)
 {
 // Parameters
-		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+    const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+    std::string outbasedir = registry.Get<std::string>(name + ".ini", "IO", "outdir" );
+    tidyupoldsims(outbasedir);
 		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
 		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
 		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
@@ -271,10 +323,12 @@ void scheduleEdwardsAndersonIsing(RegistryDB& registry, const std::string outbas
  		sched.start(); // run!
 }
 
-void scheduleIsingCC(RegistryDB& registry, const std::string outbasedir)
+void scheduleIsingCC(RegistryDB& registry)
 {
 		// Parameters
-		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+    const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+    std::string outbasedir = registry.Get<std::string>(name + ".ini", "IO", "outdir" );
+    tidyupoldsims(outbasedir);
 		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
 		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
 		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
@@ -339,10 +393,12 @@ void scheduleIsingCC(RegistryDB& registry, const std::string outbasedir)
 		}
 }
 
-void scheduleBlumeCapelBiPartite(RegistryDB& registry, const std::string outbasedir)
+void scheduleBlumeCapelBiPartite(RegistryDB& registry)
 {
-		// Parameters
-		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+    // Parameters
+    const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+    std::string outbasedir = registry.Get<std::string>(name + ".ini", "IO", "outdir" );
+    tidyupoldsims(outbasedir);
 		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
 		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
 		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
@@ -417,60 +473,48 @@ void scheduleBlumeCapelBiPartite(RegistryDB& registry, const std::string outbase
 /** Select the respective simulation.
  * 
  * @param registry The registry object that we will use
- * @param myrank the rank to use for some I/O preparation
  */
-void selectsim(RegistryDB& registry, int myrank = 0)
+void selectsim(RegistryDB& registry)
 {
 	const auto ham = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
-
-	std::string outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
-
-	// delete previous output // fixme: don't do that by default!
-    if(myrank == 0)
-    {
-        std::cout<<"[MARQOV::main] Erasing previous data!!!!!!!!!!!!!!!"<<std::endl;
-        std::string command = "rm -r " + outbasedir;
-        system(command.c_str());
-        makeDir(outbasedir);
-    }
 
 	// ----------------- select simulation ------------------
 
 	if (startswith(ham, "Ising"))
-        scheduleIsing(registry, outbasedir);
+        scheduleIsing(registry);
 
 	else if (startswith(ham,"Potts"))
-        schedulePotts(registry, outbasedir);
+        schedulePotts(registry);
 
 	else if (ham == "AshkinTeller")
-        scheduleAshkinTeller(registry, outbasedir);
+        scheduleAshkinTeller(registry);
 
 	else if (ham == "Heisenberg")
-        scheduleHeisenberg(registry, outbasedir);
+        scheduleHeisenberg(registry);
 
 	else if (ham == "Phi4")
-        schedulePhi4(registry, outbasedir);
+        schedulePhi4(registry);
 
 	else if (ham == "BlumeCapel")
-        scheduleBlumeCapel(registry, outbasedir);
+        scheduleBlumeCapel(registry);
 
 	else if (ham == "BlumeEmeryGriffiths")
-        scheduleBlumeEmeryGriffiths(registry, outbasedir);
+        scheduleBlumeEmeryGriffiths(registry);
 
 	else if (ham == "XXZAntiferro")
-        scheduleXXZAntiferro(registry, outbasedir);
+        scheduleXXZAntiferro(registry);
 
 	else if (ham == "XXZAntiferroSingleAniso")
-        scheduleXXZAntiferroSingleAniso(registry, outbasedir);
+        scheduleXXZAntiferroSingleAniso(registry);
 
 	else if (startswith(ham, "EdwardsAnderson-Ising"))
-        scheduleEdwardsAndersonIsing(registry, outbasedir);
+        scheduleEdwardsAndersonIsing(registry);
 
 	else if (ham == "IsingCC")
-        scheduleIsingCC(registry, outbasedir);
+        scheduleIsingCC(registry);
 
 	else if (ham == "BlumeCapelBipartite")
-        scheduleBlumeCapelBiPartite(registry, outbasedir);
+        scheduleBlumeCapelBiPartite(registry);
 }
 
 int main(int argc, char* argv[])
@@ -509,7 +553,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-            std::cout<<"[MARQOV::main] "<<filename<<" already exists. I would overwrite its content, hence I'm terminating now"<<std::endl;
+            std::cout<<"[MARQOV::main] "<<filename<<" already exists, but is not usable. I would overwrite its content, hence I'm terminating now"<<std::endl;
             throw;
         }
     }
@@ -518,7 +562,7 @@ int main(int argc, char* argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     if (myrank == 0) {
 #endif
-        selectsim(registry, myrank);
+        selectsim(registry);
 #ifdef MPIMARQOV
     }
     MPI_Finalize();
