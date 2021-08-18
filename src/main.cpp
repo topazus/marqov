@@ -66,11 +66,21 @@ bool startswith(const std::string& longword, const std::string& shortword) noexc
     return longword.find(shortword) == 0;
 }
 
+/** Check the vailidity of the replica configuration.
+ * throws if invalid.
+ * 
+ * @param nr number of replicas
+ * @param nL amount of lattice simulations
+ */
 void checkreplicaconfig(int nr, int nL)
 {
     if ((nr != nL) && (nr != 1)) throw std::invalid_argument("[MARQOV] Invalid replica configuration!");
 }
 
+/** Removes previous simulations.
+ * 
+ * @param outbasedir The folder that we remove entirely
+ */
 void tidyupoldsims(const std::string& outbasedir)
 {
 	// delete previous output // fixme: don't do that by default!
@@ -89,6 +99,11 @@ void tidyupoldsims(const std::string& outbasedir)
 #endif
 }
 
+/** Print some nice information
+ * 
+ * @param registry Where to get the data from.
+ * @param ham the hamiltonian
+ */
 void printInfoandcheckreplicaconfig(RegistryDB& registry, const std::string& ham)
 {
     const auto dim 	      = registry.Get<int>(ham+".ini", ham, "dim" );
@@ -106,6 +121,14 @@ void printInfoandcheckreplicaconfig(RegistryDB& registry, const std::string& ham
     checkreplicaconfig(nreplicas.size(), nL.size());
 }
 
+/** Utility function to write the common part of the config file
+ * @param os the stream associated with the new config file.
+ * @param nmetro 
+ * @param nclusteramp
+ * @param nclusterexp
+ * @param warmupsteps
+ * @param measuresteps
+ */
 void createcfgfooter(std::ostream& os, int nmetro, double nclusteramp, int nclusterexp, int warmupsteps, int measuresteps)
 {
     os<<"[MC]\n"<<"nmetro = "<<nmetro<<"\nnclusteramp = "<<nclusteramp<<"\nnclusterexp = "<<nclusterexp<<"\nwarmupsteps = "<<warmupsteps<<"\nmeasuresteps = "<<measuresteps<<"\n";
@@ -600,7 +623,7 @@ void selectsim(RegistryDB& registry)
 	if (startswith(ham, "Ising"))
         scheduleIsing(registry);
 
-	else if (startswith(ham,"Potts"))
+	else if (startswith(ham, "Potts"))
         schedulePotts(registry);
 
 	else if (ham == "AshkinTeller")
