@@ -135,29 +135,37 @@ void createcfgfooter(std::ostream& os, int nmetro, double nclusteramp, int nclus
     os<<"[IO]\n"<<"outdir = ../out\n"<<"[END]"<<std::endl;
 }
 
+
+
+// ---------------------------------------------------
+
 void scheduleIsing(RegistryDB& registry)
 {
+    std::string ham = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
     std::string outbasedir;
     try
     {
-        outbasedir = registry.Get<std::string>("Ising.ini", "IO", "outdir" );
+        outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
     }
     catch(Registry_cfgfile_not_found_Exception& e) 
     {
-        std::cout<<"[MARQOV] Unable to find Ising config! Generating new one in ./config/Ising.ini"<<std::endl;
-        ofstream ising("./config/Ising.ini");
+        std::cout<<"[MARQOV] Unable to find Ising config! Generating new one in ./config/"+ham+".ini"<<std::endl;
+        ofstream ising("./config/"+ham+".ini");
         ising<<"[Ising]\n"<<"L = 10\n"<<"rep = 2\n"<<"dim = 2\n"<<"beta = 0.3, 0.4\n"<<"J = -1.0\n\n";
         createcfgfooter(ising, 10, 25, 0, 30, 30);
         registry.init("./config");
-        outbasedir = registry.Get<std::string>("Ising.ini", "IO", "outdir" );
+        outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
     }
     tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, "Ising");
-    auto beta = registry.Get<std::vector<double> >("Ising.ini", "Ising", "beta");
-    auto J    = registry.Get<std::vector<double> >("Ising.ini", "Ising", "J");
+    auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+    auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
     auto parameters = cart_prod(beta, J);
     RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 }
+
+
+
 
 void schedulePotts(RegistryDB& registry)
 {
@@ -171,11 +179,11 @@ void schedulePotts(RegistryDB& registry)
     {
         int q = std::stoi(ham.substr(5));
         std::cout<<"[MARQOV] Unable to find"<<ham<<" config! Generating new one in ./config/"<<ham<<".ini"<<std::endl;
-        ofstream cfg("./config/" + ham + ".ini");
+        ofstream cfg("./config/" + ham+".ini");
         cfg<<"["<<ham<<"]\n"<<"q = "<<q<<'\n'<<"L = 10\n"<<"rep = 5\n"<<"dim = 2\n"<<"beta = 1.05, 1.07, 1.09\n"<<"J = -1.0\n\n";
         createcfgfooter(cfg, 2, 10, 0, 200, 200);
         registry.init("./config");
-        outbasedir = registry.Get<std::string>(ham + ".ini", "IO", "outdir" );
+        outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
     }
     tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, ham);
@@ -202,32 +210,37 @@ void schedulePotts(RegistryDB& registry)
     }
 }
 
+
+
 void scheduleAshkinTeller(RegistryDB& registry)
 {
-    const std::string fn{"Ashkin-Teller.ini"};
+    std::string ham = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
     std::string outbasedir;
     try
     {
-        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+        outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
     }
     catch(Registry_cfgfile_not_found_Exception& e) 
     {
-        std::cout<<"[MARQOV] Unable to find Ashkin-Teller config! Generating new one in ./config/"<<fn<<std::endl;
-        ofstream cfg("./config/" + fn);
+        std::cout << "[MARQOV] Unable to find Ashkin-Teller config! Generating new one in ./config/"+ham+".ini" << std::endl;
+        ofstream cfg("./config/" + ham+".ini");
         cfg<<"[AshkinTeller]\n"<<"L = 12\n"<<"rep = 10\n"<<"dim = 2\n"<<"beta = 0.312, 0.313\n"<<"J = -1.0\n"<<"K = 0.3\n\n";
         createcfgfooter(cfg, 2, 25, 0, 500, 10000);
         registry.init("./config");
-        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
+        outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
     }
     tidyupoldsims(outbasedir);
-    printInfoandcheckreplicaconfig(registry, "AshkinTeller");
-    auto beta = registry.Get<std::vector<double> >(fn, "AshkinTeller", "beta");
-    auto J    = registry.Get<std::vector<double> >(fn, "AshkinTeller", "J");
-    auto K    = registry.Get<std::vector<double> >(fn, "AshkinTeller", "K");
+    printInfoandcheckreplicaconfig(registry, ham);
+    auto beta = registry.Get<std::vector<double> >(ham+".ini", "AshkinTeller", "beta");
+    auto J    = registry.Get<std::vector<double> >(ham+".ini", "AshkinTeller", "J");
+    auto K    = registry.Get<std::vector<double> >(ham+".ini", "AshkinTeller", "K");
     auto parameters = cart_prod(beta, J, K);
 
     RegularLatticeLoop<AshkinTeller>(registry, outbasedir, parameters, defaultfilter);
 }
+
+
+
 
 void scheduleHeisenberg(RegistryDB& registry)
 {
@@ -398,22 +411,23 @@ void scheduleXXZAntiferroSingleAniso(RegistryDB& registry)
 		RegularLatticeLoop<XXZAntiferroSingleAniso<double>>(registry, outbasedir, parameters, xxzfilter);
 }
 
+/*
 void scheduleEdwardsAndersonIsing(RegistryDB& registry)
 {
 // Parameters
-    const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+    const auto name = registry.Get<std::string>(ham+".ini", "General", "Hamiltonian" );
     std::string outbasedir = registry.Get<std::string>(name + ".ini", "IO", "outdir" );
     tidyupoldsims(outbasedir);
-		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
-		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
-		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
+		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", name, "rep" );
+		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", name, "L" );
+		const auto dim  = registry.Get<int>(ham+".ini", name, "dim" );
         printInfoandcheckreplicaconfig(registry, name);	
 	
 		// Number of threads
 		int nthreads = 0;
 		try 
 		{
-			nthreads = registry.template Get<int>("mc.ini", "General", "threads_per_node" );
+			nthreads = registry.template Get<int>(ham+".ini", "General", "threads_per_node" );
 		}
 		catch (const Registry_Key_not_found_Exception&) 
 		{
@@ -423,8 +437,8 @@ void scheduleEdwardsAndersonIsing(RegistryDB& registry)
 		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 		// Physical parameters
-		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "J");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", "IsingCC", "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", "IsingCC", "J");
 		auto hp = cart_prod(beta, J);
         
 		// Typedefs
@@ -454,7 +468,7 @@ void scheduleEdwardsAndersonIsing(RegistryDB& registry)
 			mp.setgameloopsteps(1000);
 
 			// form parameter triple and replicate
-			auto params  = finalize_parameter(std::make_tuple(L, dim)/*lattice parameters*/, mp, hp);//this particular form is required to happify PGI-19.10
+			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);//this particular form is required to happify PGI-19.10
             auto rparams = replicator(params, nreplicas[j]);
 
 			// schedule simulations
@@ -462,23 +476,25 @@ void scheduleEdwardsAndersonIsing(RegistryDB& registry)
 		}
  		sched.start(); // run!
 }
+*/
 
+/*
 void scheduleIsingCC(RegistryDB& registry)
 {
 		// Parameters
-    const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
+    const auto name = registry.Get<std::string>(ham+".ini", "General", "Hamiltonian" );
     std::string outbasedir = registry.Get<std::string>(name + ".ini", "IO", "outdir" );
     tidyupoldsims(outbasedir);
-		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
-		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
-		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
+		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", name, "rep" );
+		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", name, "L" );
+		const auto dim  = registry.Get<int>(ham+".ini", name, "dim" );
         printInfoandcheckreplicaconfig(registry, name);
 
 		// Number of threads
 		int nthreads = 0;
 		try 
 		{
-			nthreads = registry.template Get<int>("mc.ini", "General", "threads_per_node" );
+			nthreads = registry.template Get<int>(ham+".ini", "General", "threads_per_node" );
 		}
 		catch (const Registry_Key_not_found_Exception&) 
 		{
@@ -490,8 +506,8 @@ void scheduleIsingCC(RegistryDB& registry)
 		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 		// Physical parameters
-		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "J");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", "IsingCC", "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", "IsingCC", "J");
 		auto hp = cart_prod(beta, J);
 
 		// Typedefs
@@ -532,23 +548,24 @@ void scheduleIsingCC(RegistryDB& registry)
 			sched.start();
 		}
 }
+*/
 
 void scheduleBlumeCapelBiPartite(RegistryDB& registry)
 {
     // Parameters
-    const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-    std::string outbasedir = registry.Get<std::string>(name + ".ini", "IO", "outdir" );
+    const auto ham = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
+    std::string outbasedir = registry.Get<std::string>(ham + ".ini", "IO", "outdir" );
     tidyupoldsims(outbasedir);
-		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
-		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
-		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
-        printInfoandcheckreplicaconfig(registry, name);
+		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", ham, "rep" );
+		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", ham, "L" );
+		const auto dim  = registry.Get<int>(ham+".ini", ham, "dim" );
+        printInfoandcheckreplicaconfig(registry, ham);
 
 		// Number of threads
 		int nthreads = 0;
 		try 
 		{
-			nthreads = registry.template Get<int>("mc.ini", "General", "threads_per_node" );
+			nthreads = registry.template Get<int>(ham+".ini", "General", "threads_per_node" );
 		}
 		catch (const Registry_Key_not_found_Exception&) 
 		{
@@ -561,10 +578,10 @@ void scheduleBlumeCapelBiPartite(RegistryDB& registry)
 
 
 		// import parameters
-		auto beta = registry.Get<std::vector<double> >("mc.ini", "BlumeCapelBipartite", "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", "BlumeCapelBipartite", "J");
-		auto DA   = registry.Get<std::vector<double> >("mc.ini", "BlumeCapelBipartite", "DA");
-		auto DB   = registry.Get<std::vector<double> >("mc.ini", "BlumeCapelBipartite", "DB");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", "BlumeCapelBipartite", "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", "BlumeCapelBipartite", "J");
+		auto DA   = registry.Get<std::vector<double> >(ham+".ini", "BlumeCapelBipartite", "DA");
+		auto DB   = registry.Get<std::vector<double> >(ham+".ini", "BlumeCapelBipartite", "DB");
 		auto hp = cart_prod(beta, J, DA, DB);
 
 		typedef BlumeCapelBipartite<int> Hamiltonian;
@@ -647,11 +664,11 @@ void selectsim(RegistryDB& registry)
 	else if (ham == "XXZAntiferroSingleAniso")
         scheduleXXZAntiferroSingleAniso(registry);
 
-	else if (startswith(ham, "EdwardsAnderson-Ising"))
-        scheduleEdwardsAndersonIsing(registry);
+//	else if (startswith(ham, "EdwardsAnderson-Ising"))
+//        scheduleEdwardsAndersonIsing(registry);
 
-	else if (ham == "IsingCC")
-        scheduleIsingCC(registry);
+//	else if (ham == "IsingCC")
+//        scheduleIsingCC(registry);
 
 	else if (ham == "BlumeCapelBipartite")
         scheduleBlumeCapelBiPartite(registry);
