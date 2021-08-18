@@ -223,17 +223,17 @@ void scheduleAshkinTeller(RegistryDB& registry)
     catch(Registry_cfgfile_not_found_Exception& e) 
     {
         std::cout << "[MARQOV] Unable to find Ashkin-Teller config! Generating new one in ./config/"+ham+".ini" << std::endl;
-        ofstream cfg("./config/" + ham+".ini");
-        cfg<<"[AshkinTeller]\n"<<"L = 12\n"<<"rep = 10\n"<<"dim = 2\n"<<"beta = 0.312, 0.313\n"<<"J = -1.0\n"<<"K = 0.3\n\n";
+        ofstream cfg("./config/"+ham+".ini");
+        cfg<<"["+ham+"]\n"<<"L = 12\n"<<"rep = 10\n"<<"dim = 2\n"<<"beta = 0.312, 0.313\n"<<"J = -1.0\n"<<"K = 0.3\n\n";
         createcfgfooter(cfg, 2, 25, 0, 500, 10000);
         registry.init("./config");
         outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
     }
     tidyupoldsims(outbasedir);
     printInfoandcheckreplicaconfig(registry, ham);
-    auto beta = registry.Get<std::vector<double> >(ham+".ini", "AshkinTeller", "beta");
-    auto J    = registry.Get<std::vector<double> >(ham+".ini", "AshkinTeller", "J");
-    auto K    = registry.Get<std::vector<double> >(ham+".ini", "AshkinTeller", "K");
+    auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+    auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
+    auto K    = registry.Get<std::vector<double> >(ham+".ini", ham, "K");
     auto parameters = cart_prod(beta, J, K);
 
     RegularLatticeLoop<AshkinTeller>(registry, outbasedir, parameters, defaultfilter);
