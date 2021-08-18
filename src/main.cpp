@@ -340,8 +340,8 @@ void scheduleBlumeEmeryGriffiths(RegistryDB& registry)
     {
         std::cout<<"[MARQOV] Unable to find BlumeEmeryGriffiths config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
-        cfg<<"[BlumeEmeryGriffiths]\n"<<"L = 8,12\n"<<"rep = 4\n"<<"dim = 2\n"<<"beta = 0.42\n"<<"J = -1\n"<<"D = 1\n"<<"K = 1\n\n";
-        createcfgfooter(cfg, 2, 0.5, 1, 300, 3000);
+        cfg<<"[BlumeEmeryGriffiths]\n"<<"L = 8,12\n"<<"rep = 25\n"<<"dim = 2\n"<<"beta = 1.66\n"<<"J = 1\n"<<"D = 0.5\n"<<"K = -1.2,-1.1\n\n";
+        createcfgfooter(cfg, 2, 0.5, 1, 500, 5000);
         registry.init("./config");
         outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
     }
