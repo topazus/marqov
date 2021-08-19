@@ -21,6 +21,22 @@
 using namespace std;
 using namespace MARQOV;
 
+/** @file libshowcase.cpp
+ * This files defines the function calls that are accessible via SWIG in other languages.
+ */
+
+/** Create a single simulation
+ * 
+ * @tparam Lattice The type of the Lattice
+ * @tparam Ham The type of the hamiltonian
+ * @tparam HamParameter the tuple of Hamiltonian parameters
+ * 
+ * @param path the path where we write the data
+ * @param mylatt a reference to a lattice
+ * @param hp the tuple with the hamiltonian parameters
+ * 
+ * @return 0
+ */
 template <class Lattice, class Ham, typename HamParameter>
 static int instantiatesim(const std::string& path, Lattice& mylatt, const HamParameter& hp)
 {
@@ -30,7 +46,7 @@ static int instantiatesim(const std::string& path, Lattice& mylatt, const HamPar
     mp.setncluster(8/2);
     mp.setwarmupsteps(500);
     mp.setgameloopsteps(3000);
-    
+
     //prepare the arguments
     auto args = make_tuple(std::ref(mylatt), mp, hp);
 
@@ -42,6 +58,16 @@ static int instantiatesim(const std::string& path, Lattice& mylatt, const HamPar
     return 0;
 }
 
+/** Create a single instance of the Ising Model
+ * 
+ * @see Ising.h
+ * 
+ * @param path The path where to store the data.
+ * @param dim The dimensionality of the hypercubic lattice.
+ * @param len The linear dimension.
+ * @param beta The inverse temperature.
+ * @param J the interaction energy.
+ */
 int pyIsing(std::string path, int dim, int len, double beta, double J)
 {
     RegularHypercubic mylatt(len, dim); //nD len x len lattice
@@ -49,7 +75,7 @@ int pyIsing(std::string path, int dim, int len, double beta, double J)
     auto hp = make_tuple(beta, J);
     return instantiatesim<RegularHypercubic, Ising<double>>(path, mylatt, hp);
 }
-/*
+
 /*
 int pyIsingGraph(std::string outpath, std::string graphpath, double beta, double J)
 {
