@@ -39,6 +39,7 @@ stages:
   stage: test
   <<: *src_except_definition
   script:
+    - apt-get update && apt-get install -y cmake libhdf5-dev
     - cmake -E make_directory build
     - cd build
     - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ..
@@ -141,6 +142,40 @@ marqov_Buster_pgi:
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="/opt/pgi/linux86-64/2019/bin/pgc++" ..
       - make MARQOV VERBOSE=1
+
+MARQOVtest_Stretch:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gxx
+    <<: *test_definition
+
+MARQOVtest_Buster:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gxx
+    <<: *test_definition
+
+marqovtest_Buster_clang:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-clang
+    stage: test
+    <<: *src_except_definition
+    script:
+      - apt-get update && apt-get install -y libhdf5-dev
+      - cmake -E make_directory build
+      - cd build
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang++ ..
+      - cmake --build . --target all --config Release
+      - ctest -O log.txt
+      - cat log.txt | grep "tests passed" | cut -d " " -f 1
+
+marqovtest_Buster_pgi:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-pgi1910-cmake
+    stage: test
+    <<: *src_except_definition
+    script:
+      - apt-get update && apt-get install -y libhdf5-dev
+      - cmake -E make_directory build
+      - cd build
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="/opt/pgi/linux86-64/2019/bin/pgc++" ..
+      - cmake --build . --target all --config Release
+      - ctest -O log.txt
+      - cat log.txt | grep "tests passed" | cut -d " " -f 1
 
 marqov_Bullseye-PGI-21-03:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-pgi-21-03
