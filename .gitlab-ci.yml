@@ -169,7 +169,7 @@ marqov_Bullseye_doxygen:
     stage: build
     script:
       - apt-get update && apt-get install -y doxygen graphviz pdf2svg
-      - cd docs
+      - cd doc
       - cmake -E make_directory doxygen
       - doxygen Doxyfile-marqov.cfg
 
