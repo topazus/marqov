@@ -25,6 +25,7 @@ if(DEBIASINTEGERS AND NOT HAVE_UINT128LEN)
 endif()
 
 add_subdirectory(src)
+add_subdirectory(demo)
 
 #add_subdirectory(testsuite)
 #enable_testing()
