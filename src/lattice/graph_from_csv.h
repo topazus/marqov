@@ -23,6 +23,9 @@
 
 #include "util/io.h"
 
+#include <vector>
+#include <string>
+
 /** Read minimal graph from csv file.
 * @note for format specifications see general documentation
 */
@@ -58,9 +61,9 @@ class GraphFromCSVwithCoords
     std::vector<std::vector<int>> neighbours;
     std::vector<std::vector<double>> grid;
 
-    GraphFromCSV(std::string filename, ncoords) 
+    GraphFromCSVwithCoords(std::string filename, int ncoords) 
     {
-        npoints = import_geometry(filename, grid, neighbours, ncoords);
+        npoints = import_geometry(filename, grid, neighbours, ncoords, false);
     }
             
     std::vector<int> nbrs(const int a, const int i) const
@@ -75,8 +78,4 @@ class GraphFromCSVwithCoords
 
     std::size_t size() const {return npoints;}
 };
-
-
-
-
 #endif

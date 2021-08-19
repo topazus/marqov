@@ -57,8 +57,6 @@ using std::ofstream;
 
 using namespace MARQOV;
 
-
-
 bool startswith(const std::string longword, const std::string shortword)
 {
 	if (longword.rfind(shortword, 0) == 0) return true;
@@ -82,6 +80,7 @@ std::string selectsim_startup(RegistryDB& registry)
 	cout << "Replicas:\t" << nreplicass << endl;
 
 	if ((nreplicas.size() != nL.size()) && (nreplicas.size() != 1)) throw std::invalid_argument("invalid replica configuration!");
+
 
 	return ham;
 }
@@ -236,17 +235,16 @@ void selectsim()
 	else if (startswith(ham, "EdwardsAnderson-Ising"))
 	{
 		// Parameters
-		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
-		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
-		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
+		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", ham, "rep" );
+		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", ham, "L" );
+		const auto dim  = registry.Get<int>(ham+".ini", ham, "dim" );
 	
 	
 		// Number of threads
 		int nthreads = 0;
 		try 
 		{
-			nthreads = registry.template Get<int>("mc.ini", "General", "threads_per_node" );
+			nthreads = registry.template Get<int>(ham+".ini", ham, "threads_per_node" );
 		}
 		catch (const Registry_Key_not_found_Exception&) 
 		{
@@ -256,8 +254,8 @@ void selectsim()
 		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 		// Physical parameters
-		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "J");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
 		auto hp = cart_prod(beta, J);
         
 
@@ -303,17 +301,16 @@ void selectsim()
 	else if (ham == "IsingCC")
 	{
 		// Parameters
-		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
-		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
-		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
+		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", ham, "rep" );
+		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", ham, "L" );
+		const auto dim  = registry.Get<int>(ham+".ini", ham, "dim" );
 	
 	
 		// Number of threads
 		int nthreads = 0;
 		try 
 		{
-			nthreads = registry.template Get<int>("mc.ini", "General", "threads_per_node" );
+			nthreads = registry.template Get<int>(ham+".ini", ham, "threads_per_node" );
 		}
 		catch (const Registry_Key_not_found_Exception&) 
 		{
@@ -325,24 +322,17 @@ void selectsim()
 		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
 		// Physical parameters
-		auto beta = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", "IsingCC", "J");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
 		auto hp = cart_prod(beta, J);
 
 		// Typedefs
 		typedef Ising<int> Hamiltonian;
 		typedef ConstantCoordinationLattice<Poissonian> Lattice;
 
-        typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
-		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType, std::knuth_b>::MarqovScheduler SchedulerType;
-
-
 		// Lattice size loop
 		for (std::size_t j=0; j<nL.size(); j++)
 		{
-			// init scheduler
-			SchedulerType sched(1, nthreads);
-
 			// prepare output
 			int L = nL[j];
 			cout << endl << "L = " << L << endl << endl;
@@ -360,6 +350,8 @@ void selectsim()
 			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);
 			auto rparams = replicator(params, nreplicas[j]);
 
+			// init scheduler            
+            auto sched = makeScheduler<Hamiltonian, Lattice, std::knuth_b>(params[0], 1, nthreads);
 			// feed scheduler
 			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
 
@@ -371,17 +363,16 @@ void selectsim()
 	else if (ham == "BlumeCapelBipartite")
 	{
 		// Parameters
-		const auto name = registry.Get<std::string>("mc.ini", "General", "Hamiltonian" );
-		auto nreplicas  = registry.Get<std::vector<int>>("mc.ini", name, "rep" );
-		const auto nL   = registry.Get<std::vector<int>>("mc.ini", name, "L" );
-		const auto dim  = registry.Get<int>("mc.ini", name, "dim" );
+		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", ham, "rep" );
+		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", ham,  "L" );
+		const auto dim  = registry.Get<int>(ham+".ini", ham, "dim" );
 	
 	
 		// Number of threads
 		int nthreads = 0;
 		try 
 		{
-			nthreads = registry.template Get<int>("mc.ini", "General", "threads_per_node" );
+			nthreads = registry.template Get<int>(ham+".ini", "ham", "threads_per_node" );
 		}
 		catch (const Registry_Key_not_found_Exception&) 
 		{
@@ -394,10 +385,10 @@ void selectsim()
 
 
 		// import parameters
-		auto beta = registry.Get<std::vector<double> >("mc.ini", ham, "beta");
-		auto J    = registry.Get<std::vector<double> >("mc.ini", ham, "J");
-		auto DA   = registry.Get<std::vector<double> >("mc.ini", ham, "DA");
-		auto DB   = registry.Get<std::vector<double> >("mc.ini", ham, "DB");
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", ham, "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", ham, "J");
+		auto DA   = registry.Get<std::vector<double> >(ham+".ini", ham, "DA");
+		auto DB   = registry.Get<std::vector<double> >(ham+".ini", ham, "DB");
 		auto hp = cart_prod(beta, J, DA, DB);
 
 		typedef BlumeCapelBipartite<int> Hamiltonian;
@@ -450,6 +441,11 @@ int main(int argc, char* argv[])
     std::cout<<"MARQOV Copyright (C) 2020-2021, The MARQOV Project contributors"<<std::endl;
     std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;
     std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;
+
+	// read config files
+	RegistryDB registry("../src/config", "ini");
+
+
 #ifdef MPIMARQOV
     int threadingsupport;
     MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &threadingsupport);//FIXME: maybe we get by with one level less.
@@ -458,34 +454,15 @@ int main(int argc, char* argv[])
         std::cout<<"couldn't initialize MPI! threading level not supported."<<std::endl;
         return -1;
     }
-#endif
 
-	// read config files
-	RegistryDB registry("../src/config", "ini");
-
-	// remove old output and prepare new one
-	std::string outbasedir = registry.Get<std::string>("mc.ini", "IO", "outdir" );
-	std::string logbasedir = registry.Get<std::string>("mc.ini", "IO", "logdir" );
-
-	//FIXME: NEVER DELETE USER DATA
-	std::string command;
-#ifdef MPIMARQOV
     int myrank;
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     if (myrank == 0) {
-#endif
-	command = "rm -r " + outbasedir;
-	system(command.c_str());
-	command = "rm -r " + logbasedir;
-	system(command.c_str());
-
-	makeDir(outbasedir);
-	makeDir(logbasedir);
-
-#ifdef MPIMARQOV
     }
 #endif
+
     selectsim();
+
 #ifdef MPIMARQOV
     MPI_Finalize();
 #endif
