@@ -35,13 +35,13 @@ namespace std {
 };
 
 //include the MARQOV library
-#include "libmarqov/libmarqov.h"
+#include "libmarqov.h"
 
 //include the RegularLattice
-#include "lattice/regular_hypercubic.h"
+#include "../src/lattice/regular_hypercubic.h"
 
 //include some predefined observables, e.g. the magnetization and the energy
-#include "hamiltonian/util/observables.h"
+#include "../src/hamiltonian/util/observables.h"
 
 
 
@@ -96,7 +96,7 @@ int main()
     RegularHypercubic mylatt(L, dim);
 
 	// Set Monte Carlo parameters using MARQOV::Config
-	MARQOV::Config mp("./"); // output path 
+	MARQOV::Config mp("out"); // output path 
 	mp.setnmetro(5); // number of Metropolis sweeps per EMCS
 	mp.setncluster(10); // number of Wolff updates per EMCS
 	mp.setwarmupsteps(500); // number of EMCS for warmup

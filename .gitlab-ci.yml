@@ -5,6 +5,7 @@ stages:
   - buildMPI
   - test
   - docs
+  - SWIG
 
 .src_except_template: &src_except_definition
   except:
@@ -38,6 +39,7 @@ stages:
   stage: test
   <<: *src_except_definition
   script:
+    - apt-get update && apt-get install -y cmake libhdf5-dev libeigen3-dev
     - cmake -E make_directory build
     - cd build
     - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ..
@@ -141,6 +143,40 @@ marqov_Buster_pgi:
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="/opt/pgi/linux86-64/2019/bin/pgc++" ..
       - make MARQOVdemo VERBOSE=1
 
+MARQOVtest_Stretch:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gxx
+    <<: *test_definition
+
+MARQOVtest_Buster:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gxx
+    <<: *test_definition
+
+marqovtest_Buster_clang:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-clang
+    stage: test
+    <<: *src_except_definition
+    script:
+      - apt-get update && apt-get install -y libhdf5-dev libeigen3-dev
+      - cmake -E make_directory build
+      - cd build
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang++ ..
+      - cmake --build . --target all --config Release
+      - ctest -O log.txt
+      - cat log.txt | grep "tests passed" | cut -d " " -f 1
+
+marqovtest_Buster_pgi:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-pgi1910-cmake
+    stage: test
+    <<: *src_except_definition
+    script:
+      - apt-get update && apt-get install -y libhdf5-dev libeigen3-dev
+      - cmake -E make_directory build
+      - cd build
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="/opt/pgi/linux86-64/2019/bin/pgc++" ..
+      - cmake --build . --target all --config Release
+      - ctest -O log.txt
+      - cat log.txt | grep "tests passed" | cut -d " " -f 1
+
 marqov_Bullseye-PGI-21-03:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-pgi-21-03
     stage: build
@@ -197,3 +233,28 @@ marqov_sphinx_docs:
       - apt-get update && apt-get install -y doxygen graphviz pdf2svg python3-breathe python3-sphinx python3-sphinx-rtd-theme git python3-numpy python3-colorama python3-h5py python3-matplotlib
       - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.physik.uni-wuerzburg.de/marqov/pymarqov.git
       - ./scripts/compilefulldocs.sh
+
+marqov_Bullseye_SWIG_python:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+    stage: SWIG
+    needs: ["MARQOV_Simple_Test"]
+    <<: *src_except_definition
+    script:
+      - apt-get update && apt-get install -y g++ swig
+      - cmake -E make_directory build
+      - cd build
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ..
+      - make pyShowcase VERBOSE=1
+
+marqov_Bullseye_SWIG_optionals:
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-gfortran-blas-lapack-fftw-hdf5-scipy3
+    stage: SWIG
+    needs: ["MARQOV_Simple_Test"]
+    allow_failure: true
+    <<: *src_except_definition
+    script:
+      - apt-get update && apt-get install -y g++ swig lua5.4-dev default-jdk r-base-dev ocaml-4.11.1
+      - cmake -E make_directory build
+      - cd build
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ..
+      - make pyShowcase JNIShowcase LuaShowcase RShowcase ocamlShowcase VERBOSE=1

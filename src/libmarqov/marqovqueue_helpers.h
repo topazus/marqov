@@ -57,8 +57,13 @@ namespace ThreadPool
      */
     struct Semaphore
     {
+        /** Default constructor.
+         *
+         * Cannot be declared noexcept since condition variables may throw.
+         */
+        Semaphore() = default;
         std::mutex mtx; ///< The mutex that we internally use for setting up a lock.
-        std::condition_variable cv; ///< A condition variable for notifxing waiting threads.
+        std::condition_variable cv; ///< A condition variable for notifying waiting threads.
         /** Blocks the current thread until the condition variable is woken up.
          */
         void wait()
@@ -66,7 +71,7 @@ namespace ThreadPool
             std::unique_lock<std::mutex> lk(mtx);
             cv.wait(lk);
         }
-        
+
         /** Wait until the condition variable is woken up and check the predicate.
          * 
          * @param _check A predicate that is to be checked.
@@ -76,7 +81,7 @@ namespace ThreadPool
             std::unique_lock<std::mutex> lk(mtx);
             cv.wait(lk, _check);
         }
-        
+
         /** Wait until the condition variable is woken up, check the predicate, or just wait for a certain amount of time.
          * 
          * @tparam T The type of the time difference.
@@ -124,6 +129,10 @@ namespace ThreadPool
          * @param _s We take the semaphore as argument that we will use to notify waiting threads about changes to the queue.
          */
         ThreadSafeQueue(Semaphore& _s) : s(_s) {}
+        /** Deletes Move constructor.
+         */
+        ThreadSafeQueue(const ThreadSafeQueue&& rhs) = delete;
+        ThreadSafeQueue(const ThreadSafeQueue&) = delete;
         /** Add something to the end of the queue.
          * 
          * @param t the new item that we put into the queue.
