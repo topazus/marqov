@@ -172,7 +172,7 @@ marqovtest_Buster_pgi:
       - apt-get update && apt-get install -y libhdf5-dev libeigen3-dev
       - cmake -E make_directory build
       - cd build
-      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="/opt/pgi/linux86-64/2019/bin/pgc++" ..
+      - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="pgc++ -DEIGEN_DONT_VECTORIZE" ..
       - cmake --build . --target all --config Release
       - ctest -O log.txt
       - cat log.txt | grep "tests passed" | cut -d " " -f 1
