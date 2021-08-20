@@ -20,6 +20,18 @@
 #include <string>
 #include <exception>
 #include <cerrno>
+#include <fstream>
+
+/** Check if file exists
+ *
+ * This checks wether the file can be opened
+ * @param fn the filename
+ * @return true if it can be opened, else false
+ */
+inline bool fileexists(const std::string& fn)
+{
+    return std::ifstream(fn).good();
+}
 
 /** Create Directory.
  * 

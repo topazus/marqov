@@ -2,15 +2,15 @@
 #include <array>
 
 // include the MARQOV library
-#include "libmarqov/libmarqov.h"
+#include "../src/libmarqov/libmarqov.h"
 
 // include the RegularLattice
-#include "lattice/regular_hypercubic.h"
+#include "../src/lattice/regular_hypercubic.h"
 
 // include certain hamiltonian building blocks from the utilities
-#include "hamiltonian/util/termcollection.h"
+#include "../src/hamiltonian/util/termcollection.h"
 // include some predefined observables, e.g. the magnetization and the energy
-#include "hamiltonian/util/observables.h"
+#include "../src/hamiltonian/util/observables.h"
 
 class MySimpleIsing
 {

@@ -6,7 +6,7 @@ add_subdirectory(components)
 
 add_executable(4-eigentest 4-eigentest.cpp)
 
-target_link_libraries(4-eigentest libmarqov)
+target_link_libraries(4-eigentest libMARQOV)
 target_include_directories(4-eigentest PUBLIC ${CMAKE_SOURCE_DIR}/src/libmarqov)
 
 enable_testing()
