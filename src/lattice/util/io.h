@@ -85,19 +85,20 @@ void save_geometry_deluxe(Grid& grid, const std::string path)
 
 
 /**
-* Import CSV lattice file containing coordinates and connections between vertices.
+* @brief Import coordinates and neighbour relations from CSV file
 *
-* @param path the filename
-* @param grid the coordinates will be stored here
-* @param nbrs the bonds will be stored here
+* @param path filename including full path
+* @param grid here the coordinates will be stored
+* @param nbrs here the neighbour relations will be stored
 * @param ncoords number of coordinates per point
+* @param idxoffs set to 1 if vertex indices in the CSV are counted from 1. Set 0 zero if they are counted from 0
 *
-* @return number of points
+* @return the number of vertices
+*
+* @note for format specifications see general documentation-
 */
-int import_geometry(const std::string path, std::vector<std::vector<double>>& grid, std::vector<std::vector<int>>& nbrs, int ncoords)
+int import_geometry(const std::string path, std::vector<std::vector<double>>& grid, std::vector<std::vector<int>>& nbrs, int ncoords, int idxoffs = 0)
 {
-	int idxoffs = 1;	
-	// set to 1 if vertex indices in the CSV are counted from 1. Set 0 zero if they are counted from 0
 
 	std::ifstream in(NULL);
 	in.open(path.c_str());
@@ -125,53 +126,6 @@ int import_geometry(const std::string path, std::vector<std::vector<double>>& gr
 			if (counter < ncoords) g.push_back(std::stod(substr));	
 			// if vertex, transform to int
 			else n.push_back(std::stoi(substr)-idxoffs);
-			counter++;
-    	}
-		grid.push_back(g);
-		nbrs.push_back(n);
-	}
-	return nbrs.size();
-}
-
-/**
-* @brief Import coordinates and neighbour relations from CSV file
-*
-* @param path filename including full path
-* @param grid here the coordinates will be stored
-* @param nbrs here the neighbour relations will be stored
-* @param ncoords number of coordinates
-* @param minusone set false if indices in CSV file are counted from zero (default), set true if they are counted from one
-*
-* @return the number of vertices
-*
-* @note for format specifications see general documentation-
-*/
-int import_geometry(const std::string path, std::vector<std::vector<double>>& grid, std::vector<std::vector<int>>& nbrs, int ncoords, bool minusone=false)
-{
-	int reduce = 0;
-	if (minusone) reduce = -1;
-
-	std::ifstream in(NULL);
-	in.open(path.c_str());
-	std::string row;
-
-    while (!in.eof()) 
-	{
-        std::getline(in, row);
-        if (in.bad() || in.fail()) 
-		{
-            break;
-        }
-		std::istringstream ss(row);
-		std::string substr;
-
-		int counter = 0;
-		std::vector<double> g;
-		std::vector<int> n;
-		while(std::getline(ss, substr, '\t'))
-		{
-			if (counter < ncoords) g.push_back(std::stof(substr));
-			else n.push_back(std::stoi(substr)+reduce);
 			counter++;
     	}
 		grid.push_back(g);
