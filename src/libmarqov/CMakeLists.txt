@@ -46,12 +46,13 @@ if( (NOT HDF5_FOUND) )
     endif()
 endif()
 
-add_library(libmarqov marqov.cpp)
-target_include_directories(libmarqov PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(libmarqov ${MYHDF5LIBS} Threads::Threads)
-set_target_properties(libmarqov PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES POSITION_INDEPENDENT_CODE ON)
+add_library(libMARQOV marqov.cpp)
+target_include_directories(libMARQOV PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(libMARQOV ${MYHDF5LIBS} Threads::Threads)
+set_target_properties(libMARQOV PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES POSITION_INDEPENDENT_CODE ON)
+
 if(DEBIASINTEGERS)
     target_compile_definitions("DEBIASINTEGERS")
 endif()
 
-set_target_properties(libmarqov PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DGIT_SHA1=\"${GIT_SHA1}\" -DGIT_BRANCH=\"${GIT_BRANCH}\"" )
+set_target_properties(libMARQOV PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DGIT_SHA1=\"${GIT_SHA1}\" -DGIT_BRANCH=\"${GIT_BRANCH}\"" )
