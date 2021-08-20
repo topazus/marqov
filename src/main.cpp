@@ -59,6 +59,33 @@ using namespace MARQOV;
 
 int main()
 {
+	// We utilize a small helper library of ours, the registry which reads Windows .ini style files to read config files
+	RegistryDB registry;
+    try
+    {
+        registry.init("../src/config", "ini");
+    }
+    catch(Registry_Exception& re)
+    {
+        std::cout<<"[MARQOV::main] Configuration directory not found! Assuming you're starting this MARQOV binary for the first time!"<<std::endl;
+        std::cout<<"WELCOME TO MARQOV!"<<std::endl;
+        std::cout<<"[MARQOV::main] To get you going we will generate and populate a configuration directory locally under ./config"<<std::endl;
+        makeDir("./config");
+        const auto filename = std::string{"./config/select.ini"};
+        if(!fileexists(filename))
+        {
+            std::ofstream select(filename);
+            select<<"[General]"<<'\n'<<"Hamiltonian = Heisenberg"<<'\n'<<"[END]"<<std::endl;
+            registry.init("./config", "ini");
+        }
+        else
+        {
+            std::cout<<"[MARQOV::main] "<<filename<<" already exists, but is not usable. I would overwrite its content, hence I'm terminating now"<<std::endl;
+            throw;
+        }
+    }
+    
+    // With the registry available we can now start to read in parameters from config files. Note that these parameters get replicated in the final HDF5 containers.
     // Initialize the lattice
 	int L = 8;
 	int dim = 2;
