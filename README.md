@@ -50,12 +50,10 @@ A small testsuite is available that can be accessed via
 - make test
 
 ## Usage
-Start to have a look at the simple demos in /demo, or hack away at your hearts content by modifying main.cpp in src!
+MARQOV is meant to be used as a library.
+For a start have a look at the files in /demo.
+There's mysimpleising and mysimpleheisenberg that show basic usage,
+or have a look at our showcase MARQOVdemo.
+Or just hack away to your heart's content by modifying main.cpp in src!
 
 
-## Todo 
-
-### Notes
-A place for other notes.
-- Did you implement something fancy that others might be interested in?
-- ?
