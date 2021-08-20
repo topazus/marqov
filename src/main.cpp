@@ -3,6 +3,9 @@
 #include <tuple>
 #include <vector>
 
+// Our small helper library to read in strings from command line files.
+#include "libmarqov/util/registry.h"
+
 //include the MARQOV library
 #include "libmarqov/libmarqov.h"
 
