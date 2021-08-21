@@ -1,24 +1,36 @@
-# MARQOV
-The MARQOV project is an extensible open source framework for the massively parallel simulation and analysis of equilibrium lattice spin models.
-It enables users to study common problems in a unified framework and can be molded to fit the needs of users exploring advanced problems.
+
+<table  align="center"><td align="center" width="9999">
+<img src="doc/_static/logo_base.svg" align="center" width="120" alt="project icon">
+
+<h1> MARQOV </h1>
+
+<h4>A modern framework for classical spin models on general topologies</h4>
+
+</td>
+<tr>
+<td align="left" width="9999" >
+The MARQOV project is an extensible open-source framework for the massively parallel simulation and analysis of equilibrium lattice spin models. It enables users to study common problems in a unified framework but can also be molded to fit the needs for exploring advanced research problems.  The project website can be reached under [http://marqov.physik.uni-wuerzburg.de](http://marqov.physik.uni-wuerzburg.de/).<br><br>
 
 For the physics motivation, Bramwel and Gingras put it best, when they said, that
 
 >  Magnetic systems offer themselves as the
-ideal benchmark for generic concepts pertaining to collective phenomena in nature. This is
-due in part to the availability of a large variety
-of diverse magnetic materials that can be chosen to approximate simple theoretical “toy
-models” of collective behavior and, in part, to
-their ease of study by a battery of experimental
-techniques. <br>
--- Bramwell & Gingras, Science 294(5546), 1495-1501 (2001).
+    ideal benchmark for generic concepts pertaining to collective phenomena in nature. This is
+    due in part to the availability of a large variety
+    of diverse magnetic materials that can be chosen to approximate simple theoretical “toy
+    models” of collective behavior and, in part, to
+    their ease of study by a battery of experimental
+    techniques. <br>
+    - Science 294(5546), 1495-1501 (2001).
 
 
 MARQOV, together with its sibling pyMARQOV enables you to delve into this adventure and study the properties of these systems!
 
-## Author
-Manuel Schrauth (mschrauth@physik.uni-wuerzburg.de)
-Florian Goth (fgoth@physik.uni-wuerzburg.de)
+
+## Authors
+* Manuel Schrauth (mschrauth@physik.uni-wuerzburg.de)
+* Florian Goth (fgoth@physik.uni-wuerzburg.de)
+
+
 
 ## License
 Every part of MARQOV is available under open licenses. Most parts are licensed under the GPLv3,
@@ -56,4 +68,12 @@ There's mysimpleising and mysimpleheisenberg that show basic usage,
 or have a look at our showcase MARQOVdemo.
 Or just hack away to your heart's content by modifying main.cpp in src!
 
+
+
+
+
+
+</td>
+</tr>
+</table>
 
