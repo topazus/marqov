@@ -1,3 +1,9 @@
+// -------------------
+// The MARQOV project
+// -------------------------------------------------------------------
+// A modern framework for classical spin models on general topologies
+// -------------------------------------------------------------------
+
 #include <iostream>
 #include <array>
 #include <tuple>
@@ -6,53 +12,72 @@
 // Our small helper library to read in strings from command line files.
 #include "libmarqov/util/registry.h"
 
-//include the MARQOV library
+// Include the MARQOV library
 #include "libmarqov/libmarqov.h"
 
-//include the RegularLattice
+// Include the regular hypercubic lattice
 #include "lattice/regular_hypercubic.h"
 
-//include some predefined observables, e.g. the magnetization and the energy
+// Include some predefined observables, e.g. the magnetization and the energy
 #include "hamiltonian/util/observables.h"
 
 
+
+// Define the data type of the state vector
+// For the Heisenberg model this is a three-dimensional unit vector
+typedef std::array<double, 3> HeisenbergSpin;
+
 // Define interaction term for the Heisenberg model
-class MyHeisenberg_interaction
+class HeisenbergInteraction
 {
 	public:
-		MyHeisenberg_interaction(const double J) : J(J) {}
-		std::array<double, 3> get (const std::array<double, 3>& phi) {return phi;};
+		// Constructor
+		HeisenbergInteraction(const double J) : J(J) {}
+
+		// Interaction strength
         const double J;
+
+		// Interaction type
+		std::array<double, 3> get (const HeisenbergSpin& phi) {return phi;};
 };
 
-class MySimpleHeisenberg
+
+
+
+// Define the Heisenberg Hamiltonian
+class HeisenbergHamiltonian
 {
 	public:
 		
 		// The spin dimension of the Heisenberg or O(3) model
-		constexpr static int SymD = 3;
+		constexpr static int SymD = 3; // must be set
 
-		// Define the state vector that this model will use.
+		// Define the data type of the state vector
 		// For the Heisenberg model this is a three-dimensional unit vector
-		typedef std::array<double, SymD> StateVector;
+		typedef std::array<double, SymD> StateVector; // must be set
 
 		// Parameters
 		double J; // The coupling constant
-		const std::string name; // every Hamiltonian MUST have a name, this is required for the HDF5 output
+		const std::string name; // every Hamiltonian MUST have a name
 
 		// Hamiltonian terms
 		// here this is only the canonical O(3) interaction, defined above
-		std::array<MyHeisenberg_interaction*, 1> interactions = {new MyHeisenberg_interaction(J)};
+		std::array<HeisenbergInteraction*, 1> interactions = {new HeisenbergInteraction(J)};
         
 		// Constructor
-		MySimpleHeisenberg(double J) : J(J), name("Heisenberg"), obs_e(*this){}
-		~MySimpleHeisenberg() {delete interactions[0];}
+		HeisenbergHamiltonian(double J) : J(J), name("Heisenberg"), obs_e(*this){}
+		// Destructor
+		~HeisenbergHamiltonian() {delete interactions[0];}
 
 		// Observables
 		Magnetization  obs_m;
-		Energy<MySimpleHeisenberg>  obs_e;
+		Energy<HeisenbergHamiltonian>  obs_e;
+
+		// Group observables
         decltype(std::make_tuple(obs_m, obs_e)) observables = {std::make_tuple(obs_m, obs_e)};
 };
+
+
 
 using namespace std;
 using namespace MARQOV;
@@ -67,9 +92,10 @@ int main()
     }
     catch(Registry_Exception& re)
     {
-        std::cout<<"[MARQOV::main] Configuration directory not found! Assuming you're starting this MARQOV binary for the first time!"<<std::endl;
-        std::cout<<"WELCOME TO MARQOV!"<<std::endl;
-        std::cout<<"[MARQOV::main] To get you going we will generate and populate a configuration directory locally under ./config"<<std::endl;
+        std::cout << "[MARQOV::main] Configuration directory not found!";
+		std::cout << "Assuming you're starting this MARQOV binary for the first time!"<<std::endl;
+        std::cout << "WELCOME TO MARQOV!"<<std::endl;
+        std::cout << "[MARQOV::main] To get you going we will generate and populate a configuration directory locally under ./config"<<std::endl;
         makeDir("./config");
         const auto filename = std::string{"./config/select.ini"};
         if(!fileexists(filename))
@@ -80,51 +106,91 @@ int main()
         }
         else
         {
-            std::cout<<"[MARQOV::main] "<<filename<<" already exists, but is not usable. I would overwrite its content, hence I'm terminating now"<<std::endl;
+            std::cout << "[MARQOV::main] "<< filename<<" already exists, but is not usable.";
+			std::cout << "I would overwrite its content, hence I'm terminating now"<<std::endl;
             throw;
         }
     }
     
-    // With the registry available we can now start to read in parameters from config files. Note that these parameters get replicated in the final HDF5 containers.
+    // With the registry available we can now start to read in parameters from config files. 
+	// Note that these parameters get replicated in the final HDF5 containers.
     
-    std::string name{"Heisenberg"};// We are a Heisenberg Model. Saves some typing.
+
+	// We are a Heisenberg Model. Saves some typing...
+    std::string name{"Heisenberg"};
     std::string fn{name + ".ini"};
-    //let's get a couple of parameters from the registry
+
+
+
+	// Geometry
+	// --------
+    // Instantiate a lattice
+    int L = reg.Get<int>(fn, name, "L" ); // linear lattice size
+    auto dim  = reg.Get<int>(fn, name, "dim" ); // dimension
+    RegularHypercubic latt(L, dim);
+    
+
+
+	// Hamltonian parameters
+	// ---------------------
+    // Set the Hamiltonian parameters, the coupling J, and the inverse temperature beta
+	// these are read from a file, using the registry module
+    auto beta = reg.Get<std::vector<double>>(fn, "Heisenberg", "beta");
+    auto J    = reg.Get<std::vector<double>>(fn, "Heisenberg", "J");
+
+	// Form the cartesian product of all betas and all J's, hence spanning
+	// our parameter space
+    auto hp = cart_prod(beta, J);
+    
+
+
+	// Output directory
+	// ----------------
+
+    // Prepare output directory using helper script
+	std::string outbasedir = "../out/";
+    makeDir(outbasedir);
+    std::string outpath = outbasedir+std::to_string(L)+"/";
+    makeDir(outpath);
+    
+
+
+    // Monte Carlo parameters 
+	// ----------------------
+
+    // First, we import them from the registry
     int nreplicas  = reg.Get<int>(fn, name, "rep" );
     auto nclusteramp   = reg.Get<double>(fn, "MC", "nclusteramp");
     auto nclusterexp   = reg.Get<int>(fn, "MC", "nclusterexp");
     auto nmetro        = reg.Get<int>(fn, "MC", "nmetro");
     auto warmupsteps   = reg.Get<int>(fn, "MC", "warmupsteps");
     auto measuresteps  = reg.Get<int>(fn, "MC", "measuresteps");
-    int L = reg.Get<int>(fn, name, "L" );// a single lattice size
-    auto dim  = reg.Get<int>(fn, name, "dim" );
     
-    //let's create a single lattice.
-    RegularHypercubic latt(L, dim);
+	// Then, we store them into a MARQOV::Config object
+    MARQOV::Config mp(outpath); // output path 
+    mp.setnmetro(nmetro); // number of Metropolis sweeps per EMCS
+    mp.setncluster(int(nclusteramp*pow(L,nclusterexp))); // number of Wolff updates per EMCS
+    mp.setwarmupsteps(warmupsteps); // number of EMCS for warmup
+    mp.setgameloopsteps(measuresteps); // number of EMCS for production
     
-    // Set the Hamiltonian parameters, J, and the inverse temperature beta
-    auto beta = reg.Get<std::vector<double> >(fn, "Heisenberg", "beta");//read in a set of inverse temperatures
-    auto J    = reg.Get<std::vector<double> >(fn, "Heisenberg", "J");//read in a set of coupling strengths
-    auto hp = cart_prod(beta, J);//Form the cartesian product of all betas and all Js, the hamiltonian parameters
+
+
+	// Schedule and Run
+	// ----------------
+
+	// Bundle the lattice, the MC parameters and the Hamiltonian parameters
+    auto paramsets = finalize_parameter(latt, mp, hp);
     
-    // prepare
-    std::string outpath = ".out/"+std::to_string(L)+"/";// by default we dump into the current directory.
-    
-    // Set Monte Carlo parameters using MARQOV::Config
-    MARQOV::Config mp(outpath);// output path 
-    mp.setnmetro(nmetro);// number of Metropolis sweeps per EMCS
-    mp.setncluster(int(nclusteramp*pow(L,nclusterexp)));// number of Wolff updates per EMCS
-    mp.setwarmupsteps(warmupsteps);// number of EMCS for warmup
-    mp.setgameloopsteps(measuresteps);// number of EMCS for production
-    
-    makeDir(mp.outpath);// A small utility function that helps us to create folders
-    
-    auto params = finalize_parameter(latt, mp, hp);//bundle the lattice, the marqov parameters and the hamiltonian parameters
-    auto rparams = replicator(params, nreplicas);//duplicate everything for the amount of replicas
+	// Duplicate everything for the amount of replicas
+    auto rparamsets = replicator(paramsets, nreplicas);
     
     // Instantiate the scheduler which waits for new threads.
-    auto sched = makeScheduler<MySimpleHeisenberg, RegularHypercubic> (rparams[0]);// makeScheduler can figure out a lot from one set of parameters
+	// (makeScheduler can figure out a lot from one set of parameters)
+    auto sched = makeScheduler<HeisenbergHamiltonian, RegularHypercubic> (rparamsets[0]);
     
-    for(auto p : rparams) sched.createSimfromParameter(p);//submit parameter set to scheduler.
+	// Submit parameter sets to the scheduler
+    for (auto p : rparamsets) sched.createSimfromParameter(p);
+
+	// Run!
     sched.start();
 }
