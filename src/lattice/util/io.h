@@ -84,6 +84,16 @@ void save_geometry_deluxe(Grid& grid, const std::string path)
 }
 
 
+int import_geometry_ncoords(std::string path)
+{
+	std::ifstream in(NULL);
+	in.open(path.c_str());
+	std::string row;
+    std::getline(in, row);
+	return std::stoi(row);
+}
+
+
 /**
 * @brief Import coordinates and neighbour relations from CSV file
 *
@@ -103,6 +113,9 @@ int import_geometry(const std::string path, std::vector<std::vector<double>>& gr
 	std::ifstream in(NULL);
 	in.open(path.c_str());
 	std::string row;
+
+        std::getline(in, row);
+        std::getline(in, row);
 
 	// loop over lines
     while (!in.eof()) 
@@ -135,47 +148,6 @@ int import_geometry(const std::string path, std::vector<std::vector<double>>& gr
 }
 
 
-
-
-/**
-* @brief Import neighbour relations from CSV file
-*
-* @param path filename including full path
-* @param grid here the coordinates will be stored
-* @param minusone set false if indices in CSV file are counted from zero (default), set true if they are counted from one
-*
-* @return the number of vertices
-*
-* @note for format specifications see general documentation-
-*/
-int import_geometry(const std::string path, std::vector<std::vector<int>>& nbrs, bool minusone=false)
-{
-	int reduce = 0;
-	if (minusone) reduce = -1;
-
-	std::ifstream in(NULL);
-	in.open(path.c_str());
-	std::string row;
-
-    while (!in.eof()) 
-	{
-        std::getline(in, row);
-        if (in.bad() || in.fail()) 
-		{
-            break;
-        }
-		std::istringstream ss(row);
-		std::string substr;
-
-		std::vector<int> n;
-		while(std::getline(ss, substr, '\t'))
-		{
-			n.push_back(std::stoi(substr)+reduce);
-    	}
-		nbrs.push_back(n);
-	}
-	return nbrs.size();
-}
 
 
 
