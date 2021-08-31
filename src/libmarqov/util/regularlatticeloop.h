@@ -59,6 +59,7 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
 	// Init Scheduler
 	SchedulerType sched(1, nthreads);
 
+	makeDir(outbasedir);
 	for (std::size_t j=0; j<nL.size(); j++)
 	{
 		// prepare
