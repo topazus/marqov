@@ -22,6 +22,8 @@
 #include <string>
 #include <fstream>
 
+
+
 /**
 * export coordinates and neighbour relations
 *
@@ -53,37 +55,12 @@ void save_geometry(Grid& grid, const std::string path)
 
 
 /**
-* export coordinates, neighbour relations and bond strengths
+* @brief Import header line of CSV graph which contains only a single number (the number of coordinates)
 *
-* @tparam Grid the type of the lattice
-* @param grid the lattice
-* @param path directory in which the geometry is to be stored
+* @param path filename including full path
+*
+* @return return the number of coordinates as an integer (can be zero)
 */
-
-template <class Grid>
-void save_geometry_deluxe(Grid& grid, const std::string path)
-{
-	std::ofstream os;
-	os.open(path.c_str());
-	os << std::fixed << std::setprecision(16);
-
-	for (int i=0; i<grid.size(); i++)
-	{
-		auto nbrs = grid.nbrs(0,i);
-		auto crds = grid.crds(i);
-		auto bnds = grid.getbnds(0,i);
-
-		os << nbrs.size() + crds.size() + bnds.size();
-
-		for (int j=0; j<crds.size(); j++) os << "\t" << crds[j];
-		for (int j=0; j<nbrs.size(); j++) os << "\t" << nbrs[j];
-		for (int j=0; j<bnds.size(); j++) os << "\t" << bnds[j];
-
-		os << std::endl;
-	}
-}
-
-
 int import_geometry_ncoords(std::string path)
 {
 	std::ifstream in(NULL);
@@ -114,10 +91,11 @@ int import_geometry(const std::string path, std::vector<std::vector<double>>& gr
 	in.open(path.c_str());
 	std::string row;
 
-        std::getline(in, row);
-        std::getline(in, row);
+	// jump over header (two lines)
+    std::getline(in, row);
+    std::getline(in, row);
 
-	// loop over lines
+	// loop over lines containing the geometry
     while (!in.eof()) 
 	{
         std::getline(in, row);
@@ -146,9 +124,5 @@ int import_geometry(const std::string path, std::vector<std::vector<double>>& gr
 	}
 	return nbrs.size();
 }
-
-
-
-
 
 #endif
