@@ -73,8 +73,8 @@ void scheduleIsing(RegistryDB& registry)
     {
         std::cout<<"[MARQOV] Unable to find Ising config! Generating new one in ./config/"+ham+".ini"<<std::endl;
         ofstream ising("./config/"+ham+".ini");
-        ising<<"[Ising]\n"<<"L = 10\n"<<"rep = 2\n"<<"dim = 2\n"<<"beta = 0.3, 0.4\n"<<"J = -1.0\n\n";
-        createcfgfooter(ising, 10, 25, 0, 30, 30);
+		createcfgbody(ising, ham, 16, 2, 4, {0.42, 0.43, 0.44, 0.45, 0.46}, -1);
+        createcfgfooter(ising, 5, 25, 0, 50, 100);
         registry.init("./config");
         outbasedir = registry.Get<std::string>(ham+".ini", "IO", "outdir" );
     }
@@ -634,7 +634,7 @@ int main(int argc, char* argv[])
     catch(Registry_Exception& re)
     {
         std::cout << "WELCOME TO MARQOV!" << std::endl;
-        std::cout << "[MARQOV] Configuration directory not found! ";
+        std::cout << "[MARQOV] Configuration directory not found!" << std::endl;
 		std::cout << "Assuming you're starting the MARQOV demonstration binary for the first time!" << std::endl;
         std::cout << "To get you going we will generate and populate a configuration directory locally under ./config" << std::endl;
 

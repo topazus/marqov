@@ -78,3 +78,27 @@ void createcfgfooter(std::ostream& os, int nmetro, double nclusteramp, int nclus
     os<<"[IO]\n"<<"outdir = ./out\n"<<"[END]"<<std::endl;
 }
 
+/** Utility function to write the standard Hamiltonian parameters of the config file
+*
+* @param os
+* @param name
+* @param L
+* @param dim
+* @param rep
+* @param beta
+* @param J
+*/
+void createcfgbody(std::ostream& os, std::string name, int L, int dim, int rep, std::vector<double> beta, int J)
+{
+
+	os << "[" << name << "]" << std::endl;
+	os << "L = " << L << std::endl;
+	os << "dim = " << dim << std::endl;
+	os << "rep = " << rep << std::endl;
+	os << "beta = ";
+	int nbetas = beta.size();
+	for (int i=0; i<nbetas-1; i++) os << beta[i] << ", ";
+	os << beta[nbetas-1] << std::endl;
+	os << "J = " << J << std::endl;
+
+}

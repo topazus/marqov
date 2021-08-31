@@ -643,7 +643,8 @@ class Core : public RefType<Grid>
             auto retval = new typename Hamiltonian::StateVector[size];
             if (step > 0)
             {
-                std::cout<<"[MARQOV::Core] Previous data found! Continuing simulation at step "<<step<<std::endl;
+				// if (step == 1) std::cout << "[MARQOV::Core] System already initialized" << std::endl;
+				if (step > 1)  std::cout << "[MARQOV::Core] Previous data found! Continuing at step " << step << std::endl;
                 //read in the state space
                 auto prevstepstate = dump.openGroup("/step" + std::to_string(step-1) + "/state");
                 {
