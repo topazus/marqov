@@ -32,45 +32,22 @@
 class GraphFromCSV
 {
     public:
-    int npoints;
-
-    std::vector<std::vector<int>> neighbours;
-
-    GraphFromCSV(std::string filename) 
-    {
-        npoints = import_geometry(filename, neighbours);
-    }
-            
-    std::vector<int> nbrs(const int a, const int i) const
-    {
-        return neighbours[i];
-    }
-
-    std::size_t size() const {return npoints;}
-};
-
-
-/* Read graph with coordinates from csv file.
-* @note for format specifications see general documentation
-*/
-class GraphFromCSVwithCoords
-{
-    public:
-    int npoints;
+    int npoints, ncoords;
 
     std::vector<std::vector<int>> neighbours;
     std::vector<std::vector<double>> grid;
 
-    GraphFromCSVwithCoords(std::string filename, int ncoords) 
+    GraphFromCSV(std::string filename) 
     {
-        npoints = import_geometry(filename, grid, neighbours, ncoords, false);
+		ncoords = import_geometry_ncoords(filename);
+        npoints = import_geometry(filename, grid, neighbours, ncoords);
     }
             
     std::vector<int> nbrs(const int a, const int i) const
     {
         return neighbours[i];
     }
-    
+
     std::vector<double> crds(const int i) const
     {
         return grid[i];
@@ -78,4 +55,5 @@ class GraphFromCSVwithCoords
 
     std::size_t size() const {return npoints;}
 };
+
 #endif

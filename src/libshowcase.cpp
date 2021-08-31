@@ -58,6 +58,9 @@ static int instantiatesim(const std::string& path, Lattice& mylatt, const HamPar
     return 0;
 }
 
+
+
+
 /** Create a single instance of the Ising Model
  * 
  * @see Ising.h
@@ -70,41 +73,47 @@ static int instantiatesim(const std::string& path, Lattice& mylatt, const HamPar
  */
 int pyIsing(std::string path, int dim, int len, double beta, double J)
 {
-    RegularHypercubic mylatt(len, dim); //nD len x len lattice
-    // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
+	// Construct hypercubic regular lattice of linear length len and dimension dim
+    RegularHypercubic mylatt(len, dim);
+
+    // Set Hamiltonian parameters, the coupling J, and the inverse temperature beta
     auto hp = make_tuple(beta, J);
+
+	// Create and run a single simulation
     return instantiatesim<RegularHypercubic, Ising<double>>(path, mylatt, hp);
 }
 
-/*
+
 int pyIsingGraph(std::string outpath, std::string graphpath, double beta, double J)
 {
-    GraphFromCSV graph(graphpath);//load lattice from a graph specification
-    // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
+	// Load lattice from a graph specification
+    GraphFromCSV graph(graphpath);
+
+	// Set Hamiltonian parameters, the coupling J, and the inverse temperature beta
     auto hp = make_tuple(beta, J);
+
+	// Create and run a single simulation
     return instantiatesim<GraphFromCSV, Ising<double>>(outpath, graph, hp);
-}*/
+}
+
 
 int pyHeisenberg(std::string path, int dim, int len, double beta, double J)
 {
-    RegularHypercubic mylatt(len, dim); //nD len x len lattice
-    // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
+    RegularHypercubic mylatt(len, dim);
     auto hp = make_tuple(beta, J);
     return instantiatesim<RegularHypercubic, Heisenberg<double, double> >(path, mylatt, hp);
 }
 
 int pyHeisenbergGraph(std::string outpath, std::string graphpath, double beta, double J)
 {
-    GraphFromCSV graph(graphpath);//load lattice from a graph specification
-    // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
+    GraphFromCSV graph(graphpath);
     auto hp = make_tuple(beta, J);
     return instantiatesim<GraphFromCSV, Heisenberg<double, double>>(outpath, graph, hp);
 }
  
 int pyPhi4(std::string path, int dim, int len, double beta, double lambda, double mass)
 {
-     RegularHypercubic mylatt(len, dim); //nD len x len lattice
-     // A section for setting our Hamiltonian parameters, J, and the inverse temperature beta
+     RegularHypercubic mylatt(len, dim);
      auto hp = make_tuple(beta, beta, lambda, mass);
  
      return instantiatesim<RegularHypercubic, Phi4<double, double> >(path, mylatt, hp);
@@ -112,43 +121,39 @@ int pyPhi4(std::string path, int dim, int len, double beta, double lambda, doubl
 
 int pyAshkinTeller(std::string path, int dim, int len, double beta, double J, double K)
 {
-     RegularHypercubic mylatt(len, dim); //nD len x len lattice
-     // A section for setting our Hamiltonian parameters, and beta
+     RegularHypercubic mylatt(len, dim);
      auto hp = make_tuple(beta, J, K);
      return instantiatesim<RegularHypercubic, AshkinTeller >(path, mylatt, hp);
 }
 
 int pyAshkinTellerGraph(std::string outpath, std::string graphpath, double beta, double J, double K)
 {
-     GraphFromCSV graph(graphpath);//load lattice from a graph specification
-     // A section for setting our Hamiltonian parameters, and beta
+     GraphFromCSV graph(graphpath);
      auto hp = make_tuple(beta, J, K);
      return instantiatesim<GraphFromCSV, AshkinTeller >(outpath, graph, hp);
 }
 
 int pyBlumeCapel(std::string path, int dim, int len, double beta, double J, double D)
 {
-     RegularHypercubic mylatt(len, dim); //nD len x len lattice
-     // A section for setting our Hamiltonian parameters, and beta
+     RegularHypercubic mylatt(len, dim);
      auto hp = make_tuple(beta, J, D);
      return instantiatesim<RegularHypercubic, BlumeCapel<int> >(path, mylatt, hp);
 }
 
 int pyBlumeCapelGraph(std::string outpath, std::string graphpath, double beta, double J, double D)
 {
-     GraphFromCSV graph(graphpath);//load lattice from a graph specification
-     // A section for setting our Hamiltonian parameters, and beta
+     GraphFromCSV graph(graphpath);
      auto hp = make_tuple(beta, J, D);
      return instantiatesim<GraphFromCSV, BlumeCapel<int> >(outpath, graph, hp);
 }
 
 int pyBEG(std::string path, int dim, int len, double beta, double J, double D, double K)
 {
-     RegularHypercubic mylatt(len, dim); //nD len x len lattice
-     // A section for setting our Hamiltonian parameters, and beta
+     RegularHypercubic mylatt(len, dim);
      auto hp = make_tuple(beta, J, D, K);
      return instantiatesim<RegularHypercubic, BlumeEmeryGriffiths<int> >(path, mylatt, hp);
 }
+
 
 template <class Lattice, class HamParms>
 static int instantiatePotts(int q, const std::string& path, Lattice&& mylatt, const HamParms& hp)
@@ -185,9 +190,7 @@ static int instantiatePotts(int q, const std::string& path, Lattice&& mylatt, co
 
 int pyPotts(int q, std::string path, int dim, int len, double beta, double J)
 {
-     RegularHypercubic mylatt(len, dim); //nD len x len lattice
-     // A section for setting our Hamiltonian parameters, and beta
+     RegularHypercubic mylatt(len, dim);
      auto hp = make_tuple(beta, J);
-     
      return instantiatePotts(q, path, mylatt, hp);
 }
