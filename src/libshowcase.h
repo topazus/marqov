@@ -5,6 +5,7 @@
 
 #include <string>
 int pyIsing(std::string path, int dim, int len, double beta, double J);
+int pyIsingGraph(std::string outpath, std::string graphpath, double beta, double J);
 
 int pyHeisenberg(std::string path, int dim, int len, double beta, double J);
 int pyHeisenbergGraph(std::string outpath, std::string graphpath, double beta, double J);
