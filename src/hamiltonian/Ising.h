@@ -35,7 +35,8 @@
 class IsingGenericVectorValuedObs
 {
 	public:
-		std::string name, desc;
+		std::string name = "dummy";
+		std::string desc = "testing vector-valued observables ...";
 		template <class StateSpace, class Grid>
 		std::vector<double> measure(const StateSpace& statespace, const Grid& grid)
 		{
@@ -45,7 +46,6 @@ class IsingGenericVectorValuedObs
 
 			return retval;
 		}
-		IsingGenericVectorValuedObs() : name("dummy"), desc("testing vector-valued observables ...") {}
 };
 
 
@@ -68,7 +68,7 @@ class Ising
 
 		double J;
 		static constexpr int SymD = 1;
-		const std::string name;
+		const std::string name = "Ising";
 
 
 		//  ---- Definitions  -----
@@ -79,7 +79,7 @@ class Ising
 
         std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
 
-		Ising(double J) : J(J), name("Ising"), obs_e(*this), obs_fx(0), obs_fy(1)
+		Ising(double J) : J(J), obs_e(*this), obs_fx(0), obs_fy(1)
 		{}
 		~Ising() {delete interactions[0];}
 
@@ -91,7 +91,7 @@ class Ising
 		MagFTComp      obs_fx;
 		MagFTComp      obs_fy;
 		IsingGenericVectorValuedObs dummy;
-        decltype(std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy)) observables = {std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy)};
+        decltype(std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy)) observables = std::make_tuple(obs_m, obs_e, obs_fx, obs_fy, dummy);
 
 
 		//  ----  Initializer  ----

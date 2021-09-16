@@ -120,13 +120,12 @@ class Phi4
 		Onsite_Quadratic<StateVector> onsite_standard;
 		Onsite_Fourth_Minus_One<StateVector> onsite_fourth_minus_one;
 
-		std::array<Standard_Interaction<StateVector>*, 1>      interactions = {new Standard_Interaction<StateVector>(J)};
+		std::array<Standard_Interaction<StateVector>*, 1>      interactions{new Standard_Interaction<StateVector>(J)};
 		std::vector<OnSite<StateVector, CouplingType>*>        onsite; // empty here, to be filled in the constructor!
 
 		Phi4(double beta, double lambda, double mass) : beta(beta), 
 												lambda(lambda), 
 												mass(mass), 
-												name("Phi4"), 
                                                 phi4interaction(J),
 												onsite_standard(mass/beta),
 												onsite_fourth_minus_one(lambda/beta),

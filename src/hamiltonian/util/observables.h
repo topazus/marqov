@@ -22,6 +22,7 @@
 #include <complex>
 #include <string>
 #include <vector>
+#include "../../libmarqov/metropolishelpers.h"
 
 /**
  * Magnetization

@@ -41,6 +41,20 @@
 
 namespace MARQOV
 {
+    template <typename FPType>
+    auto calcMHratio(FPType en)
+    {
+        FPType mhratio = 0;
+        //prevent under/overflow
+        if (en > std::log(std::numeric_limits<FPType>::min()))
+        {
+            if (en > std::log(std::numeric_limits<FPType>::max()))
+                mhratio = std::numeric_limits<FPType>::max();
+            else
+                mhratio = std::exp(en);
+        }
+        return mhratio;
+    }
     /** The Marqov internal scheduler.
      * 
      * It encapsulates the creation of simulations, the parallel tempering
@@ -64,18 +78,25 @@ namespace MARQOV
             auto t = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
             bool needswarmup = !Sim::dumppresent(std::get<1>(t));
             int idx = gamekernels.size();
-
+            
+            auto loadkernel = [&, t]()
+            {
+                    return makeCore<typename Sim::Lattice, typename Sim::HamiltonianType, typename Sim::RNGT>(t, mutexes.hdf);
+            };
+            
             std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
             {
-//                 std::cout<<"Beginning gamekernel"<<std::endl;
+                 std::cout<<"Beginning gamekernel of "<<mywork.id<<std::endl;
                 {
-                    auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
+//                     auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
+                    auto sim = kernelloaders[mywork.id]();
                     // We loop until the next PT step
                     for(; mywork.npt < npt; ++mywork.npt)
                     {
                         //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
                         sim.gameloop();
                     }
+//                    std::cout<<"Final action of id "<<mywork.id<<" : "<<sim.calcAction(sim.statespace)<<std::endl;
                 }
                 if (mywork.npt < maxpt) // determine whether this itm needs more work
                 {
@@ -90,8 +111,11 @@ namespace MARQOV
 //                 std::cout<<"finished gamekernel closing file"<<std::endl;
             };
             
+            
+            
             gamekernelmutex.lock();
             gamekernels.push_back(gamekernel);
+            kernelloaders.push_back(loadkernel);
             gamekernelmutex.unlock();
             if(needswarmup)
             {
@@ -165,15 +189,39 @@ namespace MARQOV
                 workqueue.push_back(Simstate(idx));
             }
         }
+
+        //FIXME...
+        static bool exchangepossible(Sim& sima, Sim& simb)
+        {
+           return true;
+        }
+
+        template <class F>
+        void createPTplan(F f)
+        {
+            auto len = gamekernels.size();
+            auto adapter = [&f, &len](){auto t = f(); return std::make_pair(t.first%len, t.second%len);};
+            std::generate_n(std::back_inserter(ptplan), maxpt, adapter);
+            
+            for (int i = 0; i < maxpt; ++i)
+                std::cout<<ptplan[i].first<<" "<<ptplan[i].second<<std::endl;
+        }
+        
         /** Start the simulations! GoGoGo...!
          */
         void start()
         {
+//             class Seq
+//             {
+//                 int i = 0;
+//                 auto operator()(){return std::make_pair(i,i++);}
+//             } seq;
+            auto ran = [&] {
+                return std::make_pair(rng.integer(), rng.integer());
+            };
+            createPTplan(ran);
             //create dummy data for the ptplan
-            for (int i = 0; i < maxpt; ++i)
-                ptplan.emplace_back(-1, -1 );
-            
-            //         std::cout<<"Starting up master"<<std::endl;
+            std::cout<<"Starting up master"<<std::endl;
             Simstate itm;
             
             while(!masterstop)
@@ -189,7 +237,7 @@ namespace MARQOV
                 });
                 if(busy) //there really is sth. to do
                 {
-                    // std::cout<<"dealing with work"<<std::endl;
+                    std::cout<<"dealing with work"<<std::endl;
                     if(ptplan[itm.npt].first == itm.id || ptplan[itm.npt].second == itm.id) // check if this sim is selected for PT in this time step. This should usually be the case since we do as many steps as necessary
                     {
                         ptstep(itm);
@@ -217,7 +265,7 @@ namespace MARQOV
          */
         CXX11Scheduler(int maxptsteps = 1, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
-        taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads))
+        taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads)), rng(time(0) + std::random_device{}())
         {}
         /** Tidy up scheduler.
          * 
@@ -231,6 +279,7 @@ namespace MARQOV
                 });
             }
             masterstop = true;
+            std::cout<<"PT acceptance: "<<acceptedmoves/static_cast<double>(maxpt)<<std::endl;
         }
 
 //        Scheduler() = delete; //FIXME: If this would be present, the call to Scheduler() would be ambiguous
@@ -263,12 +312,12 @@ namespace MARQOV
          */
         struct Simstate
         {
-           Simstate() : id(-1), npt(-100) {}
+           Simstate() = default;
            Simstate(int i) : id(i), npt(0) {}
            Simstate(int i, int np) : id(i), npt(np) {}
-//             std::function<void(Simstate, int)> looper;
-            int id;
-            int npt;
+           int id = -1;///< my id
+           int statespacesize = 0;
+           int npt = -100;///< which will be my next parallel tempering step.
         };
         
         /**
@@ -283,7 +332,7 @@ namespace MARQOV
          * 
          * @param id find the next partner that this id has.
          */
-        auto findpartner(uint id)
+        auto findpartner(uint id) const
         {
             return std::find_if(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == static_cast<int>(id);});
         }
@@ -297,32 +346,46 @@ namespace MARQOV
         /** Do a parallel tempering step. 
          * 
          * This function is called when the current simulation is up for a parallel tempering (PT) step.
-         * If its partner is already waiting we do the parallel tempering, if not we got moved into 
-         * a queue and wait for a partner
+         * If its partner is already waiting we do the parallel tempering, if not we get moved into 
+         * a queue and wait for a partner.
          * @param itm The Sim which is chosen for PT
          */
         void ptstep(Simstate itm) {
-            //         std::cout<<"Parallel Tempering!"<<std::endl;
-            //         std::cout<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
-            //         std::cout<<"Expected pairing for this time step: "<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
-            
+                    std::cout<<"Parallel Tempering!"<<std::endl;
+                    std::cout<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
+                    std::cout<<"Expected pairing for this time step: "<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
+            std::cout<<"ptstep begin"<<std::endl;
+            if (ptplan[itm.npt].first == ptplan[itm.npt].second)
+            {//this can happen and is not prevented
+                std::cout<<"[MARQOV::Scheduler] self swap in PT..."<<std::endl;
+                movesimtotaskqueue(itm);
+                return;
+            }
             int partner = ptplan[itm.npt].first;
             if (partner == itm.id) partner = ptplan[itm.npt].second;//it must be the other. no exchanges with myself
             auto partnerinfo = findpartner(partner);
-            
-            if (partnerinfo != ptqueue.cend())
+
+            if ((partnerinfo != ptqueue.cend()) && (itm.npt == partnerinfo->npt) )
             {// partner is at the same stage, hence we can PT exchange
-                //             std::cout<<"Partner found in queue"<<std::endl;
+
+                std::cout<<"Partner "<<partner<<" found in queue"<<std::endl;
+                {
+                    auto sima = kernelloaders[itm.id]();
+                    auto simb = kernelloaders[partnerinfo->id]();
+                    double mhratio = calcprob(sima, simb);
+                    if(rng.real() < std::min(1.0, mhratio)){
+                        exchange_statespace(sima, simb);
+++acceptedmoves;
+}
+                }
                 ptqueue.erase(partnerinfo);
-                calcprob();
-                exchange();
                 //put both sims back into the taskqueue for more processing until their next PT step
                 movesimtotaskqueue(itm);
                 movesimtotaskqueue(Simstate(partner, itm.npt));
             }
             else
             {//we have to wait for the PT partner
-                //             std::cout<<"Partner not in queue"<<std::endl;
+                std::cout<<"Partner "<<partner<<" not in queue"<<std::endl;
                 ptqueue.push_back(itm);
             }
         }
@@ -335,9 +398,9 @@ namespace MARQOV
         void movesimtotaskqueue(Simstate itm)
         {
             int newnpt = findnextnpt(itm.id, itm.npt);
-            //         std::cout<<"Putting a new item "<<itm.id<<" with "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue"<< std::endl;
+            std::cout<<"Putting a new item with id "<<itm.id<<" with npt = "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue"<< std::endl;
             taskqueue.enqueue(
-                [&,itm, newnpt]{gamekernels[itm.id](itm, newnpt);} //Get the required kernel from the array of gamekernels and execute it.
+                [&, itm, newnpt]{gamekernels[itm.id](itm, newnpt);} //Get the required kernel from the array of gamekernels and execute it.
             );
         }
         /** Determine the next PT step.
@@ -346,7 +409,7 @@ namespace MARQOV
          * @param curnpt current PT time
          * @return the next PT step where this simulation is selected for PT.
          */
-        uint findnextnpt(int idx, uint curnpt)
+        uint findnextnpt(int idx, uint curnpt) const
         {
             uint retval = curnpt+1;
             while ((retval < static_cast<uint>(maxpt)) && (ptplan[retval].first != idx) && (ptplan[retval].second != idx))
@@ -355,10 +418,10 @@ namespace MARQOV
             }
             return retval;
         }
-        
+        int acceptedmoves = 0;
         int maxpt; ///< how many pt steps do we do
         std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
-        std::vector<std::pair<int, int> > ptplan; ///< who exchanges with whom in each step
+        std::vector<std::pair<int, int> > ptplan; ///< An array of who exchanges with whom in each step
         bool masterstop; ///< A global flag to denote that the master has decided to stop.
         ThreadPool::Semaphore masterwork; ///< The semaphore that triggers the master process
         ThreadPool::ThreadSafeQueue<Simstate> workqueue; ///< This is the queue where threads put their finished work and the master does PT.
@@ -367,10 +430,35 @@ namespace MARQOV
         std::vector<Sim*> simvector; ///< An array for the full state of the simulations.
         ThreadPool::Queue taskqueue; ///< This is the queue where threads pull their work from.
         std::vector<std::function<void(Simstate, int)> > gamekernels; ///< prefabricated workitems that get executed to move a simulation forward.
-        
-        //FIXME fill those functions for proper PT
-        void calcprob() {}
-        void exchange() {}
+        std::vector<std::function<Sim(void)> > kernelloaders;
+        RNGCache<std::mt19937_64> rng{static_cast<std::mt19937_64::result_type>(0)};
+        template <class T>
+        double calcprob (T& sima, T& simb) const
+        {
+//            auto sima = kernelloaders[ida]();
+//            auto simb = kernelloaders[idb]();
+            double actionaa = sima.calcAction(sima.statespace);
+            double actionbb = simb.calcAction(simb.statespace);
+            double actionab = sima.calcAction(simb.statespace);
+            double actionba = simb.calcAction(sima.statespace);
+            std::cout<<"Action of id 1"<<" : "<<actionaa<<std::endl;
+            std::cout<<"Action of id 2"<<" : "<<actionbb<<std::endl;
+            
+            std::cout<<"Action of id 1"<<" with other statespace"<<" : "<<actionab<<std::endl;
+            std::cout<<"Action of id 2"<<" with other statespace"<<" : "<<actionba<<std::endl;
+            //calculate actual metropolis transition ratio from the propability densities
+//             double mhratio = std::exp(-actionab)*std::exp(-actionba)/std::exp(-actionaa)/std::exp(-actionbb);
+            double endiff = actionaa - actionab + actionbb - actionba;
+            double mhratio = calcMHratio(endiff);
+//             double mhratio = std::exp(actionaa - actionab + actionbb - actionba);
+            std::cout<<"M-H Ratio: "<<mhratio<<std::endl;
+            return mhratio;
+        }
+        template <class T>
+        void exchange_statespace(T& sima, T& simb) 
+        {
+    	    swap(sima.statespace, simb.statespace);
+        }
     };
 
 #ifndef MPIMARQOV
@@ -419,7 +507,7 @@ namespace MARQOV
          * @param maxptsteps How many parallel tempering steps do we do
          * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
          */
-        MPIScheduler(int maxptsteps, uint nthreads = 0) : rrctr(0), maxpt(maxptsteps), myScheduler(maxptsteps, nthreads)
+        MPIScheduler(int maxptsteps = 1, uint nthreads = 0) : rrctr(0), maxpt(maxptsteps), myScheduler(maxptsteps, nthreads)
         {
             int mpi_inited;
             MPI_Initialized(&mpi_inited);

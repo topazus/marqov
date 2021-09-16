@@ -287,13 +287,11 @@ template <typename SpinType = int>
 class EdwardsAndersonIsing
 {
 	public:
-
 		//  ----  Parameters  ----
 
 		double J;
 		static constexpr int SymD = 1;
 		const std::string name;
-
 
 		//  ---- Definitions  -----
 
@@ -301,9 +299,7 @@ class EdwardsAndersonIsing
 		template <typename RNG>
 		using MetroInitializer = EdwardsAndersonIsing_Initializer<StateVector, RNG>;
 
-
 		//  ----  Hamiltonian terms  ----
-
 		std::array<EdwardsAndersonIsing_interaction<StateVector>*, 1> interactions = {new EdwardsAndersonIsing_interaction<StateVector>(J)};
 
 		EdwardsAndersonIsing(double J) : J(J), 

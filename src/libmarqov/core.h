@@ -34,11 +34,14 @@
 #include <chrono>
 #include <mutex>
 #include <thread>
+#include <memory>
+#include "marqov_detail.h"
 #include "cachecontainer.h"
 #include "util/svmath.h"
 #include "rngcache.h"
 #include "timetracker.h"
 #include "../hamiltonian/util/randomdir.h"
+#include "../hamiltonian/util/observables.h"
 
 /** The MARQOV namespace.
  *
@@ -172,120 +175,8 @@ namespace MARQOV
      * @param h5loc the HDF5 group where we generate all the information.
      */
     void dumpEnvironmenttoHDF5Group(H5::Group& h5loc);
-    
-	namespace detail
-	{
-        /** C++17 type sink.
-         * 
-         * A generic type sink from C++17.
-         * It consumes a type, and makes it `void`.
-         */
-		template<class> struct type_sink {
-		     typedef void type;///< convert everything to void.
-		 };
-		template<class T> using type_sink_t = typename type_sink<T>::type;
-        
-        /** Helper to figure out whether a type is a lattice.
-         * 
-         * We have defined a lattice as
-         * something that has a .nbrs() and a .size() function.
-         */
-		template<class L, class=void, class=void> struct is_Lattice : std::false_type {};
-		
-		template<class Lattice> struct is_Lattice<Lattice,
-		type_sink_t< decltype( std::declval<Lattice>().nbrs(std::declval<int>(), std::declval<int>()) ) >,
-		type_sink_t< decltype( std::declval<Lattice>().size() ) >
-		> : std::true_type {};
-		
-        /** Internal base class if MARQOV gets the lattice by reference.
-         * 
-         * A base class that gets used if MARQOV::Core gets the lattice by reference.
-         * @tparam L the lattice that will be used
-         */
-		template <class L>
-		class Ref
-		{
-			public:
-				/** The constructor that takes a reference.
-				 *
-				 * @tparam Args the parameter pack with all parameters
-				 *
-				 * @param lattice A reference to a lattice.
-				 * @param args additional arguments that just get eaten.
-				 */
-				template<class... Args>
-				Ref(const L& lattice, Args&& ... args) : grid(lattice) {}
-				const L& grid; ///< A reference to the external lattice. Note that the name is the same as in NonRef.
-		};
-		
-        /** Internal base class that is used if MARQOV creates a lattice.
-         * 
-         * A base class that gets used if MARQOV::Core gets the parameters
-         * of the lattice and constructs the lattice by itself.
-         * @tparam L the lattice that will be used
-         */
-		template <class L>
-		class NonRef
-		{
-			public:
-				/** Constructor if we construct the lattice ourselves.
-				 *
-				 * @tparam Args The parameter pack of the lattice parameters.
-				 * 
-				 * @param args the actual lattice arguments.
-				 */
-				template <class ...Args>
-				NonRef(std::tuple<Args...> args) : NonRef(args, std::make_index_sequence<std::tuple_size<std::tuple<Args...>>::value>()) {}
-
-				/** Constructor to do the parameter unpacking..
-				 *
-				 * @tparam Args The parameter pack of the lattice parameters.
-				 * @tparam S an integer sequence.
-				 * 
-				 * @param args the actual lattice arguments.
-				 */
-				template <class ...Args, size_t... S>
-				NonRef(std::tuple<Args...> args, std::index_sequence<S...>) : grid(std::get<S>(args)... ) {}
-				
-				const L grid;///< The storage of the Lattice. Note that the name of the variable is the same as in detail::Ref.
-		};
-
-        /** Helper to decide whether a Hamiltonian provides an init function.
-         * 
-         * This init function is ued for setting up the initial state space.
-         * @tparam StateSpace the type of the state space
-         * @tparam H the Hamiltonian type
-         * @tparam L the Lattice type
-         * @tparam R the RNG
-         * @tparam Ts arguments for the Hamiltonian
-         */
-		template<class StateSpace, class H, class L, class R, class=void, class... Ts> struct has_init : std::false_type {};
-		template<class StateSpace, class H, class L, class RNG, class... Ts>
-		struct has_init<StateSpace, H, L, RNG,
-		type_sink_t< decltype( std::declval<H>().template initstatespace<StateSpace, L, RNG, Ts...>(std::declval<StateSpace&>(), std::declval<L&>(), std::declval<RNG&>(), std::declval<Ts>()... ) ) >, Ts... > : std::true_type {};
-        
-        /** A helper to decide whether a Hamiltonian provides the paramname function.
-         * 
-         * This is used for naming the parameter names properly in the HDF5 file.
-         * @tparam H The Hamiltonian
-         */
-        template<class H, class = void> struct has_paramname : std::false_type {};
-        
-        template<class H>
-		struct has_paramname<H,
-		type_sink_t<decltype( std::declval<H>().paramname(std::declval<int>()) )> > : std::true_type {};
-        
-        /** Helper to decide whether an observable provides a description.
-         * 
-         * This is used for providing observable descriptions in the HDF5 file.
-         * @tparam O the observable that we check.
-         */
-        template<class O, class = void> struct obs_has_desc : std::false_type {};
-        
-        template<class O>
-		struct obs_has_desc<O,
-		type_sink_t<decltype( std::declval<O>().desc )> > : std::true_type {};
-     
+    namespace detail
+    {
         /** Create proper constructor call of the cache container.
          * 
          * The user has provided description.
@@ -318,46 +209,8 @@ namespace MARQOV
          */        
         template <int i, class Tup>
         inline auto createCArgTuple(H5::Group& h5loc, Tup& t) {return detail::createCArgTuple_impl<i>(h5loc, t, typename obs_has_desc<typename std::tuple_element<i, Tup>::type>::type() );}
-	};
-    
-    
-    /** Implementation function to call an objects' member function with a tuple of arguments.
-     * 
-     * This call actually performs the function call.
-     * @tparam Function Which member function to call.
-     * @tparam Object The type of the object
-     * @tparam Tuple The type of the Tuple of arguments.
-     * @tparam I an index sequence
-     * 
-     * @param f the name of the function.
-     * @param obj the object.
-     * @param t the arguments to f.
-     * @returns the return value of the function call.
-     */
-	template<typename Function, typename Object, typename Tuple, size_t ... I>
-	inline auto _call(Function f, Object& obj, Tuple t, std::index_sequence<I ...>) 
-	{
-		return (obj.*f)(std::get<I>(t) ...);
-	}
-	
-	/** A helper function to call an objects' member function with a tuple of arguments.
-     * 
-     * @tparam Function Which member function to call.
-     * @tparam Object The type of the object
-     * @tparam Tuple The type of the Tuple of arguments.
-     * 
-     * @param f the name of the function.
-     * @param obj the object.
-     * @param t the arguments to f.
-     * @returns the return value of the function call.
-     */
-	template<typename Function, typename Object, typename Tuple>
-	inline auto _call(Function f, Object& obj, Tuple t) 
-	{
-		static constexpr auto size = std::tuple_size<Tuple>::value;
-		return _call(f, obj, t, std::make_index_sequence<size>{});
-	}
-	
+    };
+
 	//forward declaration of Core.
 	//FIXME think about proper placement of docs and where...
     template <class Grid, class Hamiltonian, class MutexType, class RNGType, template<class> class RefType>
@@ -373,12 +226,12 @@ namespace MARQOV
     class Space
     {
     private:
-        StateVectorT *const myspace; ///< the storage of the state space.
+        std::unique_ptr<StateVectorT[]> myspace;
         const std::size_t size_; ///< how many state vectors are in our state space
-        
+
         template <class G, class Hamiltonian, class MutexType, class RNGType, template<class> class RefType>
         friend class Core;
-        
+
     public:
         using size_t = std::size_t;
         typedef Grid Lattice; ///< The Type of the lattice 
@@ -390,16 +243,17 @@ namespace MARQOV
          * 
          * @param size the size of the state space.
          */
-        Space(int size) : myspace(new StateVector[size]), size_(size) {}
+        explicit Space(std::size_t size) : myspace(std::make_unique<StateVectorT[]>(size)), size_(size) {}
         /** A constructor where we basically get the memory from somewhere else.
          * 
          * @param arg a pair of a pointer and the length of the memory.
          */
         Space(std::pair<StateVectorT*, std::size_t> arg) : myspace(arg.first), size_(arg.second) {}
-        /** The destructor frees the memory.
+        /** Get access to the internal pointer.
+         *
+         * @return the internal pointer to the memory.
          */
-        ~Space() {delete [] myspace;}
-        
+        StateVectorT *const getptr() const {return myspace.get();}
         /** Query the size of the statespace
          * 
          * @return the size of the state space.
@@ -443,7 +297,21 @@ namespace MARQOV
          * @return An iterator pointing to the end
          */
         const_iterator end() const noexcept {return myspace + size_;}
+        
+        template <class A, class B>
+        friend void swap(Space<A, B>& a, Space<A, B>& b);
     };
+    
+    /** Swap two state spaces and their content
+     * @param a
+     * @param b
+     */
+    template <class StateVectorT, class Grid>
+    void swap(Space<StateVectorT, Grid>& a, Space<StateVectorT, Grid>& b)
+    {
+        if(a.size_ != b.size_) throw std::runtime_error("[MARQOV::Core] can't assign statespaces of different sizes.");
+        std::swap_ranges(a.getptr(), a.getptr() + a.size_, b.getptr());
+    }
 
     /**
     A trivial mutex for threadless support.
@@ -455,6 +323,7 @@ namespace MARQOV
     };
 
     static TrivialMutex tm;
+
 // --------------------------- MARQOV::Core class -------------------------------
 
 /** @class Core
@@ -480,6 +349,7 @@ class Core : public RefType<Grid>
         typedef Grid Lattice; ///< The Type of the Lattice
 		typedef typename Hamiltonian::StateVector StateVector; ///< The type of the StateVector as retrieved from the Hamiltonian.
 		typedef Space<StateVector, Lattice> StateSpace; ///< the type of the state space.
+		typedef RNGType RNGT;
 		marqovtime::timetracker mrqvt; ///< The TimeTracker for tracking times.
 
 		// Local classes. We gain access to all Types of MARQOV::Core
@@ -990,7 +860,7 @@ class Core : public RefType<Grid>
             std::array<hsize_t, rank> count;
             count.fill(static_cast<hsize_t>(this->grid.size()));
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
-            dataset.write(statespace.myspace, H5Mapper<StateVector>::H5Type(), mspace1, filespace);
+            dataset.write(statespace.getptr(), H5Mapper<StateVector>::H5Type(), mspace1, filespace);
         }
 
         /** Destructor.
@@ -1052,7 +922,7 @@ class Core : public RefType<Grid>
         inline typename std::enable_if_t<N < sizeof...(Ts), void>
         marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid)
         {
-            auto retval = _call(&std::tuple_element<N, 
+            auto retval = detail::_call(&std::tuple_element<N, 
                             std::tuple<Ts...> >::type::template measure<StateSpace, G>,
                             std::get<N>(t), 
                             std::forward_as_tuple(s, grid) );
@@ -1208,19 +1078,26 @@ class Core : public RefType<Grid>
             for(int i = 0; i < this->grid.len; ++i) std::cout << " ‾";
             std::cout <<"\n\n";
         }
-	private:
+        double calcAction(StateSpace& space)
+        {
+            Energy<Hamiltonian> en(ham);
+            auto energy = en.measure(space, this->grid)*this->grid.size();
+            std::cout<<"Temperature: "<<1.0/beta<<" "<<energy/this->grid.size()<<std::endl;
+            return beta * energy;
+        }
+// 	private:
 		double beta; ///< The inverse temperature.
 		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.
 		Config mcfg; ///< An instance of all our MARQOV related parameters.
 		int step; ///< The current step of the simulation. Used for HDF5 paths.
-        std::unique_lock<MutexType> hdf5lock; ///< The global lock to synchronize access to the HDF5 *library*.
+		std::unique_lock<MutexType> hdf5lock; ///< The global lock to synchronize access to the HDF5 *library*.
 		H5::H5File dump; ///< The handle for the HDF5 file. Must be before the obscaches and the statespace.
 		StateSpace statespace; ///< The statespace. It holds the current configuration space.
 		H5::Group obsgroup; ///< The HDF5 Group of all our observables.
 		H5::Group stategroup; ///< The HDF5 Group where to dump the statespace.
 		typedef decltype(std::declval<Hamiltonian>().observables) ObsTs; ///< This type is mostly a tuple of other observables.
 		typename ObsTupleToObsCacheTuple<ObsTs>::RetType obscache; ///< The HDF5 caches for each observable.
-        ObsTs& obs; ///<the actual observables defined in the hamiltonians.
+		ObsTs& obs; ///<the actual observables defined in the hamiltonians.
 		RNGCache<RNGType> rngcache;///< The caching RNG
 };
 

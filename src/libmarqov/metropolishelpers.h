@@ -20,7 +20,7 @@
 #define METROPOLISHELPERS_H
 #include <utility>
 #include <type_traits>
-#include <cstdlib>
+#include "marqov_detail.h"
 
 namespace MARQOV
 {

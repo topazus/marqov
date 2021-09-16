@@ -80,14 +80,14 @@ int main()
     vector<decltype(args)> v;
 
 	// Fill
-    for(int j = 0; j < 7; ++j)
+    for(int j = 0; j < 13; ++j)
     {
         hp = make_tuple(beta+j*0.1, J);
         v.push_back(make_tuple(std::ref(mylatt), mp, hp));
     }
 
     // Set up the MARQOV schedular
-    auto sched = makeScheduler<MySimpleHeisenberg, RegularHypercubic>(args);
+    auto sched = makeScheduler<MySimpleHeisenberg, RegularHypercubic>(args, 100);
 	// Feed parameters to the scheduler which creates the simulations
     for(auto p : v)
 		sched.createSimfromParameter(p);
