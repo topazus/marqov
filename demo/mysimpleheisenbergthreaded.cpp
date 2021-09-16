@@ -70,7 +70,7 @@ int main()
 
 	// Set the Hamiltonian parameters, J, and the inverse temperature beta
     double beta = 0.66;
-    double J = 1;
+    double J = -1;
     auto hp = make_tuple(beta, J);
 
     // Let's create some parameters tuples, a temperature scan for the scheduler to work on

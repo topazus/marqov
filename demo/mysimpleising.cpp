@@ -59,7 +59,7 @@ int main()
     
     // Set the Hamiltonian parameters, J, and the inverse temperature beta
     double beta = 0.440;
-    double J = 1;
+    double J = -1;
     auto hp = make_tuple(beta, J);
     
     // Prepare argument list, contains
