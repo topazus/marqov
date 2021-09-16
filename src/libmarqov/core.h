@@ -602,7 +602,7 @@ class Core : public RefType<Grid>
         static bool dumppresent(const Config& mc)
         {
             std::string filepath = mc.outpath + mc.outname + ".h5";
-            return std::ifstream(filepath).good() && H5::H5File::isHdf5(filepath);
+            return fileexists(filepath) && H5::H5File::isHdf5(filepath);
         }
 
         /** This function sets up the layout of the HDF5 Container.

@@ -22,6 +22,8 @@
 #include <string>
 #include <fstream>
 
+
+
 /**
 * export coordinates and neighbour relations
 *
@@ -53,57 +55,47 @@ void save_geometry(Grid& grid, const std::string path)
 
 
 /**
-* export coordinates, neighbour relations and bond strengths
+* @brief Import header line of CSV graph which contains only a single number (the number of coordinates)
 *
-* @tparam Grid the type of the lattice
-* @param grid the lattice
-* @param path directory in which the geometry is to be stored
+* @param path filename including full path
+*
+* @return return the number of coordinates as an integer (can be zero)
 */
-
-template <class Grid>
-void save_geometry_deluxe(Grid& grid, const std::string path)
+int import_geometry_ncoords(std::string path)
 {
-	std::ofstream os;
-	os.open(path.c_str());
-	os << std::fixed << std::setprecision(16);
-
-	for (int i=0; i<grid.size(); i++)
-	{
-		auto nbrs = grid.nbrs(0,i);
-		auto crds = grid.crds(i);
-		auto bnds = grid.getbnds(0,i);
-
-		os << nbrs.size() + crds.size() + bnds.size();
-
-		for (int j=0; j<crds.size(); j++) os << "\t" << crds[j];
-		for (int j=0; j<nbrs.size(); j++) os << "\t" << nbrs[j];
-		for (int j=0; j<bnds.size(); j++) os << "\t" << bnds[j];
-
-		os << std::endl;
-	}
+	std::ifstream in(NULL);
+	in.open(path.c_str());
+	std::string row;
+    std::getline(in, row);
+	return std::stoi(row);
 }
 
 
 /**
-* Import CSV lattice file containing coordinates and connections between vertices.
+* @brief Import coordinates and neighbour relations from CSV file
 *
-* @param path the filename
-* @param grid the coordinates will be stored here
-* @param nbrs the bonds will be stored here
+* @param path filename including full path
+* @param grid here the coordinates will be stored
+* @param nbrs here the neighbour relations will be stored
 * @param ncoords number of coordinates per point
+* @param idxoffs set to 1 if vertex indices in the CSV are counted from 1. Set 0 zero if they are counted from 0
 *
-* @return number of points
+* @return the number of vertices
+*
+* @note for format specifications see general documentation-
 */
-int import_geometry(const std::string path, std::vector<std::vector<double>>& grid, std::vector<std::vector<int>>& nbrs, int ncoords)
+int import_geometry(const std::string path, std::vector<std::vector<double>>& grid, std::vector<std::vector<int>>& nbrs, int ncoords, int idxoffs = 0)
 {
-	int idxoffs = 1;	
-	// set to 1 if vertex indices in the CSV are counted from 1. Set 0 zero if they are counted from 0
 
 	std::ifstream in(NULL);
 	in.open(path.c_str());
 	std::string row;
 
-	// loop over lines
+	// jump over header (two lines)
+    std::getline(in, row);
+    std::getline(in, row);
+
+	// loop over lines containing the geometry
     while (!in.eof()) 
 	{
         std::getline(in, row);
@@ -132,97 +124,5 @@ int import_geometry(const std::string path, std::vector<std::vector<double>>& gr
 	}
 	return nbrs.size();
 }
-
-/**
-* @brief Import coordinates and neighbour relations from CSV file
-*
-* @param path filename including full path
-* @param grid here the coordinates will be stored
-* @param nbrs here the neighbour relations will be stored
-* @param ncoords number of coordinates
-* @param minusone set false if indices in CSV file are counted from zero (default), set true if they are counted from one
-*
-* @return the number of vertices
-*
-* @note for format specifications see general documentation-
-*/
-int import_geometry(const std::string path, std::vector<std::vector<double>>& grid, std::vector<std::vector<int>>& nbrs, int ncoords, bool minusone=false)
-{
-	int reduce = 0;
-	if (minusone) reduce = -1;
-
-	std::ifstream in(NULL);
-	in.open(path.c_str());
-	std::string row;
-
-    while (!in.eof()) 
-	{
-        std::getline(in, row);
-        if (in.bad() || in.fail()) 
-		{
-            break;
-        }
-		std::istringstream ss(row);
-		std::string substr;
-
-		int counter = 0;
-		std::vector<double> g;
-		std::vector<int> n;
-		while(std::getline(ss, substr, '\t'))
-		{
-			if (counter < ncoords) g.push_back(std::stof(substr));
-			else n.push_back(std::stoi(substr)+reduce);
-			counter++;
-    	}
-		grid.push_back(g);
-		nbrs.push_back(n);
-	}
-	return nbrs.size();
-}
-
-
-
-
-/**
-* @brief Import neighbour relations from CSV file
-*
-* @param path filename including full path
-* @param grid here the coordinates will be stored
-* @param minusone set false if indices in CSV file are counted from zero (default), set true if they are counted from one
-*
-* @return the number of vertices
-*
-* @note for format specifications see general documentation-
-*/
-int import_geometry(const std::string path, std::vector<std::vector<int>>& nbrs, bool minusone=false)
-{
-	int reduce = 0;
-	if (minusone) reduce = -1;
-
-	std::ifstream in(NULL);
-	in.open(path.c_str());
-	std::string row;
-
-    while (!in.eof()) 
-	{
-        std::getline(in, row);
-        if (in.bad() || in.fail()) 
-		{
-            break;
-        }
-		std::istringstream ss(row);
-		std::string substr;
-
-		std::vector<int> n;
-		while(std::getline(ss, substr, '\t'))
-		{
-			n.push_back(std::stoi(substr)+reduce);
-    	}
-		nbrs.push_back(n);
-	}
-	return nbrs.size();
-}
-
-
 
 #endif

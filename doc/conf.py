@@ -69,3 +69,5 @@ if os.path.exists('./doxygen/xml'):
 
     breathe_default_project = "Marqov"
 
+sys.path.insert(0, os.path.abspath('../pymarqov/'))
+sys.path.insert(0, os.path.abspath('../pymarqov/'))

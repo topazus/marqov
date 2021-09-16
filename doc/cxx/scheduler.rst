@@ -4,5 +4,8 @@ MARQOVScheduler
 ============
 Marqov provides a multithreading scheduler with optional support for MPI.
 
-.. doxygenclass:: MARQOV::Scheduler
+.. doxygenclass:: MARQOV::CXX11Scheduler
+   :members:
+
+.. doxygenclass:: MARQOV::MPIScheduler
    :members:
