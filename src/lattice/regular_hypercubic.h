@@ -4,6 +4,7 @@
 #include "util/points.h" 
 #include "util/distance.h"
 #include "util/regular_lattice.h"
+#include "../libmarqov/cachecontainer.h"
 
 /**
  * The Regular Hypercubic lattice class.
@@ -43,5 +44,12 @@ class RegularHypercubic
 
 		std::size_t size() const {return npoints;}
 };
+
+void writelat(H5::Group& h5loc, const RegularHypercubic& l)
+{
+	dumpscalartoH5(h5loc, "name", std::string("RegularHypercubic"));
+	dumpscalartoH5(h5loc, "dim", l.dim);
+	dumpscalartoH5(h5loc, "npoints", l.npoints);
+}
 
 #endif

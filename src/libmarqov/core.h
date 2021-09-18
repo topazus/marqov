@@ -674,6 +674,14 @@ class Core : public RefType<Grid>
                 createparamname(typename MARQOV::detail::has_paramname<Hamiltonian>::type(), paramnr++)
                 , hargs), 0)... };
         }
+
+        template <class T>
+        void writelat(H5::Group& h5loc, const T& l)
+        {
+            dumpscalartoH5(h5loc, "name", std::string("unknown"));
+            dumpscalartoH5(h5loc, "size", l.size());
+        }
+
         /** Write out the parameters of the lattice.
          * 
          * UNIMPLEMENTED
@@ -682,7 +690,7 @@ class Core : public RefType<Grid>
         void dumplatparamstoH5(H5::Group& h5loc)
         {
             h5loc.setComment("These parameters are peculiar to the lattice at hand.");
-            dumpscalartoH5(h5loc, "size", this->grid.size());
+            writelat(h5loc, this->grid);
             return;
         }
         /** This function tries to dump as much useful information about the environment into 
