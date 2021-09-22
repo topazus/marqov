@@ -50,6 +50,15 @@
  */
 namespace MARQOV
 {
+    /** This function is responsible for dumping lattice information
+     * into an HDF5 group.
+     * 
+     * This is the generic case, but it can be overwritten by the user
+     * in his/her lattice classes.
+     * 
+     * @param h5loc the HDF5 group
+     * @param l the lattice.
+     */
     template <class T>
     void writelat(H5::Group& h5loc, const T& l)
     {
