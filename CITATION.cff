@@ -1,0 +1,20 @@
+# YAML 1.2
+---
+cff-version: "1.1.0"
+title: MARQOV
+message: "If you use MARQOV, please mention the following in your acknowledgements: The Monte Carlo simulations were performed with MARQOV, available at https://marqov.physik.uni-wuerzburg.de"
+repository-code: "https://git.physik.uni-wuerzburg.de/marqov/marqov"
+license: "GPL-3.0+, MIT"
+authors: 
+  -
+    family-names: Schrauth
+    given-names: Manuel
+  -
+    family-names: Goth
+    given-names: Florian
+    orcid: "https://orcid.org/0000-0003-2707-4790"
+keywords: 
+  - "Markov-Chain-Monte-Carlo"
+  - "Ising-Model"
+...
+
