@@ -48,6 +48,37 @@ namespace MARQOV
 						int rsite);
 	};
 
+    template <class RNGType>
+    inline bool update_accepted(double dE, double beta, RNGCache<RNGType>& rng)
+    {
+        constexpr double log2e = std::log2(std::exp(1.0));
+        bool accept = false;
+        if ( dE <= 0 )
+		{
+            accept = true;
+		}
+		else
+        {
+            // if not, accept with probability depending on Boltzmann weight
+            //try to decide depending on the magnitude:
+            double rngnum = rng.real();
+//             int expo = 0;
+//             double bintemp = log2e * beta;
+//             double action2 = - bintemp*dE;
+//              std::frexp(rngnum, &expo);
+//              if (expo == std::floor(action2))
+//              {
+                if ( rngnum < std::exp(-beta*dE)) 
+                {
+                    accept = true;
+                }
+//              }
+//              else
+//                  accept = expo < std::floor(bintemp);
+            
+        }
+		return accept;
+    }
 	/**
 	 * The actual Metropolis move attempt.
 	 *
@@ -101,17 +132,8 @@ namespace MARQOV
 
 		// collect energy differences
 		double dE = interactionenergydiff + onsiteenergydiff + flexenergydiff;
-		
 		int retval = 0;
-
-		// if new state is favorable, accept it
-		if ( dE <= 0 ) 
-		{
-			svold = svnew;
-			retval = 1;
-		}
-		// if not, accept with probability depending on Boltzmann weight
-		else if (rng.real() < std::exp(-beta*dE)) 
+		if (update_accepted(dE, beta, rng))
 		{
 			svold = svnew;
 			retval = 1;
