@@ -23,7 +23,7 @@
 #include "rngcache.h"
 #include "metropolishelpers.h"
 #include "../hamiltonian/util/initializers.h"
-
+#include <cassert>
 // -------------------------- Metropolis Algorithm -----------------------------
 
 namespace MARQOV
@@ -47,11 +47,14 @@ namespace MARQOV
 						double beta, 
 						int rsite);
 	};
-
+    
+//     double P4(double x)
+//     {
+//         return
+//     }
     template <class RNGType>
     inline bool update_accepted(double dE, double beta, RNGCache<RNGType>& rng)
     {
-        constexpr double log2e = std::log2(std::exp(1.0));
         bool accept = false;
         if ( dE <= 0 )
 		{
@@ -62,20 +65,24 @@ namespace MARQOV
             // if not, accept with probability depending on Boltzmann weight
             //try to decide depending on the magnitude:
             double rngnum = rng.real();
-//             int expo = 0;
-//             double bintemp = log2e * beta;
-//             double action2 = - bintemp*dE;
-//              std::frexp(rngnum, &expo);
-//              if (expo == std::floor(action2))
-//              {
+            int rndexpo = 0;
+            double bintemp = M_LOG2E * beta;
+            double action2 = - bintemp*dE;
+            auto rdmantissa = std::frexp(rngnum, &rndexpo);
+
+//             std::cout<<rngnum<<" "<<rndexpo<<" "<<action2<<" "<<std::exp(-beta*dE)<<'\n';
+//             std::cout<<rngnum<<" "<<std::exp(-beta*dE)<<" | "<<rndexpo<<" "<<std::trunc(action2)<<std::endl;
+            if (rndexpo == lround(std::trunc(action2)))// if both numbers are of equal magnitude
+            {//check harder
                 if ( rngnum < std::exp(-beta*dE)) 
                 {
                     accept = true;
                 }
-//              }
-//              else
-//                  accept = expo < std::floor(bintemp);
-            
+            }
+            else // decide based on the magnitudes
+                accept = (rndexpo < std::trunc(action2));
+//         std::cout<<(accept?"true":"false")<<" "<<(rngnum < std::exp(-beta*dE)? "exp true": "exp false")<<std::endl;
+//         assert(accept == (rngnum < std::exp(-beta*dE)));
         }
 		return accept;
     }
