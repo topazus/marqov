@@ -20,6 +20,7 @@
 #define METROPOLISHELPERS_H
 #include <utility>
 #include <type_traits>
+#include <iostream>
 #include "marqov_detail.h"
 
 namespace MARQOV
@@ -398,7 +399,7 @@ namespace MARQOV
 												  std::false_type hasbonds) 
 	{
 		typedef typename Hamiltonian::StateVector StateVector;
-	
+
 		// gather neighbours
 		const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
 	
@@ -416,7 +417,7 @@ namespace MARQOV
 			// sum up contributions from neighbourbood
 			neighbourhood = neighbourhood + nbr;
 		}
-	
+
 		return neighbourhood;
 	}
 	
