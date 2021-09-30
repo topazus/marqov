@@ -110,9 +110,9 @@ namespace MARQOV
             //try to decide depending on the magnitude:
             double action2 = M_LOG2E * action;
             
-            if (((mydouble.i64>>52)  )-1022  != trunctoi64(action2))// if both numbers have different magnitudes.
+            if (((mydouble.i64>>52)  )-1022  != detail::trunctoi64(action2))// if both numbers have different magnitudes.
             {// decide based on the magnitudes. This is likely, hence first in the branch
-                accept = (((mydouble.i64>>52)  )-1022 < trunctoi64(action2));
+                accept = (((mydouble.i64>>52)  )-1022 < detail::trunctoi64(action2));
             }
             else
             {//check harder
@@ -121,7 +121,7 @@ namespace MARQOV
 
                 double remainder = action2-std::trunc(action2);
 
-                if ( mydouble.d < exp2app6(remainder) )
+                if ( mydouble.d < detail::exp2app6(remainder) )
                 {
                     accept = true;
                 }
