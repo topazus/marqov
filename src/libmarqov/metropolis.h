@@ -24,9 +24,6 @@
 #include "metropolishelpers.h"
 #include "../hamiltonian/util/initializers.h"
 
-#include <climits>
-#include <cassert>
-
 // -------------------------- Metropolis Algorithm -----------------------------
 
 namespace MARQOV
@@ -88,6 +85,7 @@ namespace MARQOV
 #endif
         }
     }
+    
     template <class RNGType>
     inline bool update_accepted(double dE, double beta, RNGCache<RNGType>& rng)
     {
