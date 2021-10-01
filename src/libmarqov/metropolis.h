@@ -52,9 +52,9 @@ namespace MARQOV
 	};
     namespace detail
     {
-        /** calculate 2^(-x) for x in [0,1] with a sixth order polynomial approximation
+        /** calculate 2^(-x) for x in [0,1] with a sixth order polynomial approximation.
         * 
-        * Determined with lolremez to minimize the absolut error
+        * Determined with lolremez to minimize the absolut error.
         * 
         * @param x a positive real value in [0,1]
         * @return 2^(-x)
@@ -93,6 +93,15 @@ namespace MARQOV
         }
     }
 
+    /** Determine whether the move with the proposed energy change dE is accepted.
+     * 
+     * @tparam RNGType the type of the underlying RNG.
+     * 
+     * @param dE the energy change of the proposed move.
+     * @param beta the inverse temperature beta
+     * @param rng the RNGCache object that we use for drawing random numbers
+     * @return true if the move is accepted, else false
+    */
     template <class RNGType>
     inline bool update_accepted(double dE, double beta, RNGCache<RNGType>& rng)
     {
@@ -119,8 +128,7 @@ namespace MARQOV
                 accept = (((mydouble.i64>>52)  )-1022 < detail::trunctoi64(action2));
             }
             else
-            {//check harder
-
+            {//both numbers are of same magnitude -> evaluate the remainder
                 mydouble.i64 = (mydouble.i64 & ~0xFFF0000000000000) | 0x3FE0000000000000;
 
                 double remainder = action2-std::trunc(action2);
