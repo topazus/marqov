@@ -10,26 +10,26 @@ using namespace std;
  * In the test we execute both and we determine if the same number of moves is accepted.
  */
 
-#define OLD
-#define NEW
+//#define OLD
+//#define NEW
 
     template <class RNGType>
     inline bool update_accepted(double dE, double beta, RNGCache<RNGType>& rng)
     {
         bool accept = false;
         if ( dE <= 0 )
-		{
+	{
             accept = true;
-		}
-		else
+	}
+	else
         {
 //             std::cout<<"here"<<std::endl;
-                if (rng.real() < std::exp(-beta*dE) /*1.0 - beta*dE + beta*dE*beta*dE/2 -beta*dE*beta*dE*beta*dE/6*/) 
+                if (rng.real() < std::exp(-beta*dE) )
                 {
                     accept = true;
                 }
         }
-		return accept;
+	return accept;
     }
 
 int main()
