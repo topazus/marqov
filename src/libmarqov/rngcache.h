@@ -28,6 +28,7 @@ SOFTWARE.
 #include <sstream>
 #include <stdexcept>
 #include <random>
+#include <utility>
 
 /** A helper to map the C++ RNG classes to portable names.
  * 

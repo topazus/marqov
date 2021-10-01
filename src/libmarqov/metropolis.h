@@ -20,6 +20,8 @@
 #define METROPOLIS_H
 #include <type_traits>
 #include <cmath>
+#include <cstring>
+#include <cinttypes>
 #include "rngcache.h"
 #include "metropolishelpers.h"
 #include "../hamiltonian/util/initializers.h"
@@ -49,9 +51,9 @@ namespace MARQOV
 	};
     namespace detail
     {
-        /** calculate 2^(-x) for x in [0,1] with a sixth order polynomial approximation
+        /** calculate 2^(-x) for x in [0,1] with a sixth order polynomial approximation.
         * 
-        * Determined with lolremez to minimize the absolut error
+        * Determined with lolremez to minimize the absolut error.
         * 
         * @param x a positive real value in [0,1]
         * @return 2^(-x)
@@ -79,53 +81,60 @@ namespace MARQOV
         static inline int64_t trunctoi64(double f) noexcept
         {
 #ifdef __SSE2__
+#if (defined(__PGIC__) && __PGIC__ <= 18)
+            return _mm_cvttsd_si64x(_mm_set_sd(f));
+#else
             return _mm_cvttsd_si64(_mm_set_sd(f));
+#endif
 #else
             return (int64_t)std::trunc(f);
 #endif
         }
     }
-    
+
+    /** Determine whether the move with the proposed energy change dE is accepted.
+     * 
+     * @tparam RNGType the type of the underlying RNG.
+     * 
+     * @param dE the energy change of the proposed move.
+     * @param beta the inverse temperature beta
+     * @param rng the RNGCache object that we use for drawing random numbers
+     * @return true if the move is accepted, else false
+    */
     template <class RNGType>
     inline bool update_accepted(double dE, double beta, RNGCache<RNGType>& rng)
     {
+        constexpr double log2e =  1.4426950408889634074; /* log_2 e */
         bool accept = false;
         if ( dE <= 0 )
-		{
+        {
             accept = true;
-		}
-		else
+        }
+	else
         {// if not, accept with probability depending on Boltzmann weight
             double rngnum = rng.real();
             double action = -beta * dE;
             
-            union {
-                double d;
-                int64_t i64;
-            } mydouble;
-            
-            mydouble.d = rngnum;
-            //try to decide depending on the magnitude:
-            double action2 = M_LOG2E * action;
-            
-            if (((mydouble.i64>>52)  )-1022  != detail::trunctoi64(action2))// if both numbers have different magnitudes.
+            double action2 = log2e * action;// transform e^x to 2^x
+            int64_t i64;
+            std::memcpy(&i64, &rngnum, sizeof(rngnum));
+            if ((( i64 >>52)  )-1022  != detail::trunctoi64(action2))// if both numbers have different magnitudes.
             {// decide based on the magnitudes. This is likely, hence first in the branch
-                accept = (((mydouble.i64>>52)  )-1022 < detail::trunctoi64(action2));
+                accept = (((i64>>52)  )-1022 < detail::trunctoi64(action2));
             }
             else
-            {//check harder
-
-                mydouble.i64 = (mydouble.i64 & ~0xFFF0000000000000) | 0x3FE0000000000000;
+            {//both numbers are of same magnitude -> evaluate the remainder
+                i64 = (i64 & ~0xFFF0000000000000) | 0x3FE0000000000000;
 
                 double remainder = action2-std::trunc(action2);
-
-                if ( mydouble.d < detail::exp2app6(remainder) )
+                std::memcpy(&rngnum, &i64, sizeof(rngnum));
+                if ( rngnum < detail::exp2app6(remainder) )
                 {
                     accept = true;
                 }
             }
         }
-		return accept;
+	return accept;
     }
 	/**
 	 * The actual Metropolis move attempt.
