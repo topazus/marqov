@@ -82,7 +82,11 @@ namespace MARQOV
         static inline int64_t trunctoi64(double f) noexcept
         {
 #ifdef __SSE2__
+#if (__PGIC__ <= 18)
+            return _mm_cvttsd_si64x(_mm_set_sd(f));
+#else
             return _mm_cvttsd_si64(_mm_set_sd(f));
+#endif
 #else
             return (int64_t)std::trunc(f);
 #endif
