@@ -92,28 +92,28 @@ namespace MARQOV
 #endif
         }
     }
+
     template <class RNGType>
     inline bool update_accepted(double dE, double beta, RNGCache<RNGType>& rng)
     {
         bool accept = false;
         if ( dE <= 0 )
-		{
+        {
             accept = true;
-		}
-		else
+        }
+	else
         {// if not, accept with probability depending on Boltzmann weight
             double rngnum = rng.real();
             double action = -beta * dE;
-            
+
             union {
                 double d;
                 int64_t i64;
             } mydouble;
-            
+
             mydouble.d = rngnum;
-            //try to decide depending on the magnitude:
-            double action2 = M_LOG2E * action;
-            
+            double action2 = M_LOG2E * action;// transform e^x to 2^x
+
             if (((mydouble.i64>>52)  )-1022  != detail::trunctoi64(action2))// if both numbers have different magnitudes.
             {// decide based on the magnitudes. This is likely, hence first in the branch
                 accept = (((mydouble.i64>>52)  )-1022 < detail::trunctoi64(action2));
@@ -131,7 +131,7 @@ namespace MARQOV
                 }
             }
         }
-		return accept;
+	return accept;
     }
 	/**
 	 * The actual Metropolis move attempt.
