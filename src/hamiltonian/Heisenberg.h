@@ -225,17 +225,14 @@ namespace MARQOV
 
 					const auto lcpl = statespace[current][rdir] * candidate[rdir];
 					const auto cpl  = gcpl*lcpl;
-
-					if (cpl > 0)
-					{
-						if (rng.real() < -std::expm1(-2.0*beta*cpl))
-						{
-							q++;
-							cstack[q] = currentnbr;
-							clustersize++;
-							candidate[rdir] *= -1;
-						}
-					}
+                    
+                    if (wolff_update_accepted(cpl, beta, rng))
+                    {
+                        q++;
+                        cstack[q] = currentnbr;
+                        clustersize++;
+                        candidate[rdir] *= -1;
+                    }
 				}
 			}
 			return clustersize;
