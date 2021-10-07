@@ -82,7 +82,7 @@ namespace MARQOV
     template <int pref, class RNGType>
     inline bool update_accepted(double dE, double beta, RNGCache<RNGType>& rng)
     {
-        constexpr double plog2e =  static_cast<double>(pref) * 1.4426950408889634074; /* pref * log_2 e */
+        constexpr double plog2e =  static_cast<double>(pref) * 1.4426950408889634074; // pref * log_2 e
         bool accept = false;
         if ( dE <= 0 )
         {
@@ -114,6 +114,7 @@ namespace MARQOV
         }
 	return accept;
     }
+
 	/**
      * Promote_Array utility class.
      *
