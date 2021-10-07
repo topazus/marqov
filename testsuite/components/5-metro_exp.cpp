@@ -10,8 +10,8 @@ using namespace std;
  * In the test we execute both and we determine if the same number of moves is accepted.
  */
 
-//#define OLD
-//#define NEW
+#define OLD
+#define NEW
 
     template <class RNGType>
     inline bool update_accepted(double dE, double beta, RNGCache<RNGType>& rng)
@@ -46,7 +46,7 @@ int main()
     for(int i = 0; i < 500; ++i)
     {
     for(int i = 0; i < N; ++i)
-        if(MARQOV::update_accepted(dE[i], 0.44, rngcache)) acc++;
+        if(MARQOV::metro_update_accepted(dE[i], 0.44, rngcache)) acc++;
     }
     }
 #endif
