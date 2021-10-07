@@ -24,6 +24,43 @@
 
 namespace MARQOV
 {
+    template <class RNGType>
+    inline bool wolff_update_accepted(double dE, double beta, RNGCache<RNGType>& rng)
+    {
+        constexpr double twolog2e =  2.0 * 1.4426950408889634074; /* log_2 e */
+        bool accept = true;
+        if ( dE <= 0 )
+        {
+            accept = false;
+        }
+	else
+        {// if not, accept with probability depending on Boltzmann weight
+            double rngnum = rng.real();
+            double action = -beta * dE;
+            
+            double action2 = twolog2e * action;// transform e^x to 2^x
+            int64_t i64;
+            std::memcpy(&i64, &rngnum, sizeof(rngnum));
+            if ((( i64 >>52)  )-1022  != detail::trunctoi64(action2))// if both numbers have different magnitudes.
+            {// decide based on the magnitudes. This is likely, hence first in the branch
+                accept = (((i64>>52)  )-1022 > detail::trunctoi64(action2));
+            }
+            else
+            {//both numbers are of same magnitude -> evaluate the remainder
+                i64 = (i64 & ~0xFFF0000000000000) | 0x3FE0000000000000;
+
+                double remainder = action2-std::trunc(action2);
+                std::memcpy(&rngnum, &i64, sizeof(rngnum));
+                if ( rngnum < detail::exp2app6(remainder) )
+                {
+                    accept = false;
+                }
+            }
+        }
+	return accept;
+    }
+    
+    
     /**
      * This class serves as an entry point for easily defining your own
      * specializations of the Wolff Algorithm of your Hamiltonians.
@@ -85,16 +122,13 @@ namespace MARQOV
 
 					
             	    // test whether site is added to the cluster
-            	    if (cpl > 0)
-            	    {
-            	        if (rng.real() < -std::expm1(-2.0*beta*cpl))
-            	        {
-            	            q++;
-            	            cstack[q] = currentnbr;
-            	            clustersize++;
-            	            embd.flip(candidate);
-            	        }
-            	    }
+                    if (wolff_update_accepted(cpl, beta, rng))
+                    {
+                        q++;
+                        cstack[q] = currentnbr;
+                        clustersize++;
+                        embd.flip(candidate);
+                    }
             	}
             }
         }

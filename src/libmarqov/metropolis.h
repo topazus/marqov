@@ -136,6 +136,7 @@ namespace MARQOV
         }
 	return accept;
     }
+
 	/**
 	 * The actual Metropolis move attempt.
 	 *
