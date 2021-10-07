@@ -101,10 +101,10 @@ namespace MARQOV
      * @param rng the RNGCache object that we use for drawing random numbers
      * @return true if the move is accepted, else false
     */
-    template <class RNGType>
+    template <int pref, class RNGType>
     inline bool update_accepted(double dE, double beta, RNGCache<RNGType>& rng)
     {
-        constexpr double log2e =  1.4426950408889634074; /* log_2 e */
+        constexpr double log2e =  static_cast<double>(pref) * 1.4426950408889634074; /* pref * log_2 e */
         bool accept = false;
         if ( dE <= 0 )
         {
@@ -135,6 +135,21 @@ namespace MARQOV
             }
         }
 	return accept;
+    }
+    
+    /** Determine whether the move with the proposed energy change dE is accepted.
+     * 
+     * @tparam RNGType the type of the underlying RNG.
+     * 
+     * @param dE the energy change of the proposed move.
+     * @param beta the inverse temperature beta
+     * @param rng the RNGCache object that we use for drawing random numbers
+     * @return true if the move is accepted, else false
+    */
+    template <class RNGType>
+    inline bool metro_update_accepted(double dE, double beta, RNGCache<RNGType>& rng)
+    {
+        return update_accepted<1, RNGType>(dE, beta, rng);
     }
 
 	/**
@@ -191,7 +206,7 @@ namespace MARQOV
 		// collect energy differences
 		double dE = interactionenergydiff + onsiteenergydiff + flexenergydiff;
 		int retval = 0;
-		if (update_accepted(dE, beta, rng))
+		if (metro_update_accepted(dE, beta, rng))
 		{
 			svold = svnew;
 			retval = 1;

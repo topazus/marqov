@@ -24,42 +24,18 @@
 
 namespace MARQOV
 {
+    /** Determine if the Wolff would accept the move with the proposed energy change.
+     * 
+     * @param dE The energy change
+     * @param beta The inverse temperature
+     * @param rng the Random numer generator
+     * @return true if we extend the cluster, else false.
+     */
     template <class RNGType>
-    inline bool wolff_update_rejected(double dE, double beta, RNGCache<RNGType>& rng)
+    inline bool wolff_update_accepted(double dE, double beta, RNGCache<RNGType>& rng)
     {
-        constexpr double twolog2e =  2.0 * 1.4426950408889634074; /* log_2 e */
-        bool accept = false;
-        if ( dE <= 0 )
-        {
-            accept = true;
-        }
-	else
-        {// if not, accept with probability depending on Boltzmann weight
-            double rngnum = rng.real();
-            double action = -beta * dE;
-            
-            double action2 = twolog2e * action;// transform e^x to 2^x
-            int64_t i64;
-            std::memcpy(&i64, &rngnum, sizeof(rngnum));
-            if ((( i64 >>52)  )-1022  != detail::trunctoi64(action2))// if both numbers have different magnitudes.
-            {// decide based on the magnitudes. This is likely, hence first in the branch
-                accept = (((i64>>52)  )-1022 < detail::trunctoi64(action2));
-            }
-            else
-            {//both numbers are of same magnitude -> evaluate the remainder
-                i64 = (i64 & ~0xFFF0000000000000) | 0x3FE0000000000000;
-
-                double remainder = action2-std::trunc(action2);
-                std::memcpy(&rngnum, &i64, sizeof(rngnum));
-                if ( rngnum < detail::exp2app6(remainder) )
-                {
-                    accept = true;
-                }
-            }
-        }
-	return accept;
+        return !update_accepted<2, RNGType>(dE, beta, rng);
     }
-    
     
     /**
      * This class serves as an entry point for easily defining your own
@@ -68,8 +44,6 @@ namespace MARQOV
      * @tparam Hamiltonian The Hamiltonian that the Wolff algo will use.
      * @tparam Lattice The Lattice, that the Wolff algo should use.
      */
-
-
     template <class Hamiltonian, class Lattice>
     struct Wolff
     {
@@ -120,9 +94,8 @@ namespace MARQOV
 					const auto lcpl = embd.coupling(currentidx, currentnbr);
 					const double cpl = gcpl*lcpl;
 
-					
             	    // test whether site is added to the cluster
-                    if (!wolff_update_rejected(cpl, beta, rng))
+                    if (wolff_update_accepted(cpl, beta, rng))
                     {
                         q++;
                         cstack[q] = currentnbr;
