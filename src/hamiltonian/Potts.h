@@ -315,19 +315,14 @@ namespace MARQOV
 		            	    
 							const auto lcpl = embd.coupling(currentidx, currentnbr);
 							const double cpl = gcpl*lcpl;
-		
-							
-		            	    // test whether site is added to the cluster
-		            	    if (cpl > 0)
-		            	    {
-		            	        if (rng.real() < -std::expm1(-2.0*beta*cpl))
-		            	        {
-		            	            q++;
-		            	            cstack[q] = currentnbr;
-		            	            clustersize++;
-		            	            embd.flip(candidate);
-		            	        }
-		            	    }
+                            
+                            if (wolff_update_accepted(cpl, beta, rng))
+                            {
+                                q++;
+                                cstack[q] = currentnbr;
+                                clustersize++;
+                                embd.flip(candidate);
+                            }
 		            	}
 		            }
 		        }
