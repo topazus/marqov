@@ -84,7 +84,7 @@ namespace MARQOV
 	 * @return integer, encoding whether the update was accepted or rejected
 	 */
     template <class Hamiltonian, class Lattice>
-    template <class StateSpace/*, class M*/, class RNGType>
+    template <class StateSpace, class RNGType>
     int Metropolis<Hamiltonian, Lattice>::move(const Hamiltonian& ham, 
     											const Lattice& grid, 
 												StateSpace& statespace, 
@@ -125,6 +125,5 @@ namespace MARQOV
 		return retval;
 	}
 };
-
 
 #endif
