@@ -71,29 +71,28 @@ namespace MARQOV
 
 #if !(__cplusplus >= 202002L) //compilers using this improperly(e.g. <gcc-4.7) have no CXX-20 support anyway
 #include <type_traits>
-/** Straight copy of the reference implementation of cppreference.com
-*/
-template <class To, class From>
-typename std::enable_if_t<
-    sizeof(To) == sizeof(From) &&
-    std::is_trivially_copyable<From>::value &&
-    std::is_trivially_copyable<To>::value, To>
-// constexpr support needs compiler magic
-bit_cast(const From& src) noexcept
-{
-    static_assert(std::is_trivially_constructible<To>::value,
-        "This implementation additionally requires destination type to be trivially constructible");
-   To dst;
+        /** Straight copy of the reference implementation of cppreference.com
+         */
+        template <class To, class From>
+        typename std::enable_if_t<
+        sizeof(To) == sizeof(From) &&
+        std::is_trivially_copyable<From>::value &&
+        std::is_trivially_copyable<To>::value, To>
+        // constexpr support needs compiler magic
+        bit_cast(const From& src) noexcept
+        {
+            static_assert(std::is_trivially_constructible<To>::value,
+                          "This implementation additionally requires destination type to be trivially constructible");
+            To dst;
 #if (defined(__PGIC__) && __PGIC__ <= 18)
-        dst = *(reinterpret_cast<To*>(const_cast<From*>(&src)));
+            dst = *(reinterpret_cast<To*>(const_cast<From*>(&src)));
 #else
-    std::memcpy(&dst, &src, sizeof(To));
+            std::memcpy(&dst, &src, sizeof(To));
 #endif
-    return dst;
-}
+            return dst;
+        }
 #else
-using std::bit_cast;//untested
-
+        using std::bit_cast;//untested        
 #endif
 
     }
