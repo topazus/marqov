@@ -38,7 +38,7 @@ namespace ThreadPool
             while (locked.test_and_set(std::memory_order_acquire)) {
 #if defined(__cpp_lib_atomic_flag_test)
                 //C++20 feature from cppreference.com
-                while (lock.test(std::memory_order_relaxed))// test lock
+                while (locked.test(std::memory_order_relaxed))// test lock
 #endif
                 ;//spin
                 
