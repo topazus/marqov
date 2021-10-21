@@ -195,7 +195,7 @@ public:
      */
     inline auto real(double max = 1.0, double min = 0.0) noexcept
     {
-      double ret = (integer() >> 11) * 0x1.0p-53;//this is the proper thing to do, if integer() returns a 64bit integer as is the case in the RNGCache
+      double ret = (integer() >> 11) * 0x1.0p-53;//this is the proper thing to get a real from [0,1], if integer() returns a 64bit integer as is the case in the RNGCache
       return min + (max-min)*ret;
     }
     /** The maximum integer that we support.
