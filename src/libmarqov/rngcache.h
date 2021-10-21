@@ -195,11 +195,12 @@ public:
      */
     inline auto real(double max = 1.0, double min = 0.0) noexcept
     {
-        return min + (max-min)*(double(integer())/double(RNG::max()));
+      double ret = (integer() >> 11) * 0x1.0p-53;//this is the proper thing to do, if integer() returns a 64bit integer as is the case in the RNGCache
+      return min + (max-min)*ret;
     }
     /** The maximum integer that we support.
      */
-    static constexpr auto max() noexcept{return RNG::max();}
+    static constexpr auto max() noexcept {return RNG::max();}
     /** Fill the cache.
      * 
      * Can also be used to flush the cache,
@@ -210,7 +211,7 @@ public:
         for(int i = 0; i < nelems; ++i)
             data[i] = rng(); //We follow the C++11 convention that operator() advances the state of the RNG
     }
-    
+
     /** Dump the internal state of the RNG in a manner that it can be fully constructed from it.
      * 
      * We assume that the RNG supports the same operations as those from the STL.
