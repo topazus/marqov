@@ -68,6 +68,34 @@ namespace MARQOV
             return (int64_t)std::trunc(f);
 #endif
         }
+
+#if !(__cplusplus >= 202002L) //compilers using this improperly(e.g. <gcc-4.7) have no CXX-20 support anyway
+#include <type_traits>
+/** Straight copy of the reference implementation of cppreference.com
+*/
+template <class To, class From>
+typename std::enable_if_t<
+    sizeof(To) == sizeof(From) &&
+    std::is_trivially_copyable<From>::value &&
+    std::is_trivially_copyable<To>::value, To>
+// constexpr support needs compiler magic
+bit_cast(const From& src) noexcept
+{
+    static_assert(std::is_trivially_constructible<To>::value,
+        "This implementation additionally requires destination type to be trivially constructible");
+   To dst;
+#if (defined(__PGIC__) && __PGIC__ <= 18)
+        dst = *(reinterpret_cast<To*>(const_cast<From*>(&src)));
+#else
+    std::memcpy(&dst, &src, sizeof(To));
+#endif
+    return dst;
+}
+#else
+using std::bit_cast;//untested
+
+#endif
+
     }
 
     /** Determine whether the move with the proposed energy change dE is accepted.
@@ -92,10 +120,9 @@ namespace MARQOV
         {// if not, accept with probability depending on Boltzmann weight
             double rngnum = rng.real();
             double action = -beta * dE;
-            
+
             double action2 = plog2e * action;// transform e^x to 2^x
-            int64_t i64;
-            std::memcpy(&i64, &rngnum, sizeof(rngnum));
+            int64_t i64 = detail::bit_cast<int64_t>(rngnum);
             if ((( i64 >>52)  )-1022  != detail::trunctoi64(action2))// if both numbers have different magnitudes.
             {// decide based on the magnitudes. This is likely, hence first in the branch
                 accept = (((i64>>52)  )-1022 < detail::trunctoi64(action2));
@@ -104,9 +131,9 @@ namespace MARQOV
             {//both numbers are of same magnitude -> evaluate the remainder
                 i64 = (i64 & ~0xFFF0000000000000) | 0x3FE0000000000000;
 
-                double remainder = action2-std::trunc(action2);
-                std::memcpy(&rngnum, &i64, sizeof(rngnum));
-                if ( rngnum < detail::exp2app6(remainder) )
+                double remainder = action2-std::trunc(action2);//depending on compiler, occasionally a modf is faster
+                rngnum = detail::bit_cast<double>(i64);
+                if ( rngnum < detail::exp2app6(remainder))
                 {
                     accept = true;
                 }
@@ -114,7 +141,6 @@ namespace MARQOV
         }
 	return accept;
     }
-
 	/**
      * Promote_Array utility class.
      *
