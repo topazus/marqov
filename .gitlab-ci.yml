@@ -156,13 +156,19 @@ marqovtest_Buster_clang:
     stage: test
     <<: *src_except_definition
     script:
-      - apt-get update && apt-get install -y libhdf5-dev libeigen3-dev
+      - echo "deb http://deb.debian.org/debian bullseye-backports main" >> /etc/apt/sources.list
+      - apt-get update && apt-get install -y libhdf5-dev libeigen3-dev cmake
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang++ ..
       - cmake --build . --target all --config Release
-      - ctest -O log.txt
+      - ctest --version
+      - ctest -O log.txt --output-junit marqov-junit.xml
       - cat log.txt | grep "tests passed" | cut -d " " -f 1
+    artifacts:
+      when: always
+      reports:
+        junit: ./build/marqov-junit.xml
 
 marqovtest_Buster_pgi:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-pgi-21-03
