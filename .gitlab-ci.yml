@@ -152,7 +152,7 @@ MARQOVtest_Buster:
     <<: *test_definition
 
 marqovtest_Buster_clang:
-    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-clang
+    image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-clang
     stage: test
     <<: *src_except_definition
     script:
