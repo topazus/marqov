@@ -157,7 +157,8 @@ marqovtest_Buster_clang:
     <<: *src_except_definition
     script:
       - echo "deb http://deb.debian.org/debian bullseye-backports main" >> /etc/apt/sources.list
-      - apt-get update && apt-get install -y libhdf5-dev libeigen3-dev cmake
+      - apt-get update && apt-get install -y libhdf5-dev libeigen3-dev
+      - apt-get install -t bullseye-backports cmake
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang++ ..
