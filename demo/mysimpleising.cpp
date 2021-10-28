@@ -1,11 +1,11 @@
 #include <iostream>
 #include <array>
 
-// include the MARQOV library
-#include "../src/libmarqov/libmarqov.h"
-
 // include the RegularLattice
 #include "../src/lattice/regular_hypercubic.h"
+
+// include the MARQOV library
+#include "../src/libmarqov/libmarqov.h"
 
 // include certain hamiltonian building blocks from the utilities
 #include "../src/hamiltonian/util/termcollection.h"
