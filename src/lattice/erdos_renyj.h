@@ -30,3 +30,14 @@ class ErdosRenyi : public DisorderType
 			}
 		}
 };
+
+/** This function provides the necessary overload for MARQOV::Core
+ *  such that we can dump useful info into the HDF5 file
+ * 
+ * @param h5loc the group of the lattice
+ * @param l the lattice that we are dumping info about.
+ */
+void writelat(H5::Group& h5loc, const ErdosRenyi& l)
+{
+	dumpscalartoH5(h5loc, "name", std::string("ErdosRenyi"));
+}

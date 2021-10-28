@@ -144,7 +144,7 @@ class H5Mapper<T, typename std::enable_if<std::is_scalar<T>::value>::type> : pub
  * 
  * Since it's often needed for config related things, this is a small helper
  * function to dump a single scalar into its own scalar data space in a given
- * group
+ * group.
  * @tparam T the type of the scalar.
  * @param h5loc the HDF5 group / location of the variable.
  * @param key how to name the value in the HDF5 File.
@@ -153,7 +153,6 @@ class H5Mapper<T, typename std::enable_if<std::is_scalar<T>::value>::type> : pub
 template <typename T>
 inline void dumpscalartoH5(H5::Group& h5loc, std::string key, const T& val)
 {
-    
     H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
     H5::DataSet dset(h5loc.createDataSet(key.c_str(), H5Mapper<T>::H5Type(), dspace));
     dset.write(&val, H5Mapper<T>::H5Type());
