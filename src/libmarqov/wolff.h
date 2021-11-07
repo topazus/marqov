@@ -24,6 +24,19 @@
 
 namespace MARQOV
 {
+    /** Determine if the Wolff would accept the move with the proposed energy change.
+     * 
+     * @param dE The energy change
+     * @param beta The inverse temperature
+     * @param rng the Random numer generator
+     * @return true if we extend the cluster, else false.
+     */
+    template <class RNGType>
+    inline bool wolff_update_accepted(double dE, double beta, RNGCache<RNGType>& rng)
+    {
+        return !update_accepted<2, RNGType>(dE, beta, rng);
+    }
+    
     /**
      * This class serves as an entry point for easily defining your own
      * specializations of the Wolff Algorithm of your Hamiltonians.
@@ -31,8 +44,6 @@ namespace MARQOV
      * @tparam Hamiltonian The Hamiltonian that the Wolff algo will use.
      * @tparam Lattice The Lattice, that the Wolff algo should use.
      */
-
-
     template <class Hamiltonian, class Lattice>
     struct Wolff
     {
@@ -83,18 +94,14 @@ namespace MARQOV
 					const auto lcpl = embd.coupling(currentidx, currentnbr);
 					const double cpl = gcpl*lcpl;
 
-					
             	    // test whether site is added to the cluster
-            	    if (cpl > 0)
-            	    {
-            	        if (rng.real() < -std::expm1(-2.0*beta*cpl))
-            	        {
-            	            q++;
-            	            cstack[q] = currentnbr;
-            	            clustersize++;
-            	            embd.flip(candidate);
-            	        }
-            	    }
+                    if (wolff_update_accepted(cpl, beta, rng))
+                    {
+                        q++;
+                        cstack[q] = currentnbr;
+                        clustersize++;
+                        embd.flip(candidate);
+                    }
             	}
             }
         }
