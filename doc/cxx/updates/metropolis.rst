@@ -4,6 +4,6 @@ Metropolis
 ============================
 This is the basic single spin flip metropolis rule.
 
-.. doxygenclass:: MARQOV::Metropolis
+.. doxygenstruct:: MARQOV::Metropolis
    :project: Marqov
    :members:

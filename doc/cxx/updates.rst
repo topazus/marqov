@@ -3,8 +3,9 @@
 Monte Carlo Update Routines
 ============================
 
-.. toctree
-   :maxdepth: 1
+.. toctree::
+   :caption: Monte Carlo Update Routines
+   :maxdepth: 2
 
    updates/emcs.rst
    updates/metropolis.rst
