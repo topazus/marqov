@@ -56,16 +56,14 @@ namespace MARQOV
         // cluster updates
         mrqvt.switch_clock("cluster");
         double avgclustersize = 0;
-        constexpr const int defaultsize = 4096/sizeof(int);// assume that the cluster contains at minimum 128 entries.
-        int lastclustersize = defaultsize;
         
-        Wolff<Hamiltonian, Lattice> wolff;
+        Wolff<Hamiltonian, Lattice> wolff;//instantiate wollf, and initialize the cluster stack
         
         for (int j=0; j < ncluster; j++)
         {
             const int seed = rngcache.integer(grid.size());
 
-            lastclustersize = std::max(/*Wolff<Hamiltonian, Lattice>::*/wolff.move(ham, grid, statespace, rngcache, beta, seed, lastclustersize), defaultsize);
+            auto lastclustersize = wolff.move(ham, grid, statespace, rngcache, beta, seed);
             avgclustersize += double(lastclustersize);
         }
 

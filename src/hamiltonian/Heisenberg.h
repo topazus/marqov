@@ -191,14 +191,15 @@ namespace MARQOV
     template <class Lattice, class SpinType, class CouplingType>
     struct Wolff<Heisenberg<SpinType, CouplingType>, Lattice>
     {
+         std::vector<int> cstack = std::vector<int>(4096/sizeof(int), 0);///< the size of the stack is meant to be preserved across different cluster processes.
+
         template <class RNG, class StateSpace>
-        static inline int move(const Heisenberg<SpinType, CouplingType>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite, int expextedclustersize)
+        inline int move(const Heisenberg<SpinType, CouplingType>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
         {
 			typedef Heisenberg<SpinType, CouplingType> Hamiltonian;
             typedef typename Hamiltonian::StateVector StateVector;
 			constexpr static int SymD = Hamiltonian::SymD;
 
-            std::vector<int> cstack(grid.size(), 0);
             int q = 0;
             auto& seed = statespace[rsite];
             cstack[q] = rsite;
@@ -218,6 +219,8 @@ namespace MARQOV
                 q--;
 
 				const auto nbrs = grid.nbrs(0, current);
+                if(q + nbrs.size() > cstack.size()) 
+                    cstack.resize(2*cstack.size());
 				for (std::size_t i = 0; i < nbrs.size(); ++i)
 				{
 					const auto currentnbr = nbrs[i];
