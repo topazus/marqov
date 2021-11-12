@@ -51,60 +51,62 @@ class MySimpleHeisenberg
         decltype(std::make_tuple(obs_m, obs_e)) observables = {std::make_tuple(obs_m, obs_e)};
 };
 
-template <class Lattice>
-struct MARQOV::Wolff<MySimpleHeisenberg, Lattice>
+namespace MARQOV
 {
-    std::vector<int> cstack = std::vector<int>(4096/sizeof(int), 0);///< the size of the stack is meant to be preserved across different cluster processes.
-
-    template <class RNG, class StateSpace>
-    inline int move(const MySimpleHeisenberg& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
+    template <class Lattice>
+    struct MARQOV::Wolff<MySimpleHeisenberg, Lattice>
     {
-        typedef MySimpleHeisenberg Hamiltonian;
-        typedef typename Hamiltonian::StateVector StateVector;
-        constexpr static int SymD = Hamiltonian::SymD;
+        std::vector<int> cstack = std::vector<int>(4096/sizeof(int), 0);///< the size of the stack is meant to be preserved across different cluster processes.
         
-        int q = 0;
-        auto& seed = statespace[rsite];
-        cstack[q] = rsite;
-        
-        int rdir = rng.integer(SymD); // random Cartesian direction
-        seed[rdir] *= -1;
-        
-        int clustersize = 1;
-        int current = 0;
-        
-        // plain Heisenberg model has only one interaction term
-        const auto gcpl = ham.interactions[0]->J; 
-        
-        while (q>=0)
+        template <class RNG, class StateSpace>
+        inline int move(const MySimpleHeisenberg& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
         {
-            current = cstack[q];
-            q--;
+            typedef MySimpleHeisenberg Hamiltonian;
+            typedef typename Hamiltonian::StateVector StateVector;
+            constexpr static int SymD = Hamiltonian::SymD;
             
-            const auto nbrs = grid.nbrs(0, current);
-            if(q + nbrs.size() > cstack.size()) 
-                cstack.resize(2*cstack.size());
-            for (std::size_t i = 0; i < nbrs.size(); ++i)
+            int q = 0;
+            auto& seed = statespace[rsite];
+            cstack[q] = rsite;
+            
+            int rdir = rng.integer(SymD); // random Cartesian direction
+            seed[rdir] *= -1;
+            
+            int clustersize = 1;
+            int current = 0;
+            
+            // plain Heisenberg model has only one interaction term
+            const auto gcpl = ham.interactions[0]->J; 
+            
+            while (q>=0)
             {
-                const auto currentnbr = nbrs[i];
-                StateVector& candidate = statespace[currentnbr];
+                current = cstack[q];
+                q--;
                 
-                const auto lcpl = statespace[current][rdir] * candidate[rdir];
-                const auto cpl  = gcpl*lcpl;
-                
-                if (wolff_update_accepted(cpl, beta, rng))
+                const auto nbrs = grid.nbrs(0, current);
+                if(q + nbrs.size() > cstack.size()) 
+                    cstack.resize(2*cstack.size());
+                for (std::size_t i = 0; i < nbrs.size(); ++i)
                 {
-                    q++;
-                    clustersize++;
-                    cstack[q] = currentnbr;
-                    candidate[rdir] = -candidate[rdir];
+                    const auto currentnbr = nbrs[i];
+                    StateVector& candidate = statespace[currentnbr];
+                    
+                    const auto lcpl = statespace[current][rdir] * candidate[rdir];
+                    const auto cpl  = gcpl*lcpl;
+                    
+                    if (wolff_update_accepted(cpl, beta, rng))
+                    {
+                        q++;
+                        clustersize++;
+                        cstack[q] = currentnbr;
+                        candidate[rdir] = -candidate[rdir];
+                    }
                 }
             }
+            return clustersize;
         }
-        return clustersize;
-    }
-};
-
+    };
+}
 
 using namespace std;
 using namespace MARQOV;
