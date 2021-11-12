@@ -54,7 +54,7 @@ class MySimpleHeisenberg
 namespace MARQOV
 {
     template <class Lattice>
-    struct MARQOV::Wolff<MySimpleHeisenberg, Lattice>
+    struct Wolff<MySimpleHeisenberg, Lattice>
     {
         std::vector<int> cstack = std::vector<int>(4096/sizeof(int), 0);///< the size of the stack is meant to be preserved across different cluster processes.
         
