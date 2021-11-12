@@ -47,15 +47,27 @@ namespace MARQOV
     template <class Hamiltonian, class Lattice>
     struct Wolff
     {
+    /**
+     * This is the function that we call in the Monte Carlo and which has to be present in the class specialization
+     * that can be provided by a user.
+     * 
+     * @param ham the hamiltonian
+     * @param grid the lattice
+     * @param statespace The Statespace
+     * @param rng a random number generator
+     * @param beta the inverse temperature
+     * @param rsite expectedclustersize this is used for feeding the clusters size of the previous step back into the loop and hence use the old size as prediction for the new size.
+     * @return the cluster size of the final grown wolff cluster.
+     */
         template <class RNGType, class StateSpace>
-        static inline int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNGCache<RNGType>& rng, double beta, int rsite);
+        static inline int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNGCache<RNGType>& rng, double beta, int rsite, int expectedclustersize = 4096/sizeof(int));
     };
     
 
 
     template <class Hamiltonian, class Lattice>
     template <class RNGType, class StateSpace>
-    int Wolff<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNGCache<RNGType>& rng, double beta, int rsite)
+    int Wolff<Hamiltonian, Lattice>::move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNGCache<RNGType>& rng, double beta, int rsite, int expectedclustersize)
     {
 		// set up embedder
 		Embedder<Hamiltonian, Lattice> embd(ham, grid, statespace);
@@ -63,7 +75,10 @@ namespace MARQOV
 
         // prepare stack
         typedef typename Hamiltonian::StateVector StateVector;
-        std::vector<int> cstack(grid.size(), 0);
+        std::vector<int> cstack(
+            //grid.size()
+            expectedclustersize
+            , 0);
 
         // add cluster seed and flip it
         int q = 0;
@@ -98,8 +113,11 @@ namespace MARQOV
                     if (wolff_update_accepted(cpl, beta, rng))
                     {
                         q++;
-                        cstack[q] = currentnbr;
                         clustersize++;
+                         if (q < cstack.size())
+                            cstack[q] = currentnbr;
+                         else
+                             cstack.push_back(currentnbr);
                         embd.flip(candidate);
                     }
             	}

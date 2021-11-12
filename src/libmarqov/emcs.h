@@ -31,8 +31,9 @@ namespace MARQOV
     /** Entry point for overwriting the EMCS.
      * 
      * This class serves as an entry point for easily defining your own
-     * specializations of the notion of a basic sweep of your Hamiltonians.
-     * Further uses are e.g. adding your own moves
+     * specializations of the notion of a basic sweep of the statespace
+     * of your Hamiltonians.
+     * Further uses are e.g. adding your own moves.
      * To that end it has the two prototypical template parameters:
      * @tparam Hamiltonian The Hamiltonian that the Wolff algo will use.
      * @tparam Lattice The Lattice, that the Wolff algo should use.
@@ -55,11 +56,17 @@ namespace MARQOV
         // cluster updates
         mrqvt.switch_clock("cluster");
         double avgclustersize = 0;
+        constexpr const int defaultsize = 4096/sizeof(int);// assume that the cluster contains at minimum 128 entries.
+        int lastclustersize = defaultsize;
+        
+        Wolff<Hamiltonian, Lattice> wolff;
+        
         for (int j=0; j < ncluster; j++)
         {
             const int seed = rngcache.integer(grid.size());
 
-            avgclustersize += Wolff<Hamiltonian, Lattice>::move(ham, grid, statespace, rngcache, beta, seed);
+            lastclustersize = std::max(/*Wolff<Hamiltonian, Lattice>::*/wolff.move(ham, grid, statespace, rngcache, beta, seed, lastclustersize), defaultsize);
+            avgclustersize += double(lastclustersize);
         }
 
         // Metropolis sweeps

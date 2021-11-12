@@ -51,25 +51,85 @@ class MySimpleHeisenberg
         decltype(std::make_tuple(obs_m, obs_e)) observables = {std::make_tuple(obs_m, obs_e)};
 };
 
+template <class Lattice>
+    struct MARQOV::Wolff<MySimpleHeisenberg, Lattice>
+    {
+//         std::vector<int> cstack = std::vector<int>(4096/sizeof(int), 0);
+        template <class RNG, class StateSpace>
+        /*static*/ inline int move(const MySimpleHeisenberg& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite, int expectedclustersize)
+        {
+			typedef MySimpleHeisenberg Hamiltonian;
+            typedef typename Hamiltonian::StateVector StateVector;
+			constexpr static int SymD = Hamiltonian::SymD;
+
+             std::vector<int> cstack(
+ grid.size()
+// //expectedclustersize
+ , 0);
+            int q = 0;
+            auto& seed = statespace[rsite];
+            cstack[q] = rsite;
+
+			int rdir = rng.integer(SymD); // random Cartesian direction
+			seed[rdir] *= -1;
+            
+            int clustersize = 1;
+            int current = 0;
+				
+			// plain Heisenberg model has only one interaction term
+			const auto gcpl = ham.interactions[0]->J; 
+
+            while (q>=0)
+            {
+                current = cstack[q];
+                q--;
+
+				const auto nbrs = grid.nbrs(0, current);
+				for (std::size_t i = 0; i < nbrs.size(); ++i)
+				{
+					const auto currentnbr = nbrs[i];
+					StateVector& candidate = statespace[currentnbr];
+
+					const auto lcpl = statespace[current][rdir] * candidate[rdir];
+					const auto cpl  = gcpl*lcpl;
+                    
+                    if (wolff_update_accepted(cpl, beta, rng))
+                    {
+                        q++;
+                        clustersize++;
+// if (q < cstack.size())
+                        cstack[q] = currentnbr;
+// else
+// cstack.push_back(currentnbr);
+
+                        candidate[rdir] = -candidate[rdir];
+                    }
+				}
+			}
+			return clustersize;
+        }
+    };
+
+
 using namespace std;
 using namespace MARQOV;
 
 int main()
 {
     // Initialize the lattice
-	int L = 8;
-	int dim = 2;
+	int L = 32;
+	int dim = 3;
     RegularHypercubic mylatt(L, dim);
 
 	// Set Monte Carlo parameters using MARQOV::Config
 	MARQOV::Config mp("./"); // output path 
-	mp.setnmetro(5); // number of Metropolis sweeps per EMCS
-	mp.setncluster(10); // number of Wolff updates per EMCS
+	mp.setnmetro(1); // number of Metropolis sweeps per EMCS
+	mp.setncluster(500); // number of Wolff updates per EMCS
 	mp.setwarmupsteps(500); // number of EMCS for warmup
-	mp.setgameloopsteps(3000); // number of EMCS for production
+	mp.setgameloopsteps(500); // number of EMCS for production
 
 	// Set the Hamiltonian parameters, J, and the inverse temperature beta
-    double beta = 0.66;
+    double beta = 0.7;
     double J = -1;
     auto hp = make_tuple(beta, J);
 
@@ -80,17 +140,18 @@ int main()
     vector<decltype(args)> v;
 
 	// Fill
-    for(int j = 0; j < 13; ++j)
+    for(int j = 0; j < 1; ++j)
     {
         hp = make_tuple(beta+j*0.1, J);
         v.push_back(make_tuple(std::ref(mylatt), mp, hp));
     }
 
     // Set up the MARQOV schedular
-    auto sched = makeScheduler<MySimpleHeisenberg, RegularHypercubic>(args, 100);
+    auto sched = makeScheduler<MySimpleHeisenberg, RegularHypercubic>(args, 1);
 	// Feed parameters to the scheduler which creates the simulations
     for(auto p : v)
 		sched.createSimfromParameter(p);
 	// Run
     sched.start();
+system("rm  beta0.700000_0.h5");
 }

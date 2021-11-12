@@ -192,7 +192,7 @@ namespace MARQOV
     struct Wolff<Heisenberg<SpinType, CouplingType>, Lattice>
     {
         template <class RNG, class StateSpace>
-        static inline int move(const Heisenberg<SpinType, CouplingType>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
+        static inline int move(const Heisenberg<SpinType, CouplingType>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite, int expextedclustersize)
         {
 			typedef Heisenberg<SpinType, CouplingType> Hamiltonian;
             typedef typename Hamiltonian::StateVector StateVector;
