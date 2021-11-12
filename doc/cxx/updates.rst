@@ -3,14 +3,9 @@
 Monte Carlo Update Routines
 ============================
 
-.. doxygenclass:: MARQOV::EMCS
-   :project: Marqov
-   :members:
+.. toctree
+   :maxdepth: 1
 
-.. doxygenclass:: MARQOV::Metropolis
-   :project: Marqov
-   :members:
-
-.. doxygenclass:: MARQOV::Wolff
-   :project: Marqov
-   :members:
+   updates/emcs.rst
+   updates/metropolis.rst
+   updates/wolff.rst
