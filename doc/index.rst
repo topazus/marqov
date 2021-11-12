@@ -36,6 +36,7 @@ for which you can find API documentation below.
    changelog
    getting_started
    observables
+   io
 
 .. image:: ./_static/icon_regular.svg
    :width: 24
