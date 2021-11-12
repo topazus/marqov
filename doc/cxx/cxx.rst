@@ -8,8 +8,9 @@ Welcome to the API Overview of the C++ Part of MARQOV.
    :maxdepth: 1
    
    core
-   config
    scheduler
+   updates
+   config
    hamiltonians
    lattices
    utilities
