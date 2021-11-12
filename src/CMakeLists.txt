@@ -20,7 +20,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmarqov/util/config.h.in ${CMAKE_CU
 
 # Let's check whether we have SWIG and can hence build the language bindings.
 
-if(CMAKE_VERSION VERSION_GREATER 3.7)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.8.0)
     find_package(SWIG 3.0 OPTIONAL_COMPONENTS python java lua r ocaml)
 
     if(SWIG_FOUND)
