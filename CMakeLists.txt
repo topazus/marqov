@@ -24,6 +24,16 @@ if(DEBIASINTEGERS AND NOT HAVE_UINT128LEN)
     message(FATAL_ERROR "Debiasing of integers requires a 128bit data type")
 endif()
 
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
+if(COMPILER_SUPPORTS_MARCH_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+endif()
+CHECK_CXX_COMPILER_FLAG("-mtune=native" COMPILER_SUPPORTS_MTUNE_NATIVE)
+if(COMPILER_SUPPORTS_MTUNE_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=native")
+endif()
+
 add_subdirectory(src)
 add_subdirectory(demo)
 

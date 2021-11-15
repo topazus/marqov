@@ -11,7 +11,7 @@ there are two required functions of a lattice, those being
    std::vector<int> Lattice::nbrs(const int alpha, const int i) const
 
 which enables us to infer neighbour relations in your graph, since the returned vector should contain the indices
-of the site i.
+of the neighbours of the site i.
 The second function is
 
 .. code-block:: cpp

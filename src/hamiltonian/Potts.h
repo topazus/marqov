@@ -260,9 +260,7 @@ namespace MARQOV
 		};
 
 
-                
-                
-		/** Specialization of the Wolff cluster algorithm for the Q-state Potts model
+		/** Specialization of the Wolff cluster algorithm for the Q-state Potts model.
 		*
 		* @tparam Lattice the type of the lattice
 		* @tparam Q number of spin values
@@ -272,8 +270,10 @@ namespace MARQOV
         template <class Lattice, int Q>
         struct Wolff<Potts<Q>, Lattice>
         {
+            std::vector<int> cstack = std::vector<int>(4096/sizeof(int), 0);///< the size of the stack is meant to be preserved across different cluster processes.
+
             template <class RNG, class StateSpace>
-            static inline int move(const Potts<Q>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
+            inline int move(const Potts<Q>& ham, const Lattice& grid, StateSpace& statespace, RNG& rng, double beta, int rsite)
             {
 				typedef Potts<Q> Hamiltonian;
 				typedef typename Hamiltonian::StateVector StateVector;
@@ -282,10 +282,6 @@ namespace MARQOV
 				// set up embedder
 				Embedder<Hamiltonian, Lattice> embd(ham, grid, statespace);
 				embd.draw(rng,statespace[rsite]);
-		
-		        // prepare stack
-		        typedef typename Hamiltonian::StateVector StateVector;
-		        std::vector<int> cstack(grid.size(), 0);
 		
 		        // add cluster seed and flip it
 		        int q = 0;
@@ -305,7 +301,9 @@ namespace MARQOV
 					{
 		        		const double gcpl = ham.multisite[c]->k;
 		            	auto nbrs = grid.flexnbrs(c, currentidx);
-		
+                        if(q + nbrs.size() > cstack.size()) 
+                            cstack.resize(2*cstack.size());
+
 		            	// loop over neighbours
 		            	for (std::size_t i = 0; i < nbrs.size(); ++i)
 		            	{
@@ -331,6 +329,5 @@ namespace MARQOV
                             
         };
 }
-
 
 #endif

@@ -62,8 +62,9 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.8.0)
       endif()
 
       if(CMAKE_VERSION VERSION_GREATER 3.18)# language specific checks from SWIG only available in newer cmake versions
+          
           if(SWIG_r_FOUND)
-          message(STATUS "R found, building R bindings")
+          message(STATUS "R found, trying to build R bindings. Make sure development headers are present!")
 	  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
           INCLUDE_DIRECTORIES("/usr/share/R/include/") # Debian Bullseye path, could also carry over to Ubuntu
           INCLUDE(${SWIG_USE_FILE})
@@ -72,7 +73,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.8.0)
           SWIG_LINK_LIBRARIES(RShowcase libMARQOV)
           endif()
           if(SWIG_ocaml_FOUND)
-          message(STATUS "ocaml found, building OCaml bindings")
+          message(STATUS "ocaml found, trying to build OCaml bindings. Make sure development headers are present!")
           INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
           INCLUDE(${SWIG_USE_FILE})
 

@@ -21,6 +21,7 @@
 #include <vector>
 #include <cmath>
 #include "embedder.h"
+#include "metropolishelpers.h"
 
 namespace MARQOV
 {
@@ -28,7 +29,7 @@ namespace MARQOV
      * 
      * @param dE The energy change
      * @param beta The inverse temperature
-     * @param rng the Random numer generator
+     * @param rng The random number generator
      * @return true if we extend the cluster, else false.
      */
     template <class RNGType>
@@ -39,7 +40,7 @@ namespace MARQOV
     
     /**
      * This class serves as an entry point for easily defining your own
-     * specializations of the Wolff Algorithm of your Hamiltonians.
+     * specializations of the Wolff algorithm of your Hamiltonians.
      * To that end it has the two prototypical template parameters:
      * @tparam Hamiltonian The Hamiltonian that the Wolff algo will use.
      * @tparam Lattice The Lattice, that the Wolff algo should use.
@@ -47,10 +48,24 @@ namespace MARQOV
     template <class Hamiltonian, class Lattice>
     struct Wolff
     {
+    /**
+     * This is the function that we call in the Monte Carlo and which has to be present in the class specialization
+     * that can be provided by a user.
+     * 
+     * @param ham the hamiltonian
+     * @param grid the lattice
+     * @param statespace The Statespace
+     * @param rng a random number generator
+     * @param beta the inverse temperature
+     * @param rsite the randomized site wher we start the growth
+     * @return the cluster size of the final, grown wolff cluster.
+     */
         template <class RNGType, class StateSpace>
-        static inline int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNGCache<RNGType>& rng, double beta, int rsite);
+        inline int move(const Hamiltonian& ham, const Lattice& grid, StateSpace& statespace, RNGCache<RNGType>& rng, double beta, int rsite);
+
+        std::vector<int> cstack = std::vector<int>(4096/sizeof(int), 0);///< the size of the stack is meant to be preserved across different cluster processes.
     };
-    
+
 
 
     template <class Hamiltonian, class Lattice>
@@ -63,7 +78,6 @@ namespace MARQOV
 
         // prepare stack
         typedef typename Hamiltonian::StateVector StateVector;
-        std::vector<int> cstack(grid.size(), 0);
 
         // add cluster seed and flip it
         int q = 0;
@@ -83,6 +97,8 @@ namespace MARQOV
 			{
         		const double gcpl = ham.interactions[a]->J;
             	auto nbrs = grid.nbrs(a, currentidx);
+                if(q + nbrs.size() > cstack.size()) 
+                    cstack.resize(2*cstack.size());
 
             	// loop over neighbours
             	for (std::size_t i = 0; i < nbrs.size(); ++i)
@@ -98,8 +114,8 @@ namespace MARQOV
                     if (wolff_update_accepted(cpl, beta, rng))
                     {
                         q++;
-                        cstack[q] = currentnbr;
                         clustersize++;
+                        cstack[q] = currentnbr;
                         embd.flip(candidate);
                     }
             	}
