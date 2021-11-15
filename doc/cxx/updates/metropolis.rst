@@ -2,7 +2,7 @@
 
 Metropolis
 ============================
-This is the basic single spin flip metropolis rule.
+This is the basic single spin flip Metropolis rule.
 
 .. doxygenstruct:: MARQOV::Metropolis
    :project: Marqov
