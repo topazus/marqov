@@ -90,12 +90,13 @@ int main()
     std::string fn{name + ".ini"};
 
 
+	// Input
+	// -----
     // We utilize a small helper library of ours, the registry which 
 	// reads Windows .ini style files to read config files
     RegistryDB reg;
 	check_registry_availability(reg, name);
 	check_registry_file_exists(reg, name);
-			
     // With the registry available we can now start to read in parameters from config files. 
 	// Note that these parameters get replicated in the final HDF5 containers.
     
