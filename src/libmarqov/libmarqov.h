@@ -8,4 +8,5 @@
 #include "util/filters.h"  
 #include "marqovscheduler.h"
 #include "util/regularlatticeloop.h"
+#include "util/startup.h"  
 #endif
