@@ -78,49 +78,77 @@ class HeisenbergHamiltonian
 };
 
 
+void create_config_select(std::string HamiltonianName)
+{
+	const auto filename = std::string{"./config/select.ini"};
+	std::ofstream select(filename);
+	select << "[General]" << '\n' << "Hamiltonian = " << HamiltonianName << '\n' << "[END]" << std::endl;
+	select.close();
+}
+
+
 
 using namespace std;
 using namespace MARQOV;
 
 int main()
 {
-    // We utilize a small helper library of ours, the registry which reads Windows .ini style files to read config files
-    RegistryDB reg;
-    try
-    {
-        reg.init("../src/config", "ini");
-    }
-    catch(Registry_Exception& re)
-    {
-        std::cout << "[MARQOV::main] Configuration directory not found!";
-		std::cout << "Assuming you're starting this MARQOV binary for the first time!"<<std::endl;
-        std::cout << "WELCOME TO MARQOV!"<<std::endl;
-        std::cout << "[MARQOV::main] To get you going we will generate and populate a configuration directory locally under ./config"<<std::endl;
-        makeDir("./config");
-        const auto filename = std::string{"./config/select.ini"};
-        if(!fileexists(filename))
-        {
-            std::ofstream select(filename);
-            select<<"[General]"<<'\n'<<"Hamiltonian = Heisenberg"<<'\n'<<"[END]"<<std::endl;
-            reg.init("./config", "ini");
-        }
-        else
-        {
-            std::cout << "[MARQOV::main] "<< filename<<" already exists, but is not usable.";
-			std::cout << "I would overwrite its content, hence I'm terminating now"<<std::endl;
-            throw;
-        }
-    }
-    
-    // With the registry available we can now start to read in parameters from config files. 
-	// Note that these parameters get replicated in the final HDF5 containers.
-    
-
 	// We are a Heisenberg Model. Saves some typing...
     std::string name{"Heisenberg"};
     std::string fn{name + ".ini"};
 
 
+    // We utilize a small helper library of ours, the registry which reads Windows .ini style files to read config files
+    RegistryDB reg;
+    try
+    {
+        reg.init("./config", "ini");
+    }
+    catch(Registry_Exception& re)
+    {
+        std::cout << std::endl << "WELCOME TO MARQOV!" << std::endl << std::endl;
+        std::cout << "[MARQOV::main] No configuration directory found! ";
+		std::cout << "Assuming you're starting this MARQOV binary for the first time!" << std::endl;
+        std::cout << "[MARQOV::main] To get you going we will generate and populate ";
+		std::cout << "a configuration directory locally under ./config" << std::endl;
+
+        makeDir("./config");
+        const auto filename = std::string{"./config/select.ini"};
+
+        if(!fileexists(filename))
+        {
+			create_config_select(name);
+            reg.init("./config", "ini");
+        }
+        else
+        {
+            std::cout << "[MARQOV::main] "<< filename <<" already exists, but is not usable.";
+			std::cout << "I would overwrite its content, hence I'm terminating now"<<std::endl;
+            throw;
+        }
+
+    }
+
+
+	try
+	{
+    	int L = reg.Get<int>(fn, name, "L" );
+	}
+	catch(Registry_cfgfile_not_found_Exception& e)
+	{
+        std::cout<<"[MARQOV::main] Unable to find Heisenberg config! Generating new one in ./config/"<<fn<<std::endl;
+        ofstream cfg("./config/" + fn);
+        cfg << "[Heisenberg]\n" << "L = 12\n" << "rep = 4\n" << "dim = 3\n";
+		cfg << "beta = 0.67,0.68\n" << "J = -1.0\n\n";
+		cfg << "[MC]\n" << "nmetro = " << 2 << "\nnclusteramp = "<< 0.5 << "\nnclusterexp = " << 1;
+		cfg << "\nwarmupsteps = " << 500 << "\nmeasuresteps = "<< 5000 << "\n";
+		cfg << "[IO]\n" << "outdir = ./out\n" << "[END]" << std::endl;
+        reg.init("./config");                                                                                                                                                                                                           
+    } 
+			
+    // With the registry available we can now start to read in parameters from config files. 
+	// Note that these parameters get replicated in the final HDF5 containers.
+    
 
 	// Geometry
 	// --------
@@ -148,7 +176,7 @@ int main()
 	// ----------------
 
     // Prepare output directory using helper script
-	std::string outbasedir = "../out/";
+	std::string outbasedir = "./out/";
     makeDir(outbasedir);
     std::string outpath = outbasedir+std::to_string(L)+"/";
     makeDir(outpath);
