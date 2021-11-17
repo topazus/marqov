@@ -77,7 +77,7 @@ void check_registry_file_exists(RegistryType& reg, std::string name, std::string
 	std::string fn{name + ".ini"};
 	try
 	{
-		auto dim  = reg.Get<int>(fn, name, "dim" );
+		auto dim  = reg.template Get<int>(fn, name, "dim" );
 	}
 	catch(Registry_cfgfile_not_found_Exception& e)
 	{
