@@ -1,4 +1,3 @@
-
 <table  align="center"><td align="center" width="9999">
 <img src="doc/_static/logo_base.svg" align="center" width="120" alt="project icon">
 
@@ -48,10 +47,13 @@ MARQOV features foreign language bindings that will be built if SWIG and the req
 
 ## Configuration
 MARQOV follows standard cmake procedures:
-- cmake -E make_directory build
-- cd build
-- cmake -DCMAKE_BUILD_TYPE=Release ..
-- cmake --build . --target all --config Release
+
+```console
+cmake -E make_directory build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build . --target all --config Release
+```
 
 which will by default build all possible targets.
 There is one switch available: -DDEBIASINTEGERS which can be used to build
@@ -66,12 +68,22 @@ MARQOV is meant to be used as a library.
 For a start have a look at the files in /demo.
 There's mysimpleising and mysimpleheisenberg that show basic usage,
 or have a look at our showcase MARQOVdemo.
-Or just hack away to your heart's content by modifying main.cpp in src!
 
+Or just hack away to your heart's content by modifying main.cpp in src! There is a Makefile available, such that the compilation is particularly simply. The code can then be executed from any desired working directory and the output as well as log files are placed there (in respective subdirectories). We recommend using the base code folder (one level above the build directory) as the work directory. To compile and execute MARQOV's main program, use
 
+```console
+cd build 
+make main
+cd ..
+./build/src/main
+```
 
+One may avoid switching through directories in the build process using make's -C flag
 
-
+```console
+make -C build/main
+./build/src/main
+```
 
 </td>
 </tr>
