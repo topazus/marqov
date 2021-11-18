@@ -1,6 +1,6 @@
 /* This file is part of MARQOV:
  * A modern framework for classical spin models on general topologies
- * Copyright (C) 2020-2021, The MARQOV Project
+ * Copyright (C) 2021, The MARQOV Project
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -20,10 +20,9 @@
 #define STARTUP_H
 #include <vector>
 #include <tuple>
-//#include "../core.h"
-//#include "registry.h"
+#include <string>
 
-void create_config_select(std::string HamiltonianName)
+void create_config_select(const std::string& HamiltonianName)
 {
 	const auto filename = std::string{"./config/select.ini"};
 	std::ofstream select(filename);
@@ -38,7 +37,7 @@ void print_welcome_message()
 }
 
 template <class RegistryType>
-void check_registry_availability(RegistryType& reg, std::string HamiltonianName, std::string dir = "./config")
+void check_registry_availability(RegistryType& reg, const std::string& HamiltonianName, const std::string dir = "./config")
 {
 	try
 	{
@@ -71,7 +70,7 @@ void check_registry_availability(RegistryType& reg, std::string HamiltonianName,
 
 
 template <class RegistryType>
-void check_registry_file_exists(RegistryType& reg, std::string name, std::string dir = "./config")
+void check_registry_file_exists(RegistryType& reg, const std::string& name, const std::string dir = "./config")
 {
 
 	std::string fn{name + ".ini"};
