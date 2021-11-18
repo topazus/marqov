@@ -58,9 +58,6 @@ static int instantiatesim(const std::string& path, Lattice& mylatt, const HamPar
     return 0;
 }
 
-
-
-
 /** Create a single instance of the Ising Model
  * 
  * @see Ising.h
@@ -96,6 +93,16 @@ int pyIsingGraph(std::string outpath, std::string graphpath, double beta, double
     return instantiatesim<GraphFromCSV, Ising<double>>(outpath, graph, hp);
 }
 
+/** Create a single instance of the Heisenberg Model
+ * 
+ * @see Heisenberg.h
+ * 
+ * @param path The path where to store the data.
+ * @param dim The dimensionality of the hypercubic lattice.
+ * @param len The linear dimension.
+ * @param beta The inverse temperature.
+ * @param J the interaction energy.
+ */
 
 int pyHeisenberg(std::string path, int dim, int len, double beta, double J)
 {
