@@ -16,6 +16,9 @@
  * this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#ifndef SYSTEMTOOLS_H
+#define SYSTEMTOOLS_H
+
 #include <sys/stat.h>
 #include <string>
 #include <exception>
@@ -48,3 +51,4 @@ inline void makeDir(const std::string path)
             throw std::runtime_error(std::string("[MARQOV] Failed to create folder ") + path);
     }
 }
+#endif
