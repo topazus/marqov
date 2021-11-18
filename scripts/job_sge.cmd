@@ -17,8 +17,8 @@
 # Job name
 #$-N MARQOV
 
-#$ -e ../error.txt
-#$ -o ../output.txt
+#$ -e error.txt
+#$ -o output.txt
 
 echo "Starting MARQOV on $NSLOTS nodes!"
-mpirun ./src/mpiMARQOV
+mpirun ./build/src/main
