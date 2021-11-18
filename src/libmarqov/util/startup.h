@@ -97,7 +97,11 @@ void check_registry_availability(RegistryDB& reg, const std::string& name, const
 }
 
 
-/** Check whether config file exists for specific Hamiltonian. If there is none, and a suitable "rule" is available, it will be created.
+/** Check whether config file exists for specific Hamiltonian.
+*
+* This function checks whether the registry has configuration information 
+* for the specified Hamiltonian. If there is none, and a suitable "rule" 
+* is available, it will be created.
 *
 * @param reg a reference to the registry
 * @param name the name of the Hamiltonian
