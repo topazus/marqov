@@ -21,7 +21,7 @@
 #include <vector>
 #include <tuple>
 #include <string>
-#include <ofstream>
+#include <fstream>
 #include <iostream>
 #include "registry.h"
 #include "systemtools.h"
