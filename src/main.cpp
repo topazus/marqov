@@ -9,7 +9,7 @@
 #include <tuple>
 #include <vector>
 
-// Our small helper library to read in strings from command line files.
+// Our small helper library to read in strings from config files.
 #include "libmarqov/util/registry.h"
 
 // Include the MARQOV library
