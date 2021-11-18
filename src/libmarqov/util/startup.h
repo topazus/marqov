@@ -22,22 +22,49 @@
 #include <tuple>
 #include <string>
 
-void create_config_select(const std::string& HamiltonianName)
+
+/** Creates the file select.ini
+*
+* @param HamiltonianName content of the file
+* @param dir directory where the file is created
+*/
+void create_config_select(const std::string& HamiltonianName, const std::string& dir)
 {
-	const auto filename = std::string{"./config/select.ini"};
+	const auto filename = std::string{dir+"/select.ini"};
 	std::ofstream select(filename);
 	select << "[General]" << '\n' << "Hamiltonian = " << HamiltonianName << '\n' << "[END]" << std::endl;
 	select.close();
 
 }
 
+
+/** Print the default MARQOV startup message
+*/
+void print_startup_message()
+{
+	std::cout<<"MARQOV Copyright (C) 2020-2021, The MARQOV Project contributors"<<std::endl;
+	std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;
+	std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;
+}
+
+
+/** Print a friendly welcome message
+*/
 void print_welcome_message()
 {
 	std::cout << std::endl << "WELCOME TO MARQOV!" << std::endl << std::endl;
 }
 
+
+/** Check whether the folder "config" exists and whether there is a file "select.ini"
+*
+* @tparam RegistryType The type of the registry (typically this is RegistryDB)
+* @param reg a reference to the registry
+* @param name the name of the Hamiltonian
+* @param dir the desired config directory
+*/
 template <class RegistryType>
-void check_registry_availability(RegistryType& reg, const std::string& HamiltonianName, const std::string dir = "./config")
+void check_registry_availability(RegistryType& reg, const std::string& name, const std::string dir = "./config")
 {
 	try
 	{
@@ -51,13 +78,13 @@ void check_registry_availability(RegistryType& reg, const std::string& Hamiltoni
 		std::cout << "[MARQOV::main] To get you going we will generate and populate ";
 		std::cout << "a configuration directory locally under ./config" << std::endl;
 
-		makeDir("./config"); 
-		const auto filename = std::string{"./config/select.ini"};
+		makeDir(dir); 
+		const auto filename = std::string{dir+"/select.ini"};
 
 		if(!fileexists(filename))
 		{
-			create_config_select(HamiltonianName);
-			reg.init("./config", "ini");
+			create_config_select(name,dir);
+			reg.init(dir, "ini");
 		}
 		else
 		{
@@ -69,6 +96,13 @@ void check_registry_availability(RegistryType& reg, const std::string& Hamiltoni
 }
 
 
+/** Check whether config file exists for specific Hamiltonian. If there is none, and a suitable "rule" is available, it will be created.
+*
+* @tparam RegistryType The type of the registry (typically this is RegistryDB)
+* @param reg a reference to the registry
+* @param name the name of the Hamiltonian
+* @param dir the desired config directory
+*/
 template <class RegistryType>
 void check_registry_file_exists(RegistryType& reg, const std::string& name, const std::string dir = "./config")
 {
@@ -80,21 +114,38 @@ void check_registry_file_exists(RegistryType& reg, const std::string& name, cons
 	}
 	catch(Registry_cfgfile_not_found_Exception& e)
 	{
-		std::cout<<"[MARQOV::main] Unable to find Heisenberg config! Generating new one in ./config/"<<fn<<std::endl;
-		std::ofstream cfg("./config/" + fn);
-		cfg << "[Heisenberg]\n" << "L = 12\n" << "rep = 4\n" << "dim = 3\n";
-		cfg << "beta = 0.67,0.68\n" << "J = -1.0\n\n";
-		cfg << "[MC]\n" << "nmetro = " << 2 << "\nnclusteramp = "<< 0.5 << "\nnclusterexp = " << 1; 
-		cfg << "\nwarmupsteps = " << 500 << "\nmeasuresteps = "<< 5000 << "\n";
-		cfg << "[IO]\n" << "outdir = ./out\n" << "[END]" << std::endl;
-		cfg.close();
+
+		if (name == "Heisenberg")
+		{
+			std::cout<<"[MARQOV::main] Unable to find Heisenberg config! Generating new one in ./config/"<<fn<<std::endl;
+			std::ofstream cfg(dir + fn);
+			cfg << "[Heisenberg]\n" << "L = 12\n" << "rep = 4\n" << "dim = 3\n";
+			cfg << "beta = 0.67,0.68\n" << "J = -1.0\n\n";
+			cfg << "[MC]\n" << "nmetro = " << 2 << "\nnclusteramp = "<< 0.5 << "\nnclusterexp = " << 1; 
+			cfg << "\nwarmupsteps = " << 500 << "\nmeasuresteps = "<< 5000 << "\n";
+			cfg << "[IO]\n" << "outdir = ./out\n" << "[END]" << std::endl;
+			cfg.close();
+		}
+		else if (name == "Ising")
+		{
+			std::cout<<"[MARQOV::main] Unable to find Ising config! Generating new one in ./config/" <<fn<< std::endl;
+			std::ofstream cfg(dir + fn);
+			cfg << "[Ising]\n" << "L = 32\n" << "rep = 4\n" << "dim = 2\n";
+			cfg << "beta = 0.67,0.68\n" << "J = -1.0\n\n";
+			cfg << "[MC]\n" << "nmetro = " << 2 << "\nnclusteramp = "<< 0.5 << "\nnclusterexp = " << 1; 
+			cfg << "\nwarmupsteps = " << 500 << "\nmeasuresteps = "<< 5000 << "\n";
+			cfg << "[IO]\n" << "outdir = ./out\n" << "[END]" << std::endl;
+			cfg.close();
+		}
+		else
+		{
+			std::cout << "[MARQOV::main] Unable to find suitable config file!" << std::endl;
+			std::cout << "[MARQOV::main] No rule available to auto-create one!" << std::endl;
+			throw;
+		}
 
 		reg.init("./config"); 
 	}
 }
-
-
-
-
 
 #endif

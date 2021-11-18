@@ -66,6 +66,7 @@ bool startswith(const std::string& longword, const std::string& shortword) noexc
     return longword.find(shortword) == 0;
 }
 
+
 /** Check the vailidity of the replica configuration.
  * throws if invalid.
  * 
@@ -76,6 +77,7 @@ void checkreplicaconfig(int nr, int nL)
 {
     if ((nr != nL) && (nr != 1)) throw std::invalid_argument("[MARQOV] Invalid replica configuration!");
 }
+
 
 /** Removes previous simulations.
  * 
@@ -90,7 +92,7 @@ void tidyupoldsims(const std::string& outbasedir)
     if(myrank == 0)
     {
 #endif
-        std::cout<<"[MARQOV::main] Erasing previous data!!!!!!!!!!!!!!!"<<std::endl;
+        std::cout<<"[MARQOV::main] Erasing previous data!!!!"<<std::endl;
         std::string command = "rm -r " + outbasedir;
         system(command.c_str());
         makeDir(outbasedir);
@@ -98,6 +100,7 @@ void tidyupoldsims(const std::string& outbasedir)
     }
 #endif
 }
+
 
 /** Print some nice information
  * 
@@ -121,6 +124,7 @@ void printInfoandcheckreplicaconfig(RegistryDB& registry, const std::string& ham
     checkreplicaconfig(nreplicas.size(), nL.size());
 }
 
+
 /** Utility function to write the common part of the config file
  * @param os the stream associated with the new config file.
  * @param nmetro 
@@ -131,8 +135,10 @@ void printInfoandcheckreplicaconfig(RegistryDB& registry, const std::string& ham
  */
 void createcfgfooter(std::ostream& os, int nmetro, double nclusteramp, int nclusterexp, int warmupsteps, int measuresteps)
 {
-    os<<"[MC]\n"<<"nmetro = "<<nmetro<<"\nnclusteramp = "<<nclusteramp<<"\nnclusterexp = "<<nclusterexp<<"\nwarmupsteps = "<<warmupsteps<<"\nmeasuresteps = "<<measuresteps<<"\n";
-    os<<"[IO]\n"<<"outdir = ./out\n"<<"[END]"<<std::endl;
+    os << "[MC]\n"<<"nmetro = " << nmetro;
+	os << "\nnclusteramp = " << nclusteramp << "\nnclusterexp = " << nclusterexp;
+	os << "\nwarmupsteps = " << warmupsteps << "\nmeasuresteps = " << measuresteps << "\n";
+    os << "[IO]\n"<<"outdir = ./out\n" << "[END]"<<std::endl;
 }
 
 
@@ -149,7 +155,7 @@ void scheduleIsing(RegistryDB& registry)
     }
     catch(Registry_cfgfile_not_found_Exception& e) 
     {
-        std::cout<<"[MARQOV] Unable to find Ising config! Generating new one in ./config/"+ham+".ini"<<std::endl;
+        std::cout<<"[MARQOV::MARQOVdemo] Unable to find Ising config! Generating new one in ./config/"+ham+".ini"<<std::endl;
         ofstream ising("./config/"+ham+".ini");
         ising<<"[Ising]\n"<<"L = 10\n"<<"rep = 2\n"<<"dim = 2\n"<<"beta = 0.3, 0.4\n"<<"J = -1.0\n\n";
         createcfgfooter(ising, 10, 25, 0, 30, 30);
@@ -178,7 +184,7 @@ void schedulePotts(RegistryDB& registry)
     catch(Registry_cfgfile_not_found_Exception& e) 
     {
         int q = std::stoi(ham.substr(5));
-        std::cout<<"[MARQOV] Unable to find"<<ham<<" config! Generating new one in ./config/"<<ham<<".ini"<<std::endl;
+        std::cout<<"[MARQOV::MARQOVdemo] Unable to find"<<ham<<" config! Generating new one in ./config/"<<ham<<".ini"<<std::endl;
         ofstream cfg("./config/" + ham+".ini");
         cfg<<"["<<ham<<"]\n"<<"q = "<<q<<'\n'<<"L = 10\n"<<"rep = 5\n"<<"dim = 2\n"<<"beta = 1.05, 1.07, 1.09\n"<<"J = -1.0\n\n";
         createcfgfooter(cfg, 2, 10, 0, 200, 200);
@@ -222,7 +228,7 @@ void scheduleAshkinTeller(RegistryDB& registry)
     }
     catch(Registry_cfgfile_not_found_Exception& e) 
     {
-        std::cout << "[MARQOV] Unable to find Ashkin-Teller config! Generating new one in ./config/"+ham+".ini" << std::endl;
+        std::cout << "[MARQOV::MARQOVdemo] Unable to find Ashkin-Teller config! Generating new one in ./config/"+ham+".ini" << std::endl;
         ofstream cfg("./config/"+ham+".ini");
         cfg<<"["+ham+"]\n"<<"L = 12\n"<<"rep = 10\n"<<"dim = 2\n"<<"beta = 0.312, 0.313\n"<<"J = -1.0\n"<<"K = 0.3\n\n";
         createcfgfooter(cfg, 2, 25, 0, 500, 10000);
@@ -252,7 +258,7 @@ void scheduleHeisenberg(RegistryDB& registry)
     }
     catch(Registry_cfgfile_not_found_Exception& e) 
     {
-        std::cout<<"[MARQOV] Unable to find Heisenberg config! Generating new one in ./config/"<<fn<<std::endl;
+        std::cout<<"[MARQOV::MARQOVdemo] Unable to find Heisenberg config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
         cfg<<"[Heisenberg]\n"<<"L = 8,10,12\n"<<"rep = 4\n"<<"dim = 3\n"<<"beta = 0.67,0.68\n"<<"J = -1.0\n\n";
         createcfgfooter(cfg, 2, 0.5, 1, 500, 5000);
@@ -278,7 +284,7 @@ void schedulePhi4(RegistryDB& registry)
     }
     catch(Registry_cfgfile_not_found_Exception& e) 
     {
-        std::cout<<"[MARQOV] Unable to find Phi4 config! Generating new one in ./config/"<<fn<<std::endl;
+        std::cout<<"[MARQOV::MARQOVdemo] Unable to find Phi4 config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
         cfg<<"[Phi4]\n"<<"L = 6,8,12\n"<<"rep = 10\n"<<"dim = 3\n"<<"beta = 0.681, 0.684, 0.687\n"<<"lambda = 4.5\n"<<"mass = 1.0\n\n";
         createcfgfooter(cfg, 5, 0.5, 1, 20, 100);
@@ -311,7 +317,7 @@ void scheduleBlumeCapel(RegistryDB& registry)
     }
     catch(Registry_cfgfile_not_found_Exception& e) 
     {
-        std::cout<<"[MARQOV] Unable to find BlumeCapel config! Generating new one in ./config/"<<fn<<std::endl;
+        std::cout<<"[MARQOV::MARQOVdemo] Unable to find BlumeCapel config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
         cfg<<"[BlumeCapel]\n"<<"L = 8,12\n"<<"rep = 2\n"<<"dim = 3\n"<<"beta = 0.32,0.33\n"<<"J = -1\n"<<"D = 0.655\n\n";
         createcfgfooter(cfg, 3, 0.5, 1, 100, 1000);
@@ -338,7 +344,7 @@ void scheduleBlumeEmeryGriffiths(RegistryDB& registry)
     }
     catch(Registry_cfgfile_not_found_Exception& e) 
     {
-        std::cout<<"[MARQOV] Unable to find BlumeEmeryGriffiths config! Generating new one in ./config/"<<fn<<std::endl;
+        std::cout<<"[MARQOV::MARQOVdemo] Unable to find BlumeEmeryGriffiths config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
         cfg<<"[BlumeEmeryGriffiths]\n"<<"L = 8,12\n"<<"rep = 25\n"<<"dim = 2\n"<<"beta = 1.66\n"<<"J = 1\n"<<"D = 0.5\n"<<"K = -1.2,-1.1\n\n";
         createcfgfooter(cfg, 2, 0.5, 1, 500, 5000);
@@ -366,7 +372,7 @@ void scheduleXXZAntiferro(RegistryDB& registry)
     }
     catch(Registry_cfgfile_not_found_Exception& e) 
     {
-        std::cout<<"[MARQOV] Unable to find XXZAntiferro config! Generating new one in ./config/"<<fn<<std::endl;
+        std::cout<<"[MARQOV::MARQOVdemo] Unable to find XXZAntiferro config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
         cfg<<"[XXZAntiferro]\n"<<"L = 8,10,12\n"<<"rep = 10\n"<<"dim = 3\n"<<"beta = 0.92,0.93\n"<<"J = -1\n"<<"extfield = 1\n"<<"aniso = 0.8\n\n";
         createcfgfooter(cfg, 3, 0.0, 1, 500, 1500);
@@ -393,7 +399,7 @@ void scheduleXXZAntiferroSingleAniso(RegistryDB& registry)
     }
     catch(Registry_cfgfile_not_found_Exception& e) 
     {
-        std::cout<<"[MARQOV] Unable to find XXZAntiferroSingleAniso config! Generating new one in ./config/"<<fn<<std::endl;
+        std::cout<<"[MARQOV::MARQOVdemo] Unable to find XXZAntiferroSingleAniso config! Generating new one in ./config/"<<fn<<std::endl;
         ofstream cfg("./config/" + fn);
         cfg<<"[XXZAntiferroSingleAniso]\n"<<"L = 8,10,12\n"<<"rep = 10\n"<<"dim = 3\n"<<"beta = 0.92,0.93\n"<<"J = -1\n"<<"extfield = 1\n"<<"aniso = 0.8\n"<<"singleaniso = 0.4\n\n";
         createcfgfooter(cfg, 3, 0.0, 1, 500, 1500);
@@ -674,52 +680,41 @@ void selectsim(RegistryDB& registry)
         scheduleBlumeCapelBiPartite(registry);
 }
 
+
+
+
+
 int main(int argc, char* argv[])
 {
-    std::cout<<"MARQOV Copyright (C) 2020-2021, The MARQOV Project contributors"<<std::endl;
-    std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;
-    std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;
+	print_startup_message();
+
 #ifdef MPIMARQOV
     int threadingsupport;
-    MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &threadingsupport);//FIXME: maybe we get by with one level less.
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &threadingsupport);
+	//FIXME: maybe we get by with one level less.
     if(threadingsupport < MPI_THREAD_SERIALIZED)
     {
-        std::cout<<"[MARQOV::main] Couldn't initialize MPI! Requested threading level not supported."<<std::endl;
+        std::cout << "[MARQOV::main] Couldn't initialize MPI! ";
+		std::cout << "Requested threading level not supported." << std::endl;
         return -1;
     }
 #endif
 
-	// read config files
+	// read registry
+	// create config folder and select.ini file if not available in the working dir
 	RegistryDB registry;
-    try
-    {
-        registry.init("../src/config", "ini");
-    }
-    catch(Registry_Exception& re)
-    {
-        std::cout<<"[MARQOV::main] Configuration directory not found! Assuming you're starting the MARQOV demonstration binary for the first time!"<<std::endl;
-        std::cout<<"WELCOME TO MARQOV!"<<std::endl;
-        std::cout<<"[MARQOV::main] To get you going we will generate and populate a configuration directory locally under ./config"<<std::endl;
-        makeDir("./config");
-        const auto filename = std::string{"./config/select.ini"};
-        if(!fileexists(filename))
-        {
-            std::ofstream select(filename);
-            select<<"[General]"<<'\n'<<"Hamiltonian = Ising"<<'\n'<<"[END]"<<std::endl;
-            registry.init("./config", "ini");
-        }
-        else
-        {
-            std::cout<<"[MARQOV::main] "<<filename<<" already exists, but is not usable. I would overwrite its content, hence I'm terminating now"<<std::endl;
-            throw;
-        }
-    }
+	check_registry_availability(registry, "Ising");
+
 #ifdef MPIMARQOV
     int myrank = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-    if (myrank == 0) {
+    if (myrank == 0) 
+	{
 #endif
-        selectsim(registry);
+
+	// run the actual simulation
+	selectsim(registry);
+
 #ifdef MPIMARQOV
     }
     MPI_Finalize();
