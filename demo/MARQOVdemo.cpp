@@ -32,6 +32,7 @@ using std::ofstream;
 
 // MARQOV
 #include "../src/libmarqov/libmarqov.h"
+#include "../src/libmarqov/util/startup.h"
 
 // Lattices
 #include "../src/lattice/regular_hypercubic.h"

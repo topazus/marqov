@@ -21,6 +21,7 @@
 #include <vector>
 #include <tuple>
 #include <string>
+#include "registry.h"
 
 
 /** Creates the file select.ini
@@ -58,13 +59,11 @@ void print_welcome_message()
 
 /** Check whether the folder "config" exists and whether there is a file "select.ini"
 *
-* @tparam RegistryType The type of the registry (typically this is RegistryDB)
 * @param reg a reference to the registry
 * @param name the name of the Hamiltonian
 * @param dir the desired config directory
 */
-template <class RegistryType>
-void check_registry_availability(RegistryType& reg, const std::string& name, const std::string dir = "./config")
+void check_registry_availability(RegistryDB& reg, const std::string& name, const std::string dir = "./config")
 {
 	try
 	{
@@ -98,13 +97,11 @@ void check_registry_availability(RegistryType& reg, const std::string& name, con
 
 /** Check whether config file exists for specific Hamiltonian. If there is none, and a suitable "rule" is available, it will be created.
 *
-* @tparam RegistryType The type of the registry (typically this is RegistryDB)
 * @param reg a reference to the registry
 * @param name the name of the Hamiltonian
 * @param dir the desired config directory
 */
-template <class RegistryType>
-void check_registry_file_exists(RegistryType& reg, const std::string& name, const std::string dir = "./config")
+void check_registry_file_exists(RegistryDB& reg, const std::string& name, const std::string dir = "./config")
 {
 
 	std::string fn{name + ".ini"};

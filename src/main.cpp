@@ -15,6 +15,9 @@
 // Include the MARQOV library
 #include "libmarqov/libmarqov.h"
 
+// Include startup helpers
+#include "libmarqov/util/startup.h"
+
 // Include the regular hypercubic lattice
 #include "lattice/regular_hypercubic.h"
 
