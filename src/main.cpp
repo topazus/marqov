@@ -9,11 +9,14 @@
 #include <tuple>
 #include <vector>
 
-// Our small helper library to read in strings from command line files.
+// Our small helper library to read in strings from config files.
 #include "libmarqov/util/registry.h"
 
 // Include the MARQOV library
 #include "libmarqov/libmarqov.h"
+
+// Include startup helpers
+#include "libmarqov/util/startup.h"
 
 // Include the regular hypercubic lattice
 #include "lattice/regular_hypercubic.h"
@@ -78,49 +81,28 @@ class HeisenbergHamiltonian
 };
 
 
-
 using namespace std;
 using namespace MARQOV;
 
 int main()
 {
-    // We utilize a small helper library of ours, the registry which reads Windows .ini style files to read config files
-    RegistryDB reg;
-    try
-    {
-        reg.init("../src/config", "ini");
-    }
-    catch(Registry_Exception& re)
-    {
-        std::cout << "[MARQOV::main] Configuration directory not found!";
-		std::cout << "Assuming you're starting this MARQOV binary for the first time!"<<std::endl;
-        std::cout << "WELCOME TO MARQOV!"<<std::endl;
-        std::cout << "[MARQOV::main] To get you going we will generate and populate a configuration directory locally under ./config"<<std::endl;
-        makeDir("./config");
-        const auto filename = std::string{"./config/select.ini"};
-        if(!fileexists(filename))
-        {
-            std::ofstream select(filename);
-            select<<"[General]"<<'\n'<<"Hamiltonian = Heisenberg"<<'\n'<<"[END]"<<std::endl;
-            reg.init("./config", "ini");
-        }
-        else
-        {
-            std::cout << "[MARQOV::main] "<< filename<<" already exists, but is not usable.";
-			std::cout << "I would overwrite its content, hence I'm terminating now"<<std::endl;
-            throw;
-        }
-    }
-    
-    // With the registry available we can now start to read in parameters from config files. 
-	// Note that these parameters get replicated in the final HDF5 containers.
-    
+	print_welcome_message();
 
 	// We are a Heisenberg Model. Saves some typing...
     std::string name{"Heisenberg"};
     std::string fn{name + ".ini"};
 
 
+	// Input
+	// -----
+    // We utilize a small helper library of ours, the registry which 
+	// reads Windows .ini style files to read config files
+    RegistryDB reg;
+	check_registry_availability(reg, name);
+	check_registry_file_exists(reg, name);
+    // With the registry available we can now start to read in parameters from config files. 
+	// Note that these parameters get replicated in the final HDF5 containers.
+    
 
 	// Geometry
 	// --------
@@ -148,7 +130,7 @@ int main()
 	// ----------------
 
     // Prepare output directory using helper script
-	std::string outbasedir = "../out/";
+	std::string outbasedir = "./out/";
     makeDir(outbasedir);
     std::string outpath = outbasedir+std::to_string(L)+"/";
     makeDir(outpath);

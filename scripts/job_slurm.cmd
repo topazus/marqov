@@ -22,8 +22,8 @@
 #SBATCH -t 2-00:00:00
 
 # logfiles
-#SBATCH -o ../output.%a.out
-#SBATCH -e ../output.%a.err
+#SBATCH -o ./output.%a.out
+#SBATCH -e ./output.%a.err
 
 # run (from build directory)
-srun ./src/mpiMARQOV
+srun ./build/src/main
