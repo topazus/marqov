@@ -21,8 +21,10 @@
 #include <vector>
 #include <tuple>
 #include <string>
+#include <ofstream>
+#include <iostream>
 #include "registry.h"
-
+#include "systemtools.h"
 
 /** Creates the file select.ini
 *
