@@ -1,15 +1,14 @@
 #!/bin/bash
 #$ -S /bin/bash
 
-# --- MARQOV SGE job script for the ITPA cluster ---
-# move to build directory and use qsub to submit
+# --- MARQOV job script for the Sun Grid Engine (SGE) ---
 
 # start job in current working directory
 #$ -cwd  	
 
 # Pretend to require so much memory that the SGE is
 # forced to spread the MPI process across nodes
-#$ -l h_vmem=48G	# reduce for mpi16 queue
+#$ -l h_vmem=48G	# adjust this value depending on your hardware
 
 # Choose queue and number of MPI processes
 #$-pe mpi32* 8
