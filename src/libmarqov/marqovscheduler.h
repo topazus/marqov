@@ -220,7 +220,7 @@ namespace MARQOV
                 return std::make_pair(rng.integer(), rng.integer());
             };
             createPTplan(ran);
-            //create dummy data for the ptplan
+
             std::cout<<"Starting up master"<<std::endl;
             Simstate itm;
             
