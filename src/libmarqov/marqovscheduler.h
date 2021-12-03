@@ -42,7 +42,7 @@
 namespace MARQOV
 {
     template <typename FPType>
-    auto calcMHratio(FPType en)
+    constexpr auto calcMHratio(FPType en)
     {
         FPType mhratio = 0;
         //prevent under/overflow
@@ -220,7 +220,7 @@ namespace MARQOV
                 return std::make_pair(rng.integer(), rng.integer());
             };
             createPTplan(ran);
-            //create dummy data for the ptplan
+
             std::cout<<"Starting up master"<<std::endl;
             Simstate itm;
             
@@ -238,7 +238,9 @@ namespace MARQOV
                 if(busy) //there really is sth. to do
                 {
                     std::cout<<"dealing with work"<<std::endl;
-                    if(ptplan[itm.npt].first == itm.id || ptplan[itm.npt].second == itm.id) // check if this sim is selected for PT in this time step. This should usually be the case since we do as many steps as necessary
+                    // check if this sim is selected for PT in this time step. This should usually be the case since we do as many steps as necessary.
+                    // in the first time step no pt happens. Hence npt = 1 should disable PT.
+                    if((itm.npt > 0) && item_needs_pt(itm.npt, itm.id))
                     {
                         ptstep(itm);
                     }
@@ -284,12 +286,12 @@ namespace MARQOV
 
 //        Scheduler() = delete; //FIXME: If this would be present, the call to Scheduler() would be ambiguous
         CXX11Scheduler(const CXX11Scheduler&) = delete;
-        /** Move Copy Constructor
+        /** Move Constructor
          * 
          * The other object over whose resources we take ownership.
-         * mutexes are a bit odd here. We don't reuse the other mutexes but use and create our own.
+         * Mutexes are a bit odd here. We don't reuse the other mutexes but use and create our own.
          * 
-         * @param rhs the other object
+         * @param rhs the other object.
          */
         
         CXX11Scheduler(CXX11Scheduler&& rhs) : mutexes{}, maxpt(rhs.maxpt), ptqueue(std::move(rhs.ptqueue)), ptplan{}, masterstop(rhs.masterstop),
@@ -335,6 +337,17 @@ namespace MARQOV
         auto findpartner(uint id) const
         {
             return std::find_if(ptqueue.cbegin(), ptqueue.cend(), [&id](const Simstate& itm){return itm.id == static_cast<int>(id);});
+        }
+        
+        /** Check whether a work item needs parallel tempering in this time step.
+         * 
+         * @param pttime the parallel tempering time step that the item is at.
+         * @param id id for this work item
+         * @return true if the plan requires a pt exchange with someone at this point in time, else false.
+         */
+        bool item_needs_pt(int pttime, int id) const
+        {
+            return (ptplan[pttime].first == id || ptplan[pttime].second == id);
         }
         
         /** Test whether there is work available.
