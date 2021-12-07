@@ -703,6 +703,9 @@ int main(int argc, char* argv[])
 	{
 #endif
 	print_startup_message();
+#ifdef MPIMARQOV
+    }
+#endif
 	// read registry
 	// create config folder and select.ini file if not available in the working dir
 	RegistryDB registry;
@@ -711,7 +714,6 @@ int main(int argc, char* argv[])
 	selectsim(registry);
 
 #ifdef MPIMARQOV
-    }
     MPI_Finalize();
 #endif
 }
