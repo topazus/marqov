@@ -687,8 +687,6 @@ void selectsim(RegistryDB& registry)
 
 int main(int argc, char* argv[])
 {
-	print_startup_message();
-
 #ifdef MPIMARQOV
     int threadingsupport;
     MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &threadingsupport);
@@ -699,20 +697,16 @@ int main(int argc, char* argv[])
 		std::cout << "Requested threading level not supported." << std::endl;
         return -1;
     }
-#endif
-
-	// read registry
-	// create config folder and select.ini file if not available in the working dir
-	RegistryDB registry;
-	check_registry_availability(registry, "Ising");
-
-#ifdef MPIMARQOV
     int myrank = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     if (myrank == 0) 
 	{
 #endif
-
+	print_startup_message();
+	// read registry
+	// create config folder and select.ini file if not available in the working dir
+	RegistryDB registry;
+	check_registry_availability(registry, "Ising");
 	// run the actual simulation
 	selectsim(registry);
 
