@@ -488,8 +488,8 @@ namespace MARQOV
          * @param p The full set of parameters that are relevant for your Problem
          * @param filter A filter that can be applied before the actual creation of MARQOV
          */
-        template <typename ParamType, typename Callable>
-        void createSimfromParameter(ParamType& p, Callable filter)
+        template <typename ParamType, typename Callable = decltype(defaultfilter)>
+        void createSimfromParameter(ParamType& p, Callable filter = defaultfilter)
         {
             if (myrank == rrctr)
                 myScheduler.createSimfromParameter(p, filter);
