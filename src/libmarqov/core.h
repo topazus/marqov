@@ -841,7 +841,7 @@ class Core : public RefType<Grid>
             H5::DataSet dataset = stategroup.createDataSet("rngstate", H5Mapper<u_int64_t>::H5Type(), mspace1, cparms);
 
             auto filespace = dataset.getSpace();
-            hsize_t start[rank] = {0};//This works for initialization
+            hsize_t start[rank] = {};//This works for initialization
             std::array<hsize_t, rank> count;
             count.fill(static_cast<hsize_t>(len));
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);
@@ -871,7 +871,7 @@ class Core : public RefType<Grid>
             H5::DataSet dataset = stategroup.createDataSet("hamiltonianstatespace", H5Mapper<StateVector>::H5Type(), mspace1, cparms);
 
             auto filespace = dataset.getSpace();
-            hsize_t start[rank] = {0};//This works for initialization
+            hsize_t start[rank] = {};//This works for initialization
             std::array<hsize_t, rank> count;
             count.fill(static_cast<hsize_t>(this->grid.size()));
             filespace.selectHyperslab(H5S_SELECT_SET, count.data(), start);

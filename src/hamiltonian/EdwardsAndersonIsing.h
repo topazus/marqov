@@ -366,7 +366,7 @@ namespace MARQOV
 				auto nbrs = grid.nbrs(a, rsite);
 				typedef decltype(ham.interactions[a]->get(statespace[0])) InteractionType;
 				typedef decltype(MARQOV::callbonds<Lattice>(grid, a, rsite, 0, ham.interactions[a]->get(statespace[0]))) BondType;
-				typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray averagevector = {0};
+				typename MARQOV::Promote_Array<InteractionType, BondType>::CommonArray averagevector{};
 
 				// sum over neighbours
 				for (std::size_t i = 0; i < nbrs.size(); ++i)

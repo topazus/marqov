@@ -225,7 +225,7 @@ public:
             cachemaxelems = cachesize/sizeof(T);
             constexpr int rank = H5Mapper<T>::rank;
             std::array<hsize_t, rank> maxdims, chunk_dims;
-            hsize_t fdims[rank] = {0};
+            hsize_t fdims[rank] = {};
             maxdims.fill(H5S_UNLIMITED);
 
             H5::DataSpace mspace1(rank, fdims, maxdims.data());
@@ -373,7 +373,7 @@ private:
         if (cachemaxelems == 0) cachemaxelems = sizeof(T)*t.size();//If a single measurement of the observable does not fit into the cache, just make it big enough.
         constexpr int rank = H5Mapper<T>::rank;
         std::array<hsize_t, rank> maxdims, chunk_dims;
-        hsize_t fdims[rank] = {0};
+        hsize_t fdims[rank] = {};
         maxdims.fill(H5S_UNLIMITED);
         
         H5::DataSpace mspace1(rank, fdims, maxdims.data());
