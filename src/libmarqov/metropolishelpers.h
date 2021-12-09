@@ -467,9 +467,9 @@ namespace MARQOV
 		// gather neighbours and bonds
 		const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
 		const auto bnds = getbnds<Lattice>(grid, a, rsite);
-	
-		StateVector neighbourhood = {0};
-	
+
+		StateVector neighbourhood = {};
+
 		// sum over neighbours
 		for (std::size_t i=0; i<nbrs.size(); ++i)
 		{
@@ -517,9 +517,9 @@ namespace MARQOV
 
 		// gather neighbours
 		const auto nbrs = getnbrs<Lattice>(grid, a, rsite);
-	
-		StateVector neighbourhood{0};
-	
+
+		StateVector neighbourhood{};
+
 		// sum over neighbours
 		for (std::size_t i=0; i<nbrs.size(); ++i)
 		{
