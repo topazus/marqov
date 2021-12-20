@@ -76,7 +76,7 @@ inline auto finalize_parameter(L&& l_or_lp, const MARQOV::Config& mp, const std:
 
 	for(std::size_t i=0; i < hp.size(); ++i) 
 	{
-		params.emplace_back(l_or_lp, mp, hp[i]);
+		params.emplace_back(std::forward<L>(l_or_lp), mp, hp[i]);
 	}
 
 	return params;
