@@ -30,6 +30,11 @@ SOFTWARE.
 #include <random>
 #include <utility>
 
+/** @file rngcache.h
+ * This file provides a container wrapper arond the standard C++11 RNGs.
+ * This way rng generation is only a table look-up.
+ */
+
 /** A helper to map the C++ RNG classes to portable names.
  * 
  * @tparam T the used RNG.
@@ -253,7 +258,7 @@ private:
     static constexpr int pagesize = 4096;///< The pagesize of the OS. A common value.
     static constexpr int nrpages = 2; ///< How many memory pages we use.
     typedef decltype(std::declval<RNG>().operator()()) result_type;///< the type that the RNG returns.
-    static constexpr int nelems = pagesize*nrpages/sizeof(result_type); ///< How many elements we store in the cache.
+    static constexpr int nelems{pagesize*nrpages/sizeof(result_type)}; ///< How many elements we store in the cache.
     result_type* data{nullptr}; ///< The memory we use for the cache.
     int pos{0}; ///< at which integer are we currently.
     RNG rng{}; ///< the RNG.
