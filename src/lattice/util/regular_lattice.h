@@ -26,14 +26,6 @@ class RegularLattice
 {
 public:
     typedef std::vector<int> value_type;
-
-    RegularLattice() {}
-
-    RegularLattice(const RegularLattice& o) = default;
-    RegularLattice(RegularLattice&& o) = default;
-
-    RegularLattice& operator=(const RegularLattice&) = delete;
-
     RegularLattice(int l, int d) : length(l), dim(d), pows(dim) 
     {
         numberatoms = 1;
@@ -100,11 +92,11 @@ public:
 		}
 
     std::size_t size() const {return numberatoms;}
-    int length;
-    int dim;
+    int length{0};
+    int dim{0};
 private:
-    std::size_t numberatoms;
-    std::vector<int> pows;
+    std::size_t numberatoms{0};
+    std::vector<int> pows{0};
 };
 
 #endif
