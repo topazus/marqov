@@ -129,14 +129,14 @@ namespace MARQOV
 
 
 		// MC variables
-		int id; ///< id
-		int repid; ///< replica id
-		int seed; ///< Doing this correctly opens a whole can of worms... We now dump the RNG state.
-		int nsteps; ///< The number of elementary Monte Carlo steps.
-		int warmupsteps; ///< The number of steps to do for warmups.
-		int gameloopsteps; ///< gameloop steps.
-		int ncluster; ///< number of cluster updates.
-		int nmetro; ///< number of Metropolis updates.
+		int id{0}; ///< id
+		int repid{0}; ///< replica id
+		int seed{0}; ///< Doing this correctly opens a whole can of worms... We now dump the RNG state.
+		int nsteps{250}; ///< The number of elementary Monte Carlo steps.
+		int warmupsteps{100}; ///< The number of steps to do for warmups.
+		int gameloopsteps{200}; ///< gameloop steps.
+		int ncluster{20}; ///< number of cluster updates.
+		int nmetro{10}; ///< number of Metropolis updates.
 
 		Config& setid(int i) {id = i; return *this;}
 
@@ -183,7 +183,8 @@ namespace MARQOV
         };
 	};
     
-    /**  
+    /** Dump environment to file
+     * 
      * This function gathers information about the environment and dumps it into 
      * the specified HDF5 Group.
      * @see marqov.cpp
