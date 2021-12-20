@@ -295,10 +295,8 @@ namespace MARQOV
          */
         
         CXX11Scheduler(CXX11Scheduler&& rhs) : mutexes{}, maxpt(rhs.maxpt), ptqueue(std::move(rhs.ptqueue)), ptplan{std::move(rhs.ptplan)}, masterstop(rhs.masterstop),
-        masterwork{}, workqueue(masterwork)/*, simvector(std::move(rhs.simvector))*/, taskqueue{std::move(rhs.taskqueue)}, gamekernels{}
+        masterwork{}, workqueue(masterwork), taskqueue{std::move(rhs.taskqueue)}, gamekernels{}
         {
-//             std::swap(simvector, rhs.simvector);
-            
             std::swap(gamekernels, rhs.gamekernels);
             if (rhs.taskqueue.tasks_enqueued() > 0 || rhs.taskqueue.tasks_assigned() > 0)
                 throw std::runtime_error("[MARQOV::CXX11Scheduler] invalid assignment");
@@ -438,7 +436,6 @@ namespace MARQOV
         ThreadPool::ThreadSafeQueue<Simstate> workqueue; ///< This is the queue where threads put their finished work and the master does PT.
         std::mutex simvectormutex; ///< A mutex to protect accesses to the simvector which could be invalidated by the use of push_back
         std::mutex gamekernelmutex; ///< A mutex to protect accesses to the gamekernels which could be invalidated by the use of push_back
-//         std::vector<Sim*> simvector; ///< An array for the full state of the simulations.
         ThreadPool::Queue taskqueue; ///< This is the queue where threads pull their work from.
         std::vector<std::function<void(Simstate, int)> > gamekernels; ///< prefabricated workitems that get executed to move a simulation forward.
         std::vector<std::function<Sim(void)> > kernelloaders;
