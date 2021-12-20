@@ -688,11 +688,11 @@ class Core : public RefType<Grid>
             int paramnr = 0;
             (void) std::initializer_list<int>{((void) dumpscalartoH5(h5loc,
                 createparamname(typename MARQOV::detail::has_paramname<Hamiltonian>::type(), paramnr++)
-                , hargs), 0)... };
+                , std::forward<HArgs>(hargs)), 0)... };
         }
         /** Write out the parameters of the lattice.
          * 
-         * UNIMPLEMENTED
+         * FIXME: UNIMPLEMENTED
          * @param h5loc The group where to dump the information.
          */
         void dumplatparamstoH5(H5::Group& h5loc)
@@ -942,7 +942,7 @@ class Core : public RefType<Grid>
                             std::tuple<Ts...> >::type::template measure<StateSpace, G>,
                             std::get<N>(t), 
                             std::forward_as_tuple(s, grid) );
-            marqov_measure<N + 1, Ts...>(t, s, grid);
+            marqov_measure<N + 1, Ts...>(t, s, std::forward<G>(grid));
             hdf5lock.lock();
             std::get<N>(obscache)<<retval;
             hdf5lock.unlock();
@@ -1156,9 +1156,9 @@ inline constexpr auto makeCore_with_latt(const Config& mc, MutexType& mtx, const
  * @param hargs The hamiltonian arguments.
  */
 template <class Grid, class H, class RNGType = std::mt19937_64, class MutexType, class ...HArgs, size_t... S>
-inline constexpr auto makeCore_using_latt(Grid&& latt, const Config& mc, MutexType& mtx, const std::tuple<HArgs...>& hargs, std::index_sequence<S...>)
+inline constexpr auto makeCore_using_latt(Grid& latt, const Config& mc, MutexType& mtx, const std::tuple<HArgs...>& hargs, std::index_sequence<S...>)
 {
-    return Core<Grid, H, MutexType, RNGType, detail::Ref>(std::forward<Grid>(latt), mc, mtx, std::get<S>(hargs)...);
+    return Core<Grid, H, MutexType, RNGType, detail::Ref>(latt, mc, mtx, std::get<S>(hargs)...);
 }
 
 /** Instantiate Core with a reference to a precreated lattice.
@@ -1176,7 +1176,7 @@ inline auto makeCore(const std::tuple<Grid&, Config, std::tuple<HArgs...> >& t, 
 {
     //The first argument is a Lattice-like type -> from this we infer that 
     //we get a reference to sth. already allocated
-    return makeCore_using_latt<Grid, H, RNGType>(std::forward<Grid>(std::get<0>(t)), std::get<1>(t), mtx, std::get<2>(t), std::make_index_sequence<std::tuple_size<std::tuple<HArgs...>>::value>());
+    return makeCore_using_latt<Grid, H, RNGType>(std::get<0>(t), std::get<1>(t), mtx, std::get<2>(t), std::make_index_sequence<std::tuple_size<std::tuple<HArgs...>>::value>());
 }
 
 /** Instantiate Core and let it create the lattice. 
