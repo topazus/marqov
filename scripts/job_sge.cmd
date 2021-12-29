@@ -10,7 +10,7 @@
 # forced to spread the MPI process across nodes
 #$ -l h_vmem=48G	# adjust this value depending on your hardware
 
-# Choose queue and number of MPI processes
+# Choose queue/parallel environment(PE) and number of MPI processes
 #$-pe mpi32* 8
 
 # Job name
