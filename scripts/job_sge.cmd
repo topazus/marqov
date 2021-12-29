@@ -20,4 +20,4 @@
 #$ -o output.txt
 
 echo "Starting MARQOV on $NSLOTS nodes!"
-mpirun ./build/src/main
+mpirun ./build/src/main.mpi
