@@ -86,7 +86,25 @@ using namespace MARQOV;
 
 int main()
 {
-	print_welcome_message();
+#ifdef MPIMARQOV
+    int threadingsupport;
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &threadingsupport);
+	//FIXME: maybe we get by with one level less.
+    if(threadingsupport < MPI_THREAD_SERIALIZED)
+    {
+        std::cout << "[MARQOV::main] Couldn't initialize MPI! ";
+		std::cout << "Requested threading level not supported." << std::endl;
+        return -1;
+    }
+    int myrank = 0;
+    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+    if (myrank == 0) 
+	{
+#endif
+    print_welcome_message();
+#ifdef MPIMARQOV
+    }
+#endif
 
 	// We are a Heisenberg Model. Saves some typing...
     std::string name{"Heisenberg"};
@@ -175,4 +193,7 @@ int main()
 
 	// Run!
     sched.start();
+#ifdef MPIMARQOV
+    MPI_Finalize();
+#endif
 }
