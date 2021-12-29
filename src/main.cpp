@@ -84,7 +84,7 @@ class HeisenbergHamiltonian
 using namespace std;
 using namespace MARQOV;
 
-int main()
+int main(int argc, char* argv[])
 {
 #ifdef MPIMARQOV
     int threadingsupport;
