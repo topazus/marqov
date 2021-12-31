@@ -28,17 +28,22 @@ The Layout of our HDF5 containers is like this
 
 Hence the root is a series of steps. Each step consists of a simulation, hence the Config, the Observables, and a State-Dump.
 The Config has Marqovconfig + LatticeConfig + HamiltonianConfig.
-The Observables are a series of observable time series. the State-Part is a state-dump that would be consumed if it serves as input for the next step.
+The Observables are a sequence of observable time series. the State-Part is a state-dump that would be consumed if it serves as input for the next step.
 
-Environment
-============
-Information about the environment of the host system.
+It is also possible to describe the HDF5 layout used by MARQOV in Extendend Backus-Naur Form:
 
+MARQOV HDF5 File layout::
 
-  * Used Code + Version
-  * Host
-  * Time
-
+  root = steps;
+  steps = step | steps;
+  step = "/step", number, stepcontent;
+  stepcontent = stepconfig, stepenvironment, stepobservables, stepstate;
+  stepconfig = "/config", hamiltonianconfig, latticeconfig, marqovconfig;
+  stepenvironment = "/environment", usedcode, hostname, startingdate,...;
+  stepobservables = "/observables", observables;
+  stepstate = "/state", RNG, rngstate, hamiltonianstatespace;
+  hamiltonianconfig = "/hamiltonian", hamiltonianname, hamiltonianparams;
+  latticeconfig = "/lattice", latticename, latticeparams;
 
 Config
 ======
@@ -57,6 +62,15 @@ Hamiltonian
 The parameters of the Hamiltonian. Using a paramnames function in the Hamiltonian the keys can optionally be specified by the user.
 Else generic names in the form of *param<i>*, are used
 
+Environment
+============
+Information about the environment of the host system.
+
+
+  * Used Code + Version
+  * Host
+  * Time
+
 Observables
 ============
 Here the time series of the observables follow. Every Observable has its own time series.
@@ -71,3 +85,4 @@ The intent was to have a series of immutable steps where an independent party is
 performed calculations.
 Modelling a calculation as a series of steps offers the possibility that different steps can be done by different programs.
 A code with restarts is hence a calculation where the same program is used with the output of the previous step as input.
+additional things can be added in the future to the file without affecting the parseability for older codes.
