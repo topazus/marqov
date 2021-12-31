@@ -44,6 +44,8 @@ MARQOV HDF5 File layout::
   stepstate = "/state", RNG, rngstate, hamiltonianstatespace;
   hamiltonianconfig = "/hamiltonian", hamiltonianname, hamiltonianparams;
   latticeconfig = "/lattice", latticename, latticeparams;
+  marqovconfig = "/marqovconfig", marqovparams;
+
 
 Config
 ======
