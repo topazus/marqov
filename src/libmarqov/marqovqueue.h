@@ -138,6 +138,7 @@ namespace ThreadPool
             /** Move Constructor
              *
              * Takes ownership of other threads.
+             * @param rhs the object of whom we take ownership.
              */
             Workers(Workers&& rhs) : busy_mtx{}, busy{}, count(rhs.count.load()), target_count(rhs.target_count.load())
             {
@@ -145,6 +146,11 @@ namespace ThreadPool
         	std::swap(busy, rhs.busy);
         	rhs.count.store(0);
             }
+            Workers(Workers& rhs) = delete;
+            Workers() = delete;
+            Workers& operator=(Workers&& rhs) = delete;
+            Workers& operator=(Workers& rhs) = delete;
+            ~Workers() = default;
         } workers; ///< An instance of the worker bookkeeping structure.
 
         /** trigger synchronization

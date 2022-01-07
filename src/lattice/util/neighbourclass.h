@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (C) 2018 - 2020  Manuel Schrauth, Jefferson S.E. Portela, Florian Goth
+Copyright (C) 2018 - 2021  Manuel Schrauth, Jefferson S.E. Portela, Florian Goth
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -189,16 +189,24 @@ public:
         return data[idx];
     }
 
+    /** Constructor call to create a Neighbour class from a vector of vectors.
+     * 
+     * @param n the vector 
+     */
     inline Neighbours(const std::vector<std::vector<IntType> >& n) : Neighbours(&n) {}
+    
+    /** Constructor call to create a Neighbour class from a pointer to a vector of vectors.
+     * 
+     * @param n the vector 
+     */
     inline Neighbours(const std::vector<std::vector<IntType> >* n)
     {
         /*A helper structure to store some properties that we need for the construction of the data array*/
         struct Props {
-            uint occurences; ///< Used to store how often a particular amount of neighbours occured
-            IntType min; ///< used to store the minimum neighbour that occured for a particular class
-            IntType max; ///< used to store the maximum neighbour that occured for a particular class
-            uint lowest_idx; ///< used to find out where the first occurence of a particular class was
-            Props () : occurences(0), min(-1), max(0), lowest_idx(-1) {}
+            uint occurences{0}; ///< Used to store how often a particular amount of neighbours occured
+            IntType min{-1}; ///< used to store the minimum neighbour that occured for a particular class
+            IntType max{0}; ///< used to store the maximum neighbour that occured for a particular class
+            uint lowest_idx{static_cast<uint>(-1)}; ///< used to find out where the first occurence of a particular class was
         };
         std::map<uint16_t, Props> mymap;
         for (uint i = 0; i < n->size(); ++i )
@@ -238,14 +246,14 @@ public:
         }
         ret = posix_memalign((void**)&data, 4096, memsize*sizeof(IntType));//request page-aligned memory
         if(ret != 0) throw("Can't allocate memory for neighbour array!!");
-        if (memsize < 1E6)
-        {
-//            std::cout<<"Allocated "<<memsize*sizeof(IntType)/1024<<" kB of memory."<<std::endl;
-        }
-        else
-        {
-//            std::cout<<"Allocated "<<memsize*sizeof(IntType)/1024/1024<<" MB of memory."<<std::endl;
-        }
+// //         if (memsize < 1E6)
+// //         {
+// // //            std::cout<<"Allocated "<<memsize*sizeof(IntType)/1024<<" kB of memory."<<std::endl;
+// //         }
+// //         else
+// //         {
+// // //            std::cout<<"Allocated "<<memsize*sizeof(IntType)/1024/1024<<" MB of memory."<<std::endl;
+// //         }
         //copy data to our new array
         int cur_pos = 0;
         for (uint i = 0; i < n->size(); ++i)
@@ -257,8 +265,8 @@ public:
         nr_of_points = n->size();
     }
     inline ~Neighbours() {
-        if (data != NULL) free(data);
-        if (bookkeeping != NULL) free(bookkeeping);
+        if (data != nullptr) free(data);
+        if (bookkeeping != nullptr) free(bookkeeping);
     }
     std::size_t size() const {return nr_of_points;}
 
@@ -267,60 +275,51 @@ public:
     /*This friend declaration enables a function from readwrite.h to write to this data structure directly. This is needed for a more memory efficient I/O.*/ 
     friend void import_geometry_directly(const int N, std::vector<double>& gridx, std::vector<double>& gridy, Neighbours<int32_t>& outn, const std::string path );
 
-    inline Neighbours() : data(NULL), bookkeeping(NULL), nr_of_starts(0), nr_of_points(0) {}
+    /** A default empty constructor.
+     */
+    inline Neighbours() = default;
+    inline Neighbours& operator=(Neighbours&&) = delete;
 
     /**
      * A move assignment operator to avoid temporary copies.
      * @param n the temporary object.
      * @return An object with the state of n.
 	*/
-    inline Neighbours& operator=(Neighbours&& n)
+    inline Neighbours& operator=(Neighbours&& n) noexcept
     {
         if (this != &n)
         {
             //tidy up our own data
             free(data);
             free(bookkeeping);
-            //copy over state from other temporary object
-            data = n.data;
-            bookkeeping = n.bookkeeping;
-            nr_of_starts = n.nr_of_starts;
-            nr_of_points = n.nr_of_points;
-            //invalidate the OTHER class
-            n.nr_of_starts = 0;
-            n.nr_of_points = 0;
-            n.bookkeeping = NULL;
-            n.data = NULL;
+            //move state from other object
+            data = std::exchange(n.data, nullptr);
+            bookkeeping = std::exchange(n.bookkeeping, nullptr);
+            nr_of_starts = std::move(n.nr_of_starts);
+            nr_of_points = std::move(n.nr_of_points);
         }
         return *this;
     }
     /**
      * A move constructor to avoid temporary copies.
      * @param n the temporary object.
-     * @return An object with the state of n.
+     * @return An object that has taken ownership of the state of n.
 	*/
-    inline Neighbours(Neighbours&& n)
-    {
-        //copy over state from other temporary object
-        data = n.data;
-        bookkeeping = n.bookkeeping;
-        nr_of_starts = n.nr_of_starts;
-        nr_of_points = n.nr_of_points;
-        //invalidate the OTHER class
-        n.nr_of_starts = 0;
-        n.nr_of_points = 0;
-        n.bookkeeping = NULL;
-        n.data = NULL;
-    }
+    inline Neighbours(Neighbours&& n) noexcept : 
+    data{std::exchange(n.data, nullptr)},
+    bookkeeping{std::exchange(n.bookkeeping, nullptr)},
+    nr_of_starts{std::move(n.nr_of_starts)},
+    nr_of_points{std::move(n.nr_of_points)}
+    {}
 private:
     struct Info {
         std::size_t nbr_class;///< How many neighbours do we have?
         std::size_t arr_idx_beg;///< where does this class start in the neighbour array?
         std::size_t nbr_idx_beg;///< At which neighbour index does this start?
     };
-    IntType* data; ///< The data array start stores the actual neighbours
-    Info* bookkeeping;///< properties of the data array. The array is sorted in ascending order.
-    int16_t nr_of_starts; ///< The length of the bookkeeping array
-    std::size_t nr_of_points; ///< with this we can easily access the total amount of neighbours we have
+    IntType* data{nullptr}; ///< The data array start stores the actual neighbours
+    Info* bookkeeping{nullptr};///< properties of the data array. The array is sorted in ascending order.
+    int16_t nr_of_starts{0}; ///< The length of the bookkeeping array
+    std::size_t nr_of_points{0}; ///< with this we can easily access the total amount of neighbours we have
 };
 #endif

@@ -6,7 +6,7 @@
 #include "util/regular_lattice.h"
 #include "../libmarqov/cachecontainer.h"
 
-/**
+/** @class RegularHypercubic
  * The Regular Hypercubic lattice class.
  * This class provides routines for encapsulating all neighbour
  * and coordinate relations for n-dimensional hypercubic lattices.
@@ -21,9 +21,10 @@ class RegularHypercubic
 
 		RegularHypercubic(int len, int dim) : lattice(len, dim), len(len), dim(dim), npoints(pow(len, dim)) {}
 		RegularHypercubic(const RegularHypercubic&) = default;
-		RegularHypercubic(RegularHypercubic&&) = default;
-		const RegularHypercubic& operator=(const RegularHypercubic&) = delete;
-
+		RegularHypercubic(RegularHypercubic&&) noexcept = default;
+		RegularHypercubic& operator=(const RegularHypercubic&) = delete;
+        RegularHypercubic& operator=(const RegularHypercubic&&) = delete;
+        RegularHypercubic() = delete;
 		// implement nbrs
 		std::vector<int> nbrs(const int alpha, const int i) const
 		{
@@ -42,7 +43,11 @@ class RegularHypercubic
 			return lattice.nbrs(alpha, i);
 		}
 
-		std::size_t size() const {return npoints;}
+		/** Return the number of sites in this lattice.
+         * 
+         * @return the number of sites in this lattice.
+         */
+		std::size_t size() const noexcept {return npoints;}
 };
 
 /** This function provides the necessary overload for MARQOV::Core
