@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 project(marqov CXX)
 INCLUDE (CheckTypeSize)
 
+# Add our cmake module path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
+
+# Some code to have git revision strings in our output files
 include(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1) # the git revision is available in GIT_SHA1
 # now we need to retrieve the branch
@@ -18,12 +21,14 @@ else()
 set(GIT_BRANCH, "N/A")
 endif()
 
+# This option specifies whether additional scrambling is used on our integers
 option(DEBIASINTEGERS "This controls whether to employ debiasing for small integers. Not for PGI." OFF)
 check_type_size("__uint128_t" UINT128LEN LANGUAGE CXX)
 if(DEBIASINTEGERS AND NOT HAVE_UINT128LEN)
     message(FATAL_ERROR "Debiasing of integers requires a 128bit data type")
 endif()
 
+# Try to us at least the ative cpu instruction set if possible on the platform
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
 if(COMPILER_SUPPORTS_MARCH_NATIVE)
@@ -34,6 +39,7 @@ if(COMPILER_SUPPORTS_MTUNE_NATIVE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=native")
 endif()
 
+# Add our sub folders
 add_subdirectory(src)
 add_subdirectory(demo)
 
