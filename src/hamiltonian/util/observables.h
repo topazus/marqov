@@ -22,6 +22,7 @@
 #include <complex>
 #include <string>
 #include <vector>
+#include <array>
 #include "../../libmarqov/metropolishelpers.h"
 
 /**
@@ -94,6 +95,11 @@ class VectorMagnetization
 		}
 };
 
+template <typename T, typename = void>
+struct Is_tuple_like : std::false_type {};
+
+template <typename T>
+struct Is_tuple_like<T, MARQOV::detail::type_sink<std::integral_constant<int, std::tuple_size<T>::value> > > : std::true_type {};
 
 /**
  * MagFTComp
@@ -110,7 +116,32 @@ class MagFTComp
 		MagFTComp(int dir) : dir(dir), name("magft"+std::to_string(dir)) {}
 
 		template <class StateSpace, class Grid>
-		double measure(const StateSpace& statespace, const Grid& grid)
+		auto measure(const StateSpace& statespace, const Grid& grid) -> typename std::enable_if<Is_tuple_like<typename StateSpace::value_type>::value, double>::type
+		{
+			constexpr static int SymD = std::tuple_size<typename StateSpace::value_type>::value;
+			const int N = grid.size();
+
+			std::array<std::complex<double>, SymD> magFTcomp{};
+
+			for (int i=0; i<N; i++)
+			{
+				double x = grid.crds(i)[dir];
+                auto expi = std::complex<double>(std::cos(2.0*M_PI*x), std::sin(2.0*M_PI*x));
+				for (int j=0; j < SymD; j++) magFTcomp[j] += double(statespace[i][j]) * expi;
+			}
+
+			// normalize
+			for (int j=0; j < SymD; j++) magFTcomp[j] /= double(N);
+
+			// dot product of complex vector 
+			double retval = 0;
+			for (int j=0; j < SymD; j++) retval += std::norm(magFTcomp[j]);
+
+			return retval;
+		}
+		
+		template <class StateSpace, class Grid>
+		auto measure(const StateSpace& statespace, const Grid& grid) -> typename std::enable_if<!Is_tuple_like<typename StateSpace::value_type>::value, double>::type
 		{
 			const/*expr static*/ int SymD = statespace[0].size();
 			const int N = grid.size();
