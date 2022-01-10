@@ -103,10 +103,11 @@ class MagFTComp
 {
 	public:
 		int dir;
-		std::string name, desc;
+		std::string name;
+		std::string desc{"Fourier Component of Magnetization"};
 		MagFTComp(int dir, std::string name, std::string description) : dir(dir), name(name), desc(description) {}
-		MagFTComp(int dir, std::string name) : dir(dir), name(name), desc("Fourier Component of Magnetization") {}
-		MagFTComp(int dir) : dir(dir), name("magft"+std::to_string(dir)), desc("Fourier Component of Magnetization") {}
+		MagFTComp(int dir, std::string name) : dir(dir), name(name) {}
+		MagFTComp(int dir) : dir(dir), name("magft"+std::to_string(dir)) {}
 
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
@@ -115,12 +116,12 @@ class MagFTComp
 			const int N = grid.size();
 
 			std::vector<std::complex<double>> magFTcomp(SymD,0);
-			const std::complex<double> jj(0,1);
 
 			for (int i=0; i<N; i++)
 			{
 				double x = grid.crds(i)[dir];
-				for (int j=0; j<SymD; j++) magFTcomp[j] += double(statespace[i][j]) * std::exp(2.0*M_PI*x*jj);
+                auto expi = std::complex<double>(std::cos(2.0*M_PI*x), std::sin(2.0*M_PI*x));
+				for (int j=0; j<SymD; j++) magFTcomp[j] += double(statespace[i][j]) * expi;
 			}
 
 			// normalize
