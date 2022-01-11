@@ -39,3 +39,7 @@ Another use-case for specializing the Wolff update is if your model allows heavy
 .. doxygenstruct:: MARQOV::Wolff
    :project: Marqov
    :members:
+
+.. doxygenstruct:: MARQOV::Embedder
+   :project: Marqov
+   :members:
