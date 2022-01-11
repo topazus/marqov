@@ -105,25 +105,21 @@ namespace ThreadPool
          */
         struct Flags
         {
-            Toggle stop;///< A flag for denoting that the threads should stop.
-            Toggle prune;///< A flag for denoting that the threads should terminate.
-            Flags() noexcept : stop(false), prune(false) {}
-            
+            Toggle stop{false};///< A flag for denoting that the threads should stop.
+            Toggle prune{false};///< A flag for denoting that the threads should terminate.
+
             /** A copy constructor to atomically set the state of the new object.
              * @param rhs the other object
              */
             Flags(const Flags& rhs) noexcept : stop(rhs.stop.load()), prune(rhs.prune.load()) {}
         } flags;///< flags
-        
+
         /** A helper structure for some threadpool statistics.
          */
         struct Stats
         {
-            auint enqueued; ///< count how many threads are in the queue.
-            auint assigned; ///< count how many threads are worked on.
-            /** Construct our statistics with initial zero values.
-             */
-            Stats() noexcept : enqueued(0), assigned(0) {}
+            auint enqueued{0}; ///< count how many threads are in the queue.
+            auint assigned{0}; ///< count how many threads are worked on.
         } stats;///< Actual instance for our statistics.
 
         /** A helper structure to bundle the bookkeeping of workers.
