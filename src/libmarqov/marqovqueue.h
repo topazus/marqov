@@ -108,6 +108,10 @@ namespace ThreadPool
             Toggle stop;///< A flag for denoting that the threads should stop.
             Toggle prune;///< A flag for denoting that the threads should terminate.
             Flags() noexcept : stop(false), prune(false) {}
+            
+            /** A copy constructor to atomically set the state of the new object.
+             * @param rhs the other object
+             */
             Flags(const Flags& rhs) noexcept : stop(rhs.stop.load()), prune(rhs.prune.load()) {}
         } flags;///< flags
         
