@@ -224,7 +224,7 @@ marqov_Bullseye_breathe:
       paths:
         - doc/*
     script:
-      - apt-get update && apt-get install -y doxygen graphviz pdf2svg python3-breathe python3-sphinx python3-sphinx-rtd-theme
+      - apt-get update && apt-get install -y doxygen graphviz pdf2svg python3-breathe python3-sphinx python3-sphinx-rtd-theme plantuml
       - cd doc/
       - doxygen Doxyfile-marqov-breathe.cfg
       - make html
@@ -237,7 +237,7 @@ marqov_sphinx_docs:
       paths:
         - doc/*
     script:
-      - apt-get update && apt-get install -y doxygen graphviz pdf2svg python3-breathe python3-sphinx python3-sphinx-rtd-theme git python3-numpy python3-colorama python3-h5py python3-matplotlib
+      - apt-get update && apt-get install -y doxygen graphviz pdf2svg python3-breathe python3-sphinx python3-sphinx-rtd-theme git python3-numpy python3-colorama python3-h5py python3-matplotlib python3-sphinxcontrib.plantuml plantuml
       - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@git.physik.uni-wuerzburg.de/marqov/pymarqov.git
       - ./scripts/compilefulldocs.sh
 
