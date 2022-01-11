@@ -34,6 +34,27 @@ namespace MARQOV
      * specializations of the notion of a basic sweep of the statespace
      * of your Hamiltonians.
      * Further uses are e.g. adding your own moves.
+     * The EMCS defines the concepts of EMCSconcept by which we mean
+     * the basic Monte Carlo sweep that in the default implementation
+     * encompasses the execution of some Wolff cluster updates and
+     * some Metropolis local updates.
+     * @startuml
+     *   Component WolffConcept
+     *   interface WolffInterface
+     * 
+     *   Component MetropolisConcept
+     *   interface MetropolisInterface
+     * 
+     *   Component EMCSConcept
+     *   interface EMCSInterface
+     * 
+     *   EMCSConcept --> WolffInterface
+     *   EMCSConcept --> MetropolisInterface
+     *   WolffConcept .up.> WolffInterface
+     *   MetropolisConcept .up.> MetropolisInterface
+     *   EMCSConcept .up.> EMCSInterface
+     * @enduml
+     * 
      * To that end it has the two prototypical template parameters:
      * @tparam Hamiltonian The Hamiltonian that the Wolff algo will use.
      * @tparam Lattice The Lattice, that the Wolff algo should use.
