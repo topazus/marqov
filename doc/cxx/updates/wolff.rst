@@ -41,5 +41,4 @@ Another use-case for specializing the Wolff update is if your model allows heavy
    :members:
 
 .. doxygenstruct:: MARQOV::Embedder
-   :project: Marqov
    :members:
