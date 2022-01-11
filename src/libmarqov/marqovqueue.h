@@ -107,7 +107,7 @@ namespace ThreadPool
         {
             Toggle stop{false};///< A flag for denoting that the threads should stop.
             Toggle prune{false};///< A flag for denoting that the threads should terminate.
-
+            Flags() = default;
             /** A copy constructor to atomically set the state of the new object.
              * @param rhs the other object
              */
