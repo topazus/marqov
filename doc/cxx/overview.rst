@@ -8,7 +8,7 @@ that are defined via their interfaces:
 .. uml:: marqov.puml
 
 In this diagram solid lines are used to denote interfaces that are used,
-whereas dotted lines are used to denote interfaces that are exposed.
+whereas dotted lines are used to denote implementors of interfaces.
 The parts closest to the user are :doc:`MARQOV::Core <core>` , which binds everything together,
 and :doc:`MARQOV::Scheduler <scheduler>` which enables parallelism and, if multiple simulations are scheduled,
 parallel tempering between these simulations.
