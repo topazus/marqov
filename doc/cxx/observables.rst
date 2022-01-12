@@ -7,7 +7,7 @@ The concept of an observable
 ==============================
 An observable can be any object that has a measure function that returns something and takes a state space and a lattice as argument. For slightly more verbose I/O we require the presence 
 of a name, and optionally an extended description.
-MARQOV takes care of generating suitable I/O routinesfrom the signature of this measure function.
+MARQOV takes care of generating suitable I/O routines from the signature of this measure function.
 Hence the bare minimum of an observable would be
 
 .. code-block:: cpp
