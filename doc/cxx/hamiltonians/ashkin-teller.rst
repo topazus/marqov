@@ -1,7 +1,6 @@
-.. Copyright (c) 2021, Manuel Schrauth, Florian Goth
+.. Copyright (c) 2021,2022, Manuel Schrauth, Florian Goth
 
 Ashkin-Teller Model
-===================
-.. doxygenfile:: AshkinTeller.h
-..   :project: Marqov
+=====================
 
+.. doxygenfile:: AshkinTeller.h

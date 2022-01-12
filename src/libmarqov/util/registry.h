@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2005-2021 by Florian Goth   *
+ *   Copyright (C) 2005-2022 by Florian Goth   *
  *   fgoth@physik.uni-wuerzburg.de   *
  *                                                                         *
  *   Permission is hereby granted, free of charge, to any person obtaining *
@@ -359,8 +359,9 @@ struct GetTrait<bool>
 template < typename A >
 struct SetTrait
 {
-    /** Which type to convert.
-     * @param arg. The value we want to write.
+    /** Convert a type to its textual representation.
+     *
+     * @param arg The value we want to write.
      * @return a textual representation of arg.
      */
     static std::string convert(A arg)

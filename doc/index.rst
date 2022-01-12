@@ -14,7 +14,7 @@
    </style>
 
 The MARQOV Framework documentation
-==========================
+====================================
 
 Welcome to the official documentation of the MARQOV Framework!
 
