@@ -1,5 +1,6 @@
 #ifndef SIMPLE_BIPARTITE_H
 #define SIMPLE_BIPARTITE_H
+#include <vector>
 
 /**
  * Simple Bipartite Lattice
