@@ -62,8 +62,6 @@ class BlumeCapelBipartite
 		//  ----  Definitions  ----
 
 		typedef std::array<SpinType, SymD> StateVector;
-//		template <typename RNG>
-//		using MetroInitializer = Spin1_Initializer<StateVector, RNG>;
 
 		//  ----  Hamiltonian terms  ----
 
