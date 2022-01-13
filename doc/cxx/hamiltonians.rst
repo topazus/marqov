@@ -17,3 +17,4 @@ Hamiltonians
    hamiltonians/phi4
    hamiltonians/potts
    hamiltonians/xxzantiferro
+   hamiltonians/initializers
