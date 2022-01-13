@@ -3,14 +3,14 @@
  * @file AshkinTeller.h
  * @brief Three-Color Ashkin-Teller Hamiltonian.
  *
- * numerically, this model is treated as embedded Ising models
+ * Numerically, this model is treated as embedded Ising models
  *
- * the Wolff algorithm can only be used for K=<0.5!
+ * The Wolff algorithm can only be used for K=<0.5!
  *
- * compare Zhu et. al, PRB 91, 224201 (2015) for more details
+ * Compare Zhu et. al, PRB 91, 224201 (2015) for more details
  *
  * 
- * Note: This Hamiltonian presents an "extrem" use case of MARQOV, where the generic term structure is not used at all! Therefore the general Metropolis and Wolff update algorithms can not be used! Instead the interactions of the model are explicitely coded in the specialized update algorithms below
+ * Note: This Hamiltonian presents an "extreme" use case of MARQOV, where the generic term structure is not used at all! Therefore the general Metropolis and Wolff update algorithms can not be used! Instead the interactions of the model are explicitely coded in the specialized update algorithms below
  */
 
 
@@ -33,7 +33,8 @@
 class AshkinTellerMag
 {
 	public:
-		std::string name, desc;
+		std::string name{"m"};///< We call ourselves m.
+		std::string desc{"Magnetization of the Three-color Ashkin-Teller model"};///< An extended description of the observable.
 		/**
 		* @brief Perform a measurement of the Magnetization
 		*
@@ -62,10 +63,6 @@ class AshkinTellerMag
 
 			return (std::abs(mag1)+std::abs(mag2)+std::abs(mag3))/double(3*N);
 		}
-		/**
-		* @brief Constructor of the Ashkin-Teller magnetization
-		*/
-		AshkinTellerMag() : name("m"), desc("Magnetization of the Three-color Ashkin-Teller model") {}
 };
 
 

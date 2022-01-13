@@ -11,6 +11,7 @@
 #include <vector>
 #include <iomanip>
 #include <unistd.h> // provides usleep, only for testing purposes
+#include <string>
 
 typedef std::chrono::high_resolution_clock Time;
 typedef std::chrono::seconds sec;
@@ -23,6 +24,7 @@ typedef musec timeformat; ///< internal time resolution, do not change
 namespace marqovtime
 {
 	/** A clock which can be used to measure certain elements of the code
+     * 
      */
 	class marqovclock
 	{

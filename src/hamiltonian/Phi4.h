@@ -16,17 +16,13 @@
 // ------------------------------ INITIALIZER ---------------------------
 // here we have two different choices of initializers
 
-template <class StateVector, class RNG>
+template <class StateVector>
 class Phi4_Initializer_Radial
 {
 	public:
-		constexpr static int SymD = std::tuple_size<StateVector>::value;
-
-		// constructors
-		Phi4_Initializer_Radial(RNG& rn) : rng(rn) {}
-
 		// generate new statevector
-		StateVector newsv(const StateVector& osv) 
+		template <class RNGCache>
+		static StateVector newsv(const StateVector& osv, RNGCache& rng)
 		{
 			double amp = 0.5; // Amplitude (TODO: make me a class parameter)
 
@@ -35,27 +31,22 @@ class Phi4_Initializer_Radial
 			auto nsv = osv + mult(amp, newdir);
 			return nsv;
 		};
-
-	private:
-		RNG& rng;
 };
 
 
-template <class StateVector, class RNG>
+template <class StateVector>
 class Phi4_Initializer_Cartesian
 {
 	public:
 		constexpr static int SymD = std::tuple_size<StateVector>::value;
 
-		// constructors
-		Phi4_Initializer_Cartesian(RNG& rn) : rng(rn) {}
-
 		// generate new statevector
-		StateVector newsv(const StateVector& osv) 
+		template <class RNGCache>
+		static StateVector newsv(const StateVector& osv, RNGCache& rng)
 		{
 			double amp = 0.5; // Amplitude (TODO: make me a class parameter)
 
-			const int comp =	rng.integer(SymD);
+			const int comp = rng.integer(SymD);
 			double r = rng.real(-1.0, 1.0);
 			double oldval = osv[comp];
 			double newval = oldval + amp*r;
@@ -64,9 +55,6 @@ class Phi4_Initializer_Cartesian
 			nsv[comp] = newval;
 			return nsv;
 		};
-
-	private:
-		RNG& rng;
 };
 
 
@@ -108,10 +96,6 @@ class Phi4
 		//  ---- Definitions  -----
 
 		typedef std::array<SpinType, SymD> StateVector;
-		template <typename RNG>
-		using MetroInitializer =  Phi4_Initializer_Radial<StateVector, RNG>; 
-		//using MetroInitializer =  Phi4_Initializer_Cartesian<StateVector, RNG>; 
-
 
 
 		//  ----  Hamiltonian terms  ----
@@ -178,6 +162,12 @@ class Phi4
 			return name;
 		}
 };
+
+
+// specialize the initializer to be used
+template <> 
+class Initializer<Phi4<double,double> > : public  Phi4_Initializer_Radial<typename Phi4<double,double>::StateVector > {};
+
 
 
 namespace MARQOV
@@ -255,6 +245,9 @@ namespace MARQOV
 
 
 }
+
+
+
 
 
 

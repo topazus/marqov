@@ -1,6 +1,8 @@
 .. Copyright (c) 2021, Manuel Schrauth, Florian Goth
+
 Lattices
 ============
+
 Lattices in MARQOV are user defined classes that expose 
 a certain interface such that we can derive a Monte Carlo procedure from them.
 As all of MARQOV's components, lattice have required parts and optional parts.

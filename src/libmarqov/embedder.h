@@ -23,17 +23,16 @@
 namespace MARQOV 
 {
 /** The default Embedder.
-  * projects the model onto one of the SymD Cartesian dimensions
+  * Projects the model onto one of the SymD Cartesian dimensions.
   *
   * @tparam Hamiltonian the type of the Hamiltonian
   * @tparam Lattice the type of the Lattice
-  * @tparam StateSpace The type of the Statespace.
   *
   * @note This default Embedder will also work, i.e. lead to a code which compiles
   * and runs, however it might not be physically reasonable for models other than
   * standard O(N) models. Therefore, make sure to implement your own embedder when
   * using more complex models -- or disable cluster updates, in which case it will 
-  * not be executed
+  * not be executed.
   */
 template <class Hamiltonian, class Lattice>
 class Embedder
@@ -75,7 +74,7 @@ class Embedder
 		* @param pos1 The position (index) of the current state vector (which is already in the cluster)
 		* @param pos2 The position (index) of a neighbour being checked whether it will become part of the cluster
 		*
-		* @return The scalar Wolff coupling (a double)
+		* @return The scalar Wolff coupling (the type of the state space components)
 		*/
 		auto coupling(int pos1, int pos2) const
 		{
@@ -83,7 +82,7 @@ class Embedder
 		}
 
 
-		/** Specifies how a spin flip in the embedded (reduced) model is performed 
+		/** Specifies how a spin flip in the embedded (reduced) model is performed.
 		*
 		* @param sv the spin to flipped
 		*/

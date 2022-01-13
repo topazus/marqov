@@ -1,11 +1,18 @@
 .. Copyright (c) 2021, Manuel Schrauth, Florian Goth
 
 Utility functions
-============
+=========================
 
 .. doxygenfunction:: cart_prod
 
-.. doxygenfunction regularlatticeloop
+.. doxygenfunction:: RegularLatticeLoop
+
+
+Utility classes
+=================
+.. doxygenclass:: RNGCache
+   :project: Marqov
+   :members:
 
 Filters
 ========

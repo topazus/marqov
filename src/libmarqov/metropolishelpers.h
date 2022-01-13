@@ -449,7 +449,7 @@ namespace MARQOV
 	 * @param a the index of the interaction term under consideration
 	 * @param rsite the site under consideration
 	 * @param hasnbrs encodes whether the lattice provides a nbrs function
-	 * @param hasbonds encodes whether the lattice provides a bnds function
+	 * @param hasbnds encodes whether the lattice provides a bnds function
 	 *
 	 * @return sum over neighbours after applying the interaction term and weighted by respective bond strengths
 	 */

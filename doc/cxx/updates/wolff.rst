@@ -1,4 +1,4 @@
-.. Copyright (c) 2021, Manuel Schrauth, Florian Goth
+.. Copyright (c) 2021-2022 Manuel Schrauth, Florian Goth
 
 Wolff Cluster Algorithm
 ============================
@@ -38,4 +38,7 @@ Another use-case for specializing the Wolff update is if your model allows heavy
 
 .. doxygenstruct:: MARQOV::Wolff
    :project: Marqov
+   :members:
+
+.. doxygenclass:: MARQOV::Embedder
    :members:

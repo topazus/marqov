@@ -14,7 +14,7 @@
    </style>
 
 The MARQOV Framework documentation
-==========================
+====================================
 
 Welcome to the official documentation of the MARQOV Framework!
 
@@ -29,7 +29,7 @@ for which you can find API documentation below.
    :align: left
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Introduction
 
    installation

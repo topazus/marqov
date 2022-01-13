@@ -1,0 +1,58 @@
+@startuml
+
+Component HamiltonianConcept
+interface HamiltonianInterface
+
+Component LatticeConcept
+interface LatticeInterface
+
+Component WolffConcept
+interface WolffInterface
+
+Component MetropolisConcept
+interface MetropolisInterface
+
+Component EMCSConcept
+interface EMCSInterface
+
+Component EmbedderConcept
+interface EmbedderInterface
+
+Component ObservableConcept
+interface ObservableInterface
+
+Component RNGConcept
+interface RNGInterface
+
+Component MARQOVCore
+Component MARQOVScheduler
+
+EMCSConcept --> WolffInterface
+EMCSConcept --> MetropolisInterface
+WolffConcept .up.> WolffInterface
+MetropolisConcept .up.> MetropolisInterface
+MetropolisConcept --> HamiltonianInterface
+MetropolisConcept --> LatticeInterface
+EmbedderConcept .up.> EmbedderInterface
+WolffConcept ---> EmbedderInterface
+WolffConcept --> HamiltonianInterface
+WolffConcept --> LatticeInterface
+EMCSConcept .up.> EMCSInterface
+
+LatticeConcept .up.> LatticeInterface
+
+ObservableConcept .up.> ObservableInterface
+
+HamiltonianConcept .up.> HamiltonianInterface
+HamiltonianConcept -r-> ObservableConcept
+
+RNGConcept .up.> RNGInterface
+
+MARQOVScheduler --> MARQOVCore
+MARQOVCore --> EMCSInterface
+MARQOVCore -> LatticeInterface
+MARQOVCore -> HamiltonianInterface
+MARQOVCore -d-----> ObservableInterface
+MARQOVCore -> RNGInterface
+
+@enduml

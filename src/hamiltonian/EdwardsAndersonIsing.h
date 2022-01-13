@@ -296,8 +296,6 @@ class EdwardsAndersonIsing
 		//  ---- Definitions  -----
 
 		typedef std::array<SpinType, SymD> StateVector;
-		template <typename RNG>
-		using MetroInitializer = EdwardsAndersonIsing_Initializer<StateVector, RNG>;
 
 		//  ----  Hamiltonian terms  ----
 		std::array<EdwardsAndersonIsing_interaction<StateVector>*, 1> interactions = {new EdwardsAndersonIsing_interaction<StateVector>(J)};

@@ -1,6 +1,7 @@
 .. Copyright (c) 2021, Manuel Schrauth, Florian Goth
 
-Edwards Anderson Ising Model
+Regular Hypercubic lattice
 =============================
-.. doxygenfile:: EdwardsAndersonIsing.h
+
+.. doxygenfile:: regular_random_bond.h
 

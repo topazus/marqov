@@ -27,11 +27,13 @@ author = 'Manuel Schrauth, Florian Goth'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'breathe']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'breathe', 'sphinxcontrib.plantuml']
 
 # from the CXX version
 autosummary_generate = True
 
+# For PlantUML
+plantuml_output_format = 'svg'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -68,6 +70,3 @@ if os.path.exists('./doxygen/xml'):
     breathe_projects = { "Marqov": "./doxygen/xml" }
 
     breathe_default_project = "Marqov"
-
-sys.path.insert(0, os.path.abspath('../pymarqov/'))
-sys.path.insert(0, os.path.abspath('../pymarqov/'))
