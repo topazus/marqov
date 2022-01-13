@@ -9,9 +9,10 @@ We do provide default behaviour, but is also possible to specify the behaviour f
 To that end you should make a declaration in the following form visible before MARQOV::Core gets declared:
 
 .. codeblock:: cpp
-  template <>
-  class Initializer<MyHamiltonian> : public MyInitializer
-  {};
+
+   template <>
+   class Initializer<MyHamiltonian> : public MyInitializer
+   {};
 
 
 .. doxygenfile:: initializers.h
