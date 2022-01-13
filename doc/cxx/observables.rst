@@ -4,7 +4,6 @@ Observables
 ==============
 
 .. toctree::
-   :caption: observables
    :maxdepth: 1
 
    observables/concept
