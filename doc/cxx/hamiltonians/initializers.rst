@@ -14,6 +14,7 @@ To that end you should make a declaration in the following form visible before M
    class Initializer<MyHamiltonian> : public MyInitializer
    {};
 
+Here is the documentation for our default initializers.
 
 .. doxygenfile:: initializers.h
 
