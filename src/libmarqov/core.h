@@ -866,8 +866,9 @@ class Core : public RefType<Grid>
             chunk_dims.fill(4096*1024/H5Mapper<StateVector>::bytecount);//4MB chunking
 
             cparms.setChunk( rank, chunk_dims.data() );
-            cparms.setDeflate(9);//Best (1-9) compression
             cparms.setShuffle();
+            cparms.setDeflate(9);//Best (1-9) compression
+
             cparms.setFillValue(H5Mapper<StateVector>::H5Type(), &fv);
             H5::DataSet dataset = stategroup.createDataSet("hamiltonianstatespace", H5Mapper<StateVector>::H5Type(), mspace1, cparms);
 
