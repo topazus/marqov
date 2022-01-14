@@ -26,7 +26,7 @@ class Standard_Interaction : public Interaction<StateVector>
 {
 	public:
 		Standard_Interaction(const CouplingType constant) : Interaction<StateVector>(constant) {}
-		StateVector get (const StateVector& phi) noexcept {return phi;}
+		constexpr StateVector get (const StateVector& phi) noexcept {return phi;}
 };
 
 
