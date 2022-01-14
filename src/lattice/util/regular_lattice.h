@@ -1,6 +1,6 @@
 /* This file is part of MARQOV:
  * A modern framework for classical spin models on general topologies
- * Copyright (C) 2020-2021, The MARQOV Project
+ * Copyright (C) 2020-2022, The MARQOV Project
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -20,7 +20,6 @@
 #define REGULAR_LATTICE_H
 
 #include <vector>
-#include "stuff.h"
 
 class RegularLattice
 {
@@ -40,19 +39,17 @@ public:
 
     std::vector<double> crds(int k) const 
     {
-		// transform one-dimensional index to n-d coordinates
-    		std::vector<int> indices = IndexOf(k, dim, length);
-		std::vector<double> retval(dim,0);
-
-		// transform to double and normalize to unit hypercube
-		for (decltype(retval.size()) i=0; i<retval.size(); i++) 
-		{ 
-			retval[i] = double(indices[i])/length; 
-			retval[i] += 0.5/length;
-		}
-
-    		return retval;
-	}
+        std::vector<double> retval(dim);
+        double mya = static_cast<double>(1)/length;
+        for (int i=0; i < dim; i++)
+        {
+            int index = (k/pows[i])%length;
+            k -= index * pows[i];
+            retval[i] = index * mya;
+            retval[i] += 0.5 * mya;
+        }
+        return retval;
+    }
 
 		value_type operator[](int i) const
 		{

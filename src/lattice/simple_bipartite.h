@@ -1,5 +1,6 @@
 #ifndef SIMPLE_BIPARTITE_H
 #define SIMPLE_BIPARTITE_H
+#include <vector>
 
 /**
  * Simple Bipartite Lattice
@@ -18,13 +19,17 @@ class SimpleBipartite
 		}
 
 
-		inline int identify(int i) const // is this correct?
+		inline int identify(int k) const // is this correct?
 		{
-			auto index = IndexOf(i, dim, len);
-			
-			int quersumme = 0;
-			for (decltype(index.size()) j = 0; j < index.size(); j++) quersumme += index[j];
-
+            long mypow = 1;
+            int quersumme = 0;
+            for (int i=0; i < dim; i++)
+            {
+                int index2 = (k/mypow) % len;
+                quersumme += index2;
+                k -= index2 * mypow;
+                mypow *= len;
+            }
 			if (quersumme%2 == 0) return 0;
 			else return 1;
 		}
