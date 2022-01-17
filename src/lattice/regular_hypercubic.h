@@ -12,24 +12,25 @@
  * This class provides routines for encapsulating all neighbour
  * and coordinate relations for n-dimensional hypercubic lattices.
  */
-template <int dim>
+template <int dimT>
 class FixedDimRegularHypercubic
 {
 public:
     int len{0};
+    constexpr static int dim{dimT};
     int npoints{0};
     constexpr FixedDimRegularHypercubic(int len) : len(len), npoints(1)
     {
-        for(int i = 0; i < dim; ++i)
+        for(int i = 0; i < dimT; ++i)
         {
             pows[i] = npoints;
             npoints *= len;
         }
     }
 		// implement nbrs. FIXME: alpha
-		constexpr std::array<int,2*dim> nbrs(const int alpha, const int i) const
+		constexpr std::array<int,2*dimT> nbrs(const int alpha, const int i) const
 		{
-			std::array<int, 2*dim> temp{0};
+			std::array<int, 2*dimT> temp{0};
 			//calculate neighbours for site i
 			for(int j = 0; j < dim; ++j)
 			{
@@ -69,11 +70,11 @@ public:
 		* @param k the index of the site.
 		* @return the real space coordinates the point.
 		*/
-		constexpr std::array<double,dim> crds(const int k) const
+		constexpr std::array<double,dimT> crds(int k) const
 		{
-            std::array<double, dim> retval{0};
+            std::array<double, dimT> retval{0};
             double mya = static_cast<double>(1)/len;
-            for (int i=0; i < dim; i++)
+            for (int i=0; i < dimT; i++)
             {
                 int index = (k/pows[i])%len;
                 k -= index * pows[i];
@@ -84,7 +85,7 @@ public:
 		}
 
 		// implement flexnbrs
-		constexpr std::array<int,2*dim> flexnbrs(const int alpha, const int i) const
+		constexpr std::array<int,2*dimT> flexnbrs(const int alpha, const int i) const
 		{
             return this->nbrs(alpha, i);
 		}

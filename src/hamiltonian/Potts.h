@@ -76,17 +76,19 @@ class PottsMagnetization
 * @note This term does not match the required canonical interaction form and his
 * hence implented as a Flex Term
 */
-template <class StateSpace, class StateVector>
-class PottsInteraction : public FlexTerm<StateSpace, StateVector>
+template <class StateVector>
+class PottsInteraction //: public FlexTerm<StateSpace, StateVector>
 {
 	public:
-		PottsInteraction(const double k) : FlexTerm<StateSpace, StateVector>(k) {}
+		const double k;
+		PottsInteraction(const double k) : k(k) {}//FlexTerm<StateSpace, StateVector>(k) {}
 		~PottsInteraction() {};
-
+		
+		template <class StateSpace>
 		double diff (const int rsite,
 					const StateVector& svold,
 					const StateVector& svnew,
-					std::vector<int>& nbrs,
+					const decltype(std::declval<typename StateSpace::Lattice>().nbrs(0,0))& nbrs,
 					StateSpace& s)
 		{
 			double energy_old = 0;
@@ -104,6 +106,8 @@ class PottsInteraction : public FlexTerm<StateSpace, StateVector>
 
 			return energy_new-energy_old;
 		}
+		template <class StateSpace>
+		double energy(const StateSpace& s, const typename StateSpace::Lattice& grid, int c) {return 0;}
 
 };
 
@@ -136,12 +140,13 @@ class Potts
 		// the Wolff algorithm necessarily has to be provided // FIXME
 
 		// The Potts interaction is not of the standard form and hence categorized as a Flex Term
-		PottsInteraction<MARQOV::Space<StateVector, RegularHypercubic>, StateVector> potts_interaction;
-		std::vector<FlexTerm<MARQOV::Space<StateVector, RegularHypercubic>, StateVector>*> multisite;
+		PottsInteraction<StateVector> potts_interaction;
+		std::array</*FlexTerm<MARQOV::Space<StateVector, RegularHypercubic>, StateVector>*/decltype(potts_interaction)*, 1> multisite{&potts_interaction};
+//		std::vector<FlexTerm<MARQOV::Space<StateVector, RegularHypercubic>, StateVector>*> multisite;
 
 		Potts(double J) : J(J), name("Potts"), potts_interaction(J)
 		{
-			multisite.push_back(&potts_interaction);
+//			multisite.push_back(&potts_interaction);
 		}
 		~Potts() {}
 

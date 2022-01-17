@@ -301,7 +301,7 @@ class FlexEnergy
 			double retval = 0;
 			for (decltype(ham.multisite.size()) c = 0; c < ham.multisite.size(); c++)
 			{
-				double enepart = ham.multisite[c]->template energy<Grid>(statespace, grid, c);
+				double enepart = ham.multisite[c]->energy(statespace, grid, c);
 				retval += ham.multisite[c]->k * enepart;
 			}
 			return retval;
