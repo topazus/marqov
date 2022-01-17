@@ -1,6 +1,7 @@
 #ifndef REGULAR_HYPERCUBIC_H
 #define REGULAR_HYPERCUBIC_H
 
+#include <array>
 #include "util/points.h" 
 #include "util/distance.h"
 #include "util/regular_lattice.h"
@@ -11,6 +12,92 @@
  * This class provides routines for encapsulating all neighbour
  * and coordinate relations for n-dimensional hypercubic lattices.
  */
+template <int dim>
+class FixedDimRegularHypercubic
+{
+public:
+    int len{0};
+    int npoints{0};
+    constexpr FixedDimRegularHypercubic(int len) : len(len), npoints(1)
+    {
+        for(int i = 0; i < dim; ++i)
+        {
+            pows[i] = npoints;
+            npoints *= len;
+        }
+    }
+		// implement nbrs. FIXME: alpha
+		constexpr std::array<int,2*dim> nbrs(const int alpha, const int i) const
+		{
+			std::array<int, 2*dim> temp{0};
+			//calculate neighbours for site i
+			for(int j = 0; j < dim; ++j)
+			{
+				int pl = pows[j]*len;
+
+				//positive additions
+				int c = i + pows[j];
+
+				//test positive additions for PBCs
+				if (c >= (c/pl)*pl)
+				{
+					temp[2*j] = (i/pl)*pl + c % pl;
+				}
+				else
+				{
+					temp[2*j] = c;
+				}
+				
+				//negative additions
+				c = i - pows[j];
+
+				//test negative additions for PBCs
+				if (c < (i/pl)*pl)
+				{
+					temp[2*j+1] = (i/pl)*pl + (c + pl) % pl;
+				}
+				else
+				{
+					temp[2*j+1] = c;
+				}
+			}
+			return temp;
+		}
+
+		/** Get the real space coordinates of a site.
+		*
+		* @param k the index of the site.
+		* @return the real space coordinates the point.
+		*/
+		constexpr std::array<double,dim> crds(const int k) const
+		{
+            std::array<double, dim> retval{0};
+            double mya = static_cast<double>(1)/len;
+            for (int i=0; i < dim; i++)
+            {
+                int index = (k/pows[i])%len;
+                k -= index * pows[i];
+                retval[i] = index * mya;
+                retval[i] += 0.5 * mya;
+            }
+            return retval;
+		}
+
+		// implement flexnbrs
+		constexpr std::array<int,2*dim> flexnbrs(const int alpha, const int i) const
+		{
+            return this->nbrs(alpha, i);
+		}
+
+		/** Return the number of sites in this lattice.
+         * 
+         * @return the number of sites in this lattice.
+         */
+		constexpr std::size_t size() const noexcept {return npoints;}
+private:
+    std::array<int, dim> pows{0};
+};
+
 class RegularHypercubic
 {
 	private:
