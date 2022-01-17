@@ -31,7 +31,11 @@ class RegularHypercubic
 			return lattice.nbrs(alpha, i);
 		}
 
-		// implement crds
+		/** Get the real space coordinates of a site.
+		*
+		* @param i the index of the site.
+		* @return the real space coordinates the point.
+		*/
 		std::vector<double> crds(const int i) const
 		{
 			return lattice.crds(i);
@@ -51,9 +55,9 @@ class RegularHypercubic
 };
 
 /** This function provides the necessary overload for MARQOV::Core
- *  such that we can dump useful info into the HDF5 file
+ *  such that we can dump useful info into the HDF5 file.
  * 
- * @param h5loc the group of the lattice
+ * @param h5loc the group of the lattice.
  * @param l the lattice that we are dumping info about.
  */
 void writelat(H5::Group& h5loc, const RegularHypercubic& l)
