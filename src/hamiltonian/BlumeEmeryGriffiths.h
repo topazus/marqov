@@ -115,15 +115,7 @@ class BlumeEmeryGriffiths
 															name("BlumeCapel"), 
 															observables(obs_m),
 															biquadratic_exchange_int(K)
-							{
-//#ifdef __PGI
-            	//The following is necessary to make PGI-19.10 happy
-//        MARQOV::Space<StateVector, RegularHypercubic> dummy(10);
-//        StateVector dummy1;
-//        std::vector<int> temp; 
-//        biquadratic_exchange_int.diff(1, dummy1, dummy1, temp, dummy);
-//#endif
-							}
+							{}
 
 		~BlumeEmeryGriffiths()
 		{
