@@ -28,6 +28,14 @@ foreach(target ${MARQOVTARGETS})
 
 endforeach(target)
 
+find_package(PCL 1.2 COMPONENTS common kdtree REQUIRED)
+link_directories(${PCL_LIBRARY_DIRS}) 
+add_definitions(${PCL_DEFINITIONS})
+include_directories(${PCL_INCLUDE_DIRS})
+target_link_libraries(MARQOVdemo           ${PCL_LIBRARIES})
+
+
+
 
 find_package(MPI)
 if(MPI_CXX_FOUND)

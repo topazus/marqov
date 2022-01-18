@@ -37,6 +37,7 @@ using std::ofstream;
 // Lattices
 #include "../src/lattice/regular_hypercubic.h"
 #include "../src/lattice/constant_coordination.h"
+#include "../src/lattice/random_geometric_graph.h"
 #include "../src/lattice/regular_random_bond.h"
 #include "../src/lattice/simple_bipartite.h"
 
