@@ -32,7 +32,7 @@ template <class StateVector>
 class BiquadraticExchangeInteraction
 {
 	public:
-		double k;
+		double k;///< Scalar Prefactor
 		BiquadraticExchangeInteraction(double k) : k(k) {}
 
 		template <class StateSpace>

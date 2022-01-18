@@ -67,11 +67,11 @@ template <class StateSpace, class StateVector>
 class FlexTerm
 {
 	public:
-		double k;
+		double k;///< The scalar prefactor that all of MARQOV's observables have.
 		FlexTerm(double k) : k(k) {};
 		virtual ~FlexTerm() {};
 
-		/** Interface for the energy difference to be used in local update algorithms
+		/** Interface for the energy difference to be used in local update algorithms.
 		*
 		* @param rsite site under consideration
 		* @param svold state before the update

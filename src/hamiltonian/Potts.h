@@ -80,7 +80,7 @@ template <class StateVector>
 class PottsInteraction
 {
 	public:
-		const double k;
+		const double k;///< Scalar prefactor
 		PottsInteraction(const double k) : k(k) {}
 
 		template <class StateSpace>
