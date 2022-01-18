@@ -1,6 +1,6 @@
 /* This file is part of MARQOV:
  * A modern framework for classical spin models on general topologies
- * Copyright (C) 2020-2021, The MARQOV Project
+ * Copyright (C) 2020-2022, The MARQOV Project
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -77,13 +77,12 @@ class PottsMagnetization
 * hence implented as a Flex Term
 */
 template <class StateVector>
-class PottsInteraction //: public FlexTerm<StateSpace, StateVector>
+class PottsInteraction
 {
 	public:
 		const double k;
-		PottsInteraction(const double k) : k(k) {}//FlexTerm<StateSpace, StateVector>(k) {}
-		~PottsInteraction() {};
-		
+		PottsInteraction(const double k) : k(k) {}
+
 		template <class StateSpace>
 		double diff (const int rsite,
 					const StateVector& svold,
@@ -108,7 +107,6 @@ class PottsInteraction //: public FlexTerm<StateSpace, StateVector>
 		}
 		template <class StateSpace>
 		double energy(const StateSpace& s, const typename StateSpace::Lattice& grid, int c) {return 0;}
-
 };
 
 
@@ -129,7 +127,6 @@ class Potts
 		static constexpr int SymD = 1;
 		const std::string name;
 
-
 		//  ---- Definitions  -----
 
 		typedef std::array<int, SymD> StateVector;
@@ -141,20 +138,14 @@ class Potts
 
 		// The Potts interaction is not of the standard form and hence categorized as a Flex Term
 		PottsInteraction<StateVector> potts_interaction;
-		std::array</*FlexTerm<MARQOV::Space<StateVector, RegularHypercubic>, StateVector>*/decltype(potts_interaction)*, 1> multisite{&potts_interaction};
-//		std::vector<FlexTerm<MARQOV::Space<StateVector, RegularHypercubic>, StateVector>*> multisite;
+		std::array<decltype(potts_interaction)*, 1> multisite{&potts_interaction};
 
 		Potts(double J) : J(J), name("Potts"), potts_interaction(J)
-		{
-//			multisite.push_back(&potts_interaction);
-		}
-		~Potts() {}
-
-
+		{}
 		//  ----  Observables ----
 
 		PottsMagnetization<Q>  obs_m;
-        decltype(std::make_tuple(obs_m)) observables = {std::make_tuple(obs_m)};
+		decltype(std::make_tuple(obs_m)) observables = {std::make_tuple(obs_m)};
 
 
 		//  ----  Initializer  ----

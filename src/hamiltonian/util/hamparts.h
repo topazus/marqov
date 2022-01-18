@@ -84,7 +84,7 @@ class FlexTerm
 		virtual double diff (const int rsite,
 					const StateVector& svold,
 					const StateVector& svnew,
-					std::vector<int>& nbrs,
+					const decltype(std::declval<typename StateSpace::Lattice>().nbrs(0,0))& nbrs,
 					StateSpace& s) = 0;
 
 
@@ -99,8 +99,7 @@ class FlexTerm
 		*
 		* @return energy difference (double)
 		*/
-		template <class Grid>
-		double energy(const StateSpace& s, const Grid& grid, int c) {return 0;}
+		double energy(const StateSpace& s, const typename StateSpace::Lattice& grid, int c) {return 0;}
 		// TODO: remove this default implementation and instead check for existence at compile-time
 };
 #endif

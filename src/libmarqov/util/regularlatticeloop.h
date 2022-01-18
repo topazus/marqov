@@ -130,33 +130,6 @@ void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std
             break;
         }
     }
-//     // Typedefs
-// 	typedef typename std::tuple<RegularHypercubic&, MARQOV::Config, Params> ParameterType;
-// 	typedef typename MARQOV::GetSchedulerType<Hamiltonian, RegularHypercubic, ParameterType>::MarqovScheduler SchedulerType;
-// 	std::vector<RegularHypercubic> latts;
-// 	for (std::size_t j=0; j<nL.size(); j++) latts.emplace_back(nL[j], dim);
-// 
-// 	// Init Scheduler
-// 	SchedulerType sched(1, nthreads);
-// 
-// 	for (std::size_t j=0; j<nL.size(); j++)
-// 	{
-// 		// prepare
-// 		int L = nL[j];
-// 		std::cout << std::endl << "L = " << L << std::endl << std::endl;
-// 
-// 		MARQOV::Config mp(mcdefault);
-//         mp.outpath += "/"+std::to_string(L)+"/";
-// 		mp.setncluster(int(nclusteramp*pow(L,nclusterexp)));
-// 
-// 		makeDir(mp.outpath);
-// 		
-// 		auto params = finalize_parameter(latts[j], mp, hp);
-//  		auto rparams = replicator(params, nreplicas[j]);
-//  
-// 		for(auto p : rparams) sched.createSimfromParameter(p, filter);
-// 	}
-// 	sched.start();
 }
 
 #endif
