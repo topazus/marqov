@@ -14,6 +14,10 @@ target_include_directories(mysimpleheisenbergthreaded PUBLIC ${MYHDF5INCLUDES})
 target_link_libraries(mysimpleheisenbergthreaded libMARQOV)
 set_target_properties(mysimpleheisenbergthreaded PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
+add_executable(IsingRGG IsingRGG.cpp ../src/libmarqov/util/registry.cpp)
+target_include_directories(IsingRGG PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(IsingRGG libMARQOV)
+set_target_properties(IsingRGG PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
 # configuration of the main parts.
 
@@ -32,7 +36,7 @@ find_package(PCL 1.2 COMPONENTS common kdtree REQUIRED)
 link_directories(${PCL_LIBRARY_DIRS}) 
 add_definitions(${PCL_DEFINITIONS})
 include_directories(${PCL_INCLUDE_DIRS})
-target_link_libraries(MARQOVdemo           ${PCL_LIBRARIES})
+target_link_libraries(IsingRGG  ${PCL_LIBRARIES})
 
 
 

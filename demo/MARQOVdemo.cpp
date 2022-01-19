@@ -37,7 +37,6 @@ using std::ofstream;
 // Lattices
 #include "../src/lattice/regular_hypercubic.h"
 #include "../src/lattice/constant_coordination.h"
-#include "../src/lattice/random_geometric_graph.h"
 #include "../src/lattice/regular_random_bond.h"
 #include "../src/lattice/simple_bipartite.h"
 
@@ -58,94 +57,6 @@ using std::ofstream;
 
 using namespace MARQOV;
 
-/** Find out if a string starts with something.
- * @param longword we search in this string
- * @param shortword we look for this
- * @return truen if longword strarts with shortword, else false
- */
-bool startswith(const std::string& longword, const std::string& shortword) noexcept
-{
-    return longword.find(shortword) == 0;
-}
-
-
-/** Check the vailidity of the replica configuration.
- * throws if invalid.
- * 
- * @param nr number of replicas
- * @param nL amount of lattice simulations
- */
-void checkreplicaconfig(int nr, int nL)
-{
-    if ((nr != nL) && (nr != 1)) throw std::invalid_argument("[MARQOV] Invalid replica configuration!");
-}
-
-
-/** Removes previous simulations.
- * 
- * @param outbasedir The folder that we remove entirely
- */
-void tidyupoldsims(const std::string& outbasedir)
-{
-	// delete previous output // fixme: don't do that by default!
-#ifdef MPIMARQOV
-    int myrank = 0;
-    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-    if(myrank == 0)
-    {
-#endif
-        std::cout<<"[MARQOV::main] Erasing previous data!!!!"<<std::endl;
-        std::string command = "rm -r " + outbasedir;
-        system(command.c_str());
-        makeDir(outbasedir);
-#ifdef MPIMARQOV
-    }
-#endif
-}
-
-
-/** Print some nice information
- * 
- * @param registry Where to get the data from.
- * @param ham the hamiltonian
- */
-void printInfoandcheckreplicaconfig(RegistryDB& registry, const std::string& ham)
-{
-    const auto dim 	      = registry.Get<int>(ham+".ini", ham, "dim" );
-	const auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", ham, "rep" );
-	const auto nreplicas_str = registry.Get<std::string>(ham+".ini", ham, "rep" );
-	const auto nL  	      = registry.Get<std::vector<int>>(ham+".ini", ham, "L" );
-	const auto nLs 	      = registry.Get<std::string>(ham+".ini", ham, "L" );
-
-	cout << endl;
-	cout << "Hamiltonian: \t" << ham << endl;
-	cout << "Dimension: \t" << dim << endl;
-	cout << "Lattice sizes:\t" << nLs << endl;
-	cout << "Replicas:\t" << nreplicas_str << endl;
-    
-    checkreplicaconfig(nreplicas.size(), nL.size());
-}
-
-
-/** Utility function to write the common part of the config file
- * @param os the stream associated with the new config file.
- * @param nmetro 
- * @param nclusteramp
- * @param nclusterexp
- * @param warmupsteps
- * @param measuresteps
- */
-void createcfgfooter(std::ostream& os, int nmetro, double nclusteramp, int nclusterexp, int warmupsteps, int measuresteps)
-{
-    os << "[MC]\n"<<"nmetro = " << nmetro;
-	os << "\nnclusteramp = " << nclusteramp << "\nnclusterexp = " << nclusterexp;
-	os << "\nwarmupsteps = " << warmupsteps << "\nmeasuresteps = " << measuresteps << "\n";
-    os << "[IO]\n"<<"outdir = ./out\n" << "[END]"<<std::endl;
-}
-
-
-
-// ---------------------------------------------------
 
 void scheduleIsing(RegistryDB& registry)
 {
@@ -423,88 +334,6 @@ void scheduleXXZAntiferroSingleAniso(RegistryDB& registry)
 
 
 
-void scheduleIsingRGG(RegistryDB& registry)
-{
-	// Parameters
-	const auto ham = "IsingRGG";
-	const auto configfile = "IsingRGG.ini";
-
-    std::string outbasedir = registry.Get<std::string>(configfile, "IO", "outdir" );
-    tidyupoldsims(outbasedir);
-
-	auto nreplicas  = registry.Get<std::vector<int>>(configfile, ham, "rep" );
-	const auto nL   = registry.Get<std::vector<int>>(configfile, ham, "L" );
-	const auto dim  = registry.Get<int>(configfile, ham, "dim" );
-    printInfoandcheckreplicaconfig(registry, ham);
-
-
-	// Number of threads
-	int nthreads = 0;
-	try 
-	{
-		nthreads = registry.template Get<int>(configfile, "General", "threads_per_node" );
-	}
-	catch (const Registry_Key_not_found_Exception&) 
-	{
-		std::cout<<"threads_per_node not set -> automatic"<<std::endl;
-	}
-
-
-	// Replicas
-	if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-
-	// Physical parameters
-	auto beta = registry.Get<std::vector<double> >(configfile, ham, "beta");
-	auto J    = registry.Get<std::vector<double> >(configfile, ham, "J");
-	auto hp = cart_prod(beta, J);
-
-	// Typedefs
-	typedef Ising<int> Hamiltonian;
-	typedef RandomGeometricGraph<Poissonian> Lattice;
-	typedef std::knuth_b RNG;
-
-    typedef std::tuple<std::tuple<int, int, double>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
-	typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType, std::knuth_b>::MarqovScheduler SchedulerType;
-
-
-	// Lattice size loop
-	for (std::size_t j=0; j<nL.size(); j++)
-	{
-		// init scheduler
-		SchedulerType sched(1, nthreads);
-
-		// prepare output
-		int L = nL[j];
-		cout << endl << "L = " << L << endl << endl;
-		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-		makeDir(outpath);
-
-		// Monte Carlo parameters
-		MARQOV::Config mp(outpath);
-		mp.setnmetro(5);
-		mp.setncluster(15);
-		mp.setwarmupsteps(300);
-		mp.setgameloopsteps(500);
-
-		// search radius for RGG
-		double no_nn = 6;
-		double search_radius = std::cbrt((3.0/M_PI*no_nn*1.0/4.0))/double(L); // only for 3D
-
-		// form parameter triple with lattice parameters and replicate
-		auto params  = finalize_parameter(std::make_tuple(L, dim, search_radius), mp, hp);
-		auto rparams = replicator(params, nreplicas[j]);
-
-		// feed scheduler
-		for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
-
-		// run!
-		sched.start();
-	}
-}
-
-
-
-
 void scheduleBlumeCapelBiPartite(RegistryDB& registry)
 {
     // Parameters
@@ -688,9 +517,6 @@ void selectsim(RegistryDB& registry)
 
 //	else if (startswith(ham, "EdwardsAnderson-Ising"))
 //        scheduleEdwardsAndersonIsing(registry);
-
-	else if (ham == "IsingRGG")
-        scheduleIsingRGG(registry);
 
 	else if (ham == "BlumeCapelBipartite")
         scheduleBlumeCapelBiPartite(registry);
