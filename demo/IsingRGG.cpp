@@ -33,6 +33,7 @@ using namespace MARQOV;
 int main(int argc, char* argv[])
 {
 	// MPI startup
+	// -----------
 	#ifdef MPIMARQOV
     int threadingsupport;
     MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &threadingsupport);
@@ -53,8 +54,8 @@ int main(int argc, char* argv[])
 	#endif
 
 
-	// Input 
-	// -----
+	// Registry
+	// --------
 	const auto ham = "IsingRGG";
 	const auto configfile = "IsingRGG.ini";
 
@@ -63,16 +64,22 @@ int main(int argc, char* argv[])
 	RegistryDB registry;
 	check_registry_availability(registry, ham);
 	check_registry_file_exists(registry, ham);
-
-	// Parameters
-    std::string outbasedir = registry.Get<std::string>(configfile, "IO", "outdir" );
-	const auto nL   = registry.Get<std::vector<int>>(configfile, ham, "L" );
-	const auto dim  = registry.Get<int>(configfile, ham, "dim" );
-	auto nthreads = number_of_threads_per_node(registry, configfile);
-	makeDir(outbasedir);
     printInfoandcheckreplicaconfig(registry, ham);
 
+    std::string outbasedir = registry.Get<std::string>(configfile, "IO", "outdir" );
+	makeDir(outbasedir);
 
+	// Parameters
+	// ----------
+	const auto nL            = registry.Get<std::vector<int>>(configfile, ham, "L" );
+	const auto dim           = registry.Get<int>(configfile, ham, "dim" );
+	const int nreplicas      = registry.Get<int>(configfile, ham, "rep" );
+	const auto nclusteramp   = registry.Get<double>(configfile, "MC", "nclusteramp");
+	const auto nclusterexp   = registry.Get<int>(configfile, "MC", "nclusterexp");
+	const auto nmetro        = registry.Get<int>(configfile, "MC", "nmetro");
+	const auto warmupsteps   = registry.Get<int>(configfile, "MC", "warmupsteps");
+	const auto measuresteps  = registry.Get<int>(configfile, "MC", "measuresteps");
+	const auto nthreads      = number_of_threads_per_node(registry, configfile);
 
 	// Typedefs
 	// --------
@@ -87,10 +94,11 @@ int main(int argc, char* argv[])
 	auto J    = registry.Get<std::vector<double> >(configfile, ham, "J");
 	auto hp = cart_prod(beta, J);
 
+
 	// Loop over lattice sizes
 	for (std::size_t j=0; j<nL.size(); j++)
 	{
-		// Prepare output
+		// Print status and prepare directory
 		int L = nL[j];
 		std::cout << std::endl << "L = " << L << std::endl << std::endl;
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
@@ -99,16 +107,6 @@ int main(int argc, char* argv[])
 
 		// Monte Carlo parameters
 		// ----------------------
-
-		// First, we import them from the registry
-		int nreplicas      = registry.Get<int>(configfile, ham, "rep" );
-		auto nclusteramp   = registry.Get<double>(configfile, "MC", "nclusteramp");
-		auto nclusterexp   = registry.Get<int>(configfile, "MC", "nclusterexp");
-		auto nmetro        = registry.Get<int>(configfile, "MC", "nmetro");
-		auto warmupsteps   = registry.Get<int>(configfile, "MC", "warmupsteps");
-		auto measuresteps  = registry.Get<int>(configfile, "MC", "measuresteps");
-
-		// Then, we store them into a MARQOV::Config object
 		MARQOV::Config mp(outpath);
 		mp.setnmetro(nmetro); // number of Metropolis sweeps per EMCS
 		mp.setncluster(int(nclusteramp*pow(L,nclusterexp))); // number of Wolff updates per EMCS
@@ -116,15 +114,15 @@ int main(int argc, char* argv[])
 		mp.setgameloopsteps(measuresteps); // number of EMCS for production
 
 
+		// Geometry parameters
+		// -------------------
+		// search radius for RGG
+		double no_nn = 6;
+		double search_radius = std::cbrt((3.0/M_PI*no_nn*1.0/4.0))/double(L); // only for 3D
 
 
 		// Schedule and Run
 		// ----------------
-
-		// Geometry parameter: search radius for RGG
-		double no_nn = 6;
-		double search_radius = std::cbrt((3.0/M_PI*no_nn*1.0/4.0))/double(L); // only for 3D
-
 
 		// Bundle the lattice, the MC parameters and the Hamiltonian parameters
 		auto paramsets  = finalize_parameter(std::make_tuple(L, dim, search_radius), mp, hp);
