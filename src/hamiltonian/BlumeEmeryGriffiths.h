@@ -84,44 +84,34 @@ class BlumeEmeryGriffiths
 {
 	public:
 
-		//  ----  Parameters  ----
+		//  ----  Parameters and Definitions----
 
-		double J, D, K;
+		//double J, D, K; // not necessary
 		static constexpr int SymD = 1;
 		const std::string name;
-
-
-		
-		//  ---- Definitions  -----
-
 		typedef std::array<SpinType, SymD> StateVector;
-//		template <typename RNG>
-//		using MetroInitializer = Spin1_Initializer<StateVector, RNG>;
 
 
 
 		//  ----  Hamiltonian terms  ----
-
 		
+		Standard_Interaction<StateVector> standard_int;
+		Onsite_Quadratic<StateVector> onsite_int;
 		BiquadraticExchangeInteraction<StateVector> biquadratic_exchange_int;
 
-		std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
-		std::array<Onsite_Quadratic<StateVector>*, 1>     onsite       = {new Onsite_Quadratic<StateVector>(D)};
+		std::array<Standard_Interaction<StateVector>*, 1>  interactions {&standard_int};
+		std::array<Onsite_Quadratic<StateVector>*, 1>      onsite {&onsite_int};
 		std::array<decltype(biquadratic_exchange_int)*, 1> multisite {&biquadratic_exchange_int};
 	
-		BlumeEmeryGriffiths(double J, double D, double K) : J(J), 
-															D(D), 
-															K(K), 
+		BlumeEmeryGriffiths(double J, double D, double K) : //J(J), D(D), K(K), // not necessary
 															name("BlumeCapel"), 
 															observables(obs_m),
-															biquadratic_exchange_int(K)
-							{}
+															standard_int(J),
+															onsite_int(K),
+															biquadratic_exchange_int(K) {}
+							
 
-		~BlumeEmeryGriffiths()
-		{
-			delete interactions[0];
-			delete onsite[0];
-		}
+
 
 		//  ----  Observables ----
 
