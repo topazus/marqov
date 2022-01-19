@@ -63,7 +63,7 @@ namespace MARQOV
     void writelat(H5::Group& h5loc, const T& l)
     {
         dumpscalartoH5(h5loc, "name", std::string("unknown"));
-        dumpscalartoH5(h5loc, "size", l.size());
+        dumpscalartoH5(h5loc, "npoints", l.size());
     }
     /** @class Config core.h
      * 

@@ -418,144 +418,86 @@ void scheduleXXZAntiferroSingleAniso(RegistryDB& registry)
 		RegularLatticeLoop<XXZAntiferroSingleAniso<double>>(registry, outbasedir, parameters, xxzfilter);
 }
 
-/*
-void scheduleEdwardsAndersonIsing(RegistryDB& registry)
-{
-// Parameters
-    const auto name = registry.Get<std::string>(ham+".ini", "General", "Hamiltonian" );
-    std::string outbasedir = registry.Get<std::string>(name + ".ini", "IO", "outdir" );
-    tidyupoldsims(outbasedir);
-		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", name, "rep" );
-		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", name, "L" );
-		const auto dim  = registry.Get<int>(ham+".ini", name, "dim" );
-        printInfoandcheckreplicaconfig(registry, name);	
-	
-		// Number of threads
-		int nthreads = 0;
-		try 
-		{
-			nthreads = registry.template Get<int>(ham+".ini", "General", "threads_per_node" );
-		}
-		catch (const Registry_Key_not_found_Exception&) 
-		{
-			std::cout<<"threads_per_node not set -> automatic"<<std::endl;
-		}
 
-		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
-		// Physical parameters
-		auto beta = registry.Get<std::vector<double> >(ham+".ini", "IsingCC", "beta");
-		auto J    = registry.Get<std::vector<double> >(ham+".ini", "IsingCC", "J");
-		auto hp = cart_prod(beta, J);
-        
-		// Typedefs
-		typedef EdwardsAndersonIsing<int> Hamiltonian;
-		typedef RegularRandomBond<GaussianPDF> Lattice;
-        //typedef RegularRandomBond<BimodalPDF> Lattice;
 
-        typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
-		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType, std::ranlux48>::MarqovScheduler SchedulerType;
 
-		SchedulerType sched(1, nthreads);
-
-		// Lattice size loop
-		for (std::size_t j=0; j<nL.size(); j++)
-		{
-			// prepare output
-			int L = nL[j];
-			cout << endl << "L = " << L << endl << endl;
-			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-			makeDir(outpath);
-	
-			// Monte Carlo parameters
-			MARQOV::Config mp(outpath);
-			mp.setnmetro(50);
-			mp.setncluster(0);
-			mp.setwarmupsteps(200);
-			mp.setgameloopsteps(1000);
-
-			// form parameter triple and replicate
-			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);//this particular form is required to happify PGI-19.10
-            auto rparams = replicator(params, nreplicas[j]);
-
-			// schedule simulations
- 			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
-		}
- 		sched.start(); // run!
-}
-*/
-
-/*
 void scheduleIsingCC(RegistryDB& registry)
 {
-		// Parameters
-    const auto name = registry.Get<std::string>(ham+".ini", "General", "Hamiltonian" );
-    std::string outbasedir = registry.Get<std::string>(name + ".ini", "IO", "outdir" );
+	// Parameters
+	const auto ham = "IsingCC";
+	const auto configfile = "IsingCC.ini";
+
+    std::string outbasedir = registry.Get<std::string>(configfile, "IO", "outdir" );
     tidyupoldsims(outbasedir);
-		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", name, "rep" );
-		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", name, "L" );
-		const auto dim  = registry.Get<int>(ham+".ini", name, "dim" );
-        printInfoandcheckreplicaconfig(registry, name);
 
-		// Number of threads
-		int nthreads = 0;
-		try 
-		{
-			nthreads = registry.template Get<int>(ham+".ini", "General", "threads_per_node" );
-		}
-		catch (const Registry_Key_not_found_Exception&) 
-		{
-			std::cout<<"threads_per_node not set -> automatic"<<std::endl;
-		}
+	auto nreplicas  = registry.Get<std::vector<int>>(configfile, ham, "rep" );
+	const auto nL   = registry.Get<std::vector<int>>(configfile, ham, "L" );
+	const auto dim  = registry.Get<int>(configfile, ham, "dim" );
+    printInfoandcheckreplicaconfig(registry, ham);
 
 
-		// Replicas
-		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-
-		// Physical parameters
-		auto beta = registry.Get<std::vector<double> >(ham+".ini", "IsingCC", "beta");
-		auto J    = registry.Get<std::vector<double> >(ham+".ini", "IsingCC", "J");
-		auto hp = cart_prod(beta, J);
-
-		// Typedefs
-		typedef Ising<int> Hamiltonian;
-		typedef ConstantCoordinationLattice<Poissonian> Lattice;
-
-        typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
-		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType, std::knuth_b>::MarqovScheduler SchedulerType;
+	// Number of threads
+	int nthreads = 0;
+	try 
+	{
+		nthreads = registry.template Get<int>(configfile, "General", "threads_per_node" );
+	}
+	catch (const Registry_Key_not_found_Exception&) 
+	{
+		std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+	}
 
 
-		// Lattice size loop
-		for (std::size_t j=0; j<nL.size(); j++)
-		{
-			// init scheduler
-			SchedulerType sched(1, nthreads);
+	// Replicas
+	if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
 
-			// prepare output
-			int L = nL[j];
-			cout << endl << "L = " << L << endl << endl;
-			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-			makeDir(outpath);
-	
-			// Monte Carlo parameters
-			MARQOV::Config mp(outpath);
-			mp.setnmetro(5);
-			mp.setncluster(15);
-			mp.setwarmupsteps(500);
-			mp.setgameloopsteps(1500);
+	// Physical parameters
+	auto beta = registry.Get<std::vector<double> >(configfile, ham, "beta");
+	auto J    = registry.Get<std::vector<double> >(configfile, ham, "J");
+	auto hp = cart_prod(beta, J);
 
-			// form parameter triple with lattice parameters and replicate
-			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);
-			auto rparams = replicator(params, nreplicas[j]);
+	// Typedefs
+	typedef Ising<int> Hamiltonian;
+	typedef ConstantCoordinationLattice<Poissonian> Lattice;
 
-			// feed scheduler
-			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
+    typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
+	typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType, std::knuth_b>::MarqovScheduler SchedulerType;
 
-			// run!
-			sched.start();
-		}
+
+	// Lattice size loop
+	for (std::size_t j=0; j<nL.size(); j++)
+	{
+		// init scheduler
+		SchedulerType sched(1, nthreads);
+
+		// prepare output
+		int L = nL[j];
+		cout << endl << "L = " << L << endl << endl;
+		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+		makeDir(outpath);
+
+		// Monte Carlo parameters
+		MARQOV::Config mp(outpath);
+		mp.setnmetro(5);
+		mp.setncluster(15);
+		mp.setwarmupsteps(500);
+		mp.setgameloopsteps(1500);
+
+		// form parameter triple with lattice parameters and replicate
+		auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);
+		auto rparams = replicator(params, nreplicas[j]);
+
+		// feed scheduler
+		for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
+
+		// run!
+		sched.start();
+	}
 }
-*/
+
+
+
 
 void scheduleBlumeCapelBiPartite(RegistryDB& registry)
 {
@@ -634,6 +576,73 @@ void scheduleBlumeCapelBiPartite(RegistryDB& registry)
 		sched.start();
 }
 
+/*
+void scheduleEdwardsAndersonIsing(RegistryDB& registry)
+{
+// Parameters
+    const auto name = registry.Get<std::string>(ham+".ini", "General", "Hamiltonian" );
+    std::string outbasedir = registry.Get<std::string>(name + ".ini", "IO", "outdir" );
+    tidyupoldsims(outbasedir);
+		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", name, "rep" );
+		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", name, "L" );
+		const auto dim  = registry.Get<int>(ham+".ini", name, "dim" );
+        printInfoandcheckreplicaconfig(registry, name);	
+	
+		// Number of threads
+		int nthreads = 0;
+		try 
+		{
+			nthreads = registry.template Get<int>(ham+".ini", "General", "threads_per_node" );
+		}
+		catch (const Registry_Key_not_found_Exception&) 
+		{
+			std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+		}
+
+		if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
+
+		// Physical parameters
+		auto beta = registry.Get<std::vector<double> >(ham+".ini", "IsingCC", "beta");
+		auto J    = registry.Get<std::vector<double> >(ham+".ini", "IsingCC", "J");
+		auto hp = cart_prod(beta, J);
+        
+		// Typedefs
+		typedef EdwardsAndersonIsing<int> Hamiltonian;
+		typedef RegularRandomBond<GaussianPDF> Lattice;
+        //typedef RegularRandomBond<BimodalPDF> Lattice;
+
+        typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
+		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType, std::ranlux48>::MarqovScheduler SchedulerType;
+
+		SchedulerType sched(1, nthreads);
+
+		// Lattice size loop
+		for (std::size_t j=0; j<nL.size(); j++)
+		{
+			// prepare output
+			int L = nL[j];
+			cout << endl << "L = " << L << endl << endl;
+			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
+			makeDir(outpath);
+	
+			// Monte Carlo parameters
+			MARQOV::Config mp(outpath);
+			mp.setnmetro(50);
+			mp.setncluster(0);
+			mp.setwarmupsteps(200);
+			mp.setgameloopsteps(1000);
+
+			// form parameter triple and replicate
+			auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);//this particular form is required to happify PGI-19.10
+            auto rparams = replicator(params, nreplicas[j]);
+
+			// schedule simulations
+ 			for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
+		}
+ 		sched.start(); // run!
+}
+*/
+
 /** Select the respective simulation.
  * 
  * @param registry The registry object that we will use
@@ -644,7 +653,7 @@ void selectsim(RegistryDB& registry)
 
 	// ----------------- select simulation ------------------
 
-	if (startswith(ham, "Ising"))
+	if (ham == "Ising")
         scheduleIsing(registry);
 
 	else if (startswith(ham, "Potts"))
@@ -674,8 +683,8 @@ void selectsim(RegistryDB& registry)
 //	else if (startswith(ham, "EdwardsAnderson-Ising"))
 //        scheduleEdwardsAndersonIsing(registry);
 
-//	else if (ham == "IsingCC")
-//        scheduleIsingCC(registry);
+	else if (ham == "IsingCC")
+        scheduleIsingCC(registry);
 
 	else if (ham == "BlumeCapelBipartite")
         scheduleBlumeCapelBiPartite(registry);
