@@ -423,11 +423,11 @@ void scheduleXXZAntiferroSingleAniso(RegistryDB& registry)
 
 
 
-void scheduleIsingCC(RegistryDB& registry)
+void scheduleIsingRGG(RegistryDB& registry)
 {
 	// Parameters
-	const auto ham = "IsingCC";
-	const auto configfile = "IsingCC.ini";
+	const auto ham = "IsingRGG";
+	const auto configfile = "IsingRGG.ini";
 
     std::string outbasedir = registry.Get<std::string>(configfile, "IO", "outdir" );
     tidyupoldsims(outbasedir);
@@ -460,9 +460,10 @@ void scheduleIsingCC(RegistryDB& registry)
 
 	// Typedefs
 	typedef Ising<int> Hamiltonian;
-	typedef ConstantCoordinationLattice<Poissonian> Lattice;
+	typedef RandomGeometricGraph<Poissonian> Lattice;
+	typedef std::knuth_b RNG;
 
-    typedef std::tuple<std::tuple<int, int>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
+    typedef std::tuple<std::tuple<int, int, double>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
 	typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType, std::knuth_b>::MarqovScheduler SchedulerType;
 
 
@@ -482,11 +483,15 @@ void scheduleIsingCC(RegistryDB& registry)
 		MARQOV::Config mp(outpath);
 		mp.setnmetro(5);
 		mp.setncluster(15);
-		mp.setwarmupsteps(500);
-		mp.setgameloopsteps(1500);
+		mp.setwarmupsteps(300);
+		mp.setgameloopsteps(500);
+
+		// search radius for RGG
+		double no_nn = 6;
+		double search_radius = std::cbrt((3.0/M_PI*no_nn*1.0/4.0))/double(L); // only for 3D
 
 		// form parameter triple with lattice parameters and replicate
-		auto params  = finalize_parameter(std::make_tuple(L, dim), mp, hp);
+		auto params  = finalize_parameter(std::make_tuple(L, dim, search_radius), mp, hp);
 		auto rparams = replicator(params, nreplicas[j]);
 
 		// feed scheduler
@@ -684,8 +689,8 @@ void selectsim(RegistryDB& registry)
 //	else if (startswith(ham, "EdwardsAnderson-Ising"))
 //        scheduleEdwardsAndersonIsing(registry);
 
-	else if (ham == "IsingCC")
-        scheduleIsingCC(registry);
+	else if (ham == "IsingRGG")
+        scheduleIsingRGG(registry);
 
 	else if (ham == "BlumeCapelBipartite")
         scheduleBlumeCapelBiPartite(registry);
