@@ -123,7 +123,6 @@ class Potts
 		//  ----  Parameters  ----
 
 		static constexpr int q = Q; // number of states
-		double J; // coupling constant
 		static constexpr int SymD = 1;
 		const std::string name;
 
@@ -140,7 +139,7 @@ class Potts
 		PottsInteraction<StateVector> potts_interaction;
 		std::array<decltype(potts_interaction)*, 1> multisite{&potts_interaction};
 
-		Potts(double J) : J(J), name("Potts"), potts_interaction(J)
+		Potts(double J) : name("Potts"), potts_interaction(J)
 		{}
 		//  ----  Observables ----
 
