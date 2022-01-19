@@ -26,6 +26,23 @@
 #include "registry.h"
 #include "systemtools.h"
 
+int number_of_threads_per_node(RegistryDB& registry, const std::string configfile)
+{
+	int nthreads = 0;
+	try
+	{
+		nthreads = registry.template Get<int>(configfile, "General", "threads_per_node" );
+	}
+	catch (const Registry_Key_not_found_Exception&)
+	{
+		std::cout<<"threads_per_node not set -> automatic"<<std::endl;
+	}
+	
+	return nthreads;
+}
+
+
+
 /** Creates the file select.ini
 *
 * @param HamiltonianName content of the file

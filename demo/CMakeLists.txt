@@ -3,16 +3,16 @@ INCLUDE(CheckFunctionExists)
 #add_subdirectory(../src/libmarqov)
 
 # configuration for the simple ising test case
-add_executable(mysimpleising mysimpleising.cpp)
-target_include_directories(mysimpleising PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(mysimpleising libMARQOV)
-set_target_properties(mysimpleising PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+add_executable(IsingSimple IsingSimple.cpp)
+target_include_directories(IsingSimple PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(IsingSimple libMARQOV)
+set_target_properties(IsingSimple PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
 # configuration for the Heisenberg test case with threading
-add_executable(mysimpleheisenbergthreaded mysimpleheisenbergthreaded.cpp)
-target_include_directories(mysimpleheisenbergthreaded PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(mysimpleheisenbergthreaded libMARQOV)
-set_target_properties(mysimpleheisenbergthreaded PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+add_executable(HeisenbergSimpleThreaded HeisenbergSimpleThreaded.cpp)
+target_include_directories(HeisenbergSimpleThreaded PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(HeisenbergSimpleThreaded libMARQOV)
+set_target_properties(HeisenbergSimpleThreaded PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
 add_executable(IsingRGG IsingRGG.cpp ../src/libmarqov/util/registry.cpp)
 target_include_directories(IsingRGG PUBLIC ${MYHDF5INCLUDES})

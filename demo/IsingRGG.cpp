@@ -19,24 +19,16 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include <cstdlib>
-#include <fstream>
-#include <algorithm>
 #include <tuple>
-#include <iomanip>
+#include <cstdlib>
 
-// MARQOV
 #include "../src/libmarqov/libmarqov.h"
 #include "../src/libmarqov/util/startup.h"
-
-// Lattices
+#include "../src/libmarqov/util/registry.h"
 #include "../src/lattice/random_geometric_graph.h"
-
-// Hamiltonians
 #include "../src/hamiltonian/Ising.h"
 
 using namespace MARQOV;
-
 
 int main(int argc, char* argv[])
 {
@@ -65,83 +57,89 @@ int main(int argc, char* argv[])
 	// -----
 	const auto ham = "IsingRGG";
 	const auto configfile = "IsingRGG.ini";
+
 	// We utilize a small helper library of ours, the registry which
 	// reads Windows .ini style files to read config files
 	RegistryDB registry;
 	check_registry_availability(registry, ham);
 	check_registry_file_exists(registry, ham);
 
-
 	// Parameters
     std::string outbasedir = registry.Get<std::string>(configfile, "IO", "outdir" );
-    tidyupoldsims(outbasedir);
-
-	auto nreplicas  = registry.Get<std::vector<int>>(configfile, ham, "rep" );
 	const auto nL   = registry.Get<std::vector<int>>(configfile, ham, "L" );
 	const auto dim  = registry.Get<int>(configfile, ham, "dim" );
+	auto nthreads = number_of_threads_per_node(registry, configfile);
+	makeDir(outbasedir);
     printInfoandcheckreplicaconfig(registry, ham);
 
 
-	// Number of threads
-	int nthreads = 0;
-	try 
-	{
-		nthreads = registry.template Get<int>(configfile, "General", "threads_per_node" );
-	}
-	catch (const Registry_Key_not_found_Exception&) 
-	{
-		std::cout<<"threads_per_node not set -> automatic"<<std::endl;
-	}
-
-
-	// Replicas
-	if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-
-	// Physical parameters
-	auto beta = registry.Get<std::vector<double> >(configfile, ham, "beta");
-	auto J    = registry.Get<std::vector<double> >(configfile, ham, "J");
-	auto hp = cart_prod(beta, J);
 
 	// Typedefs
+	// --------
 	typedef Ising<int> Hamiltonian;
 	typedef RandomGeometricGraph<Poissonian> Lattice;
 	typedef std::knuth_b RNG;
 
-    typedef std::tuple<std::tuple<int, int, double>, MARQOV::Config, typename decltype(hp)::value_type > ParameterType;
-	typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType, RNG>::MarqovScheduler SchedulerType;
 
+	// Hamltonian parameters
+	// ---------------------
+	auto beta = registry.Get<std::vector<double> >(configfile, ham, "beta");
+	auto J    = registry.Get<std::vector<double> >(configfile, ham, "J");
+	auto hp = cart_prod(beta, J);
 
-	// Lattice size loop
+	// Loop over lattice sizes
 	for (std::size_t j=0; j<nL.size(); j++)
 	{
-		// init scheduler
-		SchedulerType sched(1, nthreads);
-
-		// prepare output
+		// Prepare output
 		int L = nL[j];
 		std::cout << std::endl << "L = " << L << std::endl << std::endl;
 		std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
 		makeDir(outpath);
 
-		// Monte Carlo parameters
-		MARQOV::Config mp(outpath);
-		mp.setnmetro(5);
-		mp.setncluster(15);
-		mp.setwarmupsteps(150);
-		mp.setgameloopsteps(300);
 
-		// search radius for RGG
+		// Monte Carlo parameters
+		// ----------------------
+
+		// First, we import them from the registry
+		int nreplicas      = registry.Get<int>(configfile, ham, "rep" );
+		auto nclusteramp   = registry.Get<double>(configfile, "MC", "nclusteramp");
+		auto nclusterexp   = registry.Get<int>(configfile, "MC", "nclusterexp");
+		auto nmetro        = registry.Get<int>(configfile, "MC", "nmetro");
+		auto warmupsteps   = registry.Get<int>(configfile, "MC", "warmupsteps");
+		auto measuresteps  = registry.Get<int>(configfile, "MC", "measuresteps");
+
+		// Then, we store them into a MARQOV::Config object
+		MARQOV::Config mp(outpath);
+		mp.setnmetro(nmetro); // number of Metropolis sweeps per EMCS
+		mp.setncluster(int(nclusteramp*pow(L,nclusterexp))); // number of Wolff updates per EMCS
+		mp.setwarmupsteps(warmupsteps); // number of EMCS for warmup
+		mp.setgameloopsteps(measuresteps); // number of EMCS for production
+
+
+
+
+		// Schedule and Run
+		// ----------------
+
+		// Geometry parameter: search radius for RGG
 		double no_nn = 6;
 		double search_radius = std::cbrt((3.0/M_PI*no_nn*1.0/4.0))/double(L); // only for 3D
 
-		// form parameter triple with lattice parameters and replicate
-		auto params  = finalize_parameter(std::make_tuple(L, dim, search_radius), mp, hp);
-		auto rparams = replicator(params, nreplicas[j]);
 
-		// feed scheduler
-		for (auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
+		// Bundle the lattice, the MC parameters and the Hamiltonian parameters
+		auto paramsets  = finalize_parameter(std::make_tuple(L, dim, search_radius), mp, hp);
 
-		// run!
+		// Duplicate everything for the amount of replicas
+		auto rparamsets = replicator(paramsets, nreplicas);
+
+		// Instantiate the scheduler which waits for new threads
+		// (makeScheduler can figure out a lot from one set of parameters)
+		auto sched = makeScheduler<Hamiltonian, Lattice> (rparamsets[0], 1, nthreads);
+
+		// Submit parameter sets to the scheduler 
+		for (auto p: rparamsets) sched.createSimfromParameter(p, defaultfilter);
+
+		// Run!
 		sched.start();
 	}
 
