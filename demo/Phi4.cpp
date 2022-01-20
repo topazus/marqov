@@ -26,7 +26,7 @@
 #include "../src/libmarqov/util/startup.h"
 #include "../src/libmarqov/util/registry.h"
 #include "../src/libmarqov/util/regularlatticeloop.h"
-#include "../src/hamiltonian/Ising.h"
+#include "../src/hamiltonian/Phi4.h"
 
 using namespace MARQOV;
 
@@ -54,8 +54,8 @@ int main(int argc, char* argv[])
 
 	// -----------------------------------------
 
-	const auto ham = "Ising";
-	const auto configfile = "Ising.ini";
+	const auto ham = "Phi4";
+	const auto configfile = "Phi4.ini";
 
 	// Load config
 	RegistryDB registry;
@@ -68,12 +68,21 @@ int main(int argc, char* argv[])
 	makeDir(outbasedir);
 
 	// Parameters
-	auto beta = registry.Get<std::vector<double> >(configfile, ham, "beta");
-	auto J    = registry.Get<std::vector<double> >(configfile, ham, "J");
-	auto parameters = cart_prod(beta, J);
+	auto beta   = registry.Get<std::vector<double> >(configfile, ham, "beta");
+	auto lambda = registry.Get<std::vector<double> >(configfile, ham, "lambda");
+	auto mass   = registry.Get<std::vector<double> >(configfile, ham, "mass");
+
+	// we need "beta" as an explicit parameter in the Hamiltonian
+	// this requires some gymnastics when using "cart_prod"
+	std::vector<double> dummy = {0.0};
+	auto parameters = cart_prod(beta, dummy, lambda, mass);
+	for (std::size_t i=0; i<parameters.size(); i++)
+		std::get<1>(parameters[i]) = std::get<0>(parameters[i]);
+
 
 	// Execute the actual simulations
-	RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
+	RegularLatticeLoop<Phi4<double,double>>(registry, outbasedir, parameters, defaultfilter);
+
 
 #ifdef MPIMARQOV
     MPI_Finalize();

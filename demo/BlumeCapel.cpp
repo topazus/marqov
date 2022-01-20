@@ -26,7 +26,7 @@
 #include "../src/libmarqov/util/startup.h"
 #include "../src/libmarqov/util/registry.h"
 #include "../src/libmarqov/util/regularlatticeloop.h"
-#include "../src/hamiltonian/Ising.h"
+#include "../src/hamiltonian/BlumeCapel.h"
 
 using namespace MARQOV;
 
@@ -54,8 +54,8 @@ int main(int argc, char* argv[])
 
 	// -----------------------------------------
 
-	const auto ham = "Ising";
-	const auto configfile = "Ising.ini";
+	const auto ham = "BlumeCapel";
+	const auto configfile = "BlumeCapel.ini";
 
 	// Load config
 	RegistryDB registry;
@@ -70,10 +70,11 @@ int main(int argc, char* argv[])
 	// Parameters
 	auto beta = registry.Get<std::vector<double> >(configfile, ham, "beta");
 	auto J    = registry.Get<std::vector<double> >(configfile, ham, "J");
-	auto parameters = cart_prod(beta, J);
+	auto D    = registry.Get<std::vector<double> >(configfile, ham, "D");
+	auto parameters = cart_prod(beta, J, D);
 
 	// Execute the actual simulations
-	RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
+	RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
 
 #ifdef MPIMARQOV
     MPI_Finalize();

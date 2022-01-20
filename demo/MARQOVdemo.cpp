@@ -164,91 +164,6 @@ void scheduleAshkinTeller(RegistryDB& registry)
 
 
 
-void scheduleHeisenberg(RegistryDB& registry)
-{
-    const std::string fn{"Heisenberg.ini"};
-    std::string outbasedir;
-    try
-    {
-        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
-    }
-    catch(Registry_cfgfile_not_found_Exception& e) 
-    {
-        std::cout<<"[MARQOV::MARQOVdemo] Unable to find Heisenberg config! Generating new one in ./config/"<<fn<<std::endl;
-        ofstream cfg("./config/" + fn);
-        cfg<<"[Heisenberg]\n"<<"L = 8,10,12\n"<<"rep = 4\n"<<"dim = 3\n"<<"beta = 0.67,0.68\n"<<"J = -1.0\n\n";
-        createcfgfooter(cfg, 2, 0.5, 1, 500, 5000);
-        registry.init("./config");
-        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
-    }
-    tidyupoldsims(outbasedir);
-    printInfoandcheckreplicaconfig(registry, "Heisenberg");
-    auto beta = registry.Get<std::vector<double> >(fn, "Heisenberg", "beta");
-    auto J    = registry.Get<std::vector<double> >(fn, "Heisenberg", "J");
-    auto parameters = cart_prod(beta, J);
-    
-    RegularLatticeLoop<Heisenberg<double, double> >(registry, outbasedir, parameters, defaultfilter);
-}
-
-void schedulePhi4(RegistryDB& registry)
-{
-    const std::string fn{"Phi4.ini"};
-    std::string outbasedir;
-    try
-    {
-        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
-    }
-    catch(Registry_cfgfile_not_found_Exception& e) 
-    {
-        std::cout<<"[MARQOV::MARQOVdemo] Unable to find Phi4 config! Generating new one in ./config/"<<fn<<std::endl;
-        ofstream cfg("./config/" + fn);
-        cfg<<"[Phi4]\n"<<"L = 6,8,12\n"<<"rep = 10\n"<<"dim = 3\n"<<"beta = 0.681, 0.684, 0.687\n"<<"lambda = 4.5\n"<<"mass = 1.0\n\n";
-        createcfgfooter(cfg, 5, 0.5, 1, 20, 100);
-        registry.init("./config");
-        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
-    }
-    tidyupoldsims(outbasedir);
-    printInfoandcheckreplicaconfig(registry, "Phi4");
-    auto beta   = registry.Get<std::vector<double> >(fn, "Phi4", "beta");
-    auto lambda = registry.Get<std::vector<double> >(fn, "Phi4", "lambda");
-    auto mass   = registry.Get<std::vector<double> >(fn, "Phi4", "mass");
-		
-		// we need "beta" as an explicit parameter in the Hamiltonian
-		// this requires some gymnastics ...
-		std::vector<double> dummy = {0.0};
-		auto parameters = cart_prod(beta, dummy, lambda, mass);
-		for (std::size_t i=0; i<parameters.size(); i++) 
-			std::get<1>(parameters[i]) = std::get<0>(parameters[i]);
-		
-		RegularLatticeLoop<Phi4<double, double> >(registry, outbasedir, parameters, defaultfilter);
-}
-
-void scheduleBlumeCapel(RegistryDB& registry)
-{
-    const std::string fn{"BlumeCapel.ini"};
-    std::string outbasedir;
-    try
-    {
-        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
-    }
-    catch(Registry_cfgfile_not_found_Exception& e) 
-    {
-        std::cout<<"[MARQOV::MARQOVdemo] Unable to find BlumeCapel config! Generating new one in ./config/"<<fn<<std::endl;
-        ofstream cfg("./config/" + fn);
-        cfg<<"[BlumeCapel]\n"<<"L = 8,12\n"<<"rep = 2\n"<<"dim = 3\n"<<"beta = 0.32,0.33\n"<<"J = -1\n"<<"D = 0.655\n\n";
-        createcfgfooter(cfg, 3, 0.5, 1, 100, 1000);
-        registry.init("./config");
-        outbasedir = registry.Get<std::string>(fn, "IO", "outdir" );
-    }
-    tidyupoldsims(outbasedir);
-    printInfoandcheckreplicaconfig(registry, "BlumeCapel");
-    auto beta = registry.Get<std::vector<double> >(fn, "BlumeCapel", "beta");
-    auto J    = registry.Get<std::vector<double> >(fn, "BlumeCapel", "J");
-    auto D    = registry.Get<std::vector<double> >(fn, "BlumeCapel", "D");
-    auto parameters = cart_prod(beta, J, D);
-    
-    RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
-}
 
 void scheduleBlumeEmeryGriffiths(RegistryDB& registry)
 {
@@ -499,15 +414,6 @@ void selectsim(RegistryDB& registry)
 
 	else if (ham == "AshkinTeller")
         scheduleAshkinTeller(registry);
-
-	else if (ham == "Heisenberg")
-        scheduleHeisenberg(registry);
-
-	else if (ham == "Phi4")
-        schedulePhi4(registry);
-
-	else if (ham == "BlumeCapel")
-        scheduleBlumeCapel(registry);
 
 	else if (ham == "BlumeEmeryGriffiths")
         scheduleBlumeEmeryGriffiths(registry);

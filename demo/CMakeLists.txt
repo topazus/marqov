@@ -25,6 +25,23 @@ target_link_libraries(Ising libMARQOV)
 set_target_properties(Ising PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 # configuration of the main parts.
 
+add_executable(Heisenberg Heisenberg.cpp ../src/libmarqov/util/registry.cpp)
+target_include_directories(Heisenberg PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(Heisenberg libMARQOV)
+set_target_properties(Heisenberg PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+
+
+add_executable(Phi4 Phi4.cpp ../src/libmarqov/util/registry.cpp)
+target_include_directories(Phi4 PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(Phi4 libMARQOV)
+set_target_properties(Phi4 PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+
+
+add_executable(BlumeCapel BlumeCapel.cpp ../src/libmarqov/util/registry.cpp)
+target_include_directories(BlumeCapel PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(BlumeCapel libMARQOV)
+set_target_properties(BlumeCapel PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+
 SET(MARQOVTARGETS MARQOVdemo mpiMARQOVdemo)
 
 foreach(target ${MARQOVTARGETS})

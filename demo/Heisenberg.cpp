@@ -26,7 +26,7 @@
 #include "../src/libmarqov/util/startup.h"
 #include "../src/libmarqov/util/registry.h"
 #include "../src/libmarqov/util/regularlatticeloop.h"
-#include "../src/hamiltonian/Ising.h"
+#include "../src/hamiltonian/Heisenberg.h"
 
 using namespace MARQOV;
 
@@ -54,8 +54,8 @@ int main(int argc, char* argv[])
 
 	// -----------------------------------------
 
-	const auto ham = "Ising";
-	const auto configfile = "Ising.ini";
+	const auto ham = "Heisenberg";
+	const auto configfile = "Heisenberg.ini";
 
 	// Load config
 	RegistryDB registry;
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 	auto parameters = cart_prod(beta, J);
 
 	// Execute the actual simulations
-	RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
+	RegularLatticeLoop<Heisenberg<double,double>>(registry, outbasedir, parameters, defaultfilter);
 
 #ifdef MPIMARQOV
     MPI_Finalize();
