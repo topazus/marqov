@@ -180,7 +180,7 @@ marqovtest_Buster_pgi:
       - cmake -E make_directory build
       - cd build
       - cmake -E env CXX_FLAGS="-O -DEIGEN_DONT_VECTORIZE" cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="pgc++" ..
-      - cmake --build . --target all --config Release
+      - cmake --build . --target all --config Release -- CXX_FLAGS="-O -DEIGEN_DONT_VECTORIZE"
       - ctest -O log.txt
       - cat log.txt | grep "tests passed" | cut -d " " -f 1
 
