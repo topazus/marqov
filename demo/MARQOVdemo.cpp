@@ -58,6 +58,7 @@ using std::ofstream;
 using namespace MARQOV;
 
 
+/*
 void scheduleIsing(RegistryDB& registry)
 {
     std::string ham = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
@@ -82,6 +83,8 @@ void scheduleIsing(RegistryDB& registry)
     auto parameters = cart_prod(beta, J);
     RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
 }
+
+*/
 
 
 
@@ -488,10 +491,10 @@ void selectsim(RegistryDB& registry)
 
 	// ----------------- select simulation ------------------
 
-	if (ham == "Ising")
-        scheduleIsing(registry);
+//	if (ham == "Ising")
+//        scheduleIsing(registry);
 
-	else if (startswith(ham, "Potts"))
+	if (startswith(ham, "Potts"))
         schedulePotts(registry);
 
 	else if (ham == "AshkinTeller")

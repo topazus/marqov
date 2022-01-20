@@ -19,6 +19,10 @@ target_include_directories(IsingRGG PUBLIC ${MYHDF5INCLUDES})
 target_link_libraries(IsingRGG libMARQOV)
 set_target_properties(IsingRGG PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
+add_executable(Ising Ising.cpp ../src/libmarqov/util/registry.cpp)
+target_include_directories(Ising PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(Ising libMARQOV)
+set_target_properties(Ising PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 # configuration of the main parts.
 
 SET(MARQOVTARGETS MARQOVdemo mpiMARQOVdemo)
