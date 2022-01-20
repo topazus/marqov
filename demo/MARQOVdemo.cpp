@@ -252,83 +252,6 @@ void scheduleXXZAntiferroSingleAniso(RegistryDB& registry)
 
 
 
-void scheduleBlumeCapelBiPartite(RegistryDB& registry)
-{
-    // Parameters
-    const auto ham = registry.Get<std::string>("select.ini", "General", "Hamiltonian" );
-    std::string outbasedir = registry.Get<std::string>(ham + ".ini", "IO", "outdir" );
-    tidyupoldsims(outbasedir);
-		auto nreplicas  = registry.Get<std::vector<int>>(ham+".ini", ham, "rep" );
-		const auto nL   = registry.Get<std::vector<int>>(ham+".ini", ham, "L" );
-		const auto dim  = registry.Get<int>(ham+".ini", ham, "dim" );
-        printInfoandcheckreplicaconfig(registry, ham);
-
-		// Number of threads
-		int nthreads = 0;
-		try 
-		{
-			nthreads = registry.template Get<int>(ham+".ini", "General", "threads_per_node" );
-		}
-		catch (const Registry_Key_not_found_Exception&) 
-		{
-			std::cout<<"threads_per_node not set -> automatic"<<std::endl;
-		}
-
-
-		// Replicas
-		if (nreplicas.size() == 1) { for (std::size_t i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }
-
-
-		// import parameters
-		auto beta = registry.Get<std::vector<double> >(ham+".ini", "BlumeCapelBipartite", "beta");
-		auto J    = registry.Get<std::vector<double> >(ham+".ini", "BlumeCapelBipartite", "J");
-		auto DA   = registry.Get<std::vector<double> >(ham+".ini", "BlumeCapelBipartite", "DA");
-		auto DB   = registry.Get<std::vector<double> >(ham+".ini", "BlumeCapelBipartite", "DB");
-		auto hp = cart_prod(beta, J, DA, DB);
-
-		typedef BlumeCapelBipartite<int> Hamiltonian;
-		typedef SimpleBipartite Lattice;
-
-        typedef typename std::tuple<SimpleBipartite&, MARQOV::Config, std::tuple<double, double, double, double> > ParameterType;
-		typedef typename GetSchedulerType<Hamiltonian, Lattice, ParameterType>::MarqovScheduler SchedulerType;
-
-		// Prepare Geometry
-		std::vector<SimpleBipartite> latts;
-		for (std::size_t j=0; j<nL.size(); j++) latts.emplace_back(nL[j], dim);
-	    
-	
-		// Init Scheduler
-		SchedulerType sched(1, nthreads);
-	    
-	
-		// Lattice size loop
-		for (std::size_t j=0; j<nL.size(); j++)
-		{
-			// prepare
-			int L = nL[j];
-			cout << endl << "L = " << L << endl << endl;
-	
-			std::string outpath = outbasedir+"/"+std::to_string(L)+"/";
-	
-			MARQOV::Config mp(outpath);
-			mp.setnmetro(10);
-			mp.setncluster(int(L/2));
-			mp.setwarmupsteps(200);
-			mp.setgameloopsteps(500);
-			
-			makeDir(mp.outpath);
-			
-			// set up and execute        
-			Lattice& latt = latts[j];
-			auto params = finalize_parameter(latt, mp, hp);
-            auto rparams = replicator(params, nreplicas[j]);
-	
-			// feed the scheduler
-			for(auto p: rparams) sched.createSimfromParameter(p, defaultfilter);
-		}
-		sched.start();
-}
-
 /*
 void scheduleEdwardsAndersonIsing(RegistryDB& registry)
 {
@@ -406,9 +329,6 @@ void selectsim(RegistryDB& registry)
 
 	// ----------------- select simulation ------------------
 
-//	if (ham == "Ising")
-//        scheduleIsing(registry);
-
 	if (startswith(ham, "Potts"))
         schedulePotts(registry);
 
@@ -426,9 +346,6 @@ void selectsim(RegistryDB& registry)
 
 //	else if (startswith(ham, "EdwardsAnderson-Ising"))
 //        scheduleEdwardsAndersonIsing(registry);
-
-	else if (ham == "BlumeCapelBipartite")
-        scheduleBlumeCapelBiPartite(registry);
 }
 
 

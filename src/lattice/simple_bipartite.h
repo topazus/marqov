@@ -15,7 +15,7 @@ class SimpleBipartite
 
 		SimpleBipartite(int len, int dim) : lattice(len,dim), len(len), dim(dim), npoints(pow(len,dim))
 		{
-			if (len%2 != 0) cout << "ERROR: linear lattice size must be even!" << endl;
+			if (len%2 != 0) std::cout << "ERROR: linear lattice size must be even!" << std::endl;
 		}
 
 

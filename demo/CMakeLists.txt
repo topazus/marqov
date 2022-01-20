@@ -42,6 +42,11 @@ target_include_directories(BlumeCapel PUBLIC ${MYHDF5INCLUDES})
 target_link_libraries(BlumeCapel libMARQOV)
 set_target_properties(BlumeCapel PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
+add_executable(BlumeCapelBipartiteLattice BlumeCapelBipartiteLattice.cpp ../src/libmarqov/util/registry.cpp)
+target_include_directories(BlumeCapelBipartiteLattice PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(BlumeCapelBipartiteLattice libMARQOV)
+set_target_properties(BlumeCapelBipartiteLattice PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+
 SET(MARQOVTARGETS MARQOVdemo mpiMARQOVdemo)
 
 foreach(target ${MARQOVTARGETS})

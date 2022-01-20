@@ -23,7 +23,7 @@
 #include <string>
 #include <functional>
 #include <vector>
-#include "util/hamparts.h"
+#include "util/termcollection.h"
 
 
 // ------------------------------ OBSERVABLES ---------------------------
