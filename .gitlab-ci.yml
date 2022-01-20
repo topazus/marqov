@@ -43,6 +43,7 @@ stages:
     - cmake -E make_directory build
     - cd build
     - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE ..
+    - cd testsuite
     - cmake --build . --target all --config Release
     - ctest -O log.txt
     - cat log.txt | grep "tests passed" | cut -d " " -f 1
@@ -162,6 +163,7 @@ marqovtest_Bullseye_clang:
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang++ ..
+      - cd testsuite
       - cmake --build . --target all --config Release
       - ctest --version
       - ctest -O log.txt --output-junit marqov-junit.xml
@@ -179,7 +181,8 @@ marqovtest_Buster_pgi:
       - apt-get update && apt-get install -y libhdf5-dev libeigen3-dev
       - cmake -E make_directory build
       - cd build
-      - cmake -E env CXX_FLAGS="-O -DEIGEN_DONT_VECTORIZE" cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="pgc++" ..
+      - cmake -E env CXX_FLAGS="-DEIGEN_DONT_VECTORIZE" cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="pgc++" ..
+      - cd testsuite
       - cmake --build . --target all --config Release -- CXX_FLAGS="-O -DEIGEN_DONT_VECTORIZE"
       - ctest -O log.txt
       - cat log.txt | grep "tests passed" | cut -d " " -f 1
