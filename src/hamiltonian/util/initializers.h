@@ -1,6 +1,6 @@
 /* This file is part of MARQOV:
  * A modern framework for classical spin models on general topologies
- * Copyright (C) 2021, The MARQOV Project
+ * Copyright (C) 2021-2022, The MARQOV Project
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,10 @@
 #include <type_traits>
 #include "randomdir.h"
 
-// ------------------------------ INITIALIZER ---------------------------
+/***********************************************************************
+ * @file initializers.h
+ * This file contains two possible default initializers.
+ **********************************************************************/
 
 template <class SV, class Enable = void> class SVInitializer;
 
