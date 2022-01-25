@@ -32,8 +32,8 @@
 class Magnetization
 {
 	public:
-		std::string name; ///< The name of the observable
-        std::string desc; ///< A helpful description that will be used in the HDF5 output files.
+	std::string name{"m"}; ///< The name of the observable
+        std::string desc{"magnetization"}; ///< A helpful description that will be used in the HDF5 output files.
 
         /** Construct a magnetization object
          * 
@@ -42,7 +42,7 @@ class Magnetization
          */
 		Magnetization(std::string name, std::string description) : name(name), desc(description) {}
 		Magnetization(std::string name) : name(name), desc("magnetization") {}
-		Magnetization() : name("m"), desc("magnetization") {}
+		Magnetization() = default;
 
 		template <class StateSpace, class Grid>
 		double measure(const StateSpace& statespace, const Grid& grid)
@@ -174,10 +174,11 @@ template <class Hamiltonian>
 class InteractionEnergy
 {
 	private:
-		Hamiltonian& ham;
+		const Hamiltonian& ham;
 
 	public:
-		InteractionEnergy (Hamiltonian& ham) : ham(ham), name("eint")  {};
+		InteractionEnergy (const Hamiltonian& ham) : ham(ham), name("eint")  {};
+		InteractionEnergy () = delete;
 
 		std::string name;
 
@@ -237,10 +238,11 @@ template <class Hamiltonian>
 class SelfEnergy
 {
 	private:
-		Hamiltonian& ham;
+		const Hamiltonian& ham;
 
 	public:
-		SelfEnergy (Hamiltonian& ham) : ham(ham), name("eself")  {};
+		SelfEnergy (const Hamiltonian& ham) : ham(ham), name("eself")  {};
+		SelfEnergy () = delete;
 
 		std::string name;
 
@@ -287,10 +289,11 @@ template <class Hamiltonian>
 class FlexEnergy
 {
 	private:
-		Hamiltonian& ham;
+		const Hamiltonian& ham;
 
 	public:
-		FlexEnergy (Hamiltonian& ham) : ham(ham), name("eflex")  {};
+		FlexEnergy (const Hamiltonian& ham) : ham(ham), name("eflex")  {};
+		FlexEnergy () = delete;
 
 		std::string name;
 
@@ -329,13 +332,16 @@ template <class Hamiltonian>
 class Energy
 {
 	private:
-		Hamiltonian& ham;
+		const Hamiltonian& ham;
 		InteractionEnergy<Hamiltonian> eint;
 		SelfEnergy<Hamiltonian> eself;
 		FlexEnergy<Hamiltonian> eflex;
 
 	public:
-		Energy (Hamiltonian& ham) : ham(ham), eint(ham), eself(ham), eflex(ham), name("e") {}
+		Energy (const Hamiltonian& ham) : ham(ham), eint(ham), eself(ham), eflex(ham), name("e") {}
+		Energy() = delete;
+		Energy(const Energy&) = default;
+		~Energy() = default;
 
 		std::string name;
 		template <class StateSpace, class Grid>

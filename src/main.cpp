@@ -74,10 +74,10 @@ class HeisenbergHamiltonian
 
 		// Observables
 		Magnetization  obs_m;
-		Energy<HeisenbergHamiltonian>  obs_e;
+		Energy<HeisenbergHamiltonian>  obs_e{*this};
 
 		// Group observables
-        decltype(std::make_tuple(obs_m, obs_e)) observables = {std::make_tuple(obs_m, obs_e)};
+               std::pair<Magnetization, Energy<HeisenbergHamiltonian> > observables{obs_m, obs_e};
 };
 
 

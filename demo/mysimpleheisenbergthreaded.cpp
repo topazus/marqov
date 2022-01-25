@@ -47,8 +47,8 @@ class MySimpleHeisenberg
 
 		// Observables
 		Magnetization  obs_m;
-		Energy<MySimpleHeisenberg>  obs_e;
-        decltype(std::make_tuple(obs_m, obs_e)) observables = {std::make_tuple(obs_m, obs_e)};
+		Energy<MySimpleHeisenberg>  obs_e{*this};
+                std::pair<Magnetization, Energy<MySimpleHeisenberg> > observables{obs_m, obs_e};
 };
 
 namespace MARQOV
