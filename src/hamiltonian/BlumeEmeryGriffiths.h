@@ -28,19 +28,18 @@
 
 // ------------------------------ HAMILTONIAN ---------------------------
 
-template <class StateSpace, class StateVector>
-class BiquadraticExchangeInteraction : public FlexTerm<StateSpace, StateVector>
+template <class StateVector>
+class BiquadraticExchangeInteraction
 {
 	public:
+		double k;///< Scalar Prefactor
+		BiquadraticExchangeInteraction(double k) : k(k) {}
 
-		BiquadraticExchangeInteraction(double k) : FlexTerm<StateSpace, StateVector>(k) {}
-		~BiquadraticExchangeInteraction() {};
-
-
+		template <class StateSpace>
 		double diff (const int rsite,
 					const StateVector& svold, 
 					const StateVector& svnew, 
-					std::vector<int>& nbrs, 
+					const decltype(std::declval<typename StateSpace::Lattice>().nbrs(0,0))& nbrs, 
 					StateSpace& s)
 		{
 			double neighbourhood = 0;
@@ -57,8 +56,8 @@ class BiquadraticExchangeInteraction : public FlexTerm<StateSpace, StateVector>
 		}
 
 
-		template <class Grid>
-		double energy(const StateSpace& statespace, const Grid& grid, int c)
+		template <class StateSpace>
+		double energy(const StateSpace& statespace, const typename StateSpace::Lattice& grid, int c)
 		{
 			const int N = grid.size();
 			double retval = 0;
@@ -85,9 +84,9 @@ class BlumeEmeryGriffiths
 {
 	public:
 
-		//  ----  Parameters  ----
+		//  ----  Parameters and Definitions----
 
-		double J, D, K;
+		//double J, D, K; // not necessary
 		static constexpr int SymD = 1;
 		const std::string name;
 		typedef std::array<SpinType, SymD> StateVector;
@@ -95,36 +94,24 @@ class BlumeEmeryGriffiths
 
 
 		//  ----  Hamiltonian terms  ----
-
 		
-		BiquadraticExchangeInteraction<MARQOV::Space<StateVector, RegularHypercubic>, StateVector> biquadratic_exchange_int;
+		Standard_Interaction<StateVector> standard_int;
+		Onsite_Quadratic<StateVector> onsite_int;
+		BiquadraticExchangeInteraction<StateVector> biquadratic_exchange_int;
 
-		std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
-		std::array<Onsite_Quadratic<StateVector>*, 1>     onsite       = {new Onsite_Quadratic<StateVector>(D)};
-		std::vector<FlexTerm<MARQOV::Space<StateVector, RegularHypercubic>, StateVector>*>  multisite ;
+		std::array<Standard_Interaction<StateVector>*, 1>  interactions {&standard_int};
+		std::array<Onsite_Quadratic<StateVector>*, 1>      onsite {&onsite_int};
+		std::array<decltype(biquadratic_exchange_int)*, 1> multisite {&biquadratic_exchange_int};
 	
-		BlumeEmeryGriffiths(double J, double D, double K) : J(J), 
-															D(D), 
-															K(K), 
+		BlumeEmeryGriffiths(double J, double D, double K) : //J(J), D(D), K(K), // not necessary
 															name("BlumeCapel"), 
 															observables(obs_m),
-															biquadratic_exchange_int(K)
-							{
-								multisite.push_back(&biquadratic_exchange_int);
-#ifdef __PGI
-            	//The following is necessary to make PGI-19.10 happy
-        MARQOV::Space<StateVector, RegularHypercubic> dummy(10);
-        StateVector dummy1;
-        std::vector<int> temp; 
-        biquadratic_exchange_int.diff(1, dummy1, dummy1, temp, dummy);
-#endif
-							}
+															standard_int(J),
+															onsite_int(K),
+															biquadratic_exchange_int(K) {}
+							
 
-		~BlumeEmeryGriffiths()
-		{
-			delete interactions[0];
-			delete onsite[0];
-		}
+
 
 		//  ----  Observables ----
 

@@ -949,6 +949,17 @@ class Core : public RefType<Grid>
             hdf5lock.unlock();
         }
 
+        template<size_t N = 0, typename A, typename B, typename S, typename G>
+        inline void marqov_measure(std::pair<A, B>& t, S& s, G&& grid)
+        {//This specialization became necessray due to a bug in gcc-10.2
+            auto retval0 = t.first.template measure<StateSpace, G>(s, grid);
+            auto retval1 = t.second.template measure<StateSpace, G>(s, grid);
+            hdf5lock.lock();
+            std::get<1>(obscache)<<retval1;
+            std::get<0>(obscache)<<retval0;
+            hdf5lock.unlock();
+        }
+
         // ------------------ update --------------------
 
         /** The elementary Monte Carlo step.
@@ -973,6 +984,7 @@ class Core : public RefType<Grid>
                 {
                     avgclustersize += elementaryMCstep();
                     mrqvt.switch_clock("measure");
+
                     marqov_measure(obs, statespace, this->grid);
                 }
             }
