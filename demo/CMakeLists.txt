@@ -20,26 +20,15 @@ find_package(PCL 1.2 COMPONENTS common kdtree)
 if(PCL_FOUND)
 	add_executable(IsingRGG IsingRGG.cpp ../src/libmarqov/util/registry.cpp)
 	add_executable(IsingRGG.mpi IsingRGG.cpp ../src/libmarqov/util/registry.cpp)
-	SET(DEMOS "${DEMOS};IsingRGG")
+	SET(DEMOTARGETS "${DEMOTARGETS};IsingRGG")
 	SET(DEMOTARGETSMPI "${DEMOTARGETSMPI};IsingRGG.mpi")
-	##link_directories(${PCL_LIBRARY_DIRS}) 
-	##add_definitions(${PCL_DEFINITIONS})
-	##include_directories(${PCL_INCLUDE_DIRS})
 
 	target_link_libraries(IsingRGG ${PCL_LIBRARIES})
+        target_compile_definitions(IsingRGG PUBLIC ${PCL_DEFINITIONS})
+        target_include_directories(IsingRGG PUBLIC ${PCL_INCLUDE_DIRS})
 	target_link_libraries(IsingRGG.mpi ${PCL_LIBRARIES})
-#[[
-    target_link_libraries(IsingRGG libMARQOV)
-    target_link_libraries(IsingRGG.mpi libMARQOV)
-
-    set_target_properties(IsingRGG PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
-	set_target_properties(IsingRGG.mpi PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
-
-	target_include_directories(IsingRGG PUBLIC ${MYHDF5INCLUDES})
-	target_include_directories(IsingRGG.mpi PUBLIC ${MYHDF5INCLUDES})
-
-    set_target_properties(IsingRGG PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DHAVE_CONFIG_H -DGIT_SHA1=\"${GIT_SHA1}\" -DGIT_BRANCH=\"${GIT_BRANCH}\"" )
-    set_target_properties(IsingRGG.mpi PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DHAVE_CONFIG_H -DGIT_SHA1=\"${GIT_SHA1}\" -DGIT_BRANCH=\"${GIT_BRANCH}\"" )]]
+        target_compile_definitions(IsingRGG.mpi PUBLIC ${PCL_DEFINITIONS})
+        target_include_directories(IsingRGG.mpi PUBLIC ${PCL_INCLUDE_DIRS})
 endif(PCL_FOUND)
 
 # some models are MPI parallelized
