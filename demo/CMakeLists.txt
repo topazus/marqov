@@ -28,14 +28,13 @@ add_executable(AshkinTellerThreeColor.mpi AshkinTellerThreeColor.cpp ../src/libm
 add_executable(BlumeEmeryGriffiths BlumeEmeryGriffiths.cpp ../src/libmarqov/util/registry.cpp)
 add_executable(BlumeEmeryGriffiths.mpi BlumeEmeryGriffiths.cpp ../src/libmarqov/util/registry.cpp)
 
-add_executable(IsingRGG IsingRGG.cpp ../src/libmarqov/util/registry.cpp)
-add_executable(IsingRGG.mpi IsingRGG.cpp ../src/libmarqov/util/registry.cpp)
 
-SET(DEMOTARGETS IsingSimple HeisenbergSimpleThreaded Ising Heisenberg Phi4 BlumeCapel XXZAntiferroSingleAniso BlumeCapelBipartiteLattice AshkinTellerThreeColor BlumeEmeryGriffiths IsingRGG Ising.mpi Heisenberg.mpi Phi4.mpi BlumeCapel.mpi XXZAntiferroSingleAniso.mpi BlumeCapelBipartiteLattice.mpi AshkinTellerThreeColor.mpi BlumeEmeryGriffiths.mpi IsingRGG.mpi)
+SET(DEMOTARGETS IsingSimple HeisenbergSimpleThreaded Ising Heisenberg Phi4 BlumeCapel XXZAntiferroSingleAniso BlumeCapelBipartiteLattice AshkinTellerThreeColor BlumeEmeryGriffiths)
 
-SET(DEMOTARGETSMPI Ising.mpi Heisenberg.mpi Phi4.mpi BlumeCapel.mpi XXZAntiferroSingleAniso.mpi BlumeCapelBipartiteLattice.mpi AshkinTellerThreeColor.mpi BlumeEmeryGriffiths.mpi IsingRGG.mpi)
+SET(DEMOTARGETSMPI Ising.mpi Heisenberg.mpi Phi4.mpi BlumeCapel.mpi XXZAntiferroSingleAniso.mpi BlumeCapelBipartiteLattice.mpi AshkinTellerThreeColor.mpi BlumeEmeryGriffiths.mpi)
 
 
+# link non-MPI targets
 foreach(target ${DEMOTARGETS})
     target_link_libraries(${target} libMARQOV)
     set_target_properties(${target} PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
@@ -43,14 +42,40 @@ foreach(target ${DEMOTARGETS})
     set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DHAVE_CONFIG_H -DGIT_SHA1=\"${GIT_SHA1}\" -DGIT_BRANCH=\"${GIT_BRANCH}\"" )
 endforeach(target)
 
+# link MPI targets
+foreach(target ${DEMOTARGETSMPI})
+    target_link_libraries(${target} libMARQOV)
+    set_target_properties(${target} PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+	target_include_directories(${target} PUBLIC ${MYHDF5INCLUDES})
+    set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DHAVE_CONFIG_H -DGIT_SHA1=\"${GIT_SHA1}\" -DGIT_BRANCH=\"${GIT_BRANCH}\"" )
+endforeach(target)
 
-# some models require PCL library
-find_package(PCL 1.2 COMPONENTS common kdtree REQUIRED)
-link_directories(${PCL_LIBRARY_DIRS}) 
-add_definitions(${PCL_DEFINITIONS})
-include_directories(${PCL_INCLUDE_DIRS})
-target_link_libraries(IsingRGG ${PCL_LIBRARIES})
-target_link_libraries(IsingRGG.mpi ${PCL_LIBRARIES})
+
+# compile IsingRGG demo only if PCL library is installed
+find_package(PCL 1.2 COMPONENTS common kdtree)
+if(PCL_FOUND)
+	add_executable(IsingRGG IsingRGG.cpp ../src/libmarqov/util/registry.cpp)
+	add_executable(IsingRGG.mpi IsingRGG.cpp ../src/libmarqov/util/registry.cpp)
+
+	link_directories(${PCL_LIBRARY_DIRS}) 
+	add_definitions(${PCL_DEFINITIONS})
+	include_directories(${PCL_INCLUDE_DIRS})
+
+	target_link_libraries(IsingRGG ${PCL_LIBRARIES})
+	target_link_libraries(IsingRGG.mpi ${PCL_LIBRARIES})
+
+    target_link_libraries(IsingRGG libMARQOV)
+    target_link_libraries(IsingRGG.mpi libMARQOV)
+
+    set_target_properties(IsingRGG PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+	set_target_properties(IsingRGG.mpi PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+
+	target_include_directories(IsingRGG PUBLIC ${MYHDF5INCLUDES})
+	target_include_directories(IsingRGG.mpi PUBLIC ${MYHDF5INCLUDES})
+
+    set_target_properties(IsingRGG PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DHAVE_CONFIG_H -DGIT_SHA1=\"${GIT_SHA1}\" -DGIT_BRANCH=\"${GIT_BRANCH}\"" )
+    set_target_properties(IsingRGG.mpi PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DHAVE_CONFIG_H -DGIT_SHA1=\"${GIT_SHA1}\" -DGIT_BRANCH=\"${GIT_BRANCH}\"" )
+endif(PCL_FOUND)
 
 
 # some models are MPI parallelized
