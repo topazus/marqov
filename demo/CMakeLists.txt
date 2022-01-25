@@ -1,112 +1,77 @@
 INCLUDE(CheckFunctionExists)
 
-#add_subdirectory(../src/libmarqov)
-
-# configuration for the simple ising test case
 add_executable(IsingSimple IsingSimple.cpp)
-target_include_directories(IsingSimple PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(IsingSimple libMARQOV)
-set_target_properties(IsingSimple PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
-# configuration for the Heisenberg test case with threading
 add_executable(HeisenbergSimpleThreaded HeisenbergSimpleThreaded.cpp)
-target_include_directories(HeisenbergSimpleThreaded PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(HeisenbergSimpleThreaded libMARQOV)
-set_target_properties(HeisenbergSimpleThreaded PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
-
-add_executable(IsingRGG IsingRGG.cpp ../src/libmarqov/util/registry.cpp)
-target_include_directories(IsingRGG PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(IsingRGG libMARQOV)
-set_target_properties(IsingRGG PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
 add_executable(Ising Ising.cpp ../src/libmarqov/util/registry.cpp)
-target_include_directories(Ising PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(Ising libMARQOV)
-set_target_properties(Ising PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
-# configuration of the main parts.
+add_executable(Ising.mpi Ising.cpp ../src/libmarqov/util/registry.cpp)
 
 add_executable(Heisenberg Heisenberg.cpp ../src/libmarqov/util/registry.cpp)
-target_include_directories(Heisenberg PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(Heisenberg libMARQOV)
-set_target_properties(Heisenberg PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
-
-add_executable(BlumeEmeryGriffiths BlumeEmeryGriffiths.cpp ../src/libmarqov/util/registry.cpp)
-target_include_directories(BlumeEmeryGriffiths PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(BlumeEmeryGriffiths libMARQOV)
-set_target_properties(BlumeEmeryGriffiths PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
-
-add_executable(Potts Potts.cpp ../src/libmarqov/util/registry.cpp)
-target_include_directories(Potts PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(Potts libMARQOV)
-set_target_properties(Potts PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+add_executable(Heisenberg.mpi Heisenberg.cpp ../src/libmarqov/util/registry.cpp)
 
 add_executable(Phi4 Phi4.cpp ../src/libmarqov/util/registry.cpp)
-target_include_directories(Phi4 PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(Phi4 libMARQOV)
-set_target_properties(Phi4 PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
-
+add_executable(Phi4.mpi Phi4.cpp ../src/libmarqov/util/registry.cpp)
 
 add_executable(BlumeCapel BlumeCapel.cpp ../src/libmarqov/util/registry.cpp)
-target_include_directories(BlumeCapel PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(BlumeCapel libMARQOV)
-set_target_properties(BlumeCapel PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+add_executable(BlumeCapel.mpi BlumeCapel.cpp ../src/libmarqov/util/registry.cpp)
 
 add_executable(XXZAntiferroSingleAniso XXZAntiferroSingleAniso.cpp ../src/libmarqov/util/registry.cpp)
-target_include_directories(XXZAntiferroSingleAniso PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(XXZAntiferroSingleAniso libMARQOV)
-set_target_properties(XXZAntiferroSingleAniso PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
-
-add_executable(AshkinTellerThreeColor AshkinTellerThreeColor.cpp ../src/libmarqov/util/registry.cpp)
-target_include_directories(AshkinTellerThreeColor PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(AshkinTellerThreeColor libMARQOV)
-set_target_properties(AshkinTellerThreeColor PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+add_executable(XXZAntiferroSingleAniso.mpi XXZAntiferroSingleAniso.cpp ../src/libmarqov/util/registry.cpp)
 
 add_executable(BlumeCapelBipartiteLattice BlumeCapelBipartiteLattice.cpp ../src/libmarqov/util/registry.cpp)
-target_include_directories(BlumeCapelBipartiteLattice PUBLIC ${MYHDF5INCLUDES})
-target_link_libraries(BlumeCapelBipartiteLattice libMARQOV)
-set_target_properties(BlumeCapelBipartiteLattice PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+add_executable(BlumeCapelBipartiteLattice.mpi BlumeCapelBipartiteLattice.cpp ../src/libmarqov/util/registry.cpp)
 
-SET(MARQOVTARGETS MARQOVdemo mpiMARQOVdemo)
+add_executable(AshkinTellerThreeColor AshkinTellerThreeColor.cpp ../src/libmarqov/util/registry.cpp)
+add_executable(AshkinTellerThreeColor.mpi AshkinTellerThreeColor.cpp ../src/libmarqov/util/registry.cpp)
 
-foreach(target ${MARQOVTARGETS})
-    add_executable (${target} ../src/libmarqov/util/registry.cpp MARQOVdemo.cpp)
+add_executable(BlumeEmeryGriffiths BlumeEmeryGriffiths.cpp ../src/libmarqov/util/registry.cpp)
+add_executable(BlumeEmeryGriffiths.mpi BlumeEmeryGriffiths.cpp ../src/libmarqov/util/registry.cpp)
+
+add_executable(IsingRGG IsingRGG.cpp ../src/libmarqov/util/registry.cpp)
+add_executable(IsingRGG.mpi IsingRGG.cpp ../src/libmarqov/util/registry.cpp)
+
+SET(DEMOTARGETS IsingSimple HeisenbergSimpleThreaded Ising Heisenberg Phi4 BlumeCapel XXZAntiferroSingleAniso BlumeCapelBipartiteLattice AshkinTellerThreeColor BlumeEmeryGriffiths IsingRGG Ising.mpi Heisenberg.mpi Phi4.mpi BlumeCapel.mpi XXZAntiferroSingleAniso.mpi BlumeCapelBipartiteLattice.mpi AshkinTellerThreeColor.mpi BlumeEmeryGriffiths.mpi IsingRGG.mpi)
+
+SET(DEMOTARGETSMPI Ising.mpi Heisenberg.mpi Phi4.mpi BlumeCapel.mpi XXZAntiferroSingleAniso.mpi BlumeCapelBipartiteLattice.mpi AshkinTellerThreeColor.mpi BlumeEmeryGriffiths.mpi IsingRGG.mpi)
+
+
+foreach(target ${DEMOTARGETS})
     target_link_libraries(${target} libMARQOV)
     set_target_properties(${target} PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
-
+	target_include_directories(${target} PUBLIC ${MYHDF5INCLUDES})
     set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DHAVE_CONFIG_H -DGIT_SHA1=\"${GIT_SHA1}\" -DGIT_BRANCH=\"${GIT_BRANCH}\"" )
-
 endforeach(target)
 
+
+# some models require PCL library
 find_package(PCL 1.2 COMPONENTS common kdtree REQUIRED)
 link_directories(${PCL_LIBRARY_DIRS}) 
 add_definitions(${PCL_DEFINITIONS})
 include_directories(${PCL_INCLUDE_DIRS})
-target_link_libraries(IsingRGG  ${PCL_LIBRARIES})
+target_link_libraries(IsingRGG ${PCL_LIBRARIES})
+target_link_libraries(IsingRGG.mpi ${PCL_LIBRARIES})
 
 
-
-
+# some models are MPI parallelized
 find_package(MPI)
 if(MPI_CXX_FOUND)
-    target_compile_options(mpiMARQOVdemo PUBLIC -DMPIMARQOV)
-    if(CMAKE_VERSION VERSION_LESS 3.10)
-	target_include_directories(mpiMARQOVdemo PUBLIC ${MPI_INCLUDE_PATH})
-	target_link_libraries(mpiMARQOVdemo ${MPI_CXX_LIBRARIES})
-	target_compile_options(mpiMARQOVdemo PUBLIC ${MPI_CXX_COMPILE_FLAGS})
-    else()
-	target_include_directories(mpiMARQOVdemo PUBLIC ${MPI_CXX_INCLUDE_DIRS})
-	target_link_libraries(mpiMARQOVdemo ${MPI_CXX_LIBRARIES})
-	set_target_properties(mpiMARQOVdemo PROPERTIES LINK_FLAGS " ${LINK_FLAGS} ${MPI_CXX_LINK_FLAGS}")
-	target_compile_options(mpiMARQOVdemo PUBLIC ${MPI_CXX_COMPILE_OPTIONS})
-	target_compile_definitions(mpiMARQOVdemo PUBLIC ${MPI_CXX_COMPILE_DEFINITIONS})
-
-    endif()
+	foreach(target ${DEMOTARGETSMPI})
+	    target_compile_options(${target} PUBLIC -DMPIMARQOV)
+    	if(CMAKE_VERSION VERSION_LESS 3.10)
+			target_include_directories(${target} PUBLIC ${MPI_INCLUDE_PATH})
+			target_link_libraries(${target} ${MPI_CXX_LIBRARIES})
+			target_compile_options(${target} PUBLIC ${MPI_CXX_COMPILE_FLAGS})
+    	else()
+			target_include_directories(${target} PUBLIC ${MPI_CXX_INCLUDE_DIRS})
+			target_link_libraries(${target} ${MPI_CXX_LIBRARIES})
+			set_target_properties(${target} PROPERTIES LINK_FLAGS " ${LINK_FLAGS} ${MPI_CXX_LINK_FLAGS}")
+			target_compile_options(${target} PUBLIC ${MPI_CXX_COMPILE_OPTIONS})
+			target_compile_definitions(${target} PUBLIC ${MPI_CXX_COMPILE_DEFINITIONS})
+    	endif()
+	endforeach(target)
 endif(MPI_CXX_FOUND)
 
 CHECK_FUNCTION_EXISTS(scandir HAVE_SCANDIR)
-
 CHECK_FUNCTION_EXISTS(alphasort HAVE_ALPHASORT)
-
 CHECK_FUNCTION_EXISTS(readdir_r HAVE_READDIR_R)
-
-#configure_file(${CMAKE_CURRENT_SOURCE_DIR}/libmarqov/util/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/libmarqov/util/config.h)
