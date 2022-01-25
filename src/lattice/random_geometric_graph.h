@@ -9,27 +9,33 @@
 
 bool construct_RGG_3D(const double R, const PointCloud& cloud, std::vector<std::vector<int>>& neighbours)
 {
+	const double Rsq = R*R;
 	double upper[3]={0,0,0};
 	double lower[3]={1,1,1};	
 	
-	double tcds[6][3]={{1,0,0},{-1,0,0},{0,1,0},{0,-1,0},{0,0,1},{0,0,-1}}; 				//parametrization of cube surfaces
+	//parametrization of cube surfaces
+	double tcds[6][3]={{1,0,0},{-1,0,0},{0,1,0},{0,-1,0},{0,0,1},{0,0,-1}};
 
-	double tcde[12][6]={{0,0,1, 0,0,0},{0,0,1, 1,0,0},{0,0,1, 0,1,0},{0,0,1, 1,1,0},		//
-				     {0,1,0, 0,0,0},{0,1,0, 1,0,0},{0,1,0, 0,0,1},{0,1,0, 1,0,1},		//parametrization of cube edges
-				     {1,0,0, 0,0,0},{1,0,0, 0,1,0},{1,0,0, 0,0,1},{1,0,0, 0,1,1}};		//
+	//parametrization of cube edges
+	double tcde[12][6]={{0,0,1, 0,0,0},{0,0,1, 1,0,0},{0,0,1, 0,1,0},{0,0,1, 1,1,0},
+				     {0,1,0, 0,0,0},{0,1,0, 1,0,0},{0,1,0, 0,0,1},{0,1,0, 1,0,1},
+				     {1,0,0, 0,0,0},{1,0,0, 0,1,0},{1,0,0, 0,0,1},{1,0,0, 0,1,1}};
 
-	double tcdc[8][3]={{0,0,0},{1,0,0},{0,1,0},{0,0,1},{1,1,0},{1,0,1},{0,1,1},{1,1,1}};		//parametrization of cube corners
+	//parametrization of cube corners
+	double tcdc[8][3]={{0,0,0},{1,0,0},{0,1,0},{0,0,1},{1,1,0},{1,0,1},{0,1,1},{1,1,1}};	
 
 	int number_of_nn;
 	int size = cloud.size();
-	std::vector< std::vector<int> > pointIdxRadiusSearch;
-	std::vector< std::vector<float> > pointRadiusSquaredDistance;
+	// arrays to collect the search results
+	std::vector<std::vector<int>> pointIdxRadiusSearch;
+	std::vector<std::vector<float>> pointRadiusSquaredDistance;
 
+	// construct PCL point cloud
 	pcl::PointCloud<pcl::PointXYZ>::Ptr pclcloud(new pcl::PointCloud<pcl::PointXYZ>);
 	pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
 	pcl::PointXYZ searchPoint;
 
-	// transform cloud into PCL format
+	// transform input cloud into PCL format
 	pclcloud->width = size;
 	pclcloud->height= 1;
 	pclcloud->points.resize(pclcloud->width * pclcloud->height);		
@@ -52,72 +58,89 @@ bool construct_RGG_3D(const double R, const PointCloud& cloud, std::vector<std::
 		searchPoint.y = crds[1];
 		searchPoint.z = crds[2];
 		
+		const auto spx = searchPoint.x;
+		const auto spy = searchPoint.y;
+		const auto spz = searchPoint.z;
+
 		pointIdxRadiusSearch.push_back(std::vector<int>());
 		pointRadiusSquaredDistance.push_back(std::vector<float>());
 		int pt=0;
 		number_of_nn = kdtree.radiusSearch(searchPoint, R, pointIdxRadiusSearch[pt], pointRadiusSquaredDistance[pt]);		
 		int surface_cuts=0;
 	
+		// surfaces
 		for(int j=0; j<6; j++)
 		{
-			if( !( ( (searchPoint.x + tcds[j][0] < upper[0]) and (searchPoint.x + tcds[j][0] > lower[0]) ) and
-			       ( (searchPoint.y + tcds[j][1] < upper[1]) and (searchPoint.y + tcds[j][1] > lower[1]) ) and
-			       ( (searchPoint.z + tcds[j][2] < upper[2]) and (searchPoint.z + tcds[j][2] > lower[2]) ) ) )
-				   {
-						pointIdxRadiusSearch.push_back(std::vector<int>());
-						pointRadiusSquaredDistance.push_back(std::vector<float>());
-						pt++;
-						pcl::PointXYZ tmp_searchPoint(searchPoint.x-tcds[j][0] , searchPoint.y-tcds[j][1] , searchPoint.z-tcds[j][2]);
+			bool c1x = (searchPoint.x + tcds[j][0] < upper[0]);
+			bool c2x = (searchPoint.x + tcds[j][0] > lower[0]);
+			bool c1y = (searchPoint.y + tcds[j][1] < upper[1]);
+			bool c2y = (searchPoint.y + tcds[j][1] > lower[1]);
+			bool c1z = (searchPoint.z + tcds[j][2] < upper[2]);
+			bool c2z = (searchPoint.z + tcds[j][2] > lower[2]);
+
+			if( !( c1x and c2x and c1y and c2y and c1z and c2z) ) 
+			{
+			 	pointIdxRadiusSearch.push_back(std::vector<int>());
+			 	pointRadiusSquaredDistance.push_back(std::vector<float>());
+			 	pt++;
+			 	pcl::PointXYZ tmp_searchPoint(	spx-tcds[j][0], 
+												spy-tcds[j][1], 
+												spz-tcds[j][2]);
 	
-						number_of_nn += kdtree.radiusSearch(tmp_searchPoint, R, pointIdxRadiusSearch[pt], pointRadiusSquaredDistance[pt]);				
-						surface_cuts++;
-					}
+			 	number_of_nn += kdtree.radiusSearch(tmp_searchPoint, R, pointIdxRadiusSearch[pt], pointRadiusSquaredDistance[pt]);				
+			 	surface_cuts++;
+			 }
 		}
 
+		// edges
 		int edge_cuts=0;
 		if(surface_cuts >= 2)
 		{
 			for(int j=0; j<12; j++)
 			{
-				if(true)
-				{
-		
-					pointIdxRadiusSearch.push_back(std::vector<int>());
-					pointRadiusSquaredDistance.push_back(std::vector<float>());
-					pt++;
-					pcl::PointXYZ tmp_searchPoint2(searchPoint.x+((tcde[j][0]==1)?(0.0):(1.0))*((tcde[j][3]==1)?(-1.0):(1.0)),
-											 searchPoint.y+((tcde[j][1]==1)?(0.0):(1.0))*((tcde[j][4]==1)?(-1.0):(1.0)),
-											 searchPoint.z+((tcde[j][2]==1)?(0.0):(1.0))*((tcde[j][5]==1)?(-1.0):(1.0)));
-					number_of_nn+=kdtree.radiusSearch(tmp_searchPoint2, R, pointIdxRadiusSearch[pt],pointRadiusSquaredDistance[pt]);
-					edge_cuts++;
-				} 
+				pointIdxRadiusSearch.push_back(std::vector<int>());
+				pointRadiusSquaredDistance.push_back(std::vector<float>());
+				pt++;
+				pcl::PointXYZ tmp_searchPoint2(	spx+((tcde[j][0]==1)?(0.0):(1.0))*((tcde[j][3]==1)?(-1.0):(1.0)),
+										 		spy+((tcde[j][1]==1)?(0.0):(1.0))*((tcde[j][4]==1)?(-1.0):(1.0)),
+										 		spz+((tcde[j][2]==1)?(0.0):(1.0))*((tcde[j][5]==1)?(-1.0):(1.0)));
+				number_of_nn+=kdtree.radiusSearch(tmp_searchPoint2, R, pointIdxRadiusSearch[pt],pointRadiusSquaredDistance[pt]);
+				edge_cuts++;
 			}
 		}
 
+		// corners
 		if(edge_cuts >= 2)
 		{
 			for(int j=0; j<8; j++)
 			{
-				if( ((searchPoint.x-tcdc[j][0])*(searchPoint.x-tcdc[j][0])+(searchPoint.y-tcdc[j][1])*(searchPoint.y-tcdc[j][1])+(searchPoint.z-tcdc[j][2])*(searchPoint.z-tcdc[j][2])) > R*R)
+				const auto distsq = (spx-tcdc[j][0])*(spx-tcdc[j][0])
+									+(spy-tcdc[j][1])*(spy-tcdc[j][1])
+									+(spz-tcdc[j][2])*(spz-tcdc[j][2]);
+
+				if(distsq > Rsq)
 				{
-										
-					
 					pointIdxRadiusSearch.push_back(std::vector<int>());
 					pointRadiusSquaredDistance.push_back(std::vector<float>());
 					pt++;
-					pcl::PointXYZ tmp_searchPoint3(searchPoint.x+((tcdc[j][0]==1)?(-1.0):(1.0)),searchPoint.y+((tcdc[j][1]==1)?(-1.0):(1.0)),searchPoint.z+((tcdc[j][2]==1)?(-1.0):(1.0)));
+					pcl::PointXYZ tmp_searchPoint3(	spx+((tcdc[j][0]==1)?(-1.0):(1.0)),
+													spy+((tcdc[j][1]==1)?(-1.0):(1.0)),
+													spz+((tcdc[j][2]==1)?(-1.0):(1.0)));
 					
 					number_of_nn+=kdtree.radiusSearch(tmp_searchPoint3, R, pointIdxRadiusSearch[pt], pointRadiusSquaredDistance[pt]);
 				}
 			}
 		}
 
-		for(int j=1;j<=pt;j++)
+		for(int j=1; j<=pt; j++)
 		{
 			pointIdxRadiusSearch[0].insert(pointIdxRadiusSearch[0].end(), pointIdxRadiusSearch[j].begin(), pointIdxRadiusSearch[j].end());
 		}
 		
+		// erase self
 		pointIdxRadiusSearch[0].erase(pointIdxRadiusSearch[0].begin());
+
+		// store
 		neighbours.push_back(pointIdxRadiusSearch[0]);		
 	}
 }
@@ -126,6 +149,7 @@ bool construct_RGG_3D(const double R, const PointCloud& cloud, std::vector<std::
 // not working
 bool construct_RGG_3D_brute(const double R, const PointCloud& points, std::vector<std::vector<int>>& neighbours)
 {
+	std::cout << "Not Working!!!" << std::endl;
 	int number_of_nn; 
 	int size = points.npoints;
 	int len = points.len;
