@@ -86,7 +86,7 @@ namespace MARQOV
             
             std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
             {
-                 std::cout<<"Beginning gamekernel of "<<mywork.id<<std::endl;
+                 std::cout << "("<<mywork.id<<")>>" << std::endl;
                 {
 //                     auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                     auto sim = kernelloaders[mywork.id]();
@@ -122,6 +122,7 @@ namespace MARQOV
                 std::function<void()> warmupkernel = [&, t, idx]
                 {
 //                     std::cout<<"Beginning warmup of "<<idx<<std::endl;
+                 		std::cout << "("<<idx<<")w" << std::flush;
                     {
                         auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                         sim.init();
@@ -135,7 +136,8 @@ namespace MARQOV
             }
             else
             {
-                std::cout<<"[MARQOV::CXX11Scheduler] Previous step found! Restarting!"<<std::endl;
+                 std::cout << "("<<idx<<")r" << std::flush;
+//                std::cout<<"[MARQOV::CXX11Scheduler] Previous step found! Restarting!"<<std::endl;
                 workqueue.push_back(Simstate(idx));
             }
         }
@@ -237,7 +239,7 @@ namespace MARQOV
                 });
                 if(busy) //there really is sth. to do
                 {
-                    std::cout<<"dealing with work"<<std::endl;
+//                    std::cout<<"dealing with work"<<std::endl;
                     // check if this sim is selected for PT in this time step. This should usually be the case since we do as many steps as necessary.
                     // in the first time step no pt happens. Hence npt = 1 should disable PT.
                     if((itm.npt > 0) && item_needs_pt(itm.npt, itm.id))
@@ -407,7 +409,8 @@ namespace MARQOV
         void movesimtotaskqueue(Simstate itm)
         {
             int newnpt = findnextnpt(itm.id, itm.npt);
-            std::cout<<"Putting a new item with id "<<itm.id<<" with npt = "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue"<< std::endl;
+//            std::cout<<"Putting a new item with id "<<itm.id<<" with npt = "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue"<< std::endl;
+               std::cout << "("<<itm.id<<")~" << std::flush;
             taskqueue.enqueue(
                 [&, itm, newnpt]{gamekernels[itm.id](itm, newnpt);} //Get the required kernel from the array of gamekernels and execute it.
             );

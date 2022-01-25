@@ -91,13 +91,7 @@ class BlumeEmeryGriffiths
 		static constexpr int SymD = 1;
 		const std::string name;
 
-
-		
-		//  ---- Definitions  -----
-
 		typedef std::array<SpinType, SymD> StateVector;
-//		template <typename RNG>
-//		using MetroInitializer = Spin1_Initializer<StateVector, RNG>;
 
 
 

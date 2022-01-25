@@ -30,6 +30,15 @@ target_include_directories(Heisenberg PUBLIC ${MYHDF5INCLUDES})
 target_link_libraries(Heisenberg libMARQOV)
 set_target_properties(Heisenberg PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
+add_executable(BlumeEmeryGriffiths BlumeEmeryGriffiths.cpp ../src/libmarqov/util/registry.cpp)
+target_include_directories(BlumeEmeryGriffiths PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(BlumeEmeryGriffiths libMARQOV)
+set_target_properties(BlumeEmeryGriffiths PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+
+add_executable(Potts Potts.cpp ../src/libmarqov/util/registry.cpp)
+target_include_directories(Potts PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(Potts libMARQOV)
+set_target_properties(Potts PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
 add_executable(Phi4 Phi4.cpp ../src/libmarqov/util/registry.cpp)
 target_include_directories(Phi4 PUBLIC ${MYHDF5INCLUDES})
@@ -41,6 +50,16 @@ add_executable(BlumeCapel BlumeCapel.cpp ../src/libmarqov/util/registry.cpp)
 target_include_directories(BlumeCapel PUBLIC ${MYHDF5INCLUDES})
 target_link_libraries(BlumeCapel libMARQOV)
 set_target_properties(BlumeCapel PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+
+add_executable(XXZAntiferroSingleAniso XXZAntiferroSingleAniso.cpp ../src/libmarqov/util/registry.cpp)
+target_include_directories(XXZAntiferroSingleAniso PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(XXZAntiferroSingleAniso libMARQOV)
+set_target_properties(XXZAntiferroSingleAniso PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
+
+add_executable(AshkinTellerThreeColor AshkinTellerThreeColor.cpp ../src/libmarqov/util/registry.cpp)
+target_include_directories(AshkinTellerThreeColor PUBLIC ${MYHDF5INCLUDES})
+target_link_libraries(AshkinTellerThreeColor libMARQOV)
+set_target_properties(AshkinTellerThreeColor PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES)
 
 add_executable(BlumeCapelBipartiteLattice BlumeCapelBipartiteLattice.cpp ../src/libmarqov/util/registry.cpp)
 target_include_directories(BlumeCapelBipartiteLattice PUBLIC ${MYHDF5INCLUDES})

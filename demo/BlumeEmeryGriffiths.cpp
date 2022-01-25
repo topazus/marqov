@@ -1,5 +1,5 @@
 /* MARQOV - A modern framework for classical spin models on general topologies
- * Copyright (C) 2020-2021, The MARQOV Project
+ * Copyright (C) 2020-2022, The MARQOV Project
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -19,31 +19,23 @@
 #include <vector>
 #include <iostream>
 #include <string>
-#include <cstdlib>
-#include <fstream>
-#include <algorithm>
 #include <tuple>
-#include <iomanip>
+#include <cstdlib>
 
-using std::cout;
-using std::endl;
-using std::flush;
-using std::ofstream;
-
-// MARQOV
 #include "../src/libmarqov/libmarqov.h"
 #include "../src/libmarqov/util/startup.h"
-
-
+#include "../src/libmarqov/util/registry.h"
+#include "../src/libmarqov/util/regularlatticeloop.h"
+#include "../src/hamiltonian/BlumeEmeryGriffiths.h"
 
 using namespace MARQOV;
 
 int main(int argc, char* argv[])
 {
-#ifdef MPIMARQOV
+	// MPI startup
+	#ifdef MPIMARQOV
     int threadingsupport;
     MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &threadingsupport);
-	//FIXME: maybe we get by with one level less.
     if(threadingsupport < MPI_THREAD_SERIALIZED)
     {
         std::cout << "[MARQOV::main] Couldn't initialize MPI! ";
@@ -54,17 +46,43 @@ int main(int argc, char* argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
     if (myrank == 0) 
 	{
-#endif
-	print_startup_message();
-#ifdef MPIMARQOV
+	#endif
+		print_startup_message();
+	#ifdef MPIMARQOV
     }
-#endif
-	// read registry
-	// create config folder and select.ini file if not available in the working dir
+	#endif
+
+	// -----------------------------------------
+
+	const auto ham = "BlumeEmeryGriffiths";
+	const auto configfile = "BlumeEmeryGriffiths.ini";
+
+	// Load config
 	RegistryDB registry;
-	check_registry_availability(registry, "Ising");
-	// run the actual simulation
-//	selectsim(registry);
+	check_registry_availability(registry, ham);
+	check_registry_file_exists(registry, ham);
+    printInfoandcheckreplicaconfig(registry, ham);
+	
+	// Prepare output folder
+	auto outbasedir = registry.Get<std::string>(configfile, "IO", "outdir" );
+	makeDir(outbasedir);
+
+	// Parameters
+	// ----------
+	// Inverse temperature
+	auto beta = registry.Get<std::vector<double> >(configfile, ham, "beta");
+	// Standard interaction
+	auto J    = registry.Get<std::vector<double> >(configfile, ham, "J");
+	// Zero-field splitting
+	auto D    = registry.Get<std::vector<double> >(configfile, ham, "D");
+	// Bi-quadratic exchange interaction
+	auto K    = registry.Get<std::vector<double> >(configfile, ham, "K");
+
+	// Span parameter space
+	auto parameters = cart_prod(beta, J, D, K);
+
+	// Execute the actual simulations
+	RegularLatticeLoop<BlumeEmeryGriffiths<int>>(registry, outbasedir, parameters, defaultfilter);
 
 #ifdef MPIMARQOV
     MPI_Finalize();
