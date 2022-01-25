@@ -119,7 +119,7 @@ template <int Q>
 class Potts
 {
 	public:
-		
+		std::string name{"Potts"};
 		//  ----  Parameters  ----
 
 		static constexpr int q = Q; // number of states
