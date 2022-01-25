@@ -1,7 +1,6 @@
 INCLUDE(CheckFunctionExists)
 
 add_executable(IsingSimple IsingSimple.cpp)
-
 add_executable(HeisenbergSimpleThreaded HeisenbergSimpleThreaded.cpp)
 
 add_executable(Ising Ising.cpp ../src/libmarqov/util/registry.cpp)
@@ -12,6 +11,9 @@ add_executable(Heisenberg.mpi Heisenberg.cpp ../src/libmarqov/util/registry.cpp)
 
 add_executable(Phi4 Phi4.cpp ../src/libmarqov/util/registry.cpp)
 add_executable(Phi4.mpi Phi4.cpp ../src/libmarqov/util/registry.cpp)
+
+add_executable(Potts Potts.cpp ../src/libmarqov/util/registry.cpp)
+add_executable(Potts.mpi Potts.cpp ../src/libmarqov/util/registry.cpp)
 
 add_executable(BlumeCapel BlumeCapel.cpp ../src/libmarqov/util/registry.cpp)
 add_executable(BlumeCapel.mpi BlumeCapel.cpp ../src/libmarqov/util/registry.cpp)
@@ -29,9 +31,16 @@ add_executable(BlumeEmeryGriffiths BlumeEmeryGriffiths.cpp ../src/libmarqov/util
 add_executable(BlumeEmeryGriffiths.mpi BlumeEmeryGriffiths.cpp ../src/libmarqov/util/registry.cpp)
 
 
-SET(DEMOTARGETS IsingSimple HeisenbergSimpleThreaded Ising Heisenberg Phi4 BlumeCapel XXZAntiferroSingleAniso BlumeCapelBipartiteLattice AshkinTellerThreeColor BlumeEmeryGriffiths)
+# lists make things easier ...
+SET(DEMOTARGETS IsingSimple HeisenbergSimpleThreaded Ising Heisenberg Phi4 Potts BlumeCapel XXZAntiferroSingleAniso BlumeCapelBipartiteLattice AshkinTellerThreeColor BlumeEmeryGriffiths)
 
-SET(DEMOTARGETSMPI Ising.mpi Heisenberg.mpi Phi4.mpi BlumeCapel.mpi XXZAntiferroSingleAniso.mpi BlumeCapelBipartiteLattice.mpi AshkinTellerThreeColor.mpi BlumeEmeryGriffiths.mpi)
+SET(DEMOTARGETSMPI Ising.mpi Heisenberg.mpi Phi4.mpi Potts.mpi BlumeCapel.mpi XXZAntiferroSingleAniso.mpi BlumeCapelBipartiteLattice.mpi AshkinTellerThreeColor.mpi BlumeEmeryGriffiths.mpi)
+
+
+# groups
+# this allows to do "make demo" and "make demo.mpi"
+add_custom_target(demo DEPENDS ${DEMOTARGETS})
+add_custom_target(demo.mpi DEPENDS ${DEMOTARGETSMPI})
 
 
 # link non-MPI targets
