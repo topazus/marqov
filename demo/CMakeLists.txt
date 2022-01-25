@@ -12,8 +12,11 @@ endforeach(demo)
 # lists make things easier ...
 SET(DEMOTARGETS IsingSimple HeisenbergSimpleThreaded ${DEMOS})
 
-SET(DEMOTARGETSMPI ${DEMOS})
-list(TRANSFORM DEMOTARGETSMPI APPEND ".mpi")
+# SET(DEMOTARGETSMPI ${DEMOS})
+foreach(demo ${DEMOS})
+SET(DEMOTARGETSMPI "${DEMOTARGETSMPI};${demo}.mpi")
+endforeach()
+# list(TRANSFORM DEMOTARGETSMPI APPEND ".mpi")
 
 # compile IsingRGG demo only if PCL library is installed
 find_package(PCL 1.2 COMPONENTS common kdtree)
