@@ -124,10 +124,6 @@ class Potts
 		double J; // coupling constant
 		static constexpr int SymD = 1;
 		const std::string name;
-
-
-		//  ---- Definitions  -----
-
 		typedef std::array<int, SymD> StateVector;
 
 		//  ----  Hamiltonian terms  ---- 

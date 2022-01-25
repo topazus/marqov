@@ -185,9 +185,6 @@ class XXZAntiferro
         double Delta, H;
 		static constexpr int SymD = 3;
 		const std::string name;
-
-
-		//  ---- Definitions  -----
 		
 		typedef std::array<SpinType, SymD> StateVector;
 

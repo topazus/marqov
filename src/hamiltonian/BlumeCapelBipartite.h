@@ -57,10 +57,6 @@ class BlumeCapelBipartite
 		double J, DA, DB;
 		static constexpr int SymD = 1;
 		const std::string name;
-
-
-		//  ----  Definitions  ----
-
 		typedef std::array<SpinType, SymD> StateVector;
 
 		//  ----  Hamiltonian terms  ----

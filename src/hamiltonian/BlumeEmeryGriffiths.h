@@ -90,7 +90,6 @@ class BlumeEmeryGriffiths
 		double J, D, K;
 		static constexpr int SymD = 1;
 		const std::string name;
-
 		typedef std::array<SpinType, SymD> StateVector;
 
 
