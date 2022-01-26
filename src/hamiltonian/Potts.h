@@ -119,14 +119,11 @@ template <int Q>
 class Potts
 {
 	public:
-		
+		std::string name{"Potts"};
 		//  ----  Parameters  ----
 
 		static constexpr int q = Q; // number of states
 		static constexpr int SymD = 1;
-		const std::string name;
-
-		//  ---- Definitions  -----
 
 		typedef std::array<int, SymD> StateVector;
 

@@ -13,7 +13,7 @@
 #include "hamiltonian/Heisenberg.h"
 #include "hamiltonian/Ising.h"
 #include "hamiltonian/Phi4.h"
-#include "hamiltonian/AshkinTeller.h"
+#include "hamiltonian/AshkinTellerThreeColor.h"
 #include "hamiltonian/BlumeCapel.h"
 #include "hamiltonian/BlumeEmeryGriffiths.h"
 #include "hamiltonian/Potts.h"
@@ -130,14 +130,14 @@ int pyAshkinTeller(std::string path, int dim, int len, double beta, double J, do
 {
      RegularHypercubic mylatt(len, dim);
      auto hp = make_tuple(beta, J, K);
-     return instantiatesim<RegularHypercubic, AshkinTeller >(path, mylatt, hp);
+     return instantiatesim<RegularHypercubic, AshkinTellerThreeColor >(path, mylatt, hp);
 }
 
 int pyAshkinTellerGraph(std::string outpath, std::string graphpath, double beta, double J, double K)
 {
      GraphFromCSV graph(graphpath);
      auto hp = make_tuple(beta, J, K);
-     return instantiatesim<GraphFromCSV, AshkinTeller >(outpath, graph, hp);
+     return instantiatesim<GraphFromCSV, AshkinTellerThreeColor >(outpath, graph, hp);
 }
 
 int pyBlumeCapel(std::string path, int dim, int len, double beta, double J, double D)

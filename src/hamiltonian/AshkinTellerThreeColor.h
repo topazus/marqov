@@ -1,6 +1,6 @@
 
 /**
- * @file AshkinTeller.h
+ * @file AshkinTellerThreeColor.h
  * @brief Three-Color Ashkin-Teller Hamiltonian.
  *
  * Numerically, this model is treated as embedded Ising models
@@ -20,7 +20,8 @@
 #include <tuple>
 #include <string>
 #include <functional>
-//#include "../hamparts.h" // not needed, see above
+//#include "util/hamparts.h" // not needed, see above
+#include "util/termcollection.h"
 #include "../libmarqov/metropolis.h"
 
 
@@ -30,7 +31,7 @@
 /**
 * @brief Magnetization of the Three-Color Ashkin-Teller model
 */
-class AshkinTellerMag
+class AshkinTellerThreeColorMag
 {
 	public:
 		std::string name{"m"};///< We call ourselves m.
@@ -100,7 +101,7 @@ class AshkinTeller_Initializer
 
 /** Three-Color Ashkin-Teller Hamiltonian
  */
-class AshkinTeller
+class AshkinTellerThreeColor
 {
 	public:
 		//  ----  Parameters  ----
@@ -111,13 +112,7 @@ class AshkinTeller
 		static constexpr int SymD = 3; ///< use SymD to encode the three colors of the model
 		const std::string name;
 
-
-
-		//  ---- Definitions  -----
-
 		typedef std::array<int, SymD> StateVector;
-//		template <typename RNG>
-//		using MetroInitializer = AshkinTeller_Initializer<StateVector, RNG>;
 
 
 		//  ---- Hamiltonian  -----
@@ -127,7 +122,7 @@ class AshkinTeller
 		 * @param J the Ising interaction
 		 * @param K the Four-spin interaction
 		 */
-		AshkinTeller(double J, double K) : J(J), K(K), name("ThreeColorAshkinTeller"), observables(obs_m) {}
+		AshkinTellerThreeColor(double J, double K) : J(J), K(K), name("ThreeColorAshkinTeller"), observables(obs_m) {}
 		
 
 		// we need this only for the update algorithms to access ham.interactions[0]->J 
@@ -138,7 +133,7 @@ class AshkinTeller
 	
 		//  ----  Observables ----
 
-		AshkinTellerMag       obs_m;
+		AshkinTellerThreeColorMag       obs_m;
 		decltype(std::make_tuple(obs_m)) observables = {std::make_tuple(obs_m)};
 	
 
@@ -171,9 +166,9 @@ class AshkinTeller
 };
 
 template <>
-class Initializer<AshkinTeller>
+class Initializer<AshkinTellerThreeColor>
 {
-typedef typename AshkinTeller::StateVector StateVector;
+typedef typename AshkinTellerThreeColor::StateVector StateVector;
 template <class RNGCache>
 static StateVector newsv(const StateVector&, RNGCache&) {return StateVector();}
 };
@@ -187,9 +182,9 @@ namespace MARQOV
 {
 
 	template <class Lattice>
-	class Embedder<AshkinTeller, Lattice>
+	class Embedder<AshkinTellerThreeColor, Lattice>
 	{
-		typedef AshkinTeller Hamiltonian;
+		typedef AshkinTellerThreeColor Hamiltonian;
 		typedef typename Hamiltonian::StateVector StateVector;
 		typedef Space<StateVector, Lattice> StateSpace;
 		static constexpr int SymD = Hamiltonian::SymD;
@@ -244,16 +239,16 @@ namespace MARQOV
 	 * @tparam Lattice type of the lattice
 	 */
 	template <class Lattice>
-	struct Metropolis<AshkinTeller, Lattice>
+	struct Metropolis<AshkinTellerThreeColor, Lattice>
 	{
 
 		// some typedefs
-		typedef typename AshkinTeller::StateVector StateVector;
+		typedef typename AshkinTellerThreeColor::StateVector StateVector;
 		typedef int ReducedStateVector;
 
 
 		// coupling of the embedded Ising model
-		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, const AshkinTeller& ham)
+		static inline double metro_coupling(StateVector& sv1, StateVector& sv2, int color, const AshkinTellerThreeColor& ham)
 		{
 			double retval = 0.0;
 			switch (color)
@@ -285,11 +280,10 @@ namespace MARQOV
 	
 	
 		// the actual Metropolis move attempt
-		template <class StateSpace/*, class M*/, class RNG>
-		static inline int move(const AshkinTeller& ham, 
+		template <class StateSpace,  class RNG>
+		static inline int move(const AshkinTellerThreeColor& ham, 
 						   const Lattice& grid, 
 						   StateSpace& statespace, 
-//						   M& metro, 
 						   RNG& rng, 
 						   double beta, 
 						   int rsite)

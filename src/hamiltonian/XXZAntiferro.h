@@ -23,14 +23,14 @@ class XXZAntiferroStaggeredMagZ
 			const int N = grid.size();
 			const int L = grid.len;
 
-			if ((L+1) % 2 == 0) cout << "[MARQOV] Error: Lattice size must be a multiple of two!" << endl; // TODO
+			if ((L+1) % 2 == 0) std::cout << "[MARQOV] Error: Lattice size must be a multiple of two!" << std::endl; // TODO
 
 			double magA = 0;
 			double magB = 0;
 
 			if (grid.dim == 2)
 			{
-				cout << "[MARQOV] Error: This is not implemented!" << endl; // TODO
+				std::cout << "[MARQOV] Error: This is not implemented!" << std::endl; // TODO
 			}
 
 			if (grid.dim == 3)
@@ -76,7 +76,7 @@ class XXZAntiferroStaggeredMagXY
 			const int N = grid.size();
 			const int L = grid.len;
 
-			if ((L+1) % 2 == 0) cout << "error"<< endl;
+			if ((L+1) % 2 == 0) std::cout << "[MARQOV] Error: Lattice size must be a multiple of two!" << std::endl; // TODO
 
 			double magAx = 0;
 			double magBx = 0;
@@ -85,7 +85,7 @@ class XXZAntiferroStaggeredMagXY
 
 			if (grid.dim == 2)
 			{
-				cout << "[MARQOV] Error: This is not implemented!" << endl; // TODO
+				std::cout << "[MARQOV] Error: This is not implemented!" << std::endl; // TODO
 			}
 
 			if (grid.dim == 3)
@@ -137,8 +137,8 @@ class XXZAntiferro_interaction
 {
 	public:
 		const double& Delta; // uniaxial exchange anisotropy
-		static constexpr double J = 1; // global coupling (TODO)
-		XXZAntiferro_interaction(const double& myDelta) : Delta(myDelta) {}
+		static constexpr double J = 1; // global coupling (positiv = antiferromagnetic)
+		XXZAntiferro_interaction(const double& Delta) : Delta(Delta) {}
 		StateVector get (const StateVector& phi) 
 		{
 			StateVector retval;
@@ -185,9 +185,6 @@ class XXZAntiferro
         double Delta, H;
 		static constexpr int SymD = 3;
 		const std::string name;
-
-
-		//  ---- Definitions  -----
 		
 		typedef std::array<SpinType, SymD> StateVector;
 

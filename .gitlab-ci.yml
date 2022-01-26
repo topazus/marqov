@@ -23,7 +23,7 @@ stages:
     - cmake -E make_directory build
     - cd build
     - cmake ..
-    - make MARQOVdemo
+    - make demo
 
 .BUILDMPI_template: &buildMPI_definition
   stage: buildMPI
@@ -33,7 +33,7 @@ stages:
     - cmake -E make_directory build
     - cd build
     - cmake ..
-    - make mpiMARQOVdemo
+    - make demo.mpi
 
 .TEST_template: &test_definition
   stage: test
@@ -57,7 +57,7 @@ MARQOV_Simple_Test:
       - cmake -E make_directory build
       - cd build
       - cmake ..
-      - make mysimpleising
+      - make IsingSimple
 
 MARQOV_Simple_Threaded_Test:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-gxx
@@ -68,7 +68,7 @@ MARQOV_Simple_Threaded_Test:
       - cmake -E make_directory build
       - cd build
       - cmake ..
-      - make mysimpleheisenbergthreaded
+      - make HeisenbergSimpleThreaded
 
 MARQOV_Ubuntu_bionic:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/ubuntu:bionic-beaver-gfortran-lapack
@@ -79,7 +79,7 @@ MARQOV_Ubuntu_bionic:
       - cmake -E make_directory build
       - cd build
       - cmake ..
-      - make MARQOVdemo
+      - make demo
 
 MARQOV_Stretch:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gxx
@@ -102,7 +102,7 @@ mpiMARQOV_Ubuntu_bionic:
       - cmake -E make_directory build
       - cd build
       - cmake ..
-      - make mpiMARQOVdemo
+      - make demo.mpi
 
 mpiMARQOV_Stretch:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gxx
@@ -121,7 +121,7 @@ marqov_Buster_clang:
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang++ ..
-      - make MARQOVdemo VERBOSE=1
+      - make demo VERBOSE=1
 
 marqov_Bullseye_clang:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-clang
@@ -131,7 +131,7 @@ marqov_Bullseye_clang:
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER=clang++ ..
-      - make MARQOVdemo VERBOSE=1
+      - make demo VERBOSE=1
 
 marqov_Buster_pgi:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:buster-pgi1910-cmake
@@ -142,7 +142,7 @@ marqov_Buster_pgi:
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="/opt/pgi/linux86-64/2019/bin/pgc++" ..
-      - make CXX_FLAGS="-O" MARQOVdemo VERBOSE=1
+      - make CXX_FLAGS="-O" demo VERBOSE=1
 
 MARQOVtest_Stretch:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:stretch-gxx
@@ -196,7 +196,7 @@ marqov_Bullseye-PGI-21-03:
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="pgc++" ..
-      - make MARQOVdemo VERBOSE=1
+      - make demo VERBOSE=1
 
 marqov_Bullseye-Intel-21:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-intel-oneapi-icpc
@@ -208,7 +208,7 @@ marqov_Bullseye-Intel-21:
       - cmake -E make_directory build
       - cd build
       - cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_CXX_COMPILER="icpc" ..
-      - make MARQOVdemo VERBOSE=1
+      - make demo VERBOSE=1
 
 marqov_Bullseye_doxygen:
     image: git.physik.uni-wuerzburg.de:25812/z03/pdi/debian:bullseye-clang
