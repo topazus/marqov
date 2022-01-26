@@ -1,6 +1,6 @@
 /* This file is part of MARQOV:
  * A modern framework for classical spin models on general topologies
- * Copyright (C) 2020-2021, The MARQOV Project
+ * Copyright (C) 2020-2022, The MARQOV Project
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -76,17 +76,18 @@ class PottsMagnetization
 * @note This term does not match the required canonical interaction form and his
 * hence implented as a Flex Term
 */
-template <class StateSpace, class StateVector>
-class PottsInteraction : public FlexTerm<StateSpace, StateVector>
+template <class StateVector>
+class PottsInteraction
 {
 	public:
-		PottsInteraction(const double k) : FlexTerm<StateSpace, StateVector>(k) {}
-		~PottsInteraction() {};
+		const double k;///< Scalar prefactor
+		PottsInteraction(const double k) : k(k) {}
 
+		template <class StateSpace>
 		double diff (const int rsite,
 					const StateVector& svold,
 					const StateVector& svnew,
-					std::vector<int>& nbrs,
+					const decltype(std::declval<typename StateSpace::Lattice>().nbrs(0,0))& nbrs,
 					StateSpace& s)
 		{
 			double energy_old = 0;
@@ -104,7 +105,8 @@ class PottsInteraction : public FlexTerm<StateSpace, StateVector>
 
 			return energy_new-energy_old;
 		}
-
+		template <class StateSpace>
+		double energy(const StateSpace& s, const typename StateSpace::Lattice& grid, int c) {return 0;}
 };
 
 
@@ -117,13 +119,12 @@ template <int Q>
 class Potts
 {
 	public:
-		
+		std::string name{"Potts"};
 		//  ----  Parameters  ----
 
 		static constexpr int q = Q; // number of states
-		double J; // coupling constant
 		static constexpr int SymD = 1;
-		const std::string name;
+
 		typedef std::array<int, SymD> StateVector;
 
 		//  ----  Hamiltonian terms  ---- 
@@ -132,20 +133,15 @@ class Potts
 		// the Wolff algorithm necessarily has to be provided // FIXME
 
 		// The Potts interaction is not of the standard form and hence categorized as a Flex Term
-		PottsInteraction<MARQOV::Space<StateVector, RegularHypercubic>, StateVector> potts_interaction;
-		std::vector<FlexTerm<MARQOV::Space<StateVector, RegularHypercubic>, StateVector>*> multisite;
+		PottsInteraction<StateVector> potts_interaction;
+		std::array<decltype(potts_interaction)*, 1> multisite{&potts_interaction};
 
-		Potts(double J) : J(J), name("Potts"), potts_interaction(J)
-		{
-			multisite.push_back(&potts_interaction);
-		}
-		~Potts() {}
-
-
+		Potts(double J) : name("Potts"), potts_interaction(J)
+		{}
 		//  ----  Observables ----
 
 		PottsMagnetization<Q>  obs_m;
-        decltype(std::make_tuple(obs_m)) observables = {std::make_tuple(obs_m)};
+		decltype(std::make_tuple(obs_m)) observables = {std::make_tuple(obs_m)};
 
 
 		//  ----  Initializer  ----

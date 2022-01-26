@@ -36,8 +36,8 @@ class MySimpleIsing
 
 		// Observables
 		Magnetization  obs_m;
-		Energy<MySimpleIsing>  obs_e;
-        decltype(std::make_tuple(obs_m, obs_e)) observables = {std::make_tuple(obs_m, obs_e)};
+		Energy<MySimpleIsing>  obs_e{*this};
+		std::pair<Magnetization, Energy<MySimpleIsing> >  observables {obs_m, obs_e};
 };
 
 using namespace std;
