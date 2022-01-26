@@ -20,7 +20,6 @@
 #include <iostream>
 #include <string>
 #include <tuple>
-#include <cstdlib>
 
 #include "../src/libmarqov/libmarqov.h"
 #include "../src/libmarqov/util/startup.h"

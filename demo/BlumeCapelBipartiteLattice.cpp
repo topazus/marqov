@@ -1,5 +1,5 @@
 /* MARQOV - A modern framework for classical spin models on general topologies
- * Copyright (C) 2020-2021, The MARQOV Project
+ * Copyright (C) 2020-2022, The MARQOV Project
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -20,7 +20,6 @@
 #include <iostream>
 #include <string>
 #include <tuple>
-#include <cstdlib>
 
 #include "../src/libmarqov/libmarqov.h"
 #include "../src/libmarqov/util/startup.h"
