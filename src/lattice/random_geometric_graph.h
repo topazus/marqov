@@ -7,7 +7,7 @@
 #include <pcl/kdtree/kdtree_flann.h>
 
 
-bool construct_RGG_3D(const double R, const PointCloud& cloud, std::vector<std::vector<int>>& neighbours)
+void construct_RGG_3D(const double R, const PointCloud& cloud, std::vector<std::vector<int>>& neighbours)
 {
 	const double Rsq = R*R;
 	double upper[3]={0,0,0};
@@ -29,6 +29,7 @@ bool construct_RGG_3D(const double R, const PointCloud& cloud, std::vector<std::
 	// arrays to collect the search results
 	std::vector<std::vector<int>> pointIdxRadiusSearch;
 	std::vector<std::vector<float>> pointRadiusSquaredDistance;
+
 
 	// construct PCL point cloud
 	pcl::PointCloud<pcl::PointXYZ>::Ptr pclcloud(new pcl::PointCloud<pcl::PointXYZ>);
@@ -137,17 +138,19 @@ bool construct_RGG_3D(const double R, const PointCloud& cloud, std::vector<std::
 			pointIdxRadiusSearch[0].insert(pointIdxRadiusSearch[0].end(), pointIdxRadiusSearch[j].begin(), pointIdxRadiusSearch[j].end());
 		}
 		
+
 		// erase self
 		pointIdxRadiusSearch[0].erase(pointIdxRadiusSearch[0].begin());
 
 		// store
 		neighbours.push_back(pointIdxRadiusSearch[0]);		
 	}
+
 }
 
 
 // not working
-bool construct_RGG_3D_brute(const double R, const PointCloud& points, std::vector<std::vector<int>>& neighbours)
+void construct_RGG_3D_brute(const double R, const PointCloud& points, std::vector<std::vector<int>>& neighbours)
 {
 	std::cout << "Not Working!!!" << std::endl;
 	int number_of_nn; 
