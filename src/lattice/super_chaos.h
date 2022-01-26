@@ -1,4 +1,4 @@
-
+#include <vector>
 /**
  * Super Chaos Lattice
  * @tparam PointCloud the point cloud that we use
