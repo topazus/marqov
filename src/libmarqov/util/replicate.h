@@ -31,7 +31,7 @@
 * @return returns vector of replicated parameters
 */
 template <class Params>
-inline std::vector<Params> replicator(const std::vector<Params>& params, int nreplicas)
+inline std::vector<Params> replicator(const std::vector<Params>& params, int nreplicas, int repoffset=0)
 {
 	std::vector<Params> newparams;
 
@@ -45,7 +45,7 @@ inline std::vector<Params> replicator(const std::vector<Params>& params, int nre
 		for (int j = 0; j < nreplicas; ++j)
 		{
 			auto mpr(mp);
-			mpr.setrepid(j);
+			mpr.setrepid(j+repoffset);
 			mpr.setid(mcid++);
 			newparams.emplace_back(l, mpr, hp);
 		}

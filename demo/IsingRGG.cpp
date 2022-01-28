@@ -73,6 +73,7 @@ int main(int argc, char* argv[])
 	const auto nL            = registry.Get<std::vector<int>>(configfile, ham, "L" );
 	const auto dim           = registry.Get<int>(configfile, ham, "dim" );
 	const int nreplicas      = registry.Get<int>(configfile, ham, "rep" );
+	const int replicaoffset  = registry.Get<int>(configfile, ham, "repoffs" );
 	const auto nclusteramp   = registry.Get<double>(configfile, "MC", "nclusteramp");
 	const auto nclusterexp   = registry.Get<int>(configfile, "MC", "nclusterexp");
 	const auto nmetro        = registry.Get<int>(configfile, "MC", "nmetro");
@@ -127,7 +128,7 @@ int main(int argc, char* argv[])
 		auto paramsets  = finalize_parameter(std::make_tuple(L, dim, search_radius), mp, hp);
 
 		// Duplicate everything for the amount of replicas
-		auto rparamsets = replicator(paramsets, nreplicas);
+		auto rparamsets = replicator(paramsets, nreplicas, replicaoffset);
 
 		// Instantiate the scheduler which waits for new threads
 		// (makeScheduler can figure out a lot from one set of parameters)
