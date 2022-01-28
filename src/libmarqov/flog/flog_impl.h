@@ -177,6 +177,14 @@ public:
             msg<<s;
         return *this;
     }
+    /** input stream operator specialization for stringstreams
+     */
+    FLogImpl& operator<<(const std::stringstream& s)
+    {
+        if (FLOG_EXTLEVEL >= Channel)
+            msg<<s.str();
+        return *this;
+    }
     /** input stream operator
      */
     template <typename T>

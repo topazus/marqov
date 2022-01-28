@@ -21,6 +21,26 @@
 
 #define FLOG_DISABLE_VERBOSE_FUN
 #include "flog/flog.h"
+#include <string>
+
+class MLogAppender : public FLogWriter_file
+{
+public:
+    void reopen(const std::string& fn) {if(file.is_open()) file.close(); file.open(fn);}
+    MLogAppender(const std::string& fn) : FLogWriter_file(fn) {}
+};
+
+class MLogState {
+public:
+    int level;
+    std::string fn;
+    MLogState(int l, const std::string f) : level(l), fn(f) {reset();}
+    void reset()
+    {
+    FLogClear(level);
+    FLogappendLogger<MLogAppender>(fn);
+    }
+};
 
 #define MLOG_EXTLEVEL FLOG_EXTLEVEL
 

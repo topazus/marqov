@@ -44,7 +44,7 @@ class FLogWriter_file : public FLogWriterBase
 public:
     void write(const std::stringstream& s) {file<<s.rdbuf();}
     FLogWriter_file(const std::string& fn) : file(fn) {}
-private:
+protected:
     std::ofstream file{"flogdebug.txt"};
 };
 

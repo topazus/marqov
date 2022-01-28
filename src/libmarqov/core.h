@@ -78,6 +78,7 @@ namespace MARQOV
          * 
          * The standard constructor. It requires an outpath, the rest of the
          * positional parameters are optional.
+         * logpath is by default set to outpath
          * 
          * @param op the output path.
          * @param i id.
@@ -97,7 +98,7 @@ namespace MARQOV
 		  			int ws = 100, 
 		  			int gls = 200, 
 		  			int nc = 20, 
-		  			int nm = 10) : outpath(op), 
+		  			int nm = 10) : outpath(op), logpath{op},
 		  		 			  	 id(i), 
 		  					  	 repid(ri),
 		  					  	 seed(s), 
@@ -461,6 +462,7 @@ class Core : public RefType<Grid>
      */
 	template <class ...HArgs>
 	Core(const Grid& lattice, Config mc, MutexType& mtx, double mybeta, HArgs&& ... hargs) : 
+        mlogstate(mc.logverbosity, mc.outpath + "/" + mc.outname + ".mlog"),
 		RefType<Grid>(lattice),
 		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
@@ -475,8 +477,7 @@ class Core : public RefType<Grid>
 		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}())
 		{
-            FLogInit(DEBUGVERBOSE, mc.outpath + "/" + mc.outname + ".mlog");//simple resetting to file
-            MLOGRELEASE<<"Initializing MARQOV with reference to lattice: "<<mybeta<<" 1 "<<mc.outpath<<" 2"<<mc.outname<<" 3"<<mc.logpath<<std::endl;
+            MLOGRELEASE<<"Initializing MARQOV with reference to lattice: "<<mybeta<<" 1 "<<mc.outpath<<" 2"<<mc.outname<<" 3"<<mc.logpath<<" tid: "<<std::this_thread::get_id()<<'\n';
 			hdf5lock.unlock();
 
 			// init clocks
@@ -501,6 +502,7 @@ class Core : public RefType<Grid>
 	 */
 	template <class ...HArgs, class ... LArgs>
 	Core(std::tuple<LArgs...> largs, Config mc, MutexType& mtx, double mybeta, HArgs&& ... hargs) : 
+        mlogstate(mc.logverbosity, mc.outpath + "/" + mc.outname + ".mlog"),
 		RefType<Grid>(largs),
 		beta(mybeta),
 		ham(std::forward<HArgs>(hargs) ... ),
@@ -732,6 +734,8 @@ class Core : public RefType<Grid>
         template <class... HArgs>
         void createstep(H5::H5File& file, int s, const Config& mc, HArgs&& ...hargs)
         {
+            if (s > 1)
+                MLOGRELEASE<<"Restarting of "<<mc.id<<" at "<<s<<"\n";
             file.setComment("A calculation is made up by a series of steps. Each step can use as input the previous step.");
             std::string stepname = "step" + std::to_string(s);
             H5::Group step(file.createGroup(stepname));
@@ -896,7 +900,7 @@ class Core : public RefType<Grid>
          */
         ~Core() 
         {
-            MLOGRELEASEVERBOSE<<"Simulation finished: Beginning cleanup.\n";
+            MLOGRELEASEVERBOSE<<"Simulation finished: Beginning cleanup. "<<" tid: "<<std::this_thread::get_id()<<'\n';
             //locking is necessary since the dump functions contain HDF5 calls.
             hdf5lock.lock();
             dumprng();
@@ -950,7 +954,7 @@ class Core : public RefType<Grid>
         inline typename std::enable_if_t<N < sizeof...(Ts), void>
         marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid)
         {
-            FLOGDEBUGVERBOSE<<"Measuring observable "<<N<<"\n";
+            FLOGDEBUGVERBOSE<<"Measuring observable "<<N<<" of "<<mcfg.id<<" at b="<<beta<<" tid: "<<std::this_thread::get_id()<<'\n';
             auto retval = detail::_call(&std::tuple_element<N, 
                             std::tuple<Ts...> >::type::template measure<StateSpace, G>,
                             std::get<N>(t), 
@@ -967,9 +971,9 @@ class Core : public RefType<Grid>
             auto retval0 = t.first.template measure<StateSpace, G>(s, grid);
             auto retval1 = t.second.template measure<StateSpace, G>(s, grid);
             hdf5lock.lock();
-            FLOGDEBUGVERBOSE<<"Measuring observable 1\n";
+            MLOGDEBUGVERBOSE<<"Measuring observable 1 of"<<mcfg.id<<" at b="<<beta<<" tid: "<<std::this_thread::get_id()<<'\n';
             std::get<1>(obscache)<<retval1;
-            FLOGDEBUGVERBOSE<<"Measuring observable 2\n";
+            MLOGDEBUGVERBOSE<<"Measuring observable 2 of"<<mcfg.id<<" at b="<<beta<<" tid: "<<std::this_thread::get_id()<<'\n';
             std::get<0>(obscache)<<retval0;
             hdf5lock.unlock();
         }
@@ -988,7 +992,8 @@ class Core : public RefType<Grid>
          */
         void gameloop()
         {
-            MLOGDEBUG<<"Beginning Gameloop\n";
+            mlogstate.reset();
+            MLOGDEBUG<<"Beginning Gameloop of "<<mcfg.id<<" at b="<<beta<<" tid: "<<std::this_thread::get_id()<<'\n';
             constexpr int gli = 10;
             double avgclustersize = 0;
             for (int k=0; k < gli; k++)
@@ -1009,9 +1014,9 @@ class Core : public RefType<Grid>
 		  if (this->mcfg.id == 0)
           {
               MLOGRELEASE<<"Average cluster size: "<<avgclustersize/this->mcfg.gameloopsteps<<std::endl;
-              mrqvt.status();
+              MLOGRELEASE<<mrqvt.status();
           }
-          MLOGDEBUG<<"Ending Gameloop\n";
+          MLOGDEBUG<<"Ending Gameloop of "<<mcfg.id<<"\n";
         }
 
         /** Warm up loop
@@ -1020,6 +1025,7 @@ class Core : public RefType<Grid>
          */
         void wrmploop()
         {
+            mlogstate.reset();
             MLOGDEBUG<<"Beginning Warmuploop\n";
             constexpr int gli = 10;
             if(step < 1)
@@ -1136,6 +1142,7 @@ class Core : public RefType<Grid>
             return beta * energy;
         }
 // 	private:
+        MLogState mlogstate;
 		double beta; ///< The inverse temperature.
 		Hamiltonian ham; ///< An instance of the user-defined Hamiltonian.
 		Config mcfg; ///< An instance of all our MARQOV related parameters.

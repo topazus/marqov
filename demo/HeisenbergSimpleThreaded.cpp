@@ -4,7 +4,7 @@
 #include <vector>
 
 //include the MARQOV library
-#include "../src/libmarqov/libmarqov.h"
+#include "libmarqov.h"
 
 //include the RegularLattice
 #include "../src/lattice/regular_hypercubic.h"
@@ -137,14 +137,14 @@ int main()
     vector<decltype(args)> v;
 
 	// Fill
-    for(int j = 0; j < 1; ++j)
+    for(int j = 0; j < 5; ++j)
     {
         hp = make_tuple(beta+j*0.1, J);
         v.push_back(make_tuple(std::ref(mylatt), mp, hp));
     }
 
     // Set up the MARQOV schedular
-    auto sched = makeScheduler<MySimpleHeisenberg, RegularHypercubic>(args, 1);
+    auto sched = makeScheduler<MySimpleHeisenberg, RegularHypercubic>(args, 10);
 	// Feed parameters to the scheduler which creates the simulations
     for(auto p : v)
 		sched.createSimfromParameter(p);
