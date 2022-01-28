@@ -1,6 +1,6 @@
 /* This file is part of MARQOV:
  * A modern framework for classical spin models on general topologies
- * Copyright (C) 2020-2021, The MARQOV Project
+ * Copyright (C) 2020-2022, The MARQOV Project
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -35,6 +35,8 @@
 #include <mutex>
 #include <thread>
 #include <memory>
+#define FLOG_EXTLEVEL DEBUGVERBOSE
+#include "mlog.h"
 #include "marqov_detail.h"
 #include "cachecontainer.h"
 #include "util/svmath.h"
@@ -125,8 +127,8 @@ namespace MARQOV
 		// Output
 		std::string outname; ///< the output filename; is empty but will be specified by a filter!
 		std::string outpath; ///< the outpath; full filename will be "outpath/outfile.h5"
-		std::string logpath; ///< the logpath. For lack of a better place it is currently stored here.
-
+		std::string logpath; ///< the logpath. For lack of a better place it is currently stored here. Logfilename = logath/outname.mlog
+		int logverbosity;///< An integer to have runtime configurable verbostiy levels
 
 		// MC variables
 		int id{0}; ///< id
@@ -325,7 +327,11 @@ namespace MARQOV
     template <class StateVectorT, class Grid>
     void swap(Space<StateVectorT, Grid>& a, Space<StateVectorT, Grid>& b)
     {
-        if(a.size_ != b.size_) throw std::runtime_error("[MARQOV::Core] can't assign statespaces of different sizes.");
+        if(a.size_ != b.size_)
+        {
+            MLOGRELEASE<<"Runtime Exception: Can't assign statespaces of different sizes.\n";
+            throw std::runtime_error("[MARQOV::Core] can't assign statespaces of different sizes.");
+        }
         std::swap_ranges(a.getptr(), a.getptr() + a.size_, b.getptr());
     }
 
@@ -469,6 +475,8 @@ class Core : public RefType<Grid>
 		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}())
 		{
+            FLogInit(DEBUGVERBOSE, mc.outpath + "/" + mc.outname + ".mlog");//simple resetting to file
+            MLOGRELEASE<<"Initializing MARQOV with reference to lattice: "<<mybeta<<" 1 "<<mc.outpath<<" 2"<<mc.outname<<" 3"<<mc.logpath<<std::endl;
 			hdf5lock.unlock();
 
 			// init clocks
@@ -507,6 +515,8 @@ class Core : public RefType<Grid>
 		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}())
 		{
+            FLogInit(RELEASEVERBOSE, "myfirstlogfile.txt");//simple resetting to file
+            MLOGRELEASE<<"initializing "<<mybeta<<" "<<mc.outpath<<" "<<mc.outname<<" "<<mc.logpath<<std::endl;
 			hdf5lock.unlock();
 
 			mrqvt.add_clock("cluster");
@@ -886,6 +896,7 @@ class Core : public RefType<Grid>
          */
         ~Core() 
         {
+            MLOGRELEASEVERBOSE<<"Simulation finished: Beginning cleanup.\n";
             //locking is necessary since the dump functions contain HDF5 calls.
             hdf5lock.lock();
             dumprng();
@@ -939,6 +950,7 @@ class Core : public RefType<Grid>
         inline typename std::enable_if_t<N < sizeof...(Ts), void>
         marqov_measure(std::tuple<Ts...>& t, S& s, G&& grid)
         {
+            FLOGDEBUGVERBOSE<<"Measuring observable "<<N<<"\n";
             auto retval = detail::_call(&std::tuple_element<N, 
                             std::tuple<Ts...> >::type::template measure<StateSpace, G>,
                             std::get<N>(t), 
@@ -955,7 +967,9 @@ class Core : public RefType<Grid>
             auto retval0 = t.first.template measure<StateSpace, G>(s, grid);
             auto retval1 = t.second.template measure<StateSpace, G>(s, grid);
             hdf5lock.lock();
+            FLOGDEBUGVERBOSE<<"Measuring observable 1\n";
             std::get<1>(obscache)<<retval1;
+            FLOGDEBUGVERBOSE<<"Measuring observable 2\n";
             std::get<0>(obscache)<<retval0;
             hdf5lock.unlock();
         }
@@ -974,6 +988,7 @@ class Core : public RefType<Grid>
          */
         void gameloop()
         {
+            MLOGDEBUG<<"Beginning Gameloop\n";
             constexpr int gli = 10;
             double avgclustersize = 0;
             for (int k=0; k < gli; k++)
@@ -991,8 +1006,12 @@ class Core : public RefType<Grid>
             mrqvt.stop();
 
 //            mrqvt.status();
-		  if (this->mcfg.id == 0) std::cout << "|\n\n" << "Average cluster size: "  << avgclustersize/this->mcfg.gameloopsteps << std::endl; 
-		  if (this->mcfg.id == 0) mrqvt.status();
+		  if (this->mcfg.id == 0)
+          {
+              MLOGRELEASE<<"Average cluster size: "<<avgclustersize/this->mcfg.gameloopsteps<<std::endl;
+              mrqvt.status();
+          }
+          MLOGDEBUG<<"Ending Gameloop\n";
         }
 
         /** Warm up loop
@@ -1001,6 +1020,7 @@ class Core : public RefType<Grid>
          */
         void wrmploop()
         {
+            MLOGDEBUG<<"Beginning Warmuploop\n";
             constexpr int gli = 10;
             if(step < 1)
             {
@@ -1012,6 +1032,7 @@ class Core : public RefType<Grid>
                 }
                 if (this->mcfg.id == 0) std::cout << "|";
             }
+            MLOGDEBUG<<"Ending Warmuploop\n";
         }
 
         // -------------- special purpose functions ----------------
@@ -1111,7 +1132,7 @@ class Core : public RefType<Grid>
         {
             Energy<Hamiltonian> en(ham);
             auto energy = en.measure(space, this->grid)*this->grid.size();
-            std::cout<<"Temperature: "<<1.0/beta<<" "<<energy/this->grid.size()<<std::endl;
+            MLOGDEBUGVERBOSE<<"Temperature: "<<1.0/beta<<" "<<energy/this->grid.size()<<std::endl;
             return beta * energy;
         }
 // 	private:

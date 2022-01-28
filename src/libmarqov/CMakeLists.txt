@@ -48,6 +48,8 @@ endif()
 
 add_library(libMARQOV marqov.cpp)
 target_include_directories(libMARQOV PUBLIC ${MYHDF5INCLUDES})
+target_include_directories(libMARQOV INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+
 target_link_libraries(libMARQOV ${MYHDF5LIBS} Threads::Threads)
 set_target_properties(libMARQOV PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES POSITION_INDEPENDENT_CODE ON)
 
