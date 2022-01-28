@@ -19,6 +19,7 @@
 #ifndef MLOG_H
 #define MLOG_H
 
+#define FLOG_DISABLE_VERBOSE_FUN
 #include "flog/flog.h"
 
 #define MLOG_EXTLEVEL FLOG_EXTLEVEL

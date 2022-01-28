@@ -34,13 +34,19 @@ SOFTWARE.*/
     #define FLOG_EXTLEVEL RELEASE
 #endif
 
-#if defined(__GNUC__) || defined(__clang__)
-#define FLOG_FUN __PRETTY_FUNCTION__
-#else
 #define FLOG_FUN __func__
+
+#if defined(__GNUC__) || defined(__clang__)
+#define FLOG_VERBOSE_FUN __PRETTY_FUNCTION__
+#else
+#define FLOG_VERBOSE_FUN __func__
 #endif
 
+#ifdef FLOG_DISABLE_VERBOSE_FUN
 #define FLOGPREFIX "("<<std::string(__FILE__)<<", "<<std::string(FLOG_FUN)<<", "<<std::to_string(__LINE__)<<std::string(") ")
+#else
+#define FLOGPREFIX "("<<std::string(__FILE__)<<", "<<std::string(FLOG_VERBOSE_FUN)<<", "<<std::to_string(__LINE__)<<std::string(") ")
+#endif
 
 #define FLOGDEBUGVERBOSE (FLogImpl<3>()<<FLOGPREFIX)
 #define FLOGDEBUG (FLogImpl<2>()<<FLOGPREFIX)
