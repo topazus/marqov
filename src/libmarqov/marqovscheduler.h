@@ -78,12 +78,13 @@ namespace MARQOV
             auto t = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
             bool needswarmup = !Sim::dumppresent(std::get<1>(t));
             int idx = gamekernels.size();
-            
+            std::get<1>(t).id = idx+1000;
+
             auto loadkernel = [&, t]()
             {
                     return makeCore<typename Sim::Lattice, typename Sim::HamiltonianType, typename Sim::RNGT>(t, mutexes.hdf);
             };
-            
+
             std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
             {
                  std::cout << "("<<mywork.id<<")>>" << std::endl;
@@ -267,7 +268,7 @@ namespace MARQOV
          * @param maxptsteps How many parallel tempering steps do we do. Defaults to just a single PTstep and hence disables it.
          * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
          */
-        CXX11Scheduler(int maxptsteps = 1, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
+        CXX11Scheduler(int maxptsteps = 1, uint nthreads = 0) : mlogstate(DEBUG, "marqovmaster.mlog"), maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
         taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads)), rng(time(0) + std::random_device{}())
         {}
@@ -296,12 +297,16 @@ namespace MARQOV
          * @param rhs the other object.
          */
         
-        CXX11Scheduler(CXX11Scheduler&& rhs) : mutexes{}, maxpt(rhs.maxpt), ptqueue(std::move(rhs.ptqueue)), ptplan{std::move(rhs.ptplan)}, masterstop(rhs.masterstop),
+        CXX11Scheduler(CXX11Scheduler&& rhs) : mutexes{}, mlogstate(rhs.mlogstate), maxpt(rhs.maxpt), ptqueue(std::move(rhs.ptqueue)), ptplan{std::move(rhs.ptplan)}, masterstop(rhs.masterstop),
         masterwork{}, workqueue(masterwork), taskqueue{std::move(rhs.taskqueue)}, gamekernels{}
         {
             std::swap(gamekernels, rhs.gamekernels);
             if (rhs.taskqueue.tasks_enqueued() > 0 || rhs.taskqueue.tasks_assigned() > 0)
+            {
+                mlogstate.reset();
+                MLOGRELEASE<<"CXX11Scheduler: invalid assignment\n";
                 throw std::runtime_error("[MARQOV::CXX11Scheduler] invalid assignment");
+            }
         }
         CXX11Scheduler& operator=(const CXX11Scheduler&) = delete;
         CXX11Scheduler& operator=(CXX11Scheduler&& ) = delete;
@@ -319,15 +324,7 @@ namespace MARQOV
            int statespacesize = 0;
            int npt = -100;///< which will be my next parallel tempering step.
         };
-        
-        /**
-         * This class collects mutexes that synchronize I/O.
-         */
-        struct GlobalMutexes
-        {
-            std::mutex hdf;///< Lock for the HDF5 I/O since the library for C++ is not thread-safe.
-            std::mutex io;///< Lock for the rest?
-        } mutexes;
+
         /** Find the parallel tempering exchange partner of the given id.
          * 
          * @param id find the next partner that this id has.
@@ -362,13 +359,14 @@ namespace MARQOV
          * @param itm The Sim which is chosen for PT
          */
         void ptstep(Simstate itm) {
-                    std::cout<<"Parallel Tempering!"<<std::endl;
-                    std::cout<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
-                    std::cout<<"Expected pairing for this time step: "<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
-            std::cout<<"ptstep begin"<<std::endl;
+                mlogstate.reset();
+                MLOGRELEASEVERBOSE<<"Parallel Tempering!"<<std::endl;
+                MLOGRELEASEVERBOSE<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
+                MLOGRELEASEVERBOSE<<"Expected pairing for this time step: "<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
+                MLOGRELEASEVERBOSE<<"ptstep begin"<<std::endl;
             if (ptplan[itm.npt].first == ptplan[itm.npt].second)
             {//this can happen and is not prevented
-                std::cout<<"[MARQOV::Scheduler] self swap in PT..."<<std::endl;
+                MLOGRELEASEVERBOSE<<"[MARQOV::Scheduler] self swap in PT..."<<std::endl;
                 movesimtotaskqueue(itm);
                 return;
             }
@@ -379,15 +377,15 @@ namespace MARQOV
             if ((partnerinfo != ptqueue.cend()) && (itm.npt == partnerinfo->npt) )
             {// partner is at the same stage, hence we can PT exchange
 
-                std::cout<<"Partner "<<partner<<" found in queue"<<std::endl;
+                MLOGRELEASEVERBOSE<<"Partner "<<partner<<" found in queue"<<std::endl;
                 {
                     auto sima = kernelloaders[itm.id]();
                     auto simb = kernelloaders[partnerinfo->id]();
                     double mhratio = calcprob(sima, simb);
                     if(rng.real() < std::min(1.0, mhratio)){
                         exchange_statespace(sima, simb);
-++acceptedmoves;
-}
+                        ++acceptedmoves;
+                    }
                 }
                 ptqueue.erase(partnerinfo);
                 //put both sims back into the taskqueue for more processing until their next PT step
@@ -396,7 +394,7 @@ namespace MARQOV
             }
             else
             {//we have to wait for the PT partner
-                std::cout<<"Partner "<<partner<<" not in queue"<<std::endl;
+                MLOGRELEASEVERBOSE<<"Partner "<<partner<<" not in queue"<<std::endl;
                 ptqueue.push_back(itm);
             }
         }
@@ -409,8 +407,7 @@ namespace MARQOV
         void movesimtotaskqueue(Simstate itm)
         {
             int newnpt = findnextnpt(itm.id, itm.npt);
-//            std::cout<<"Putting a new item with id "<<itm.id<<" with npt = "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue"<< std::endl;
-               std::cout << "("<<itm.id<<")~" << std::flush;
+            MLOGRELEASEVERBOSE<<"Putting a new item with id "<<itm.id<<" with npt = "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue"<< std::endl;
             taskqueue.enqueue(
                 [&, itm, newnpt]{gamekernels[itm.id](itm, newnpt);} //Get the required kernel from the array of gamekernels and execute it.
             );
@@ -430,6 +427,15 @@ namespace MARQOV
             }
             return retval;
         }
+        /**
+         * This class collects mutexes that synchronize I/O.
+         */
+        struct GlobalMutexes
+        {
+            std::mutex hdf;///< Lock for the HDF5 I/O since the library for C++ is not thread-safe.
+            std::mutex io;///< Lock for the rest?
+        } mutexes;
+        MLogState mlogstate;
         int acceptedmoves = 0;
         int maxpt; ///< how many pt steps do we do
         std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
