@@ -37,8 +37,8 @@ public:
     MLogState(int l, const std::string f) : level(l), fn(f) {reset();}
     void reset()
     {
-    FLogClear(level);
-    FLogappendLogger<MLogAppender>(fn);
+        FLogClear(level);
+        FLogappendLogger<MLogAppender>(fn);
     }
 };
 
