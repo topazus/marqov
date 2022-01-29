@@ -39,7 +39,7 @@ public:
      */
     static FLog& getInstance()
     {
-        static FLog instance;
+        static thread_local FLog instance;
         return instance;
     }
     /**
