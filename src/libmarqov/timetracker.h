@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <unistd.h> // provides usleep, only for testing purposes
 #include <string>
+#include <sstream>
 
 typedef std::chrono::high_resolution_clock Time;
 typedef std::chrono::seconds sec;
@@ -89,8 +90,9 @@ namespace marqovtime
 			* @param minimal if true (default), timing results are printed as a one-liner
 			* @param verbose if true (default), the sum of all clock timings is printed as well
 			*/
-			void status(bool minimal=true, bool verbose=true)
+			std::stringstream status(bool minimal=true, bool verbose=true)
 			{
+				std::stringstream retval;
 				const auto now = Time::now();
 
 				// sum up contributions
@@ -100,7 +102,7 @@ namespace marqovtime
 				// find suitable time format 
 				double print_mult = 1.0;
 				std::string print_unit = "mus";
-				std::cout << std::setprecision(1) << std::fixed;
+				retval << std::setprecision(1) << std::fixed;
 
 				const double kilo = 1000;
 
@@ -129,17 +131,17 @@ namespace marqovtime
 				// print timing results as a one-liner using only the clock tags
 				if (minimal)
 				{
-					std::cout << "Timing results (in " << print_unit << "): ";
+					retval << "Timing results (in " << print_unit << "): ";
 					for (auto& c: clocks)
 					{
 						auto dur_print = std::chrono::duration_cast<timeformat>(c.dur).count();
-						std::cout << c.tag << " " << dur_print*print_mult << " | ";
+						retval << c.tag << " " << dur_print*print_mult << " | ";
 					}
 				}
 				// print timing results in a more verbose way using the full clock names
 				else
 				{
-					std::cout << "Timing results:" << std::endl;
+					retval << "Timing results:" << std::endl;
 					for (auto& x: clocks) 
 					{
 						auto dur_print = std::chrono::duration_cast<timeformat>(x.dur).count();
@@ -147,13 +149,13 @@ namespace marqovtime
 	
 						if (x.name != active_clock) // list all clocks
 						{
-							std::cout << "  " << x.name << "\t" << dur_print*print_mult << " " << print_unit << std::endl;
+							retval << "  " << x.name << "\t" << dur_print*print_mult << " " << print_unit << std::endl;
 						}
 						else
 						{
 							auto diff = std::chrono::duration_cast<timeformat>(now-x.starttime).count();
 							sum = sum + diff;
-							std::cout << x.name << " " << dur_print+diff << "\t (active)";
+							retval << x.name << " " << dur_print+diff << "\t (active)";
 						}
 					}
 				}
@@ -164,9 +166,10 @@ namespace marqovtime
 					wallclock.dur = std::chrono::duration_cast<timeformat>(now-wallclock.inittime);
 					auto dur_print = std::chrono::duration_cast<timeformat>(wallclock.dur).count();
 
-					if (minimal) std::cout << "wall " << dur_print*print_mult << std::endl;
-					else std::cout << "  wallclock     " << dur_print*print_mult << " " << print_unit << std::endl << std::endl;
+					if (minimal) retval << "wall " << dur_print*print_mult << std::endl;
+					else retval << "  wallclock     " << dur_print*print_mult << " " << print_unit << std::endl << std::endl;
 				}
+			return retval;
 		}
 	
 	
