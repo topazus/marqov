@@ -129,7 +129,7 @@ namespace MARQOV
 		std::string outname; ///< the output filename; is empty but will be specified by a filter!
 		std::string outpath; ///< the outpath; full filename will be "outpath/outfile.h5"
 		std::string logpath; ///< the logpath. For lack of a better place it is currently stored here. Logfilename = logath/outname.mlog
-		int logverbosity;///< An integer to have runtime configurable verbostiy levels
+		int logverbosity{RELEASE};///< An integer to have runtime configurable verbostiy levels
 
 		// MC variables
 		int id{0}; ///< id
@@ -477,7 +477,7 @@ class Core : public RefType<Grid>
 		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}())
 		{
-            MLOGRELEASE<<"Initializing MARQOV with reference to lattice: "<<mybeta<<" 1 "<<mc.outpath<<" 2"<<mc.outname<<" 3"<<mc.logpath<<" tid: "<<std::this_thread::get_id()<<'\n';
+            MLOGRELEASE<<"initializing MARQOV with supplied lattice. Log written to: "<<mc.outpath + "/" + mc.outname + ".mlog"<<std::endl;
 			hdf5lock.unlock();
 
 			// init clocks
@@ -517,8 +517,7 @@ class Core : public RefType<Grid>
 		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}())
 		{
-            FLogInit(RELEASEVERBOSE, "myfirstlogfile.txt");//simple resetting to file
-            MLOGRELEASE<<"initializing "<<mybeta<<" "<<mc.outpath<<" "<<mc.outname<<" "<<mc.logpath<<std::endl;
+            MLOGRELEASE<<"initializing MARQOV. Taking care of lattice ourselves. Log written to: "<<mc.outpath + "/" + mc.outname + ".mlog"<<std::endl;
 			hdf5lock.unlock();
 
 			mrqvt.add_clock("cluster");
@@ -541,7 +540,8 @@ class Core : public RefType<Grid>
             auto retval = new typename Hamiltonian::StateVector[size];
             if (step > 0)
             {
-//                std::cout<<"[MARQOV::Core] Previous data found! Continuing simulation at step "<<step<<std::endl;
+                MLOGVERBOSE<<"Previous data found! Continuing simulation at step "<<step<<std::endl;
+
                 //read in the state space
                 auto prevstepstate = dump.openGroup("/step" + std::to_string(step-1) + "/state");
                 {
@@ -644,6 +644,7 @@ class Core : public RefType<Grid>
         template <class ...HArgs>
         H5::H5File setupHDF5Container(const Config& mc, HArgs&& ...hargs)
         {
+            MLOGDEBUGVERBOSE<<"Creating HDF5 Container"<<std::endl;
             std::string filepath = mc.outpath + mc.outname + ".h5";
             auto flag = H5F_ACC_TRUNC;
             if (dumppresent(mc)) flag = H5F_ACC_RDWR;
@@ -689,6 +690,7 @@ class Core : public RefType<Grid>
         template <class ...HArgs>
         void dumphamparamstoH5(H5::Group& h5loc, HArgs&&... hargs)
         {
+            MLOGDEBUGVERBOSE<<"Writing hamiltonian params to file"<<std::endl;
             H5::StrType strdatatype(H5::PredType::C_S1, ham.name.size());
             H5::DataSpace dspace(H5S_SCALAR); // create a scalar data space
             H5::DataSet dset(h5loc.createDataSet("Model", strdatatype, dspace));
