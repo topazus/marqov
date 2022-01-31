@@ -3,4 +3,4 @@
 Ashkin-Teller Model
 =====================
 
-.. doxygenfile:: AshkinTeller.h
+.. doxygenfile:: AshkinTellerThreeColor.h
