@@ -19,6 +19,8 @@
 #ifndef MLOG_H
 #define MLOG_H
 
+//use the respective defines of FLog to configure it's behaviour
+#define FLOG_EXTLEVEL MLOG_EXTLEVEL
 #define FLOG_DISABLE_VERBOSE_FUN
 #include "flog/flog.h"
 #include <string>
@@ -41,8 +43,6 @@ public:
         FLogappendLogger<MLogAppender>(fn);
     }
 };
-
-#define MLOG_EXTLEVEL FLOG_EXTLEVEL
 
 #define MLOGDEBUGVERBOSE FLOGDEBUGVERBOSE
 #define MLOGDEBUG FLOGDEBUG
