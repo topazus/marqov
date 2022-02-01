@@ -57,6 +57,7 @@ int main()
     mp.setncluster(10); // number of Wolff updates per EMCS
     mp.setwarmupsteps(500); // number of EMCS for warmup
     mp.setgameloopsteps(3000); // number of EMCS for production
+    mp.logverbosity = DEBUG; // set the verbositiy of our log verbose
     
     // Set the Hamiltonian parameters, J, and the inverse temperature beta
     double beta = 0.440;
