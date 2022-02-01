@@ -35,7 +35,7 @@
 #include <mutex>
 #include <thread>
 #include <memory>
-#define FLOG_EXTLEVEL DEBUGVERBOSE
+#define MLOG_EXTLEVEL DEBUGVERBOSE
 #include "mlog.h"
 #include "marqov_detail.h"
 #include "cachecontainer.h"
@@ -129,7 +129,7 @@ namespace MARQOV
 		std::string outname; ///< the output filename; is empty but will be specified by a filter!
 		std::string outpath; ///< the outpath; full filename will be "outpath/outfile.h5"
 		std::string logpath; ///< the logpath. For lack of a better place it is currently stored here. Logfilename = logath/outname.mlog
-		int logverbosity{RELEASE};///< An integer to have runtime configurable verbostiy levels
+		int logverbosity{DEBUG};///< An integer to have runtime configurable verbostiy levels
 
 		// MC variables
 		int id{0}; ///< id
@@ -141,33 +141,39 @@ namespace MARQOV
 		int ncluster{20}; ///< number of cluster updates.
 		int nmetro{10}; ///< number of Metropolis updates.
 
-		Config& setid(int i) {id = i; return *this;}
+		Config& setid(int i) noexcept {id = i; return *this;}
 
 		/** Set the replica id.
          */
-		Config& setrepid(int ri) {repid = ri; return *this;}
+		Config& setrepid(int ri) noexcept {repid = ri; return *this;}
 		/** Set the seed.
          */
-		Config& setseed(int s) {seed = s; return *this;}
+		Config& setseed(int s) noexcept {seed = s; return *this;}
 		/** Set the number of steps.
          */
-		Config& setnsteps(int ns) {nsteps = ns; return *this;}
+		Config& setnsteps(int ns) noexcept {nsteps = ns; return *this;}
 
 		/** Set the number of warmup steps.
          */
-		Config& setwarmupsteps(int w) {warmupsteps = w; return *this;}
+		Config& setwarmupsteps(int w) noexcept {warmupsteps = w; return *this;}
 
 		/** Set the number of gameloop steps
          */
-		Config& setgameloopsteps(int g) {gameloopsteps = g; return *this;}
+		Config& setgameloopsteps(int g) noexcept {gameloopsteps = g; return *this;}
 		/** Set the number of cluster updates.
          */
-		Config& setncluster(int nc) {ncluster = nc; return *this;}
+		Config& setncluster(int nc) noexcept {ncluster = nc; return *this;}
 
 		/**Set the number of Metropolis sweeps.
          */
-		Config& setnmetro(int nm) {nmetro = nm; return *this;}
+		Config& setnmetro(int nm) noexcept {nmetro = nm; return *this;}
 
+		/** Set the loglevel.
+         * 
+         * Should be one of the predefined integers. The higher the integer, the higher the verbosity.
+         * @param ll the loglevel for the next creation of a MARQOV object.
+         */
+        Config& setloglevel(int ll) noexcept {logverbosity = ll; return *this;}
 		/** Dump parameters to HDF5 Group.
          * 
          * @param mcg the HDF5 group where to store the parameters.
@@ -320,7 +326,7 @@ namespace MARQOV
         template <class A, class B>
         friend void swap(Space<A, B>& a, Space<A, B>& b);
     };
-    
+
     /** Swap two state spaces and their content
      * @param a
      * @param b
@@ -477,7 +483,9 @@ class Core : public RefType<Grid>
 		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}())
 		{
+            std::cout<<"log level s "<<mc.logverbosity<<std::endl;
             MLOGRELEASE<<"initializing MARQOV with supplied lattice. Log written to: "<<mc.outpath + "/" + mc.outname + ".mlog"<<std::endl;
+            std::cout<<"initializing MARQOV with supplied lattice. Log written to: "<<mc.outpath + "/" + mc.outname + ".mlog"<<std::endl;
 			hdf5lock.unlock();
 
 			// init clocks
@@ -517,6 +525,7 @@ class Core : public RefType<Grid>
 		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}())
 		{
+            std::cout<<"log level o "<<mc.logverbosity<<std::endl;
             MLOGRELEASE<<"initializing MARQOV. Taking care of lattice ourselves. Log written to: "<<mc.outpath + "/" + mc.outname + ".mlog"<<std::endl;
 			hdf5lock.unlock();
 
@@ -902,6 +911,7 @@ class Core : public RefType<Grid>
          */
         ~Core() 
         {
+            mlogstate.reset();
             MLOGRELEASEVERBOSE<<"Simulation finished: Beginning cleanup. "<<" tid: "<<std::this_thread::get_id()<<'\n';
             //locking is necessary since the dump functions contain HDF5 calls.
             hdf5lock.lock();

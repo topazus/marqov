@@ -75,6 +75,7 @@ namespace MARQOV
         template <typename ParamType, typename Callable = decltype(defaultfilter)>
         void createSimfromParameter(ParamType& p, Callable filter = defaultfilter)
         {
+            mlogstate.reset();
             auto t = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
             bool needswarmup = !Sim::dumppresent(std::get<1>(t));
             int idx = gamekernels.size();
@@ -87,6 +88,7 @@ namespace MARQOV
 
             std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
             {
+                mlogstate.reset();
                  std::cout << "("<<mywork.id<<")>>" << std::endl;
                 {
 //                     auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
@@ -97,6 +99,7 @@ namespace MARQOV
                         //std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
                         sim.gameloop();
                     }
+                    mlogstate.reset();
                     MLOGRELEASEVERBOSE<<"Final action of id "<<mywork.id<<" : "<<sim.calcAction(sim.statespace)<<std::endl;
                 }
                 if (mywork.npt < maxpt) // determine whether this itm needs more work
@@ -111,9 +114,7 @@ namespace MARQOV
                 }
 //                 std::cout<<"finished gamekernel closing file"<<std::endl;
             };
-            
-            
-            
+
             gamekernelmutex.lock();
             gamekernels.push_back(gamekernel);
             kernelloaders.push_back(loadkernel);
@@ -221,6 +222,7 @@ namespace MARQOV
             auto ran = [&] {
                 return std::make_pair(rng.integer(), rng.integer());
             };
+            mlogstate.reset();
             createPTplan(ran);
 
             std::cout<<"Starting up master"<<std::endl;
@@ -283,6 +285,7 @@ namespace MARQOV
                     return workqueue.is_empty() && (taskqueue.tasks_enqueued() == 0) && (taskqueue.tasks_assigned() == 0);
                 });
             }
+            mlogstate.reset();
             masterstop = true;
             MLOGVERBOSE<<"PT acceptance: "<<acceptedmoves/static_cast<double>(maxpt)<<std::endl;
         }
@@ -407,6 +410,7 @@ namespace MARQOV
         void movesimtotaskqueue(Simstate itm)
         {
             int newnpt = findnextnpt(itm.id, itm.npt);
+            mlogstate.reset();
             MLOGRELEASEVERBOSE<<"Putting a new item with id "<<itm.id<<" with npt = "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue"<< std::endl;
             taskqueue.enqueue(
                 [&, itm, newnpt]{gamekernels[itm.id](itm, newnpt);} //Get the required kernel from the array of gamekernels and execute it.
