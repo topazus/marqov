@@ -1,6 +1,6 @@
 /* This file is part of MARQOV:
  * A modern framework for classical spin models on general topologies
- * Copyright (C) 2021, The MARQOV Project
+ * Copyright (C) 2021-2022, The MARQOV Project
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -24,24 +24,8 @@
 #include <fstream>
 #include <iostream>
 #include "registry.h"
+#include "query_threads.h"
 #include "systemtools.h"
-
-int number_of_threads_per_node(RegistryDB& registry, const std::string configfile)
-{
-	int nthreads = 0;
-	try
-	{
-		nthreads = registry.template Get<int>(configfile, "General", "threads_per_node" );
-	}
-	catch (const Registry_Key_not_found_Exception&)
-	{
-		std::cout<<"threads_per_node not set -> automatic"<<std::endl;
-	}
-	
-	return nthreads;
-}
-
-
 
 /** Creates the file select.ini
 *
@@ -62,7 +46,7 @@ void create_config_select(const std::string& HamiltonianName, const std::string&
 */
 void print_startup_message()
 {
-	std::cout<<"MARQOV Copyright (C) 2020-2021, The MARQOV Project contributors"<<std::endl;
+	std::cout<<"MARQOV Copyright (C) 2020-2022, The MARQOV Project contributors"<<std::endl;
 	std::cout<<"This program comes with ABSOLUTELY NO WARRANTY."<<std::endl;
 	std::cout<<"This is free software, and you are welcome to redistribute it under certain conditions."<<std::endl;
 }

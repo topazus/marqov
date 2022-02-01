@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
+#include "query_threads.h"
 #include "registry.h"
 #include "../../lattice/regular_hypercubic.h"
-#include "startup.h"
 
 template <class Hamiltonian, class Params, class Callable, int dim>
 void FixedRegularLatticeLoop(const std::vector<Params>& hp, Callable filter, const std::vector<int>& nL, const std::vector<int>& nreplicas, const MARQOV::Config& mcdefault, double nclusteramp, int nclusterexp, int nthreads)
@@ -65,7 +65,7 @@ void RegularLatticeLoop(RegistryDB& reg, std::string configfile, std::string nam
 	const auto warmupsteps   = reg.Get<int>(configfile, "MC", "warmupsteps");
 	const auto measuresteps  = reg.Get<int>(configfile, "MC", "measuresteps");
 	const auto nthreads      = number_of_threads_per_node(reg, configfile);
-    
+
     MARQOV::Config mcdefault(outbasedir);
 		mcdefault.setnmetro(nmetro);
 		mcdefault.setwarmupsteps(warmupsteps);
