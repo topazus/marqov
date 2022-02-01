@@ -25,18 +25,22 @@
 #include "flog/flog.h"
 #include <string>
 
-class MLogAppender : public FLogWriter_file
+class MLogAppender : public FLogWriterBase
 {
 public:
+    void write(const std::stringstream& s) {file<<s.rdbuf();}
     void reopen(const std::string& fn) {if(file.is_open()) file.close(); file.open(fn);}
-    MLogAppender(const std::string& fn) : FLogWriter_file(fn) {}
+    MLogAppender(const std::string& fn) : file(fn, std::ios::out | std::ios::app) {}
+private:
+    std::ofstream file;
 };
 
 class MLogState {
 public:
-    int level;
+    int level{DEBUG};
     std::string fn;
-    MLogState(int l, const std::string f) : level(l), fn(f) {reset();}
+    MLogState(int l, const std::string& f) : level(l), fn(f) {}
+    MLogState() = delete ;
     void reset()
     {
         FLogClear(level);
