@@ -541,7 +541,7 @@ namespace MARQOV
          */
         MPIScheduler(MPIScheduler&& rhs) : rrctr(rhs.rrctr), maxpt(rhs.maxpt), marqov_COMM(rhs.marqov_COMM), nr_nodes(rhs.nr_nodes), myrank(rhs.myrank), myScheduler(std::move(rhs.myScheduler)) {}
         MPIScheduler(const MPIScheduler&) = delete;
-        ~MPIScheduler(){MPI_Comm_free(marqov_COMM);}
+        ~MPIScheduler(){MPI_Comm_free(&marqov_COMM);}
         MPIScheduler& operator=(const MPIScheduler&) = delete;
         MPIScheduler& operator=(MPIScheduler&& ) = delete;
     private:
@@ -550,7 +550,10 @@ namespace MARQOV
             int mpi_inited;
             MPI_Initialized(&mpi_inited);
             if (!mpi_inited)
+            {
+                MLOGRELEASE<<"MPI not initialized!"<<std::endl;
                 throw("MPI not initialized!");
+            }
             MPI_Comm tmp_COMM;///< our own MPI communicator.
             MPI_Comm_dup(MPI_COMM_WORLD, &tmp_COMM);
             return tmp_COMM;
