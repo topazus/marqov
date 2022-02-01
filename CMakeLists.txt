@@ -32,12 +32,6 @@ else()
 set(GIT_BRANCH, "N/A")
 endif()
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    SET(COMPILETIMELOGLEVEL "DEBUGVERBOSE" CACHE STRING "The maximum available LogLevel" FORCE)
-else()
-    SET(COMPILETIMELOGLEVEL "RELEASEVERBOSE" CACHE STRING "The maximum available LogLevel" FORCE)
-endif()
-
 # This option specifies whether additional scrambling is used on our integers
 option(DEBIASINTEGERS "This controls whether to employ debiasing for small integers. Not for PGI." OFF)
 check_type_size("__uint128_t" UINT128LEN LANGUAGE CXX)

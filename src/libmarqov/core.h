@@ -35,7 +35,6 @@
 #include <mutex>
 #include <thread>
 #include <memory>
-#define MLOG_EXTLEVEL DEBUGVERBOSE
 #include "mlog.h"
 #include "marqov_detail.h"
 #include "cachecontainer.h"
