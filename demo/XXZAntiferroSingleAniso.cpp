@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 
 	// Execute the actual simulations
 	// Note that this example does use a custom filter
-	RegularLatticeLoop<XXZAntiferroSingleAniso<double>>(registry, outbasedir, parameters, xxzfilter);
+	RegularLatticeLoop<XXZAntiferroSingleAniso<double>>(registry, configfile, ham, outbasedir, parameters, xxzfilter);
 
 #ifdef MPIMARQOV
     MPI_Finalize();

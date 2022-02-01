@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 	auto parameters = cart_prod(beta, J, D);
 
 	// Execute the actual simulations
-	RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
+	RegularLatticeLoop<BlumeCapel<int>>(registry, configfile, ham, outbasedir, parameters, defaultfilter);
 
 #ifdef MPIMARQOV
     MPI_Finalize();

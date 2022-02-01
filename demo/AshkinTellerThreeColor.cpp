@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 	auto parameters = cart_prod(beta, J, K);
 
 	// Execute the actual simulations
-	RegularLatticeLoop<AshkinTellerThreeColor>(registry, outbasedir, parameters, defaultfilter);
+	RegularLatticeLoop<AshkinTellerThreeColor>(registry, configfile, ham, outbasedir, parameters, defaultfilter);
 
 #ifdef MPIMARQOV
     MPI_Finalize();

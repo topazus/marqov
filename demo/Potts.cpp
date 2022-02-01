@@ -76,16 +76,16 @@ int main(int argc, char* argv[])
 	switch(registry.Get<int>(ham+".ini", ham, "q"))
 	{
 		case 3:
-			RegularLatticeLoop<Potts<3>>(registry, outbasedir, parameters, defaultfilter);
+			RegularLatticeLoop<Potts<3>>(registry, configfile, ham, outbasedir, parameters, defaultfilter);
 			break;
 		case 4:
-			RegularLatticeLoop<Potts<4>>(registry, outbasedir, parameters, defaultfilter);
+			RegularLatticeLoop<Potts<4>>(registry, configfile, ham, outbasedir, parameters, defaultfilter);
 			break;
 		case 6:
-			RegularLatticeLoop<Potts<6>>(registry, outbasedir, parameters, defaultfilter);
+			RegularLatticeLoop<Potts<6>>(registry, configfile, ham, outbasedir, parameters, defaultfilter);
 			break;
 		case 8:
-			RegularLatticeLoop<Potts<8>>(registry, outbasedir, parameters, defaultfilter);
+			RegularLatticeLoop<Potts<8>>(registry, configfile, ham, outbasedir, parameters, defaultfilter);
 			break;
 		default:
 			std::cout<<"[MARQOV::Demo] Potts model: unsupported q!";

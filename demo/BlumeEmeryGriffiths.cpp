@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
 	auto parameters = cart_prod(beta, J, D, K);
 
 	// Execute the actual simulations
-	RegularLatticeLoop<BlumeEmeryGriffiths<int>>(registry, outbasedir, parameters, defaultfilter);
+	RegularLatticeLoop<BlumeEmeryGriffiths<int>>(registry, configfile, ham, outbasedir, parameters, defaultfilter);
 
 #ifdef MPIMARQOV
     MPI_Finalize();
