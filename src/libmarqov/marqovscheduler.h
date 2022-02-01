@@ -541,7 +541,7 @@ namespace MARQOV
          */
         MPIScheduler(MPIScheduler&& rhs) : rrctr(rhs.rrctr), maxpt(rhs.maxpt), marqov_COMM(rhs.marqov_COMM), nr_nodes(rhs.nr_nodes), myrank(rhs.myrank), myScheduler(std::move(rhs.myScheduler)) {}
         MPIScheduler(const MPIScheduler&) = delete;
-        ~MPIScheduler() = default;
+        ~MPIScheduler(){MPI_Comm_free(marqov_COMM);}
         MPIScheduler& operator=(const MPIScheduler&) = delete;
         MPIScheduler& operator=(MPIScheduler&& ) = delete;
     private:
