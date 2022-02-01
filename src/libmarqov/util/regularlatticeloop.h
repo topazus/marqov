@@ -6,6 +6,7 @@
 
 #include "registry.h"
 #include "../../lattice/regular_hypercubic.h"
+#include "startup.h"
 
 template <class Hamiltonian, class Params, class Callable, int dim>
 void FixedRegularLatticeLoop(const std::vector<Params>& hp, Callable filter, const std::vector<int>& nL, const std::vector<int>& nreplicas, const MARQOV::Config& mcdefault, double nclusteramp, int nclusterexp, int nthreads)
@@ -51,35 +52,25 @@ void FixedRegularLatticeLoop(const std::vector<Params>& hp, Callable filter, con
 * @param filter the filter
 */
 template <class Hamiltonian, class Params, class Callable>
-void RegularLatticeLoop(RegistryDB& reg, const std::string outbasedir, const std::vector<Params>& hp, Callable filter)
+void RegularLatticeLoop(RegistryDB& reg, std::string configfile, std::string name, const std::string outbasedir, const std::vector<Params>& hp, Callable filter)
 {
 	// Parameters
-	const auto name = reg.Get<std::string>("select.ini", "General", "Hamiltonian" );
-	auto nreplicas  = reg.Get<std::vector<int>>(name+".ini", name, "rep" );
-	const auto nL   = reg.Get<std::vector<int>>(name+".ini", name, "L" );
-	const auto dim  = reg.Get<int>(name+".ini", name, "dim" );
+	auto nreplicas  = reg.Get<std::vector<int>>(configfile, name, "rep" );
+	const auto nL   = reg.Get<std::vector<int>>(configfile, name, "L" );
+	const auto dim  = reg.Get<int>(configfile, name, "dim" );
 
-	const auto nclusteramp   = reg.Get<double>(name+".ini", "MC", "nclusteramp");
-	const auto nclusterexp   = reg.Get<int>(name+".ini", "MC", "nclusterexp");
-	const auto nmetro        = reg.Get<int>(name+".ini", "MC", "nmetro");
-	const auto warmupsteps   = reg.Get<int>(name+".ini", "MC", "warmupsteps");
-	const auto measuresteps  = reg.Get<int>(name+".ini", "MC", "measuresteps");
+	const auto nclusteramp   = reg.Get<double>(configfile, "MC", "nclusteramp");
+	const auto nclusterexp   = reg.Get<int>(configfile, "MC", "nclusterexp");
+	const auto nmetro        = reg.Get<int>(configfile, "MC", "nmetro");
+	const auto warmupsteps   = reg.Get<int>(configfile, "MC", "warmupsteps");
+	const auto measuresteps  = reg.Get<int>(configfile, "MC", "measuresteps");
+	const auto nthreads      = number_of_threads_per_node(reg, configfile);
     
     MARQOV::Config mcdefault(outbasedir);
 		mcdefault.setnmetro(nmetro);
 		mcdefault.setwarmupsteps(warmupsteps);
 		mcdefault.setgameloopsteps(measuresteps);
 
-	// Number of threads
-	int nthreads = 0;
-	try 
-	{
-		nthreads = reg.template Get<int>("mc.ini", "General", "threads_per_node" );
-	}
-	catch (const Registry_Key_not_found_Exception&) 
-	{
-		std::cout<<"threads_per_node not set -> automatic"<<std::endl;
-	}
 
 	// Prepare Geometry
 	if (nreplicas.size() == 1) { for (decltype(nL.size()) i=0; i<nL.size()-1; i++) nreplicas.push_back(nreplicas[0]); }

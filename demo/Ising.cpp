@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 	auto parameters = cart_prod(beta, J);
 
 	// Execute the actual simulations
-	RegularLatticeLoop<Ising<int>>(registry, outbasedir, parameters, defaultfilter);
+	RegularLatticeLoop<Ising<int>>(registry, configfile, ham, outbasedir, parameters, defaultfilter);
 
 #ifdef MPIMARQOV
     MPI_Finalize();
