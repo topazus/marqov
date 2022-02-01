@@ -32,6 +32,12 @@ else()
 set(GIT_BRANCH, "N/A")
 endif()
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    SET(COMPILETIMELOGLEVEL "DEBUGVERBOSE" CACHE STRING "The maximum available LogLevel" FORCE)
+else()
+    SET(COMPILETIMELOGLEVEL "RELEASEVERBOSE" CACHE STRING "The maximum available LogLevel" FORCE)
+endif()
+
 # This option specifies whether additional scrambling is used on our integers
 option(DEBIASINTEGERS "This controls whether to employ debiasing for small integers. Not for PGI." OFF)
 check_type_size("__uint128_t" UINT128LEN LANGUAGE CXX)
@@ -39,7 +45,7 @@ if(DEBIASINTEGERS AND NOT HAVE_UINT128LEN)
     message(FATAL_ERROR "Debiasing of integers requires a 128bit data type")
 endif()
 
-# Try to us at least the ative cpu instruction set if possible on the platform
+# Try to use at least the native cpu instruction set if possible on the platform
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
 if(COMPILER_SUPPORTS_MARCH_NATIVE)
