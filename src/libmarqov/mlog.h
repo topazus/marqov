@@ -39,7 +39,7 @@ class MLogState {
 public:
     int level{DEBUG};
     std::string fn;
-    MLogState(int l, const std::string& f) : level(l), fn(f) {}
+    MLogState(int l, const std::string& f) : level(l), fn(f) {reset();}
     MLogState() = delete ;
     void reset()
     {
