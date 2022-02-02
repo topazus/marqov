@@ -8,15 +8,15 @@ set(MYHDF5LIBS ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
 
 if( (NOT HDF5_FOUND) )
     if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0")
-        message(STATUS "Fetching libhdf-1.12.0")
+        message(STATUS "Fetching libhdf-1.12.1")
 	set(libhdf5major "1.12")
-	set(libhdf5minor "0")
+	set(libhdf5minor "1")
 	set(libhdf5ver "${libhdf5major}.${libhdf5minor}")
 	include(FetchContent)
         FetchContent_Declare(libhdf5
 	URL https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-${libhdf5major}/hdf5-${libhdf5ver}/src/hdf5-${libhdf5ver}.tar.gz
 #	GIT_REPOSITORY https://github.com/HDFGroup/hdf5.git
-#        GIT_TAG hdf5-1_12_0
+#        GIT_TAG hdf5-1_12_1
 	)
 	FetchContent_GetProperties(libhdf5)
         if(NOT libhdf5_POPULATED)
