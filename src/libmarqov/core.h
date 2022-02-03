@@ -482,9 +482,7 @@ class Core : public RefType<Grid>
 		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}())
 		{
-            std::cout<<"log level s "<<mc.logverbosity<<std::endl;
             MLOGRELEASE<<"initializing MARQOV with supplied lattice. Log written to: "<<mc.outpath + "/" + mc.outname + ".mlog"<<std::endl;
-            std::cout<<"initializing MARQOV with supplied lattice. Log written to: "<<mc.outpath + "/" + mc.outname + ".mlog"<<std::endl;
 			hdf5lock.unlock();
 
 			// init clocks
@@ -524,7 +522,6 @@ class Core : public RefType<Grid>
 		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}())
 		{
-            std::cout<<"log level o "<<mc.logverbosity<<std::endl;
             MLOGRELEASE<<"initializing MARQOV. Taking care of lattice ourselves. Log written to: "<<mc.outpath + "/" + mc.outname + ".mlog"<<std::endl;
 			hdf5lock.unlock();
 
@@ -536,14 +533,14 @@ class Core : public RefType<Grid>
 			mrqvt.run("other");
 		}
 
-		/** Set up and/or reinitialize state space.
+	/** Set up and/or reinitialize state space.
          * 
          * This sets up the state space.
          * If a previous step is present we reread that from the files.
          * @param size the number of statevectors that we want to have.
          * @returns A pointer to the state space memory.
          */
-		auto setupstatespace(int size)
+	auto setupstatespace(int size)
         {
             auto retval = new typename Hamiltonian::StateVector[size];
             if (step > 0)
@@ -911,7 +908,7 @@ class Core : public RefType<Grid>
         ~Core() 
         {
             mlogstate.reset();
-            MLOGRELEASEVERBOSE<<"Simulation finished: Beginning cleanup. "<<" tid: "<<std::this_thread::get_id()<<'\n';
+            MLOGRELEASEVERBOSE<<" Simulation of id "<<mcfg.id<<" finished: Beginning cleanup. ThreadID: "<<std::this_thread::get_id()<<'\n';
             //locking is necessary since the dump functions contain HDF5 calls.
             hdf5lock.lock();
             dumprng();
@@ -1004,13 +1001,13 @@ class Core : public RefType<Grid>
         void gameloop()
         {
             mlogstate.reset();
-            MLOGDEBUG<<"Beginning Gameloop of "<<mcfg.id<<" at b="<<beta<<" tid: "<<std::this_thread::get_id()<<'\n';
+            MLOGDEBUG<<"Beginning Gameloop of "<<mcfg.id<<" at beta = "<<beta<<". ThreadID: "<<std::this_thread::get_id()<<'\n';
             constexpr int gli = 10;
             double avgclustersize = 0;
             for (int k=0; k < gli; k++)
             {
 
-                if (this->mcfg.id == 0) std::cout << "." << std::flush;
+                if (this->mcfg.id == 0) MLOGRELEASE << "." << std::flush;
                 for (int i=0; i < this->mcfg.gameloopsteps/10; ++i)
                 {
                     avgclustersize += elementaryMCstep();
@@ -1044,7 +1041,7 @@ class Core : public RefType<Grid>
                 if (this->mcfg.id == 0) std::cout << "|";
                 for (int k=0; k < gli; k++)
                 {
-                    if (this->mcfg.id == 0) std::cout << "." << std::flush;
+                    if (this->mcfg.id == 0) MLOGRELEASE << "." << std::flush;
                     for (int i=0; i < this->mcfg.warmupsteps/10; ++i) elementaryMCstep();
                 }
                 if (this->mcfg.id == 0) std::cout << "|";
