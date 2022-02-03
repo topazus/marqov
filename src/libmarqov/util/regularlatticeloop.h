@@ -64,12 +64,24 @@ void RegularLatticeLoop(RegistryDB& reg, std::string configfile, std::string nam
 	const auto nmetro        = reg.Get<int>(configfile, "MC", "nmetro");
 	const auto warmupsteps   = reg.Get<int>(configfile, "MC", "warmupsteps");
 	const auto measuresteps  = reg.Get<int>(configfile, "MC", "measuresteps");
+
 	const auto nthreads      = number_of_threads_per_node(reg, configfile);
 
-    MARQOV::Config mcdefault(outbasedir);
+	int loglevel = DEBUG;
+	try
+	{
+	    loglevel  = reg.Get<int>(configfile, "MC", "loglevel");
+	}
+	catch(Registry_Exception& re)
+	{
+	;//log level is debug if not explicitly set.
+	}
+	MARQOV::Config mcdefault(outbasedir);
 		mcdefault.setnmetro(nmetro);
 		mcdefault.setwarmupsteps(warmupsteps);
 		mcdefault.setgameloopsteps(measuresteps);
+		mcdefault.setloglevel(loglevel);
+
 
 
 	// Prepare Geometry
