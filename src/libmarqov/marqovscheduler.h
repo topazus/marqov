@@ -89,14 +89,15 @@ namespace MARQOV
             std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
             {
                 mlogstate.reset();
-                 std::cout << "("<<mywork.id<<")>>" << std::endl;
+                MLOGRELEASEVERBOSE<< "executing gameloop of "<<mywork.id << std::endl;
                 {
 //                     auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                     auto sim = kernelloaders[mywork.id]();
                     // We loop until the next PT step
                     for(; mywork.npt < npt; ++mywork.npt)
                     {
-                        //std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
+                        mlogstate.reset();//reset to master logfile
+                        MLOGDEBUG<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
                         sim.gameloop();
                     }
                     mlogstate.reset();
@@ -109,10 +110,10 @@ namespace MARQOV
                 }
                 else
                 {
-                    //                 std::cout<<"no more work required on "<<mywork.id<<std::endl;
+                    MLOGDEBUG<<"no more work required on "<<mywork.id<<std::endl;
                     masterwork.notify_all();//trigger those waiting for signals from the taskqueue. since we don't push_back anything they would not be notified.
                 }
-//                 std::cout<<"finished gamekernel closing file"<<std::endl;
+                MLOGDEBUG<<"finished gamekernel of "<<mywork.id<<" closing file"<<std::endl;
             };
 
             gamekernelmutex.lock();
@@ -207,9 +208,17 @@ namespace MARQOV
             std::generate_n(std::back_inserter(ptplan), maxpt, adapter);
             
             for (int i = 0; i < maxpt; ++i)
-                std::cout<<ptplan[i].first<<" "<<ptplan[i].second<<std::endl;
+                MLOGDEBUGVERBOSE<<ptplan[i].first<<" "<<ptplan[i].second<<std::endl;
         }
         
+        /** Set the log verbosity.
+         * 
+         * @param l the loglevel.
+         */
+        void setloglevel(int l)
+        {
+            mlogstate.level = l;
+        }
         /** Start the simulations! GoGoGo...!
          */
         void start()
@@ -225,7 +234,7 @@ namespace MARQOV
             mlogstate.reset();
             createPTplan(ran);
 
-            std::cout<<"Starting up master"<<std::endl;
+            MLOGRELEASEVERBOSE<<"Starting processing of simulations"<<std::endl;
             Simstate itm;
             
             while(!masterstop)
@@ -273,7 +282,9 @@ namespace MARQOV
         CXX11Scheduler(int maxptsteps = 1, uint nthreads = 0, int mid = 0) : myid(mid), mlogstate(DEBUG, "marqovmaster_rank"+std::to_string(myid)+".mlog"), maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
         taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads)), rng(time(0) + std::random_device{}())
-        {}
+        {
+    	    MLOGRELEASE<<"Starting up CXX Scheduler with "<<((nthreads == 0)?std::thread::hardware_concurrency():nthreads)<<" threads"<<std::endl;
+        }
         /** Tidy up scheduler.
          * 
          * This frees all resources and waits until all threads have finished.
@@ -411,9 +422,9 @@ namespace MARQOV
         {
             int newnpt = findnextnpt(itm.id, itm.npt);
             mlogstate.reset();
-            MLOGRELEASEVERBOSE<<"Putting a new item with id "<<itm.id<<" with npt = "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue"<< std::endl;
+            MLOGRELEASEVERBOSE<<"Putting a new item with id "<<itm.id<<" with npt = "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue. Currently running tasks: "<<taskqueue.tasks_enqueued() << std::endl;
             taskqueue.enqueue(
-                [&, itm, newnpt]{gamekernels[itm.id](itm, newnpt);} //Get the required kernel from the array of gamekernels and execute it.
+                [&, itm, newnpt]{gamekernels[itm.id](itm, newnpt);mlogstate.reset();MLOGDEBUG<<"terminating that thing in the taskqueue\n";} //Get the required kernel from the array of gamekernels and execute it.
             );
         }
         /** Determine the next PT step.
@@ -440,17 +451,17 @@ namespace MARQOV
             double actionbb = simb.calcAction(simb.statespace);
             double actionab = sima.calcAction(simb.statespace);
             double actionba = simb.calcAction(sima.statespace);
-            std::cout<<"Action of id 1"<<" : "<<actionaa<<std::endl;
-            std::cout<<"Action of id 2"<<" : "<<actionbb<<std::endl;
+            MLOGRELEASEVERBOSE<<"Action of id 1"<<" : "<<actionaa<<std::endl;
+            MLOGRELEASEVERBOSE<<"Action of id 2"<<" : "<<actionbb<<std::endl;
             
-            std::cout<<"Action of id 1"<<" with other statespace"<<" : "<<actionab<<std::endl;
-            std::cout<<"Action of id 2"<<" with other statespace"<<" : "<<actionba<<std::endl;
+            MLOGRELEASEVERBOSE<<"Action of id 1"<<" with other statespace"<<" : "<<actionab<<std::endl;
+            MLOGRELEASEVERBOSE<<"Action of id 2"<<" with other statespace"<<" : "<<actionba<<std::endl;
             //calculate actual metropolis transition ratio from the propability densities
 //             double mhratio = std::exp(-actionab)*std::exp(-actionba)/std::exp(-actionaa)/std::exp(-actionbb);
             double endiff = actionaa - actionab + actionbb - actionba;
             double mhratio = calcMHratio(endiff);
 //             double mhratio = std::exp(actionaa - actionab + actionbb - actionba);
-            std::cout<<"M-H Ratio: "<<mhratio<<std::endl;
+            MLOGRELEASEVERBOSE<<"M-H Ratio: "<<mhratio<<std::endl;
             return mhratio;
         }
         template <class T>
@@ -466,7 +477,7 @@ namespace MARQOV
             std::mutex hdf;///< Lock for the HDF5 I/O since the library for C++ is not thread-safe.
             std::mutex io;///< Lock for the rest?
         } mutexes;
-        int myid{0};///< An idea to distinguish giles from multiple schedulers.
+        int myid{0};///< An idea to distinguish files from multiple schedulers.
         MLogState mlogstate;
         int acceptedmoves = 0;
         int maxpt; ///< how many pt steps do we do
@@ -561,6 +572,7 @@ namespace MARQOV
         int getavailableMPIhosts(){
             int t;
             MPI_Comm_size(marqov_COMM, &t);
+            MLOGRELEASE<<"Starting MPI Scheduler on "<<t<<" ranks"<<std::endl;
             return t;
         }
         int getmyMPIrank(){

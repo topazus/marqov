@@ -113,6 +113,7 @@ using namespace MARQOV;
 
 int main()
 {
+	std::cout<<"Welcome to the MARQOV Heisenberg test case! THis test is the minimum example that features a self-defined Heisenberg model and utlizes the multithread scheduler."<<std::endl;
     // Initialize the lattice
 	int L = 8;
 	int dim = 2;
@@ -124,6 +125,7 @@ int main()
 	mp.setncluster(10); // number of Wolff updates per EMCS
 	mp.setwarmupsteps(500); // number of EMCS for warmup
 	mp.setgameloopsteps(3000); // number of EMCS for production
+	mp.setloglevel(RELEASE); // set the log level
 
 	// Set the Hamiltonian parameters, J, and the inverse temperature beta
     double beta = 0.66;
@@ -137,7 +139,7 @@ int main()
     vector<decltype(args)> v;
 
 	// Fill
-    for(int j = 0; j < 5; ++j)
+    for(int j = 0; j < 4; ++j)
     {
         hp = make_tuple(beta+j*0.1, J);
         v.push_back(make_tuple(std::ref(mylatt), mp, hp));
@@ -145,10 +147,10 @@ int main()
 
     // Set up the MARQOV schedular
     auto sched = makeScheduler<MySimpleHeisenberg, RegularHypercubic>(args, 10);
+    sched.setloglevel(RELEASE);
 	// Feed parameters to the scheduler which creates the simulations
     for(auto p : v)
 		sched.createSimfromParameter(p);
 	// Run
     sched.start();
-system("rm  beta0.700000_0.h5");
 }
