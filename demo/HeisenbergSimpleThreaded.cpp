@@ -113,7 +113,9 @@ using namespace MARQOV;
 
 int main()
 {
-	std::cout<<"Welcome to the MARQOV Heisenberg test case! THis test is the minimum example that features a self-defined Heisenberg model and utlizes the multithread scheduler."<<std::endl;
+	std::cout<<"Welcome to the MARQOV Heisenberg test case! ";
+	std::cout<<"This test is the minimum example that features a self-defined Heisenberg model and utlizes ";
+	std::cout<<"the multithread scheduler."<<std::endl;
     // Initialize the lattice
 	int L = 8;
 	int dim = 2;
