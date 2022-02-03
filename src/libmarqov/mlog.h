@@ -49,7 +49,7 @@ public:
     }
 };
 
-#define MLOGTIME "( "<< std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()<<" )"
+#define MLOGTIME "( "<< std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()<<" ) "
 
 #define MLOGDEBUGVERBOSE FLOGDEBUGVERBOSE<<MLOGTIME
 #define MLOGDEBUG FLOGDEBUG<<MLOGTIME
