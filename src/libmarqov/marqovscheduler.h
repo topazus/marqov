@@ -124,8 +124,7 @@ namespace MARQOV
             {
                 std::function<void()> warmupkernel = [&, t, idx]
                 {
-//                     std::cout<<"Beginning warmup of "<<idx<<std::endl;
-                 		std::cout << "("<<idx<<")w" << std::flush;
+                    MLOGRELEASEVERBOSE<<"Beginning warmup of "<<idx<<std::endl;
                     {
                         auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                         sim.init();
