@@ -24,6 +24,7 @@
 #define FLOG_DISABLE_VERBOSE_FUN
 #include "flog/flog.h"
 #include <string>
+#include <chrono>
 
 class MLogAppender : public FLogWriterBase
 {
@@ -48,10 +49,12 @@ public:
     }
 };
 
-#define MLOGDEBUGVERBOSE FLOGDEBUGVERBOSE
-#define MLOGDEBUG FLOGDEBUG
-#define MLOGRELEASEVERBOSE FLOGRELEASEVERBOSE
-#define MLOGVERBOSE FLOGVERBOSE
-#define MLOGRELEASE FLOGRELEASE
+#define MLOGTIME "( "<< std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()<<" )"
+
+#define MLOGDEBUGVERBOSE FLOGDEBUGVERBOSE<<MLOGTIME
+#define MLOGDEBUG FLOGDEBUG<<MLOGTIME
+#define MLOGRELEASEVERBOSE FLOGRELEASEVERBOSE<<MLOGTIME
+#define MLOGVERBOSE FLOGVERBOSE<<MLOGTIME
+#define MLOGRELEASE FLOGRELEASE<<MLOGTIME
 
 #endif
