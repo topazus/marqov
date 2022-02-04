@@ -45,6 +45,8 @@ using namespace MARQOV;
 
 int main()
 {
+    std::cout<<"Welcome to the simplest test case of MARQOV:"<<std::endl;
+    std::cout<<"A plain Ising Model in 2D without threading support."<<std::endl;
     // Initialize the lattice
 	int L = 8;
 	int dim = 2;
@@ -57,7 +59,7 @@ int main()
     mp.setncluster(10); // number of Wolff updates per EMCS
     mp.setwarmupsteps(500); // number of EMCS for warmup
     mp.setgameloopsteps(3000); // number of EMCS for production
-    mp.logverbosity = DEBUG; // set the verbositiy of our log verbose
+    mp.logverbosity = DEBUG; // set the verbositiy of our log to quite verbose
     
     // Set the Hamiltonian parameters, J, and the inverse temperature beta
     double beta = 0.440;
