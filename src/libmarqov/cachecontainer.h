@@ -31,6 +31,7 @@ SOFTWARE.
 #include <utility>
 #include <tuple>
 #include <stdexcept>
+#include <complex>
 #include <H5Cpp.h>
 #include <H5File.h>
 
@@ -138,6 +139,26 @@ class H5Mapper<T, typename std::enable_if<std::is_scalar<T>::value>::type> : pub
         static constexpr T fillval = 0; ///< All scalar types get initialized to 0.
         static constexpr int bytecount = sizeof(T);///< Their bytecount on the current platform.
         static constexpr int rank = 1; ///< Scalars are vectors(rank=1) of length 1.
+};
+
+template <typename FPType>
+class H5Mapper<std::complex<FPType>, void>
+{
+    public:
+        static constexpr std::complex<FPType> fillval{FPType(0)}; ///< All scalar types get initialized to 0.
+        static constexpr std::size_t bytecount = sizeof(std::complex<FPType>);///< Their bytecount on the current platform.
+        static constexpr int rank = 1; ///< Scalars are vectors(rank=1) of length 1.
+        /** Generate the proper HDF5 Array Type.
+         * @returns The Corresponding HDF5 Type of the array.
+         */
+        static auto H5Type()
+        {
+            std::complex<FPType> dummy;
+            H5::CompType cmplx(bytecount);
+            cmplx.insertMember("r", 0, H5MapperBase<FPType>::H5Type());
+            cmplx.insertMember("i", sizeof(FPType), H5MapperBase<FPType>::H5Type());
+            return cmplx;
+        }
 };
 
 /** Dumps a Scalar into an HDF5 file/group.
