@@ -141,11 +141,16 @@ class H5Mapper<T, typename std::enable_if<std::is_scalar<T>::value>::type> : pub
         static constexpr int rank = 1; ///< Scalars are vectors(rank=1) of length 1.
 };
 
+/**
+ * This specialization enables the support for complex datatypes in MARQOV.
+ * 
+ * @see H5Mapper
+ */
 template <typename FPType>
 class H5Mapper<std::complex<FPType>, void>
 {
     public:
-        static constexpr std::complex<FPType> fillval{FPType(0)}; ///< All scalar types get initialized to 0.
+        static constexpr std::complex<FPType> fillval{FPType(0)}; ///< All complex types get initialized to 0+I*0
         static constexpr std::size_t bytecount = sizeof(std::complex<FPType>);///< Their bytecount on the current platform.
         static constexpr int rank = 1; ///< Scalars are vectors(rank=1) of length 1.
         /** Generate the proper HDF5 Array Type.
