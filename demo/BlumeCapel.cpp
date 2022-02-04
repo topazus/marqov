@@ -22,7 +22,7 @@
 #include <tuple>
 #include <cstdlib>
 
-#include "../src/libmarqov/libmarqov.h"
+#include "libmarqov.h"
 #include "../src/libmarqov/util/startup.h"
 #include "../src/libmarqov/util/registry.h"
 #include "../src/libmarqov/util/regularlatticeloop.h"
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 	auto parameters = cart_prod(beta, J, D);
 
 	// Execute the actual simulations
-	RegularLatticeLoop<BlumeCapel<int>>(registry, outbasedir, parameters, defaultfilter);
+	RegularLatticeLoop<BlumeCapel<int>>(registry, configfile, ham, outbasedir, parameters, defaultfilter);
 
 #ifdef MPIMARQOV
     MPI_Finalize();

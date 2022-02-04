@@ -22,7 +22,7 @@
 #include <tuple>
 #include <cstdlib>
 
-#include "../src/libmarqov/libmarqov.h"
+#include "libmarqov.h"
 #include "../src/libmarqov/util/startup.h"
 #include "../src/libmarqov/util/registry.h"
 #include "../src/libmarqov/util/regularlatticeloop.h"
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 	auto parameters = cart_prod(beta, J, K);
 
 	// Execute the actual simulations
-	RegularLatticeLoop<AshkinTellerThreeColor>(registry, outbasedir, parameters, defaultfilter);
+	RegularLatticeLoop<AshkinTellerThreeColor>(registry, configfile, ham, outbasedir, parameters, defaultfilter);
 
 #ifdef MPIMARQOV
     MPI_Finalize();

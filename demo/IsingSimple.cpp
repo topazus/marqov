@@ -5,7 +5,7 @@
 #include "../src/lattice/regular_hypercubic.h"
 
 // include the MARQOV library
-#include "../src/libmarqov/libmarqov.h"
+#include "libmarqov.h"
 
 // include certain hamiltonian building blocks from the utilities
 #include "../src/hamiltonian/util/termcollection.h"
@@ -51,11 +51,13 @@ int main()
     RegularHypercubic mylatt(L, dim);
 
     // Set Monte Carlo parameters using MARQOV::Config
-    MARQOV::Config mp("out"); // output filename: will be out.h5
+    MARQOV::Config mp("./"); //initialize bas path to current folder
+    mp.outname = "IsingSimple_out"; // output filename: will be IsingSimple_out.h5
     mp.setnmetro(5); // number of Metropolis sweeps per EMCS
     mp.setncluster(10); // number of Wolff updates per EMCS
     mp.setwarmupsteps(500); // number of EMCS for warmup
     mp.setgameloopsteps(3000); // number of EMCS for production
+    mp.logverbosity = DEBUG; // set the verbositiy of our log verbose
     
     // Set the Hamiltonian parameters, J, and the inverse temperature beta
     double beta = 0.440;

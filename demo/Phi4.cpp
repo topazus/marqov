@@ -21,7 +21,7 @@
 #include <string>
 #include <tuple>
 
-#include "../src/libmarqov/libmarqov.h"
+#include "libmarqov.h"
 #include "../src/libmarqov/util/startup.h"
 #include "../src/libmarqov/util/registry.h"
 #include "../src/libmarqov/util/regularlatticeloop.h"
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 
 
 	// Execute the actual simulations
-	RegularLatticeLoop<Phi4<double,double>>(registry, outbasedir, parameters, defaultfilter);
+	RegularLatticeLoop<Phi4<double,double>>(registry, configfile, ham, outbasedir, parameters, defaultfilter);
 
 
 #ifdef MPIMARQOV

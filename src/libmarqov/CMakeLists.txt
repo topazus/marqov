@@ -1,20 +1,22 @@
 find_package(HDF5 COMPONENTS CXX)
 find_package(Threads)
 
+
+
 set(MYHDF5INCLUDES ${HDF5_INCLUDE_DIRS})
 set(MYHDF5LIBS ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
 
 if( (NOT HDF5_FOUND) )
     if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0")
-        message(STATUS "Fetching libhdf-1.12.0")
+        message(STATUS "Fetching libhdf-1.12.1")
 	set(libhdf5major "1.12")
-	set(libhdf5minor "0")
+	set(libhdf5minor "1")
 	set(libhdf5ver "${libhdf5major}.${libhdf5minor}")
 	include(FetchContent)
         FetchContent_Declare(libhdf5
 	URL https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-${libhdf5major}/hdf5-${libhdf5ver}/src/hdf5-${libhdf5ver}.tar.gz
 #	GIT_REPOSITORY https://github.com/HDFGroup/hdf5.git
-#        GIT_TAG hdf5-1_12_0
+#        GIT_TAG hdf5-1_12_1
 	)
 	FetchContent_GetProperties(libhdf5)
         if(NOT libhdf5_POPULATED)
@@ -48,11 +50,43 @@ endif()
 
 add_library(libMARQOV marqov.cpp)
 target_include_directories(libMARQOV PUBLIC ${MYHDF5INCLUDES})
+target_include_directories(libMARQOV INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+
 target_link_libraries(libMARQOV ${MYHDF5LIBS} Threads::Threads)
 set_target_properties(libMARQOV PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES POSITION_INDEPENDENT_CODE ON)
 
 if(DEBIASINTEGERS)
-    target_compile_definitions("DEBIASINTEGERS")
+    target_compile_definitions(libMARQOV PUBLIC DEBIASINTEGERS)
 endif()
 
+if(NOT COMPILETIMELOGLEVEL)
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        SET(COMPILETIMELOGLEVEL "DEBUGVERBOSE" CACHE STRING "The maximum available LogLevel" FORCE)
+    else()
+        SET(COMPILETIMELOGLEVEL "RELEASEVERBOSE" CACHE STRING "The maximum available LogLevel" FORCE)
+    endif()
+endif()
+
+message(STATUS "Selected compile time loglevel: ${COMPILETIMELOGLEVEL}")
+target_compile_definitions(libMARQOV PUBLIC MLOG_EXTLEVEL=${COMPILETIMELOGLEVEL})
+
 set_target_properties(libMARQOV PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMPILE_FLAGS " ${COMPILE_FLAGS} -DGIT_SHA1=\"${GIT_SHA1}\" -DGIT_BRANCH=\"${GIT_BRANCH}\"" )
+if (HDF5_IS_PARALLEL)
+# If a parrallel HDF5 Version is employed, then the HDF5 headers that we include
+# require MPI and hence we need to make libmarqov dependent on MPI
+    find_package(MPI)
+    if(MPI_CXX_FOUND)
+	target_compile_options(libMARQOV PUBLIC -DMPIMARQOV)
+	if(CMAKE_VERSION VERSION_LESS 3.10)
+    	    target_include_directories(libMARQOV PUBLIC ${MPI_INCLUDE_PATH})
+    	    target_link_libraries(libMARQOV ${MPI_CXX_LIBRARIES})
+    	    target_compile_options(libMARQOV PUBLIC ${MPI_CXX_COMPILE_FLAGS})
+	else()
+    	    target_include_directories(libMARQOV PUBLIC ${MPI_CXX_INCLUDE_DIRS})
+    	    target_link_libraries(libMARQOV ${MPI_CXX_LIBRARIES})
+    	    set_target_properties(libMARQOV PROPERTIES LINK_FLAGS " ${LINK_FLAGS} ${MPI_CXX_LINK_FLAGS}")
+    	    target_compile_options(libMARQOV PUBLIC ${MPI_CXX_COMPILE_OPTIONS})
+    	    target_compile_definitions(libMARQOV PUBLIC ${MPI_CXX_COMPILE_DEFINITIONS})
+	endif()
+endif(MPI_CXX_FOUND)
+endif()

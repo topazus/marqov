@@ -154,6 +154,7 @@ namespace ThreadPool
             if(queue.empty()) return false;
             t = std::move(queue.front());
             queue.pop_front();
+//            queue.shrink_to_fit();
             return true;
         }
         /** Checks whether the queue is empty.

@@ -21,7 +21,7 @@
 #include <string>
 #include <tuple>
 
-#include "../src/libmarqov/libmarqov.h"
+#include "libmarqov.h"
 #include "../src/libmarqov/util/startup.h"
 #include "../src/libmarqov/util/registry.h"
 #include "../src/lattice/random_geometric_graph.h"

@@ -2,7 +2,7 @@
 #define MARQOVSCHEDULER_H
 /* MIT License
  * 
- * Copyright (c) 2020 - 2021 Florian Goth
+ * Copyright (c) 2020 - 2022 Florian Goth
  * fgoth@physik.uni-wuerzburg.de
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -75,28 +75,33 @@ namespace MARQOV
         template <typename ParamType, typename Callable = decltype(defaultfilter)>
         void createSimfromParameter(ParamType& p, Callable filter = defaultfilter)
         {
+            mlogstate.reset();
             auto t = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
             bool needswarmup = !Sim::dumppresent(std::get<1>(t));
             int idx = gamekernels.size();
-            
+            std::get<1>(t).id = idx;
+
             auto loadkernel = [&, t]()
             {
                     return makeCore<typename Sim::Lattice, typename Sim::HamiltonianType, typename Sim::RNGT>(t, mutexes.hdf);
             };
-            
+
             std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
             {
-                 std::cout << "("<<mywork.id<<")>>" << std::endl;
+                mlogstate.reset();
+                MLOGRELEASEVERBOSE<< "executing gameloop of "<<mywork.id << std::endl;
                 {
 //                     auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                     auto sim = kernelloaders[mywork.id]();
                     // We loop until the next PT step
                     for(; mywork.npt < npt; ++mywork.npt)
                     {
-                        //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
+                        mlogstate.reset();//reset to master logfile
+                        MLOGDEBUG<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
                         sim.gameloop();
                     }
-//                    std::cout<<"Final action of id "<<mywork.id<<" : "<<sim.calcAction(sim.statespace)<<std::endl;
+                    mlogstate.reset();
+                    MLOGRELEASEVERBOSE<<"Final action of id "<<mywork.id<<" : "<<sim.calcAction(sim.statespace)<<std::endl;
                 }
                 if (mywork.npt < maxpt) // determine whether this itm needs more work
                 {
@@ -105,14 +110,12 @@ namespace MARQOV
                 }
                 else
                 {
-                    //                 std::cout<<"no more work required on "<<mywork.id<<std::endl;
+                    MLOGDEBUG<<"no more work required on "<<mywork.id<<std::endl;
                     masterwork.notify_all();//trigger those waiting for signals from the taskqueue. since we don't push_back anything they would not be notified.
                 }
-//                 std::cout<<"finished gamekernel closing file"<<std::endl;
+                MLOGDEBUG<<"finished gamekernel of "<<mywork.id<<" closing file"<<std::endl;
             };
-            
-            
-            
+
             gamekernelmutex.lock();
             gamekernels.push_back(gamekernel);
             kernelloaders.push_back(loadkernel);
@@ -121,8 +124,7 @@ namespace MARQOV
             {
                 std::function<void()> warmupkernel = [&, t, idx]
                 {
-//                     std::cout<<"Beginning warmup of "<<idx<<std::endl;
-                 		std::cout << "("<<idx<<")w" << std::flush;
+                    MLOGRELEASEVERBOSE<<"Beginning warmup of "<<idx<<std::endl;
                     {
                         auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                         sim.init();
@@ -136,8 +138,7 @@ namespace MARQOV
             }
             else
             {
-                 std::cout << "("<<idx<<")r" << std::flush;
-//                std::cout<<"[MARQOV::CXX11Scheduler] Previous step found! Restarting!"<<std::endl;
+                MLOGRELEASEVERBOSE<<"[MARQOV::CXX11Scheduler] Previous step found! Restarting!"<<std::endl;
                 workqueue.push_back(Simstate(idx));
             }
         }
@@ -206,9 +207,17 @@ namespace MARQOV
             std::generate_n(std::back_inserter(ptplan), maxpt, adapter);
             
             for (int i = 0; i < maxpt; ++i)
-                std::cout<<ptplan[i].first<<" "<<ptplan[i].second<<std::endl;
+                MLOGDEBUGVERBOSE<<ptplan[i].first<<" "<<ptplan[i].second<<std::endl;
         }
         
+        /** Set the log verbosity.
+         * 
+         * @param l the loglevel.
+         */
+        void setloglevel(int l)
+        {
+            mlogstate.level = l;
+        }
         /** Start the simulations! GoGoGo...!
          */
         void start()
@@ -221,9 +230,10 @@ namespace MARQOV
             auto ran = [&] {
                 return std::make_pair(rng.integer(), rng.integer());
             };
+            mlogstate.reset();
             createPTplan(ran);
 
-            std::cout<<"Starting up master"<<std::endl;
+            MLOGRELEASEVERBOSE<<"Starting processing of simulations"<<std::endl;
             Simstate itm;
             
             while(!masterstop)
@@ -266,11 +276,14 @@ namespace MARQOV
          * 
          * @param maxptsteps How many parallel tempering steps do we do. Defaults to just a single PTstep and hence disables it.
          * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
+         * @param id An integer id. This is used by MPI to pass down the rank.
          */
-        CXX11Scheduler(int maxptsteps = 1, uint nthreads = 0) : maxpt(maxptsteps), masterstop(false), masterwork{},
+        CXX11Scheduler(int maxptsteps = 1, uint nthreads = 0, int mid = 0) : myid(mid), mlogstate(DEBUG, "marqovmaster_rank"+std::to_string(myid)+".mlog"), maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
         taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads)), rng(time(0) + std::random_device{}())
-        {}
+        {
+    	    MLOGRELEASE<<"Starting up CXX Scheduler with "<<((nthreads == 0)?std::thread::hardware_concurrency():nthreads)<<" threads"<<std::endl;
+        }
         /** Tidy up scheduler.
          * 
          * This frees all resources and waits until all threads have finished.
@@ -282,8 +295,9 @@ namespace MARQOV
                     return workqueue.is_empty() && (taskqueue.tasks_enqueued() == 0) && (taskqueue.tasks_assigned() == 0);
                 });
             }
+            mlogstate.reset();
             masterstop = true;
-            std::cout<<"PT acceptance: "<<acceptedmoves/static_cast<double>(maxpt)<<std::endl;
+            MLOGVERBOSE<<"PT acceptance: "<<acceptedmoves/static_cast<double>(maxpt)<<std::endl;
         }
 
 //        Scheduler() = delete; //FIXME: If this would be present, the call to Scheduler() would be ambiguous
@@ -296,12 +310,16 @@ namespace MARQOV
          * @param rhs the other object.
          */
         
-        CXX11Scheduler(CXX11Scheduler&& rhs) : mutexes{}, maxpt(rhs.maxpt), ptqueue(std::move(rhs.ptqueue)), ptplan{std::move(rhs.ptplan)}, masterstop(rhs.masterstop),
+        CXX11Scheduler(CXX11Scheduler&& rhs) : myid(rhs.myid), mutexes{}, mlogstate(rhs.mlogstate), maxpt(rhs.maxpt), ptqueue(std::move(rhs.ptqueue)), ptplan{std::move(rhs.ptplan)}, masterstop(rhs.masterstop),
         masterwork{}, workqueue(masterwork), taskqueue{std::move(rhs.taskqueue)}, gamekernels{}
         {
             std::swap(gamekernels, rhs.gamekernels);
             if (rhs.taskqueue.tasks_enqueued() > 0 || rhs.taskqueue.tasks_assigned() > 0)
+            {
+                mlogstate.reset();
+                MLOGRELEASE<<"CXX11Scheduler: invalid assignment\n";
                 throw std::runtime_error("[MARQOV::CXX11Scheduler] invalid assignment");
+            }
         }
         CXX11Scheduler& operator=(const CXX11Scheduler&) = delete;
         CXX11Scheduler& operator=(CXX11Scheduler&& ) = delete;
@@ -319,15 +337,7 @@ namespace MARQOV
            int statespacesize = 0;
            int npt = -100;///< which will be my next parallel tempering step.
         };
-        
-        /**
-         * This class collects mutexes that synchronize I/O.
-         */
-        struct GlobalMutexes
-        {
-            std::mutex hdf;///< Lock for the HDF5 I/O since the library for C++ is not thread-safe.
-            std::mutex io;///< Lock for the rest?
-        } mutexes;
+
         /** Find the parallel tempering exchange partner of the given id.
          * 
          * @param id find the next partner that this id has.
@@ -362,13 +372,14 @@ namespace MARQOV
          * @param itm The Sim which is chosen for PT
          */
         void ptstep(Simstate itm) {
-                    std::cout<<"Parallel Tempering!"<<std::endl;
-                    std::cout<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
-                    std::cout<<"Expected pairing for this time step: "<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
-            std::cout<<"ptstep begin"<<std::endl;
+                mlogstate.reset();
+                MLOGRELEASEVERBOSE<<"Parallel Tempering!"<<std::endl;
+                MLOGRELEASEVERBOSE<<"itm.id "<<itm.id<<" itm.npt "<<itm.npt<<std::endl;
+                MLOGRELEASEVERBOSE<<"Expected pairing for this time step: "<<ptplan[itm.npt].first<<" "<<ptplan[itm.npt].second<<std::endl;
+                MLOGRELEASEVERBOSE<<"ptstep begin"<<std::endl;
             if (ptplan[itm.npt].first == ptplan[itm.npt].second)
             {//this can happen and is not prevented
-                std::cout<<"[MARQOV::Scheduler] self swap in PT..."<<std::endl;
+                MLOGRELEASEVERBOSE<<"[MARQOV::Scheduler] self swap in PT..."<<std::endl;
                 movesimtotaskqueue(itm);
                 return;
             }
@@ -379,15 +390,15 @@ namespace MARQOV
             if ((partnerinfo != ptqueue.cend()) && (itm.npt == partnerinfo->npt) )
             {// partner is at the same stage, hence we can PT exchange
 
-                std::cout<<"Partner "<<partner<<" found in queue"<<std::endl;
+                MLOGRELEASEVERBOSE<<"Partner "<<partner<<" found in queue"<<std::endl;
                 {
                     auto sima = kernelloaders[itm.id]();
                     auto simb = kernelloaders[partnerinfo->id]();
                     double mhratio = calcprob(sima, simb);
                     if(rng.real() < std::min(1.0, mhratio)){
                         exchange_statespace(sima, simb);
-++acceptedmoves;
-}
+                        ++acceptedmoves;
+                    }
                 }
                 ptqueue.erase(partnerinfo);
                 //put both sims back into the taskqueue for more processing until their next PT step
@@ -396,7 +407,7 @@ namespace MARQOV
             }
             else
             {//we have to wait for the PT partner
-                std::cout<<"Partner "<<partner<<" not in queue"<<std::endl;
+                MLOGRELEASEVERBOSE<<"Partner "<<partner<<" not in queue"<<std::endl;
                 ptqueue.push_back(itm);
             }
         }
@@ -409,10 +420,10 @@ namespace MARQOV
         void movesimtotaskqueue(Simstate itm)
         {
             int newnpt = findnextnpt(itm.id, itm.npt);
-//            std::cout<<"Putting a new item with id "<<itm.id<<" with npt = "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue"<< std::endl;
-               std::cout << "("<<itm.id<<")~" << std::flush;
+            mlogstate.reset();
+            MLOGRELEASEVERBOSE<<"Putting a new item with id "<<itm.id<<" with npt = "<<itm.npt <<" until npt = "<< newnpt<<" into the taskqueue. Currently running tasks: "<<taskqueue.tasks_enqueued() << std::endl;
             taskqueue.enqueue(
-                [&, itm, newnpt]{gamekernels[itm.id](itm, newnpt);} //Get the required kernel from the array of gamekernels and execute it.
+                [&, itm, newnpt]{gamekernels[itm.id](itm, newnpt);mlogstate.reset();MLOGDEBUG<<"terminating that thing in the taskqueue\n";} //Get the required kernel from the array of gamekernels and execute it.
             );
         }
         /** Determine the next PT step.
@@ -430,6 +441,43 @@ namespace MARQOV
             }
             return retval;
         }
+        template <class T>
+        double calcprob (T& sima, T& simb) const
+        {
+//            auto sima = kernelloaders[ida]();
+//            auto simb = kernelloaders[idb]();
+            double actionaa = sima.calcAction(sima.statespace);
+            double actionbb = simb.calcAction(simb.statespace);
+            double actionab = sima.calcAction(simb.statespace);
+            double actionba = simb.calcAction(sima.statespace);
+            MLOGRELEASEVERBOSE<<"Action of id 1"<<" : "<<actionaa<<std::endl;
+            MLOGRELEASEVERBOSE<<"Action of id 2"<<" : "<<actionbb<<std::endl;
+            
+            MLOGRELEASEVERBOSE<<"Action of id 1"<<" with other statespace"<<" : "<<actionab<<std::endl;
+            MLOGRELEASEVERBOSE<<"Action of id 2"<<" with other statespace"<<" : "<<actionba<<std::endl;
+            //calculate actual metropolis transition ratio from the propability densities
+//             double mhratio = std::exp(-actionab)*std::exp(-actionba)/std::exp(-actionaa)/std::exp(-actionbb);
+            double endiff = actionaa - actionab + actionbb - actionba;
+            double mhratio = calcMHratio(endiff);
+//             double mhratio = std::exp(actionaa - actionab + actionbb - actionba);
+            MLOGRELEASEVERBOSE<<"M-H Ratio: "<<mhratio<<std::endl;
+            return mhratio;
+        }
+        template <class T>
+        void exchange_statespace(T& sima, T& simb) 
+        {
+    	    swap(sima.statespace, simb.statespace);
+        }
+        /**
+         * This class collects mutexes that synchronize I/O.
+         */
+        struct GlobalMutexes
+        {
+            std::mutex hdf;///< Lock for the HDF5 I/O since the library for C++ is not thread-safe.
+            std::mutex io;///< Lock for the rest?
+        } mutexes;
+        int myid{0};///< An idea to distinguish files from multiple schedulers.
+        MLogState mlogstate;
         int acceptedmoves = 0;
         int maxpt; ///< how many pt steps do we do
         std::vector<Simstate> ptqueue; ///< here we collect who is waiting for its PT partner
@@ -443,33 +491,6 @@ namespace MARQOV
         std::vector<std::function<void(Simstate, int)> > gamekernels; ///< prefabricated workitems that get executed to move a simulation forward.
         std::vector<std::function<Sim(void)> > kernelloaders;
         RNGCache<std::mt19937_64> rng{static_cast<std::mt19937_64::result_type>(0)};
-        template <class T>
-        double calcprob (T& sima, T& simb) const
-        {
-//            auto sima = kernelloaders[ida]();
-//            auto simb = kernelloaders[idb]();
-            double actionaa = sima.calcAction(sima.statespace);
-            double actionbb = simb.calcAction(simb.statespace);
-            double actionab = sima.calcAction(simb.statespace);
-            double actionba = simb.calcAction(sima.statespace);
-            std::cout<<"Action of id 1"<<" : "<<actionaa<<std::endl;
-            std::cout<<"Action of id 2"<<" : "<<actionbb<<std::endl;
-            
-            std::cout<<"Action of id 1"<<" with other statespace"<<" : "<<actionab<<std::endl;
-            std::cout<<"Action of id 2"<<" with other statespace"<<" : "<<actionba<<std::endl;
-            //calculate actual metropolis transition ratio from the propability densities
-//             double mhratio = std::exp(-actionab)*std::exp(-actionba)/std::exp(-actionaa)/std::exp(-actionbb);
-            double endiff = actionaa - actionab + actionbb - actionba;
-            double mhratio = calcMHratio(endiff);
-//             double mhratio = std::exp(actionaa - actionab + actionbb - actionba);
-            std::cout<<"M-H Ratio: "<<mhratio<<std::endl;
-            return mhratio;
-        }
-        template <class T>
-        void exchange_statespace(T& sima, T& simb) 
-        {
-    	    swap(sima.statespace, simb.statespace);
-        }
     };
 
 #ifndef MPIMARQOV
@@ -482,7 +503,7 @@ namespace MARQOV
     public:
         /** This gives us the parameters of a simulation and we are responsible for setting everything up.
          * It has a template parameter, but of course all used parameters have to resolve to the same underlying MarqovType.
-         * FIXME: It is expected that all MPI ranks execute the same code until here!!! that makes it easier to have valid data on every node...
+         * FIXME: It is expected that all MPI ranks execute the same code until here!!! That makes it easier to have valid data on every node...
          * @param p The full set of parameters that are relevant for your Problem
          * @param filter A filter that can be applied before the actual creation of MARQOV
          */
@@ -507,6 +528,8 @@ namespace MARQOV
             }
             MPI_Bcast(&rrctr, 1, MPI_INT, MASTER, marqov_COMM);
         }
+        /** Start execution on all nodes.
+         */
         void start()
         {
             myScheduler.start();
@@ -518,35 +541,51 @@ namespace MARQOV
          * @param maxptsteps How many parallel tempering steps do we do
          * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
          */
-        MPIScheduler(int maxptsteps = 1, uint nthreads = 0) : rrctr(0), maxpt(maxptsteps), myScheduler(maxptsteps, nthreads)
-        {
-            int mpi_inited;
-            MPI_Initialized(&mpi_inited);
-            if (!mpi_inited)
-                throw("MPI not initialized!");
-            MPI_Comm_dup(MPI_COMM_WORLD, &marqov_COMM);
-            MPI_Comm_size(marqov_COMM, &nr_nodes);
-            MPI_Comm_rank(marqov_COMM, &myrank);
-        }
+        MPIScheduler(int maxptsteps = 1, uint nthreads = 0) : rrctr(0), maxpt(maxptsteps), marqov_COMM(std::move(createMPICommunicator())), nr_nodes(getavailableMPIhosts()), myrank(getmyMPIrank()), myScheduler(maxptsteps, nthreads, myrank)
+        {}
          /** Move Copy Constructor
          * 
          * The other object over whose resources we take ownership.
          * 
          * @param rhs the other object
          */
-        MPIScheduler(MPIScheduler&& rhs) : rrctr(rhs.rrctr), marqov_COMM(rhs.marqov_COMM), myScheduler(std::move(rhs.myScheduler)), myrank(rhs.myrank), nr_nodes(rhs.nr_nodes), maxpt(rhs.maxpt) {}
+        MPIScheduler(MPIScheduler&& rhs) : rrctr(rhs.rrctr), maxpt(rhs.maxpt), marqov_COMM(rhs.marqov_COMM), nr_nodes(rhs.nr_nodes), myrank(rhs.myrank), myScheduler(std::move(rhs.myScheduler)) {}
         MPIScheduler(const MPIScheduler&) = delete;
-        ~MPIScheduler() = default;
+        ~MPIScheduler(){MPI_Comm_free(&marqov_COMM);}
         MPIScheduler& operator=(const MPIScheduler&) = delete;
         MPIScheduler& operator=(MPIScheduler&& ) = delete;
     private:
+        static auto createMPICommunicator()
+        {
+            int mpi_inited;
+            MPI_Initialized(&mpi_inited);
+            if (!mpi_inited)
+            {
+                MLOGRELEASE<<"MPI not initialized!"<<std::endl;
+                throw("MPI not initialized!");
+            }
+            MPI_Comm tmp_COMM;///< our own MPI communicator.
+            MPI_Comm_dup(MPI_COMM_WORLD, &tmp_COMM);
+            return tmp_COMM;
+        }
+        int getavailableMPIhosts(){
+            int t;
+            MPI_Comm_size(marqov_COMM, &t);
+            MLOGRELEASE<<"Starting MPI Scheduler on "<<t<<" ranks"<<std::endl;
+            return t;
+        }
+        int getmyMPIrank(){
+            int t;
+            MPI_Comm_rank(marqov_COMM, &t);
+            return t;
+        }
         int rrctr;
+        int maxpt; ///< how many pt steps do we do
         MPI_Comm marqov_COMM;///< our own MPI communicator.
         static constexpr int MASTER = 0;
-        CXX11Scheduler<Sim> myScheduler;//MPI starts the program parallely on every node(if properly executed), hence every node needs his CXX11scheduler.
-        int myrank; ///< my MPI rank
         int nr_nodes; ///< how many nodes are we actually executed on.
-        int maxpt; ///< how many pt steps do we do
+        int myrank; ///< my MPI rank
+        CXX11Scheduler<Sim> myScheduler;//MPI starts the program parallely on every node(if properly executed), hence every node needs his CXX11scheduler.
     };
 
     template <class MarqovType>
