@@ -79,7 +79,7 @@ namespace MARQOV
             auto t = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
             bool needswarmup = !Sim::dumppresent(std::get<1>(t));
             int idx = gamekernels.size();
-            std::get<1>(t).id = idx+1000;
+            std::get<1>(t).id = idx;
 
             auto loadkernel = [&, t]()
             {
