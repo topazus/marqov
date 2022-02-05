@@ -32,10 +32,9 @@ for which you can find API documentation below.
    :maxdepth: 1
    :caption: Introduction
 
+   problem
    installation
    changelog
-   getting_started
-   observables
    io
 
 .. image:: ./_static/icon_regular.svg
