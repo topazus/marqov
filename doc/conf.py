@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'pyMARQOV/MARQOV'
-copyright = '2021, The MARQOV project'
+copyright = '2021-2022, The MARQOV project'
 author = 'Manuel Schrauth, Florian Goth'
 
 
@@ -27,7 +27,7 @@ author = 'Manuel Schrauth, Florian Goth'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'breathe', 'sphinxcontrib.plantuml']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'breathe', 'sphinxcontrib.plantuml', 'sphinx.ext.mathjax']
 
 # from the CXX version
 autosummary_generate = True
@@ -58,6 +58,7 @@ html_logo = "./_static/logo.png"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+mathjax_path='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML'
 
 # configure napoleon extension; makes Sphinx understand NumPy or Google style docstrings!
 napoleon_google_docstring = False
