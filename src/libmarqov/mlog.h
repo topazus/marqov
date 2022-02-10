@@ -25,6 +25,7 @@
 #include "flog/flog.h"
 #include <string>
 #include <chrono>
+#include <ctime>
 
 class MLogAppender : public FLogWriterBase
 {
@@ -49,7 +50,19 @@ public:
     }
 };
 
-#define MLOGTIME "( "<< std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count()<<" ) "
+
+std::string return_current_time_and_date()
+{
+    auto now = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
+    return ss.str();
+}
+
+
+#define MLOGTIME "("<< return_current_time_and_date() <<") "
 
 #define MLOGDEBUGVERBOSE FLOGDEBUGVERBOSE<<MLOGTIME
 #define MLOGDEBUG FLOGDEBUG<<MLOGTIME
