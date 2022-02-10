@@ -1002,23 +1002,20 @@ class Core : public RefType<Grid>
         {
             mlogstate.reset();
             MLOGDEBUG<<"Beginning Gameloop of "<<mcfg.id<<" at beta = "<<beta<<". ThreadID: "<<std::this_thread::get_id()<<'\n';
-            constexpr int gli = 10;
+            constexpr int gli = 10; // granularity of the status display 
             double avgclustersize = 0;
             for (int k=0; k < gli; k++)
             {
-
-                if (this->mcfg.id == 0) MLOGRELEASE << "." << std::flush;
                 for (int i=0; i < this->mcfg.gameloopsteps/10; ++i)
                 {
                     avgclustersize += elementaryMCstep();
                     mrqvt.switch_clock("measure");
-
                     marqov_measure(obs, statespace, this->grid);
                 }
+				MLOGSTATUS << "Gameloop at " << std::to_string(int(double(k+1)/double(gli)*100)) << "%\n";
             }
             mrqvt.stop();
 
-//            mrqvt.status();
 		  if (this->mcfg.id == 0)
           {
               MLOGRELEASE<<"Average cluster size: "<<avgclustersize/this->mcfg.gameloopsteps<<std::endl;
@@ -1035,16 +1032,14 @@ class Core : public RefType<Grid>
         {
             mlogstate.reset();
             MLOGDEBUG<<"Beginning Warmuploop\n";
-            constexpr int gli = 10;
+            constexpr int gli = 10; // granularity of the status display
             if(step < 1)
             {
-                if (this->mcfg.id == 0) std::cout << "|";
                 for (int k=0; k < gli; k++)
                 {
-                    if (this->mcfg.id == 0) MLOGRELEASE << "." << std::flush;
-                    for (int i=0; i < this->mcfg.warmupsteps/10; ++i) elementaryMCstep();
+                    for (int i=0; i < this->mcfg.warmupsteps/gli; ++i) elementaryMCstep();
+					MLOGSTATUS << "Warmuploop " << std::to_string(int(double(k+1)/double(gli)*100)) << "%\n";
                 }
-                if (this->mcfg.id == 0) std::cout << "|";
             }
             MLOGDEBUG<<"Ending Warmuploop\n";
         }
