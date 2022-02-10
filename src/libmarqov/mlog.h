@@ -62,7 +62,7 @@ std::string return_current_time_and_date()
 }
 
 
-#define MLOGSTATUS (FLogImpl<0>()) << "\n\t"
+#define MLOGSTATUS (FLogImpl<0>()) << "\t" <<  return_current_time_and_date() << "\n\t"
 #define MLOGTIME "("<< return_current_time_and_date() <<")\n\t"
 
 #define MLOGDEBUGVERBOSE FLOGDEBUGVERBOSE<<MLOGTIME

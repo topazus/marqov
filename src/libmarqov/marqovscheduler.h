@@ -38,6 +38,7 @@
 #include <mpi.h>
 #endif
 #include "util/filters.h"
+#include "util/startup.h"
 
 namespace MARQOV
 {
@@ -282,6 +283,8 @@ namespace MARQOV
         workqueue(masterwork),
         taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads)), rng(time(0) + std::random_device{}())
         {
+			if (myid == 0)	print_welcome_message();
+			if (myid == 0)  print_startup_message();
     	    MLOGRELEASE<<"Starting up CXX Scheduler with "<<((nthreads == 0)?std::thread::hardware_concurrency():nthreads)<<" threads"<<std::endl;
         }
         /** Tidy up scheduler.
@@ -297,7 +300,8 @@ namespace MARQOV
             }
             mlogstate.reset();
             masterstop = true;
-            MLOGVERBOSE<<"PT acceptance: "<<acceptedmoves/static_cast<double>(maxpt)<<std::endl;
+            MLOGVERBOSE << "PT acceptance: "<<acceptedmoves/static_cast<double>(maxpt)<<std::endl;
+			MLOGSTATUS << "MARQOV terminated properly";
         }
 
 //        Scheduler() = delete; //FIXME: If this would be present, the call to Scheduler() would be ambiguous

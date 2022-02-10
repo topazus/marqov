@@ -98,12 +98,6 @@ int main(int argc, char* argv[])
     }
     int myrank = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-    if (myrank == 0) 
-	{
-#endif
-    print_welcome_message();
-#ifdef MPIMARQOV
-    }
 #endif
 
 	// We are a Heisenberg Model. Saves some typing...

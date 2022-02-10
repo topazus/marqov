@@ -482,7 +482,7 @@ class Core : public RefType<Grid>
 		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}())
 		{
-            MLOGRELEASE<<"initializing MARQOV with supplied lattice. Log written to: "<<mc.outpath + "/" + mc.outname + ".mlog"<<std::endl;
+            MLOGRELEASE<<"Initializing MARQOV with supplied lattice. Log written to: "<< mc.outpath + "/" + mc.outname + ".mlog"<<std::endl;
 			hdf5lock.unlock();
 
 			// init clocks
@@ -522,7 +522,7 @@ class Core : public RefType<Grid>
 		obs(ham.observables),
 		rngcache(time(NULL)+std::random_device{}())
 		{
-            MLOGRELEASE<<"initializing MARQOV. Taking care of lattice ourselves. Log written to: "<<mc.outpath + "/" + mc.outname + ".mlog"<<std::endl;
+            MLOGRELEASE<<"Initializing MARQOV. Taking care of the lattice ourselves. Log written to: "<<mc.outpath + "/" + mc.outname + ".mlog"<<std::endl;
 			hdf5lock.unlock();
 
 			mrqvt.add_clock("cluster");
@@ -1001,7 +1001,7 @@ class Core : public RefType<Grid>
         void gameloop()
         {
             mlogstate.reset();
-            MLOGDEBUG<<"Beginning Gameloop of "<<mcfg.id<<" at beta = "<<beta<<". ThreadID: "<<std::this_thread::get_id()<<'\n';
+            MLOGDEBUG<<"Beginning Gameloop of "<< mcfg.id <<" at beta = "<< beta <<". ThreadID: "<<std::this_thread::get_id()<<'\n';
             constexpr int gli = 10; // granularity of the status display 
             double avgclustersize = 0;
             for (int k=0; k < gli; k++)
