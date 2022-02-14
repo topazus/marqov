@@ -139,7 +139,9 @@ namespace MARQOV
             else
             {
                 MLOGRELEASEVERBOSE<<"[MARQOV::CXX11Scheduler] Previous step found! Restarting!"<<std::endl;
-                workqueue.push_back(Simstate(idx));
+                //Do not submit a job to the scheduler if no gameloop steps are requested
+                if(std::get<1>(t).gameloopsteps > 0)
+                    workqueue.push_back(Simstate(idx));
             }
         }
         /** This registers an already allocated simulation with us.
