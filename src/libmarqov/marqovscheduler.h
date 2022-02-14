@@ -76,22 +76,22 @@ namespace MARQOV
         void createSimfromParameter(ParamType& p, Callable filter = defaultfilter)
         {
             mlogstate.reset();
-            auto t = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
-            bool needswarmup = !Sim::dumppresent(std::get<1>(t));
+            auto margs = filter(p);//FIXME: I think the filter may not modify the type of parameters anymore.
+            bool needswarmup = !Sim::dumppresent(std::get<1>(margs));
             int idx = gamekernels.size();
-            std::get<1>(t).id = idx;
+            std::get<1>(margs).id = idx;
 
-            auto loadkernel = [&, t]()
+            auto loadkernel = [&, margs]()
             {
-                    return makeCore<typename Sim::Lattice, typename Sim::HamiltonianType, typename Sim::RNGT>(t, mutexes.hdf);
+                    return makeCore<typename Sim::Lattice, typename Sim::HamiltonianType, typename Sim::RNGT>(margs, mutexes.hdf);
             };
 
-            std::function<void(Simstate, int)> gamekernel = [&, t](Simstate mywork, int npt)
+            std::function<void(Simstate, int)> gamekernel = [&, margs](Simstate mywork, int npt)
             {
                 mlogstate.reset();
                 MLOGRELEASEVERBOSE<< "executing gameloop of "<<mywork.id << std::endl;
                 {
-//                     auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
+//                     auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(margs, mutexes.hdf);
                     auto sim = kernelloaders[mywork.id]();
                     // We loop until the next PT step
                     for(; mywork.npt < npt; ++mywork.npt)
@@ -122,11 +122,11 @@ namespace MARQOV
             gamekernelmutex.unlock();
             if(needswarmup)
             {
-                std::function<void()> warmupkernel = [&, t, idx]
+                std::function<void()> warmupkernel = [&, margs, idx]
                 {
                     MLOGRELEASEVERBOSE<<"Beginning warmup of "<<idx<<std::endl;
                     {
-                        auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
+                        auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(margs, mutexes.hdf);
                         sim.init();
                         sim.wrmploop();
                     }
@@ -140,7 +140,7 @@ namespace MARQOV
             {
                 MLOGRELEASEVERBOSE<<"[MARQOV::CXX11Scheduler] Previous step found! Restarting!"<<std::endl;
                 //Do not submit a job to the scheduler if no gameloop steps are requested
-                if(std::get<1>(t).gameloopsteps > 0)
+                if(std::get<1>(margs).gameloopsteps > 0)
                     workqueue.push_back(Simstate(idx));
             }
         }
