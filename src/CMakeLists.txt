@@ -87,16 +87,20 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.8.0)
       endif()
 
       if(CMAKE_VERSION VERSION_GREATER 3.18)# language specific checks from SWIG only available in newer cmake versions
-          
-          if(SWIG_r_FOUND)
+          find_program(R_EXECUTABLE NAMES R R.exe) # make sure that we have R and can query for the header
+
+          if(SWIG_r_FOUND AND R_EXECUTABLE)
           message(STATUS "R found, trying to build R bindings. Make sure development headers are present!")
-	  INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
-          INCLUDE_DIRECTORIES("/usr/share/R/include/") # Debian Bullseye path, could also carry over to Ubuntu
+          INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+          find_path(R_INCLUDE_DIRS R.h PATHS /usr/local/lib /usr/local/lib64 /usr/share PATH_SUFFIXES include R/include DOC "filepath to R.h")
+
+          INCLUDE_DIRECTORIES(${R_INCLUDE_DIRS})
           INCLUDE(${SWIG_USE_FILE})
 
           swig_add_library(RShowcase TYPE SHARED LANGUAGE R SOURCES libshowcase.i libshowcase.cpp)
           SWIG_LINK_LIBRARIES(RShowcase libMARQOV)
           endif()
+
           if(SWIG_ocaml_FOUND)
           message(STATUS "ocaml found, trying to build OCaml bindings. Make sure development headers are present!")
           INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
