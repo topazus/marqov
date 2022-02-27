@@ -101,7 +101,7 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.8.0)
           SWIG_LINK_LIBRARIES(RShowcase libMARQOV)
           endif()
 
-          if(SWIG_ocaml_FOUND)
+          if(SWIG_ocaml_FOUND AND (SWIG_VERSION VERSION_GREATER "3.0.12")) # prevent ocaml builds on 3.0.12 which is used on Debian Buster
           message(STATUS "ocaml found, trying to build OCaml bindings. Make sure development headers are present!")
           INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
           INCLUDE(${SWIG_USE_FILE})
