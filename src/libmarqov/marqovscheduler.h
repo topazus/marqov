@@ -324,6 +324,29 @@ namespace MARQOV
         CXX11Scheduler& operator=(const CXX11Scheduler&) = delete;
         CXX11Scheduler& operator=(CXX11Scheduler&& ) = delete;
     private:
+        class StepRuntimeEstimator
+        {
+        public:
+            inline double getestimate() const noexcept
+            {
+                return currentestimate;
+            }
+            inline void addruntime(double t) noexcept
+            {
+                currentestimate = (nrofpoints*currentestimate + t)/(nrofpoints + 1);
+                ++currentestimate;
+                MLOGRELEASEVERBOSE<<"[CXX11Scheduler]: current runtime estimate "<<currentestimate<<std::endl; 
+            }
+            inline void setruntime(double t) noexcept
+            {
+                currentestimate = t;
+                MLOGRELEASEVERBOSE<<"[CXX11Scheduler]: current runtime estimate "<<currentestimate<<std::endl;
+            }
+        private:
+            int nrofpoints{0};
+            double currentestimate{0};
+        };
+        
         /**
          * Simstate helper class
          * This class encapsulates the parallel tempering state of a single sim.
@@ -336,6 +359,7 @@ namespace MARQOV
            int id = -1;///< my id
            int statespacesize = 0;
            int npt = -100;///< which will be my next parallel tempering step.
+           StepRuntimeEstimator rt;
         };
 
         /** Find the parallel tempering exchange partner of the given id.
