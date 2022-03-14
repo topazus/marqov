@@ -41,6 +41,39 @@
 
 namespace MARQOV
 {
+    /** @class StepRuntimeEstimator 
+     * This class accumulates estmates for the rntime of a parameter set.
+     */
+    class StepRuntimeEstimator
+    {
+    public:
+        using DurationType = std::chrono::duration<double>; ///> We store the durations as doubles
+        /** retrieve the current estimate.
+         */
+        inline DurationType getestimate() const noexcept
+        {
+            return currentestimate;
+        }
+        /** update with a new estimate.
+         */
+        inline void addruntime(DurationType t) noexcept
+        {
+            currentestimate = (nrofpoints*currentestimate + t)/(nrofpoints + 1);
+            ++nrofpoints;
+            MLOGDEBUGVERBOSE<<"[CXX11Scheduler]: current runtime estimate "<<currentestimate.count()<<std::endl; 
+        }
+        /** Set the estimate, e.g. with an initial guess.
+         */
+        inline void setruntime(DurationType t) noexcept
+        {
+            currentestimate = t;
+            MLOGDEBUGVERBOSE<<"[CXX11Scheduler]: current runtime estimate "<<currentestimate.count()<<std::endl;
+        }
+    private:
+        int nrofpoints{0};//< How many points did we accumulate.
+        DurationType currentestimate{0}; //< The current estimate.
+    };
+    
     template <typename FPType>
     constexpr auto calcMHratio(FPType en)
     {
@@ -96,9 +129,13 @@ namespace MARQOV
                     // We loop until the next PT step
                     for(; mywork.npt < npt; ++mywork.npt)
                     {
+                        auto start = std::chrono::steady_clock::now();
                         mlogstate.reset();//reset to master logfile
                         MLOGDEBUG<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
                         sim.gameloop();
+                        auto stop = std::chrono::steady_clock::now();
+                        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+                        mywork.rt.addruntime(duration);
                     }
                     mlogstate.reset();
                     MLOGRELEASEVERBOSE<<"Final action of id "<<mywork.id<<" : "<<sim.calcAction(sim.statespace)<<std::endl;
@@ -125,13 +162,16 @@ namespace MARQOV
                 std::function<void()> warmupkernel = [&, t, idx]
                 {
                     MLOGRELEASEVERBOSE<<"Beginning warmup of "<<idx<<std::endl;
+                    std::chrono::time_point<std::chrono::steady_clock> start = std::chrono::steady_clock::now();
                     {
                         auto sim = makeCore<typename Sim::Lattice, typename Sim::HamiltonianType>(t, mutexes.hdf);
                         sim.init();
                         sim.wrmploop();
                     }
+                    std::chrono::time_point<std::chrono::steady_clock> stop = std::chrono::steady_clock::now();
+                    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
                     //enqueue the next full work item into the workqueue immediately
-                    workqueue.push_back(Simstate(idx));
+                    workqueue.push_back(Simstate(idx, std::get<1>(t).gameloopsteps/std::get<1>(t).warmupsteps * duration));
 //                     std::cout<<"finished warmup closing file"<<std::endl;
                 };
                 taskqueue.enqueue(warmupkernel);
@@ -139,7 +179,7 @@ namespace MARQOV
             else
             {
                 MLOGRELEASEVERBOSE<<"[MARQOV::CXX11Scheduler] Previous step found! Restarting!"<<std::endl;
-                workqueue.push_back(Simstate(idx));
+                workqueue.push_back(Simstate(idx, 0));
             }
         }
         /** This registers an already allocated simulation with us.
@@ -156,8 +196,12 @@ namespace MARQOV
                 // We loop until the next PT step
                 for(; mywork.npt < npt; ++mywork.npt)
                 {
+                    auto start = std::chrono::steady_clock::now();
                     //    std::cout<<"Gamelooping on item "<<mywork.id<<" "<<mywork.npt<<std::endl;
                     sim.gameloop();
+                    auto stop = std::chrono::steady_clock::now();
+                    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+                    mywork.rt.addruntime(duration);
                 }
                 if (mywork.npt < maxpt) // determine whether this itm needs more work
                 {
@@ -180,10 +224,13 @@ namespace MARQOV
             {
                 std::function<void()> warmupkernel = [&, idx]
                 {
+                    auto start = std::chrono::steady_clock::now();
                     sim.init();
                     sim.wrmploop();
+                    auto stop = std::chrono::steady_clock::now();
+                    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
                     //enqueue the next full work item into the workqueue immediately
-                    workqueue.push_back(Simstate(idx));
+                    workqueue.push_back(Simstate(idx, duration));//FIXME: maybe query the marqov object itself.
                 };
                 taskqueue.enqueue(warmupkernel);
             }
@@ -324,29 +371,6 @@ namespace MARQOV
         CXX11Scheduler& operator=(const CXX11Scheduler&) = delete;
         CXX11Scheduler& operator=(CXX11Scheduler&& ) = delete;
     private:
-        class StepRuntimeEstimator
-        {
-        public:
-            inline double getestimate() const noexcept
-            {
-                return currentestimate;
-            }
-            inline void addruntime(double t) noexcept
-            {
-                currentestimate = (nrofpoints*currentestimate + t)/(nrofpoints + 1);
-                ++currentestimate;
-                MLOGRELEASEVERBOSE<<"[CXX11Scheduler]: current runtime estimate "<<currentestimate<<std::endl; 
-            }
-            inline void setruntime(double t) noexcept
-            {
-                currentestimate = t;
-                MLOGRELEASEVERBOSE<<"[CXX11Scheduler]: current runtime estimate "<<currentestimate<<std::endl;
-            }
-        private:
-            int nrofpoints{0};
-            double currentestimate{0};
-        };
-        
         /**
          * Simstate helper class
          * This class encapsulates the parallel tempering state of a single sim.
@@ -354,7 +378,7 @@ namespace MARQOV
         struct Simstate
         {
            Simstate() = default;
-           Simstate(int i) : id(i), npt(0) {}
+           Simstate(int i, typename StepRuntimeEstimator::DurationType rte) : id(i), npt(0) {rt.setruntime(rte);}
            Simstate(int i, int np) : id(i), npt(np) {}
            int id = -1;///< my id
            int statespacesize = 0;
