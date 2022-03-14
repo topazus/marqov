@@ -301,7 +301,11 @@ namespace MARQOV
                     // in the first time step no pt happens. Hence npt = 1 should disable PT.
                     if((itm.npt > 0) && item_needs_pt(itm.npt, itm.id))
                     {
-                        ptstep(itm);
+                        auto curtime = std::chrono::steady_clock::now();
+                        if (curtime - starttime - itm.rt.getestimate() > maxruntime)
+                            ptstep(itm);
+                        else
+                            std::cout<<"runtime exceeded not putting another into the queue"<<std::endl;
                     }
                     else
                     {//usually triggered at the beginning
@@ -325,7 +329,7 @@ namespace MARQOV
          * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
          * @param id An integer id. This is used by MPI to pass down the rank.
          */
-        CXX11Scheduler(int maxptsteps = 1, uint nthreads = 0, int mid = 0) : myid(mid), mlogstate(DEBUG, "marqovmaster_rank"+std::to_string(myid)+".mlog"), maxpt(maxptsteps), masterstop(false), masterwork{},
+        CXX11Scheduler(int maxptsteps = 1, uint nthreads = 0, int mid = 0) : starttime(std::chrono::steady_clock::now()), myid(mid), mlogstate(DEBUG, "marqovmaster_rank"+std::to_string(myid)+".mlog"), maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
         taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads)), rng(time(0) + std::random_device{}())
         {
@@ -357,7 +361,7 @@ namespace MARQOV
          * @param rhs the other object.
          */
         
-        CXX11Scheduler(CXX11Scheduler&& rhs) : myid(rhs.myid), mutexes{}, mlogstate(rhs.mlogstate), maxpt(rhs.maxpt), ptqueue(std::move(rhs.ptqueue)), ptplan{std::move(rhs.ptplan)}, masterstop(rhs.masterstop),
+        CXX11Scheduler(CXX11Scheduler&& rhs) : starttime(rhs.starttime), myid(rhs.myid), mutexes{}, mlogstate(rhs.mlogstate), maxpt(rhs.maxpt), ptqueue(std::move(rhs.ptqueue)), ptplan{std::move(rhs.ptplan)}, masterstop(rhs.masterstop),
         masterwork{}, workqueue(masterwork), taskqueue{std::move(rhs.taskqueue)}, gamekernels{}
         {
             std::swap(gamekernels, rhs.gamekernels);
@@ -371,6 +375,7 @@ namespace MARQOV
         CXX11Scheduler& operator=(const CXX11Scheduler&) = delete;
         CXX11Scheduler& operator=(CXX11Scheduler&& ) = delete;
     private:
+        using DurationType = std::chrono::duration<double>;
         /**
          * Simstate helper class
          * This class encapsulates the parallel tempering state of a single sim.
@@ -385,7 +390,8 @@ namespace MARQOV
            int npt = -100;///< which will be my next parallel tempering step.
            StepRuntimeEstimator rt;
         };
-
+        DurationType maxruntime{8760*std::chrono::hours{1}};
+        std::chrono::time_point<std::chrono::steady_clock> starttime;
         /** Find the parallel tempering exchange partner of the given id.
          * 
          * @param id find the next partner that this id has.
