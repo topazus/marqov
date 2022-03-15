@@ -52,19 +52,4 @@ inline void makeDir(const std::string path)
             throw std::runtime_error(std::string("[MARQOV] Failed to create folder ") + path);
     }
 }
-
-std::chrono::duration<double> get_duration(const std::string& s)
-{
-    std::istringstream str(s);
-    std::ios_base::iostate err = std::ios_base::goodbit;
- 
-    std::tm t;
-    std::istreambuf_iterator<char> ret =
-        std::use_facet<std::time_get<char>>(str.getloc()).get_time(
-            {str}, {}, str, err, &t);
-    str.setstate(err);
-    if (!str) throw("time duration not parseable");
-    std::chrono::duration<double> retval = std::chrono::hours{t.tm_hour} + std::chrono::minutes{t.tm_min} + std::chrono::seconds{t.tm_sec};
-    return retval;
-}
 #endif

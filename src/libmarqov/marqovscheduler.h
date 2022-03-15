@@ -265,6 +265,14 @@ namespace MARQOV
         {
             mlogstate.level = l;
         }
+        /**
+         * Set the maximum runtime.
+         * @param d the duration
+         */
+        void setmaxruntime(const std::chrono::duration<double>& d) noexcept
+        {
+            maxruntime = d;
+        }
         /** Start the simulations! GoGoGo...!
          */
         void start()

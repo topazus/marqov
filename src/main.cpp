@@ -165,7 +165,8 @@ int main(int argc, char* argv[])
     auto nmetro        = reg.Get<int>(fn, "MC", "nmetro");
     auto warmupsteps   = reg.Get<int>(fn, "MC", "warmupsteps");
     auto measuresteps  = reg.Get<int>(fn, "MC", "measuresteps");
-    
+	auto maxruntime    = reg.Get<double>(fn, "MC", "maxruntimehours")*std::chrono::hours{1};
+	
 	// Then, we store them into a MARQOV::Config object
     MARQOV::Config mp(outpath); // output path 
     mp.setnmetro(nmetro); // number of Metropolis sweeps per EMCS
@@ -187,7 +188,7 @@ int main(int argc, char* argv[])
     // Instantiate the scheduler which waits for new threads.
 	// (makeScheduler can figure out a lot from one set of parameters)
     auto sched = makeScheduler<HeisenbergHamiltonian, RegularHypercubic> (rparamsets[0]);
-    
+    sched.setmaxruntime(maxruntime);
 	// Submit parameter sets to the scheduler
     for (auto p : rparamsets) sched.createSimfromParameter(p);
 

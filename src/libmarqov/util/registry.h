@@ -37,6 +37,8 @@
 #include <vector>
 #include <stdexcept>
 #include <sstream>
+#include <chrono>
+#include <locale>
 
 /** The base exception class thrown by the registry.
  *
