@@ -38,9 +38,9 @@ class IsingGenericVectorValuedObs
 		std::string name = "dummy";
 		std::string desc = "testing vector-valued observables ...";
 		template <class StateSpace, class Grid>
-		std::vector<double> measure(const StateSpace& statespace, const Grid& grid)
+		std::vector<std::complex<double>> measure(const StateSpace& statespace, const Grid& grid)
 		{
-			std::vector<double> retval;
+			std::vector<std::complex<double>> retval;
 
 			for (int i=0; i<5; i++) retval.push_back(42+0.1*i);
 
@@ -49,6 +49,15 @@ class IsingGenericVectorValuedObs
 };
 
 
+
+
+template <class StateVector>
+class Ising_extfield : public OnSite<StateVector, double> 
+{
+	public:
+	Ising_extfield(const double& H) : OnSite<StateVector,double>(H) {}
+	double get (const StateVector& phi) {return phi[0];};
+};
 
 
 // ------------------------------ HAMILTONIAN ---------------------------
@@ -66,7 +75,7 @@ class Ising
 		
 		//  ----  Parameters  ----
 
-		double J;
+		double J1, J2,  H;
 		static constexpr int SymD = 1;
 		const std::string name = "Ising";
 
@@ -77,9 +86,12 @@ class Ising
 
 		//  ----  Hamiltonian terms  ---- 
 
-        std::array<Standard_Interaction<StateVector>*, 1> interactions = {new Standard_Interaction<StateVector>(J)};
+        std::array<Standard_Interaction<StateVector>*, 2> interactions = {
+			new Standard_Interaction<StateVector>(J1), 
+			new Standard_Interaction<StateVector>(J2)};
+		std::array<Ising_extfield<StateVector>*, 1> onsite = {new Ising_extfield<StateVector>(H)}; 
 
-		Ising(double J) : J(J), obs_e(*this), obs_fx(0), obs_fy(1)
+		Ising(double J1, double J2, double H) : J1(J1), J2(J2), H(H), obs_e(*this), obs_fx(0), obs_fy(1)
 		{}
 		~Ising() {delete interactions[0];}
 

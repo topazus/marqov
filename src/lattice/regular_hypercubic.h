@@ -32,36 +32,50 @@ public:
 		{
 			std::array<int, 2*dimT> temp{0};
 			//calculate neighbours for site i
-			for(int j = 0; j < dim; ++j)
+			if (alpha==0)
 			{
-				int pl = pows[j]*len;
+				for(int j = 0; j < dim; ++j)
+				{
+					int pl = pows[j]*len;
 
-				//positive additions
-				int c = i + pows[j];
+					//positive additions
+					int c = i + pows[j];
 
-				//test positive additions for PBCs
-				if (c >= (c/pl)*pl)
-				{
-					temp[2*j] = (i/pl)*pl + c % pl;
-				}
-				else
-				{
-					temp[2*j] = c;
-				}
-				
-				//negative additions
-				c = i - pows[j];
+					//test positive additions for PBCs
+					if (c >= (c/pl)*pl)
+					{
+						temp[2*j] = (i/pl)*pl + c % pl;
+					}
+					else
+					{
+						temp[2*j] = c;
+					}
+					
+					//negative additions
+					c = i - pows[j];
 
-				//test negative additions for PBCs
-				if (c < (i/pl)*pl)
-				{
-					temp[2*j+1] = (i/pl)*pl + (c + pl) % pl;
-				}
-				else
-				{
-					temp[2*j+1] = c;
+					//test negative additions for PBCs
+					if (c < (i/pl)*pl)
+					{
+						temp[2*j+1] = (i/pl)*pl + (c + pl) % pl;
+					}
+					else
+					{
+						temp[2*j+1] = c;
+					}
 				}
 			}
+			else
+			{
+				int N = len;
+				int Nq = N*N;
+
+				temp[0] = (Nq + ((i+N)/N)*N + (i+N-1)%N)%Nq;
+			    temp[1] = (Nq + ((i-N)/N)*N + (i-N-1)%N)%Nq;
+			    temp[2] = (Nq + ((i+N)/N)*N + (i+N+1)%N)%Nq;
+			    temp[3] = (Nq + ((i-N)/N)*N + (i-N+1)%N)%Nq;
+			}
+
 			return temp;
 		}
 

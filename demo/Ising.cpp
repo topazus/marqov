@@ -68,8 +68,10 @@ int main(int argc, char* argv[])
 
 	// Parameters
 	auto beta = registry.Get<std::vector<double> >(configfile, ham, "beta");
-	auto J    = registry.Get<std::vector<double> >(configfile, ham, "J");
-	auto parameters = cart_prod(beta, J);
+	auto J1    = registry.Get<std::vector<double> >(configfile, ham, "J1");
+	auto J2    = registry.Get<std::vector<double> >(configfile, ham, "J2");
+	auto H    = registry.Get<std::vector<double> >(configfile, ham, "H");
+	auto parameters = cart_prod(beta, J1, J2, H);
 
 	// Execute the actual simulations
 	RegularLatticeLoop<Ising<int>>(registry, configfile, ham, outbasedir, parameters, defaultfilter);
