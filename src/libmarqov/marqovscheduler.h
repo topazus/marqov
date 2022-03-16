@@ -60,14 +60,16 @@ namespace MARQOV
         {
             currentestimate = (nrofpoints*currentestimate + t)/(nrofpoints + 1);
             ++nrofpoints;
-            MLOGDEBUGVERBOSE<<"[CXX11Scheduler]: current runtime estimate "<<currentestimate.count()<<std::endl; 
+            //MLOGDEBUGVERBOSE
+            std::cout<<"[CXX11Scheduler]: current runtime estimate "<<currentestimate.count()<<std::endl; 
         }
         /** Set the estimate, e.g. with an initial guess.
          */
         inline void setruntime(DurationType t) noexcept
         {
             currentestimate = t;
-            MLOGDEBUGVERBOSE<<"[CXX11Scheduler]: current runtime estimate "<<currentestimate.count()<<std::endl;
+            //MLOGDEBUGVERBOSE
+            std::cout<<"[CXX11Scheduler]: initial runtime estimate "<<currentestimate.count()<<std::endl;
         }
     private:
         int nrofpoints{0};//< How many points did we accumulate.
@@ -310,14 +312,18 @@ namespace MARQOV
                     if((itm.npt > 0) && item_needs_pt(itm.npt, itm.id))
                     {
                         auto curtime = std::chrono::steady_clock::now();
-                        if (curtime - starttime - itm.rt.getestimate() > maxruntime)
+                        if (curtime - starttime + itm.rt.getestimate() < maxruntime)
                             ptstep(itm);
                         else
-                            std::cout<<"runtime exceeded not putting another into the queue"<<std::endl;
+                            MLOGRELEASEVERBOSE<<"Runtime exceeded not putting another into the queue"<<std::endl;
                     }
                     else
                     {//usually triggered at the beginning
+                        auto curtime = std::chrono::steady_clock::now();
+                        if (curtime - starttime + itm.rt.getestimate() < maxruntime) //prevent a run if we can predict it will not fit into the time
                         movesimtotaskqueue(itm);
+                        else
+                            MLOGRELEASEVERBOSE<<"Runtime exceeded. Not continuing after warmup"<<std::endl;
                     }
                 }
                 else

@@ -187,7 +187,7 @@ int main(int argc, char* argv[])
     
     // Instantiate the scheduler which waits for new threads.
 	// (makeScheduler can figure out a lot from one set of parameters)
-    auto sched = makeScheduler<HeisenbergHamiltonian, RegularHypercubic> (rparamsets[0]);
+    auto sched = makeScheduler<HeisenbergHamiltonian, RegularHypercubic> (rparamsets[0], 100);
     sched.setmaxruntime(maxruntime);
 	// Submit parameter sets to the scheduler
     for (auto p : rparamsets) sched.createSimfromParameter(p);
