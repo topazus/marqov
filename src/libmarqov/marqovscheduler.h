@@ -342,8 +342,9 @@ namespace MARQOV
          * @param maxptsteps How many parallel tempering steps do we do. Defaults to just a single PTstep and hence disables it.
          * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
          * @param id An integer id. This is used by MPI to pass down the rank.
+         * @param duration the maximum runtime(walltime) of this scheduler. If it is exceeded, it will terminate.
          */
-        CXX11Scheduler(int maxptsteps = 1, uint nthreads = 0, int mid = 0) : starttime(std::chrono::steady_clock::now()), myid(mid), mlogstate(DEBUG, "marqovmaster_rank"+std::to_string(myid)+".mlog"), maxpt(maxptsteps), masterstop(false), masterwork{},
+        CXX11Scheduler(int maxptsteps = 1, uint nthreads = 0, int mid = 0, const std::chrono::duration<double>& d={8760*std::chrono::hours{1}}) : starttime(std::chrono::steady_clock::now()), myid(mid), mlogstate(DEBUG, "marqovmaster_rank"+std::to_string(myid)+".mlog"), maxpt(maxptsteps), masterstop(false), masterwork{},
         workqueue(masterwork),
         taskqueue(((nthreads == 0)?std::thread::hardware_concurrency():nthreads)), rng(time(0) + std::random_device{}())
         {
@@ -602,10 +603,26 @@ namespace MARQOV
         {
             myScheduler.start();
         }
+        /** Set the log verbosity.
+         * 
+         * @param l the loglevel.
+         */
+        void setloglevel(int l)
+        {
+            myScheduler.setloglevel(l);
+        }
+        /**
+         * Set the maximum runtime.
+         * @param d the duration
+         */
+        void setmaxruntime(const std::chrono::duration<double>& d) noexcept
+        {
+            myScheduler.setmaxruntime(d);
+        }
         void waitforall() {}
         /** Construct MPI Scheduler.
          * 
-         * We expect MPI to be initialized beforehand. The user should feel that he is writing MPI code.
+         * We expect MPI to be initialized beforehand. The user should feel that (s)he is writing MPI code.
          * @param maxptsteps How many parallel tempering steps do we do
          * @param nthreads how many threads should be used. If not specified defaults to what is reported by the OS.
          */
