@@ -26,6 +26,7 @@ SOFTWARE.
 */
 
 #include <vector>
+#include <array>
 #include <string>
 #include <type_traits>
 #include <utility>
