@@ -1,6 +1,6 @@
 find_package(HDF5 COMPONENTS CXX)
 find_package(Threads)
-
+include(GNUInstallDirs)
 
 
 set(MYHDF5INCLUDES ${HDF5_INCLUDE_DIRS})
@@ -51,6 +51,8 @@ endif()
 add_library(libMARQOV marqov.cpp)
 target_include_directories(libMARQOV PUBLIC ${MYHDF5INCLUDES})
 target_include_directories(libMARQOV INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+
+install(TARGETS libMARQOV LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 target_link_libraries(libMARQOV ${MYHDF5LIBS} Threads::Threads)
 set_target_properties(libMARQOV PROPERTIES CXX_STANDARD 14 CXX_STANDARD_REQUIRED YES POSITION_INDEPENDENT_CODE ON)
