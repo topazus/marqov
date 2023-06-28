@@ -117,7 +117,7 @@ class H5Mapper
         static constexpr int rank = 1;///< This template assumes vectors.
         static constexpr int bytecount = std::tuple_size<T>::value*H5Mapper<typename T::value_type>::bytecount;///< The size of a compile time-array
         /** Generate the proper HDF5 Array Type.
-         * @returns The Corresponding HDF5 Type of the array.
+         * @returns The corresponding HDF5 Type of the array.
          */
         static H5::ArrayType H5Type()
         {
@@ -140,7 +140,7 @@ class H5Mapper<T, typename std::enable_if<std::is_scalar<T>::value>::type> : pub
         static constexpr int rank = 1; ///< Scalars are vectors(rank=1) of length 1.
 };
 
-/** Dumps a Scalar into an HDF5 file/group.
+/** Dumps a scalar into an HDF5 file/group.
  * 
  * Since it's often needed for config related things, this is a small helper
  * function to dump a single scalar into its own scalar data space in a given
@@ -375,7 +375,7 @@ private:
         std::array<hsize_t, rank> maxdims, chunk_dims;
         hsize_t fdims[rank] = {};
         maxdims.fill(H5S_UNLIMITED);
-        
+
         H5::DataSpace mspace1(rank, fdims, maxdims.data());
         H5::DSetCreatPropList cparms;
 
