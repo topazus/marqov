@@ -4,6 +4,7 @@
 #include <vector>
 
 //include the MARQOV library
+#undef MPIMARQOV
 #include "libmarqov.h"
 
 //include the RegularLattice
@@ -117,16 +118,16 @@ int main()
 	std::cout<<"This test is the minimum example that features a self-defined Heisenberg model and utlizes ";
 	std::cout<<"the multithread scheduler."<<std::endl;
     // Initialize the lattice
-	int L = 8;
-	int dim = 2;
+	int L = 64;
+	int dim = 3;
     RegularHypercubic mylatt(L, dim);
 
 	// Set Monte Carlo parameters using MARQOV::Config
 	MARQOV::Config mp("./"); // output path 
 	mp.setnmetro(5); // number of Metropolis sweeps per EMCS
 	mp.setncluster(10); // number of Wolff updates per EMCS
-	mp.setwarmupsteps(500); // number of EMCS for warmup
-	mp.setgameloopsteps(3000); // number of EMCS for production
+	mp.setwarmupsteps(5); // number of EMCS for warmup
+	mp.setgameloopsteps(3); // number of EMCS for production
 	mp.setloglevel(RELEASE); // set the log level
 
 	// Set the Hamiltonian parameters, J, and the inverse temperature beta

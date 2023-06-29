@@ -6,7 +6,12 @@ add_executable(HeisenbergSimpleThreaded HeisenbergSimpleThreaded.cpp)
 SET(DEMOS Ising Heisenberg Phi4 Potts BlumeCapel XXZAntiferroSingleAniso BlumeCapelBipartiteLattice AshkinTellerThreeColor BlumeEmeryGriffiths)
 foreach(demo ${DEMOS})
 add_executable(${demo} ${demo}.cpp ../src/libmarqov/util/registry.cpp)
+install(TARGETS ${demo}
+          DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/marqov/demo)
+
 add_executable(${demo}.mpi ${demo}.cpp ../src/libmarqov/util/registry.cpp)
+install(TARGETS ${demo}.mpi
+          DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/marqov/demo)
 endforeach(demo)
 
 # lists make things easier ...

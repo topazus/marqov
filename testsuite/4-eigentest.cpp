@@ -80,7 +80,8 @@ class MyEigenHeisenberg
 		// Observables
 		Magnetization obs_m;
 		Energy<MyEigenHeisenberg>  obs_e;
-        decltype(std::make_tuple(obs_m, obs_e)) observables = {std::make_tuple(obs_m, obs_e)};
+		std::pair<Magnetization, Energy<MyEigenHeisenberg> > observables{obs_m, obs_e};
+//        decltype(std::make_tuple(obs_m, obs_e)) observables = {std::make_tuple(obs_m, obs_e)};
 };
 
 

@@ -26,6 +26,7 @@ SOFTWARE.
 */
 
 #include <vector>
+#include <array>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -118,7 +119,7 @@ class H5Mapper
         static constexpr int rank = 1;///< This template assumes vectors.
         static constexpr int bytecount = std::tuple_size<T>::value*H5Mapper<typename T::value_type>::bytecount;///< The size of a compile time-array
         /** Generate the proper HDF5 Array Type.
-         * @returns The Corresponding HDF5 Type of the array.
+         * @returns The corresponding HDF5 Type of the array.
          */
         static H5::ArrayType H5Type()
         {
@@ -154,7 +155,7 @@ class H5Mapper<std::complex<FPType>, void>
         static constexpr std::size_t bytecount = sizeof(std::complex<FPType>);///< Their bytecount on the current platform.
         static constexpr int rank = 1; ///< Scalars are vectors(rank=1) of length 1.
         /** Generate the proper HDF5 Array Type.
-         * @returns The Corresponding HDF5 Type of the array.
+         * @returns The corresponding HDF5 Type of the array.
          */
         static auto H5Type()
         {
@@ -401,7 +402,7 @@ private:
         std::array<hsize_t, rank> maxdims, chunk_dims;
         hsize_t fdims[rank] = {};
         maxdims.fill(H5S_UNLIMITED);
-        
+
         H5::DataSpace mspace1(rank, fdims, maxdims.data());
         H5::DSetCreatPropList cparms;
 
