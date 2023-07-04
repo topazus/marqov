@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 Project(MARQOV.tests CXX)
 
-find_package (Eigen3)
+find_package (Eigen3 QUIET)
 
 add_subdirectory(components)
 # add_subdirectory(systems)
